@@ -83,6 +83,14 @@
   }
 
   /* ---------- trên GitHub: Firebase ---------- */
+  // Firebase tự bỏ mảng rỗng, đối tượng rỗng và đổi đối tượng có khóa là số thành mảng,
+  // nên mỗi khóa được lưu nguyên thành một chuỗi JSON để đọc ra đúng như lúc ghi.
+  function dongGoi(v) { return v == null ? null : JSON.stringify(v); }
+  function moGoi(x) {
+    if (x == null) return null;
+    if (typeof x === "string") { try { return JSON.parse(x); } catch (e) { return null; } }
+    return sach(x);
+  }
   function noiFirebase(cfg, baoTrangThai) {
     var V = "10.12.5", goc = "https://www.gstatic.com/firebasejs/" + V + "/";
     return napScript(goc + "firebase-app-compat.js").then(function () {
@@ -95,11 +103,11 @@
       db.ref(".info/connected").on("value", function (s) {
         baoTrangThai(s.val() ? "ok" : "cho", s.val() ? "Đã nối qua Firebase" : "Đang nối Firebase…");
       });
-      var ghi = taoHangDoi(function (key, v) { return base.child(key).set(v); }, function (e) {
+      var ghi = taoHangDoi(function (key, v) { return base.child(key).set(dongGoi(v)); }, function (e) {
         baoTrangThai("loi", "Firebase không cho ghi (" + ((e && (e.code || e.message)) || e) + "). Kiểm tra mục Rules.");
       });
       KHOA.forEach(function (key) {
-        base.child(key).on("value", function (s) { nn.phat(key, sach(s.val())); }, function (e) {
+        base.child(key).on("value", function (s) { nn.phat(key, moGoi(s.val())); }, function (e) {
           baoTrangThai("loi", "Firebase không cho đọc (" + ((e && (e.code || e.message)) || e) + "). Kiểm tra mục Rules.");
         });
       });
