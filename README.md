@@ -1,6 +1,6 @@
 # Rước đuốc về trường
 
-Trò chơi khởi động tiết Toán 6 (lớp 6/3, THCS Phan Tây Hồ): 4 tổ trả lời 5 câu bằng thẻ, điện thoại quét thẻ, màn hình TV cho 4 bạn cầm đuốc tiến về đài lửa.
+Trò chơi khởi động tiết Toán 6 (lớp 6/3, THCS Phan Tây Hồ): 4 tổ trả lời 5 câu bằng thẻ, điện thoại quét thẻ, màn hình TV cho 4 bạn cầm đuốc đi trên đường đêm về trường (sương mù tan dần), về đích thì các tổ thắp đuốc theo thứ hạng.
 
 - Màn hình TV: mở trang, chọn **Màn hình TV**, bấm F11.
 - Điện thoại: mở trang bằng Chrome (hoặc quét mã QR hiện trên TV), chọn **Điện thoại**.

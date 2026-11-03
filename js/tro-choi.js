@@ -150,21 +150,22 @@
     return String(t || "").replace(/\s+/g, " ").replace(/^["“”'\s]+|["“”'\s]+$/g, "").slice(0, 240);
   }
   function nhacClaude(q, truoc, sau) {
-    var hang = RD.xepHang(sau), hangTruoc = RD.xepHang(truoc);
+    var hang = RD.xepHang(sau), hangTruoc = RD.xepHang(truoc), d = RD.vietDiem;
+    var ten = function (t) { return RD.TO[t].ten; };
     var dong = sau.map(function (r, t) {
-      var c = r.cau[q] || { dung: 0, thay: 0, buoc: 0 };
-      return "- " + RD.TO[t].ten + ": câu này +" + c.buoc + " bước (" + c.dung + "/" + c.thay + " bạn đúng), tổng " + r.buoc + "/" + r.toiDa + " bước, đã đi " + Math.round(r.viTri * 100) + "% quãng đường, đang xếp thứ " + hang.hang[t] + ".";
+      var c = r.cau[q] || { dung: 0, thay: 0, tram: 0 };
+      return "- " + ten(t) + ": câu này " + c.dung + "/" + c.thay + " bạn đúng, +" + d(c.tram) + " điểm; tổng " + d(r.tram) + " điểm, đang xếp thứ " + hang.hang[t] + ".";
     }).join("\n");
     var ghi = [];
-    sau.forEach(function (r, t) { if (r.cau[q] && r.cau[q].tron) ghi.push(RD.TO[t].ten + " đúng cả tổ ở câu này."); });
-    if (q > 1 && hang.nhat.length === 1 && hangTruoc.nhat.indexOf(hang.nhat[0]) < 0) ghi.push(RD.TO[hang.nhat[0]].ten + " vừa vượt lên dẫn đầu.");
-    if (q === 5) ghi.push(hang.nhat.length > 1 ? "Câu cuối: " + hang.nhat.map(function (t) { return RD.TO[t].ten; }).join(" và ") + " về đích bằng nhau, sẽ cùng châm lửa." : "Câu cuối: " + RD.TO[hang.nhat[0]].ten + " đi xa nhất, sẽ được châm đài lửa.");
-    else if (q === 4) ghi.push("Câu sau là câu 5, chặng nước rút, mỗi bạn đúng được 2 bước.");
+    sau.forEach(function (r, t) { if (r.cau[q] && r.cau[q].tron) ghi.push(ten(t) + " đúng cả tổ ở câu này (bứt phá)."); });
+    if (q > 1 && hang.nhat.length === 1 && hangTruoc.nhat.indexOf(hang.nhat[0]) < 0) ghi.push(ten(hang.nhat[0]) + " vừa vượt lên dẫn đầu.");
+    if (q === 5) ghi.push(hang.nhat.length > 1 ? "Câu cuối: " + hang.nhat.map(ten).join(" và ") + " bằng điểm nhau, cùng về nhất và sẽ cùng thắp đuốc." : "Câu cuối: " + ten(hang.nhat[0]) + " về nhất, sẽ thắp ngọn đuốc đầu tiên.");
+    else if (q === 4) ghi.push("Câu sau là câu 5, câu nước rút, gấp đôi điểm.");
     return "Bạn là bình luận viên vui vẻ của trò chơi \"Rước đuốc về trường\" ở lớp 6/3 (học sinh 11-12 tuổi). " +
-      "Bốn tổ cầm đuốc đi trên 4 đường dài bằng nhau về đài lửa; mỗi bạn trả lời đúng thì tổ tiến 1 bước, câu 5 là chặng nước rút được 2 bước.\n" +
+      "Bốn tổ cầm đuốc đi trên 4 con đường dài bằng nhau về trường, sương mù tan dần phía trước. Mỗi câu, tổ được điểm theo tỉ lệ bạn trong tổ trả lời đúng: câu 1 đến 4 tối đa 1 điểm, câu 5 là câu nước rút tối đa 2 điểm; tổng tối đa 6 điểm.\n" +
       "Vừa công bố câu " + q + "/5. Số liệu:\n" + dong + (ghi.length ? "\nGhi chú: " + ghi.join(" ") : "") +
-      "\nViết đúng MỘT câu bình luận bằng tiếng Việt có dấu, dài 12 đến 28 từ, giọng phấn khởi như bình luận viên thể thao, nhắc tên tổ và số bước. " +
-      "Không nhắc đáp án, phép tính hay lỗi sai; không chê tổ nào, tổ đi chậm thì động viên. Không dùng emoji, không dùng dấu ngoặc kép. Chỉ trả về câu bình luận.";
+      "\nViết đúng MỘT câu bình luận bằng tiếng Việt có dấu, dài 12 đến 28 từ, giọng phấn khởi như bình luận viên thể thao, nhắc tên tổ và số điểm (số thập phân viết bằng dấu phẩy, ví dụ 0,91). " +
+      "Không nhắc đáp án, phép tính hay lỗi sai; không chê tổ nào, tổ đi sau thì động viên. Không dùng emoji, không dùng dấu ngoặc kép. Chỉ trả về câu bình luận.";
   }
   var BL = {};
   function hienLoiBinh(chu, nhan, cho) {
@@ -402,7 +403,8 @@
       else if (k === "thu") dienThu(RD.cauCuaBuoc(nowHopLe().step), true);
     });
     $('[data-tv="am"]').setAttribute("aria-pressed", A.bat ? "true" : "false");
-    $("#nutChamLua").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "finish") tiep(); });
+    $("#nutThuHang").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "finish") tiep(); });
+    $("#nutHienBao").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "rank") tiep(); });
     $("#cbVan").addEventListener("click", function () { if (choXacNhan) choXacNhan(true); });
     $("#cbThem").addEventListener("click", function () { if (choXacNhan) choXacNhan(false); });
     document.addEventListener("keydown", function (e) {
@@ -459,34 +461,37 @@
     $("#chuanBiTV").hidden = !(step === "setup" || moCB);
     capNhatChuanBi($("#cbTV"));
     $('[data-tv="thu"]').hidden = !((loai === "q" || loai === "a") && cfg().thu);
-    // băng rôn trên tường: câu đang chơi, các câu đã công bố
-    var daCB = cauDaTinh(), soCB = Object.keys(daCB).length;
-    $("#btSo").textContent = q || Math.max(1, Math.min(5, soCB + (step === "intro" || step === "setup" ? 1 : 0)));
-    $$("#btCham i").forEach(function (d, k) { d.classList.toggle("xong", !!daCB[k + 1]); });
     if (doi) vaoBuocTV(step, cu, loai, q, rev);
     if (loai === "q" || loai === "a") capNhatManCau(q);
     if (loai === "q" && cfg().thu && doi) { clearTimeout(henThu); henThu = setTimeout(function () { dienThu(q, false); }, 1600); }
   }
   function anHud() {
-    ["#tieuDe", "#dich", "#bangRon", "#pill", "#loiBinh", "#goiY", "#dem"].forEach(function (s) { $(s).hidden = true; });
+    ["#tieuDe", "#dich", "#bangRon", "#cauSo", "#loiBinh", "#goiY", "#nutThuHang"].forEach(function (x) { $(x).hidden = true; });
     $("#canhBao").hidden = true;
     choXacNhan = null;
   }
+  function huyHoatCanh() {
+    var g = G();
+    SK.huy();
+    if (g) g.killTweensOf(["#manBao", "#mbKhung", "#mbChe", "#nutHienBao", "#chop", "#dich", "#nutThuHang", "#mcNuocTo"]);
+    $("#chop").style.opacity = 0;
+  }
+  function cauSo(chu) { var c = $("#cauSo"); c.textContent = chu; c.hidden = false; }
   function vaoBuocTV(step, cu, loai, q, rev) {
     var g = G();
     anHud();
-    if (g && SK._tlCham) { SK._tlCham.kill(); SK._tlCham = null; }
-    if (g && tlRace) { tlRace.kill(); tlRace = null; }
-    var iStep = RD.BUOC.indexOf(step);
+    huyHoatCanh();
     $("#manCau").hidden = !(loai === "q" || loai === "a");
-    $("#manBao").hidden = !(step === "bao" || step === "baoName" || step === "baoSpots");
-    if (iStep < RD.BUOC.indexOf("light")) SK.tatLua();
-    if (iStep < RD.BUOC.indexOf("finish")) SK.camera(960, 540, 1, cu === "finish" ? 0.8 : 0);
+    $("#manBao").hidden = true;
     var sau = tinh();
-    SK.hienHuy(step !== "setup" && step !== "intro");
+    var datYen = function () {
+      SK.anDuoc(); SK.datSuong(1);
+      SK.datViTri(sau.map(function (r) { return r.viTri; }));
+      SK.datBang(sau, null);
+    };
     if (step === "setup" || step === "intro") {
-      SK.datViTri([0, 0, 0, 0]);
-      sau.forEach(function (r, i) { SK.chuHuy(i, 0, r.toiDa); });
+      datYen();
+      SK.hienBang(false, false);
       if (step === "intro") {
         var td = $("#tieuDe");
         td.hidden = false;
@@ -496,65 +501,65 @@
       return;
     }
     if (loai === "q" || loai === "a") {
+      datYen();
       veManCau(q, loai === "a", cu);
       return;
     }
     if (loai === "r") {
-      var pill = $("#pill");
-      pill.hidden = false;
-      pill.textContent = q === 5 ? "Câu 5/5 · nước rút" : "Câu " + q + "/5";
-      if (q === 5) {
-        var br = $("#bangRon");
-        br.hidden = false;
-        if (g) g.fromTo(br, { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(2)" });
-      }
+      cauSo("Câu " + q + " / 5");
+      SK.hienBang(true, cu === "a" + q);
       var phatLai = tvDaDien !== null && rev !== (tvDaDien["r" + q] | 0);
       if (tvDaDien) tvDaDien["r" + q] = rev;
       if (phatLai && rev > 0) {
+        if (q === 5) {
+          var br = $("#bangRon");
+          br.hidden = false;
+          if (g) g.fromTo(br, { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(2)" });
+        }
         var truoc = tinh(q);
-        tlRace = SK.congBo(q, truoc, sau, function () {
-          tlRace = null;
-          if (q === 5) $("#bangRon").hidden = true;
-          var ten = RD.xepHang(sau);
+        SK.congBo(q, truoc, sau, function () {
+          $("#bangRon").hidden = true;
           var tong = 0, dung = 0;
           sau.forEach(function (r) { if (r.cau[q]) { tong += r.cau[q].thay; dung += r.cau[q].dung; } });
-          if (tong && dung / tong >= 0.8) { SK.phaoGiay(null, null, 140); A.lapLanh(); SK.bayChu("Cả lớp tuyệt vời!", 960, 560, "but-pha", 1.8); }
+          if (tong && dung / tong >= 0.8) { SK.phaoGiay(null, null, 140); A.lapLanh(); SK.bayChu("Cả lớp tuyệt vời!", 860, 520, "but-pha", 1.8); }
           binhLuan(q, truoc, sau);
-          void ten;
         });
       } else {
-        SK.datViTri(sau.map(function (r) { return r.viTri; }));
-        sau.forEach(function (r, i) { SK.chuHuy(i, r.buoc, r.toiDa); });
+        datYen();
+        SK.datBang(sau, q);
         var bl = BL[ses() + ":" + q];
         if (bl) hienLoiBinh(bl.chu, bl.nhan);
       }
       return;
     }
     var hang = RD.xepHang(sau);
-    sau.forEach(function (r, i) { SK.chuHuy(i, r.buoc, r.toiDa); });
+    SK.hienBang(false, false);
     if (step === "finish") {
-      SK.vaoDich(hang.nhat, sau, cu !== "r5");
-      var dich = $("#dich"), tenNhat = hang.nhat.map(function (t) { return RD.TO[t].ten; });
-      var khac = [0, 1, 2, 3].filter(function (t) { return hang.nhat.indexOf(t) < 0; }).map(function (t) { return RD.TO[t].ten; });
-      $("#dichTen").textContent = tenNhat.length > 1 ? tenNhat.join(" và ") + " về đích bằng nhau!" : tenNhat[0] + " về đích xa nhất!";
-      $("#dichPhu").textContent = (tenNhat.length > 1 ? "Mời hai tổ trưởng cùng lên châm lửa" : "Mời tổ trưởng " + tenNhat[0] + " lên châm lửa") + (khac.length ? " · " + khac.join(", ") + " đứng làm đội danh dự" : "");
-      dich.hidden = false;
-      if (g && cu === "r5") { g.fromTo(dich, { y: -50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, delay: 1.6, ease: "back.out(1.6)" }); A.ken(); }
+      cauSo("Về đích");
+      var hc = cu === "r5";
+      SK.veDich(sau, hang, hc, function () {
+        var ten = hang.nhat.map(function (t) { return RD.TO[t].ten; });
+        $("#dichTen").textContent = ten.length > 1 ? ten.join(" và ") + " cùng về nhất!" : ten[0] + " về nhất!";
+        $("#dichPhu").textContent = RD.vietDiem(sau[hang.nhat[0]].tram) + " điểm · Chúc mừng " + (ten.length > 1 ? "các bạn" : ten[0]) + "!";
+        var dich = $("#dich"), nut = $("#nutThuHang");
+        dich.hidden = false; nut.hidden = false;
+        if (g && hc) {
+          g.fromTo(dich, { y: -50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.6)" });
+          g.fromTo(nut, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5, delay: 1.2, ease: "back.out(2)" });
+        } else if (g) g.set([dich, nut], { opacity: 1, y: 0, scale: 1 });
+      });
       return;
     }
-    if (step === "light") {
-      SK.vaoDich(hang.nhat, sau, true);
-      if (cu === "finish") {
-        SK.chamLua(hang.nhat, function () { goiY("Bấm tiếp để xem bức tranh"); });
-      } else { SK.thapSang(true); SK.camera(1073, 600, 1.35, 0); }
+    if (step === "rank") {
+      cauSo("Thứ hạng các tổ");
+      var hc2 = cu === "finish";
+      SK.thuHang(sau, hang, hc2, function () { $("#cauSo").hidden = true; veBao("rank", hc2); });
       return;
     }
-    // báo tường
-    SK.vaoDich(hang.nhat, sau, true);
-    SK.thapSang(true);
-    veBao(step, cu, hang);
+    // bao: hiện toàn bộ báo tường
+    SK.thuHang(sau, hang, false);
+    veBao("bao", cu === "rank");
   }
-  var tlRace = null;
   function goiY(chu) { var g = $("#goiY"); g.textContent = chu; g.hidden = false; }
 
   /* ---------- màn câu hỏi ---------- */
@@ -576,6 +581,16 @@
       }).join("");
       if (g) g.fromTo(".mc-the", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power2.out" });
       A.trong(0.7);
+      var nt = $("#mcNuocTo");
+      nt.hidden = q !== 5 || hien;
+      if (q === 5 && !hien) {
+        A.trongDon(0.9);
+        setTimeout(function () { A.ken(); }, 900);
+        if (g) {
+          g.fromTo(nt, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, delay: 0.3, ease: "back.out(2)" });
+          g.to(nt, { scale: 0.9, opacity: 0, duration: 0.5, delay: 3.2, ease: "power2.in", onComplete: function () { nt.hidden = true; } });
+        } else setTimeout(function () { nt.hidden = true; }, 3200);
+      }
     }
     $$(".mc-o", m).forEach(function (o) {
       var dung = o.dataset.l === c.dung;
@@ -626,79 +641,42 @@
   }
 
   /* ---------- màn báo tường ---------- */
-  function veBao(step, cu, hang) {
-    var g = G();
+  // rank: hiện báo tường, che dòng chữ trên dải băng (chỉ còn hình và số 51), nút "Hiện báo tường"
+  // bao: mở dải băng, pháo giấy, phóng to phần tiêu đề rồi thu về
+  function veBao(step, hoatCanh) {
+    var g = G(), mb = $("#manBao");
     var img = $("#mbAnh"), gia = $("#mbGia");
     if (RD.anhBao) { if (img.getAttribute("src") !== RD.anhBao) img.src = RD.anhBao; img.hidden = false; gia.hidden = true; }
     else { img.hidden = true; gia.hidden = false; }
-    var che = $("#mbChe"), che51 = $("#mbChe51"), chu = $("#mbCheChu"), khung = $("#mbKhung"), loi = $("#mbLoi");
-    var oo = $$(".mb-o");
-    if (g) { g.killTweensOf([che, che51, khung, loi].concat(oo)); }
-    var datMo = function (mo) {
-      che.hidden = mo; che51.hidden = mo;
-      che.classList.remove("nam");
-      chu.textContent = "LỚP 6/3 SẮP CHÀO ĐÓN NGÀY GÌ?";
-      if (g) g.set([che, che51], { opacity: 1, y: 0 });
-    };
-    var datO = function (hien) {
-      oo.forEach(function (o, k) {
-        var t = hang.thuTu[k], T = RD.TO[t];
-        o.style.setProperty("--m", T.mau);
-        o.style.setProperty("--d", T.dam);
-        o.querySelector("b").textContent = hang.hang[t];
-        o.querySelector("span").textContent = T.ten;
-        o.querySelector("small").textContent = hang.hang[t] === 1 ? "chọn mẫu thiệp và dán trước" : "";
-        o.querySelector("small").hidden = hang.hang[t] !== 1;
-        o.style.opacity = hien ? 1 : 0;
-      });
-      loi.hidden = true;
-    };
-    if (g) g.set(khung, { scale: 1, transformOrigin: "50% 50%" });
-    if (step === "bao") {
-      datMo(false); datO(false);
-      if (cu === "light" && g) {
+    var che = $("#mbChe"), khung = $("#mbKhung"), s51 = $("#mb51"), nut = $("#nutHienBao");
+    if (g) { g.killTweensOf([mb, che, khung, s51, nut]); g.set(khung, { scale: 1, opacity: 1, transformOrigin: "50% 50%" }); g.set(che, { opacity: 1, y: 0 }); g.set(mb, { opacity: 1 }); }
+    mb.hidden = false;
+    if (step === "rank") {
+      che.hidden = false; s51.hidden = false; nut.hidden = false;
+      if (hoatCanh && g) {
         var chop = $("#chop");
         g.fromTo(chop, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.in" });
         g.to(chop, { opacity: 0, duration: 1.1, delay: 0.6, ease: "power2.out" });
         g.fromTo(khung, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, delay: 0.5, ease: "power2.out" });
+        g.fromTo(nut, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5, delay: 2.2, ease: "back.out(2)" });
         A.vut();
-      } else if (g) g.set(khung, { opacity: 1 });
+      } else if (g) g.set(nut, { opacity: 1, scale: 1 });
       return;
     }
-    if (step === "baoName") {
-      datO(false);
-      if (cu === "bao" && g) {
-        datMo(false);
-        che.classList.add("nam");
-        var dem = { y: 1976 };
-        chu.textContent = "1976";
-        A.trongDon(2.4);
-        var tl = g.timeline();
-        tl.to(dem, { y: 2026, duration: 2.6, ease: "power1.inOut", onUpdate: function () { chu.textContent = String(Math.round(dem.y)); } });
-        tl.call(function () { A.trong(1); A.ken(); }, null, 2.65);
-        tl.to(che, { y: -30, opacity: 0, duration: 0.7, ease: "power2.in" }, 3.1);
-        tl.to(che51, { opacity: 0, scale: 1.4, duration: 0.7, ease: "power2.in" }, 3.1);
-        tl.call(function () {
-          che.hidden = true; che51.hidden = true;
-          SK.phaoGiay(null, null, 220, 0, true);
-          SK.lapLanh(960, 110, 40, true);
-          A.lapLanh();
-        }, null, 3.6);
-        tl.to(khung, { scale: 1.75, transformOrigin: "50% 7%", duration: 1.4, ease: "power2.inOut" }, 3.8);
-        tl.to(khung, { scale: 1, duration: 1.4, ease: "power2.inOut" }, 8.6);
-      } else datMo(true);
-      if (g) g.set(khung, { opacity: 1 });
-      return;
-    }
-    // baoSpots
-    datMo(true);
-    if (g) g.set(khung, { opacity: 1 });
-    datO(true);
-    if (cu === "baoName" && g) {
-      oo.forEach(function (o, k) {
-        g.fromTo(o, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.6, delay: 0.3 + k * 0.45, ease: "back.out(2)", onStart: function () { A.trong(0.6 + k * 0.1); } });
-      });
-    }
+    nut.hidden = true; s51.hidden = true;
+    if (hoatCanh && g) {
+      A.trongDon(1.2);
+      var tl = g.timeline();
+      tl.to(che, { y: -40, opacity: 0, duration: 0.8, ease: "power2.in" }, 1.2);
+      tl.call(function () {
+        che.hidden = true;
+        A.trong(1); A.ken(); A.lapLanh();
+        SK.phaoGiay(null, null, 240, 0, true);
+        SK.lapLanh(960, 110, 40, true);
+      }, null, 2.0);
+      tl.to(khung, { scale: 1.75, transformOrigin: "50% 7%", duration: 1.4, ease: "power2.inOut" }, 2.2);
+      tl.to(khung, { scale: 1, duration: 1.4, ease: "power2.inOut" }, 7.2);
+    } else che.hidden = true;
   }
 
   /* =====================================================================
@@ -777,16 +755,16 @@
     if (l === "q") return "Câu " + q + " · quét thẻ";
     if (l === "a") return "Câu " + q + " · đã hiện đáp án";
     if (l === "r") return "Câu " + q + " · đang công bố";
-    return { finish: "Về đích", light: "Châm lửa", bao: "Báo tường · hỏi ngày lễ", baoName: "Báo tường · đã mở tên ngày lễ", baoSpots: "Báo tường · 4 ô dán thiệp" }[step] || step;
+    return { finish: "Về đích · tổ nhất thắp đuốc", rank: "Thứ hạng · báo tường chỉ hiện hình và số 51", bao: "Báo tường đầy đủ" }[step] || step;
   }
   function nhanTiep(step) {
     var l = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
     if (step === "setup") return "Bắt đầu trò chơi";
     if (step === "intro") return "Hiện câu 1";
     if (l === "q") return "Hiện đáp án";
-    if (l === "a") return q === 5 ? "Công bố nước rút" : "Công bố câu " + q;
+    if (l === "a") return q === 5 ? "Công bố câu nước rút" : "Công bố câu " + q;
     if (l === "r") return q < 5 ? "Hiện câu " + (q + 1) : "Về đích";
-    return { finish: "Châm lửa", light: "Xem bức tranh", bao: "Mở tên ngày lễ", baoName: "Hiện 4 ô trống" }[step] || "Đã xong phần khởi động";
+    return { finish: "Thứ hạng các tổ", rank: "Hiện báo tường" }[step] || "Đã xong phần khởi động";
   }
   function veDT() {
     var now = nowHopLe(), step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -797,14 +775,14 @@
     chip.title = NOI.chu;
     var t = $("#dtTiep");
     t.textContent = nhanTiep(step);
-    t.disabled = step === "baoSpots";
+    t.disabled = step === "bao";
     $("#dtLui").disabled = step === "setup";
     // câu hỏi
     $("#dtCau").hidden = !q;
     if (q) {
       var c = RD.CAU[q - 1];
       $("#dtCau").style.setProperty("--ac", c.mau);
-      $("#dtCauSo").textContent = "Câu " + q + "/5" + (q === 5 ? " · nước rút" : "");
+      $("#dtCauSo").textContent = "Câu " + q + "/5" + (q === 5 ? " · nước rút, gấp đôi điểm" : "");
       $("#dtDapAn").textContent = "Đáp án đúng: " + c.dung;
       $("#dtCauHoi").textContent = c.hoi;
     }
@@ -820,15 +798,13 @@
     if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Kiểm tra sĩ số, danh sách 4 tổ, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
     else if (step === "intro") html = "TV đang hiện luật chơi. Đọc cho cả lớp nghe rồi bấm <b>Hiện câu 1</b>.";
     else if (loai === "q") html = Q.coCamera() ? "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Bấm <b>Bật camera quét liên tục</b>, đưa điện thoại lia chậm qua từng cụm tổ cho đến khi tổ báo đủ." : "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Đứng gần từng cụm tổ, bấm <b>Chụp ảnh một tổ</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ.";
-    else if (loai === "a") html = "Mời vài bạn giải thích cách làm. Thẻ nào chưa đọc được thì chạm số thẻ để ghi Đúng, Sai hoặc Vắng. Xong bấm <b>Công bố</b>.";
+    else if (loai === "a") html = "Mời vài bạn giải thích cách làm. Thẻ nào chưa đọc được thì chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Công bố</b>.";
     else if (loai === "r") html = "TV đang đánh trống công bố. Chờ lời bình hiện xong rồi bấm tiếp.";
-    else if (step === "finish") html = "Mời tổ trưởng tổ về đích lên bấm nút <b>Châm lửa</b> trên TV (hoặc bấm nút dưới đây). Cả lớp cùng đếm 3, 2, 1.";
-    else if (step === "light") html = "Lửa đã cháy. Bấm <b>Xem bức tranh</b> để hiện báo tường.";
-    else if (step === "bao") html = "Hỏi cả lớp: <b>Lớp 6/3 sắp chào đón ngày gì?</b> Mời tổ châm lửa trả lời trước, rồi bấm <b>Mở tên ngày lễ</b>.";
-    else if (step === "baoName") html = "Bấm <b>Hiện 4 ô trống</b> để giao chỗ dán thiệp theo thứ tự về đích.";
-    else if (step === "baoSpots") {
+    else if (step === "finish") html = "Sương đã tan, tổ về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng tổ, rồi bấm <b>Thứ hạng các tổ</b> để 3 tổ còn lại lần lượt thắp đuốc.";
+    else if (step === "rank") html = "Bốn ngọn đuốc cùng sáng, báo tường hiện hình và số 51. Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Hiện báo tường</b>.";
+    else if (step === "bao") {
       var hang = RD.xepHang(tinh());
-      html = "Xong phần khởi động. Thứ tự chọn mẫu thiệp và dán: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ".";
+      html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ".";
     }
     $("#dtGhi").hidden = !html;
     if (ghi.dataset.html !== html) { ghi.innerHTML = html; ghi.dataset.html = html; }

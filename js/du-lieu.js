@@ -7,12 +7,13 @@
   RD.MAXID = 60;          // bộ mã thẻ có 60 số
   RD.SO_THE = 46;         // thẻ in sẵn: 1–45 và thẻ dự phòng 46
 
-  // 4 tổ: màu lấy theo dải băng chéo của 4 bạn cầm đuốc
+  // 4 tổ (thiết kế 3/11/2026): bạn cầm đuốc vẽ kiểu Ghibli, mặt tự vẽ, đồng phục theo ảnh của trường.
+  // anh: 520 px cao; lua: tâm ngọn lửa trên ảnh; kieu: cách di chuyển (đi, lướt, tốc biến, nhảy), mọi kiểu mất cùng thời gian
   RD.TO = [
-    { n: 1, ten: "Tổ 1", mau: "#2f6fd6", nhat: "#dfe9fb", dam: "#1b4a97", anh: "anh/to-1.webp", w: 311, h: 640, dau: [278, 44], quay: 1 },
-    { n: 2, ten: "Tổ 2", mau: "#2f9a58", nhat: "#ddf2e4", dam: "#1d6a3b", anh: "anh/to-2.webp", w: 366, h: 640, dau: [319, 40], quay: 1 },
-    { n: 3, ten: "Tổ 3", mau: "#e9861c", nhat: "#fdead3", dam: "#a9590a", anh: "anh/to-3.webp", w: 331, h: 640, dau: [30, 39], quay: -1 },
-    { n: 4, ten: "Tổ 4", mau: "#8b52cc", nhat: "#eee2f9", dam: "#5b2f93", anh: "anh/to-4.webp", w: 330, h: 640, dau: [302, 44], quay: 1 }
+    { n: 1, ten: "Tổ 1", mau: "#2f6fd6", nhat: "#dfe9fb", dam: "#1b4a97", anh: "anh/to-1.webp", mat: "anh/mat-1.webp", w: 280, h: 520, lua: [255, 42], kieu: "di", mo: "bạn nam áo vàng" },
+    { n: 2, ten: "Tổ 2", mau: "#2f9a58", nhat: "#ddf2e4", dam: "#1d6a3b", anh: "anh/to-2.webp", mat: "anh/mat-2.webp", w: 349, h: 520, lua: [324, 40], kieu: "luot", mo: "bạn nữ áo vàng" },
+    { n: 3, ten: "Tổ 3", mau: "#e9861c", nhat: "#fdead3", dam: "#a9590a", anh: "anh/to-3.webp", mat: "anh/mat-3.webp", w: 363, h: 520, lua: [340, 50], kieu: "bien", mo: "bạn nam áo thể dục" },
+    { n: 4, ten: "Tổ 4", mau: "#8b52cc", nhat: "#eee2f9", dam: "#5b2f93", anh: "anh/to-4.webp", mat: "anh/mat-4.webp", w: 342, h: 520, lua: [320, 44], kieu: "nhay", mo: "bạn nữ áo thể dục" }
   ];
 
   // 5 câu (bản cuối 1/11/2026). Màn hình không ghi "chu vi", "diện tích", không hiện lời giải.
@@ -48,13 +49,14 @@
       chon: ["12 mét vuông", "24 mét vuông", "6 mét vuông", "8 mét vuông"]
     }
   ];
-  RD.HE_SO = [1, 1, 1, 1, 2];   // câu 5 = chặng nước rút, mỗi bạn đúng 2 bước
-  RD.TONG_HE_SO = 6;
+  RD.DIEM_CAU = [1, 1, 1, 1, 2];   // điểm tối đa mỗi câu: câu 5 là câu nước rút, gấp đôi điểm
+  RD.TONG_DIEM = 6;
 
   // các bước của buổi chơi, theo đúng thứ tự bấm "tiếp"
   RD.BUOC = ["setup", "intro"];
   for (var q = 1; q <= 5; q++) RD.BUOC.push("q" + q, "a" + q, "r" + q);
-  RD.BUOC.push("finish", "light", "bao", "baoName", "baoSpots");
+  // finish: sương tan, tổ nhất thắp đuốc · rank: 3 tổ còn lại thắp đuốc, báo tường hiện hình và số 51 · bao: hiện toàn bộ báo tường
+  RD.BUOC.push("finish", "rank", "bao");
   RD.cauCuaBuoc = function (b) { var m = /^[qar]([1-5])$/.exec(b || ""); return m ? +m[1] : 0; };
   RD.loaiBuoc = function (b) { return /^[qar][1-5]$/.test(b || "") ? b[0] : b; };
 
@@ -129,34 +131,38 @@
       return r;
     });
   };
-  // vị trí 0..1 trên đường dài bằng nhau = số bước / số bước tối đa.
-  // Tối đa = số bạn có mặt × 6; ở câu đã công bố, thẻ chưa đọc được (hoặc ghi "vắng ở câu này")
-  // không tính đúng cũng không tính sai và được bớt khỏi tối đa, nên nhãn "bước / tối đa" luôn khớp vị trí.
+  // Điểm câu = điểm tối đa × số bạn đúng ÷ số thẻ đọc được của tổ (thẻ chưa đọc được hoặc ghi "vắng ở câu này"
+  // không tính đúng cũng không tính sai), làm tròn 2 chữ số; tính bằng phần trăm điểm (số nguyên) để cộng không lệch.
+  // Tổng = cộng các điểm câu đã làm tròn (đúng bằng số hiện trên TV); vị trí trên đường = tổng ÷ 6.
   RD.tinhDiem = function (cfg, scans, cauTinh) {
     var lop = RD.lop(cfg);
-    var res = lop.to.map(function () { return { buoc: 0, toiDa: 0, viTri: 0, cau: [] }; });
+    var res = lop.to.map(function () { return { tram: 0, diem: 0, viTri: 0, cau: [] }; });
     for (var q = 1; q <= 5; q++) {
-      var w = RD.HE_SO[q - 1];
-      if (!cauTinh[q]) { res.forEach(function (r, t) { r.toiDa += lop.to[t].coMat.length * w; }); continue; }
+      if (!cauTinh[q]) continue;
+      var max = RD.DIEM_CAU[q - 1];
       RD.ketQuaCau(q, lop, scans[q]).forEach(function (r, t) {
-        res[t].buoc += r.dung * w;
-        res[t].toiDa += r.thay * w;
-        res[t].cau[q] = { dung: r.dung, thay: r.thay, buoc: r.dung * w, tron: r.thay > 0 && r.dung === r.thay };
+        var tram = r.thay ? Math.round(100 * max * r.dung / r.thay) : 0;
+        res[t].tram += tram;
+        res[t].cau[q] = { dung: r.dung, thay: r.thay, tram: tram, tron: r.thay > 0 && r.dung === r.thay };
       });
     }
-    res.forEach(function (r) { r.viTri = r.toiDa ? Math.min(1, r.buoc / r.toiDa) : 0; });
+    res.forEach(function (r) { r.diem = r.tram / 100; r.viTri = Math.min(1, r.tram / (100 * RD.TONG_DIEM)); });
     return res;
   };
-  // thứ hạng: tổ đi xa hơn đứng trước; bằng nhau thì cùng hạng
+  // 91 -> "0,91"
+  RD.vietDiem = function (tram) { return ((tram | 0) / 100).toFixed(2).replace(".", ","); };
+  // thứ hạng: tổ nhiều điểm hơn đứng trước; bằng điểm thì cùng hạng (và cùng thắp đuốc)
   RD.xepHang = function (res) {
-    var idx = [0, 1, 2, 3].sort(function (a, b) { return res[b].viTri - res[a].viTri || a - b; });
+    var idx = [0, 1, 2, 3].sort(function (a, b) { return res[b].tram - res[a].tram || a - b; });
     var hang = [], prev = null, h = 0;
     idx.forEach(function (t, i) {
-      if (prev === null || Math.abs(res[t].viTri - res[prev].viTri) > 1e-9) h = i + 1;
+      if (prev === null || res[t].tram !== res[prev].tram) h = i + 1;
       hang[t] = h;
       prev = t;
     });
-    return { thuTu: idx, hang: hang, nhat: idx.filter(function (t) { return hang[t] === 1; }) };
+    var nhom = [];
+    idx.forEach(function (t) { var g = nhom[nhom.length - 1]; if (g && hang[g[0]] === hang[t]) g.push(t); else nhom.push([t]); });
+    return { thuTu: idx, hang: hang, nhat: idx.filter(function (t) { return hang[t] === 1; }), nhom: nhom };
   };
 
   /* ---------- lời bình viết sẵn (dùng khi không có Claude) ---------- */
@@ -167,40 +173,39 @@
   }
   RD.loiBinhMau = function (q, truoc, sau, seed) {
     var ten = function (t) { return RD.TO[t].ten; };
+    var d = RD.vietDiem;
     var hangSau = RD.xepHang(sau), hangTruoc = RD.xepHang(truoc);
     var dau = hangSau.thuTu[0], nhi = hangSau.thuTu[1], cuoi = hangSau.thuTu[3];
     var tron = [0, 1, 2, 3].filter(function (t) { return sau[t].cau[q] && sau[t].cau[q].tron; });
-    var gain = function (t) { return sau[t].cau[q] ? sau[t].cau[q].buoc : 0; };
     var doiDau = hangTruoc.nhat.indexOf(dau) < 0 && hangSau.nhat.length === 1 && q > 1;
-    var sat = sau[dau].viTri - sau[nhi].viTri < 0.03;
+    var cach = sau[dau].tram - sau[nhi].tram, sat = cach > 0 && cach <= 15;
     var s = seed | 0, lines = [];
     if (q === 5) {
-      lines.push(chon([
-        "Chặng nước rút khép lại! " + ten(dau) + " đã đi xa nhất trên đường về trường.",
-        "Về đích rồi! " + ten(dau) + " dẫn đầu, cả 4 tổ đã cùng rước đuốc về tới sân trường.",
-        "Bước chân cuối cùng đã xong, " + ten(dau) + " là tổ đi xa nhất hôm nay!"
-      ], s));
-      if (hangSau.nhat.length > 1) lines = ["Không thể tin nổi: " + noi(hangSau.nhat.map(ten)) + " về đích bằng nhau, cùng nhau châm lửa!"];
-      return lines[0];
+      if (hangSau.nhat.length > 1) return "Không thể tin nổi: " + noi(hangSau.nhat.map(ten)) + " bằng điểm nhau, cùng về nhất và cùng thắp đuốc!";
+      return chon([
+        "Câu nước rút khép lại! " + ten(dau) + " về nhất với " + d(sau[dau].tram) + " điểm, ngọn đuốc đầu tiên đang chờ!",
+        "Về đích rồi! " + ten(dau) + " dẫn đầu với " + d(sau[dau].tram) + " điểm, cả 4 tổ đã rước đuốc về tới trường.",
+        "Bước chân cuối cùng đã xong, " + ten(dau) + " về nhất với " + d(sau[dau].tram) + " điểm!"
+      ], s);
     }
     if (tron.length) {
       var t0 = tron[0];
       lines.push(chon([
-        noi(tron.map(ten)) + " bứt phá: cả tổ đều đúng, tiến liền " + gain(t0) + " bước!",
+        noi(tron.map(ten)) + " bứt phá: cả tổ đều đúng, cộng trọn " + d(sau[t0].cau[q].tram) + " điểm!",
         "Tuyệt vời " + noi(tron.map(ten)) + ", không bỏ sót bạn nào, ngọn đuốc lao vút lên phía trước!",
         "Cả " + noi(tron.map(ten)) + " cùng đúng hết, bước chân thật đều và chắc!"
       ], s));
     }
     if (doiDau) lines.push(chon([
-      ten(dau) + " vượt lên dẫn đầu! Cuộc đua đang nóng dần lên.",
+      ten(dau) + " vượt lên dẫn đầu với " + d(sau[dau].tram) + " điểm! Cuộc đua đang nóng dần lên.",
       "Đổi ngôi rồi! " + ten(dau) + " đang cầm đuốc đi trước cả đoàn."
     ], s + 1));
     if (sat) lines.push(chon([
-      ten(dau) + " và " + ten(nhi) + " đang sát nút, chỉ cách nhau vài bước chân!",
-      "Khoảng cách giữa " + ten(dau) + " và " + ten(nhi) + " rất mỏng, câu sau sẽ quyết định nhiều!"
+      ten(dau) + " và " + ten(nhi) + " đang sát nút, chỉ cách nhau " + d(cach) + " điểm!",
+      "Khoảng cách giữa " + ten(dau) + " và " + ten(nhi) + " chỉ " + d(cach) + " điểm, câu sau sẽ quyết định nhiều!"
     ], s + 2));
     if (!lines.length) lines.push(chon([
-      "Cả 4 tổ cùng tiến lên, " + ten(dau) + " đang đi trước một chút.",
+      "Cả 4 tổ cùng tiến lên, " + ten(dau) + " đang đi trước một chút với " + d(sau[dau].tram) + " điểm.",
       ten(dau) + " giữ nhịp tốt, các tổ còn lại vẫn bám theo rất sát.",
       "Bốn ngọn đuốc cùng tiến về trường, " + ten(dau) + " tạm dẫn đầu sau câu " + q + "."
     ], s + 3));
@@ -208,7 +213,7 @@
       " " + ten(cuoi) + " cố lên, còn nhiều câu phía trước!",
       " " + ten(cuoi) + " vẫn còn đủ thời gian để bứt lên!",
       ""
-    ], s + 4) : (q === 4 ? " Câu 5 là chặng nước rút, mỗi bạn đúng được 2 bước!" : "");
+    ], s + 4) : (q === 4 ? " Câu 5 là câu nước rút, gấp đôi điểm!" : "");
     return lines[0] + (lines[0].length < 70 ? dongVien : "");
   };
 })();
