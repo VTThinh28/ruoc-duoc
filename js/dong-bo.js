@@ -1,4 +1,4 @@
-/* Rước đuốc về trường: nối điện thoại với màn hình TV.
+/* Rước đuốc: nối điện thoại với màn hình TV.
    Trong Claude: kho dữ liệu của trang (db). Trên GitHub: Firebase Realtime Database.
    Chưa có gì: chỉ nối các thẻ (tab) mở trên cùng một máy. */
 (function () {

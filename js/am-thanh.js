@@ -1,4 +1,4 @@
-/* Rước đuốc về trường: âm thanh tự tạo bằng Web Audio (trống, tiếng lửa, kèn), không cần file nhạc */
+/* Rước đuốc: tiếng động tự tạo bằng Web Audio (trống, tiếng lửa, kèn) và nhạc nền "Fireflies over the Festival" (bản Suno của thầy Thịnh), lặp liền mạch */
 (function () {
   "use strict";
   var RD = window.RD = window.RD || {};
@@ -21,7 +21,46 @@
       nhieu = b;
     }
     if (ac.state === "suspended") ac.resume();
+    giaiMaNhac();
   };
+
+  /* ---------- nhạc nền ---------- */
+  // muc: độ to mong muốn (0..1) theo bước chơi; batNhac: nút tắt/bật nhạc (điện thoại hoặc TV)
+  var NH = { url: "nhac/nhac-nen.ogg", tai: null, buf: null, src: null, g: null, muc: 0, batNhac: true, dangGiai: false };
+  A.taiNhac = function (url) {
+    if (url) NH.url = url;
+    if (NH.tai) return;
+    NH.tai = fetch(NH.url).then(function (r) { if (!r.ok) throw new Error("nhac " + r.status); return r.arrayBuffer(); })
+      .then(function (ab) { NH.ab = ab; giaiMaNhac(); })
+      .catch(function () { NH.tai = null; });
+  };
+  function giaiMaNhac() {
+    if (!ac || !NH.ab || NH.buf || NH.dangGiai) return;
+    NH.dangGiai = true;
+    var ab = NH.ab;
+    var xong = function (b) { NH.buf = b; NH.ab = null; NH.dangGiai = false; capNhatNhac(1.2); };
+    var p = ac.decodeAudioData(ab, xong, function () { NH.dangGiai = false; });
+    if (p && p.then) p.catch(function () { NH.dangGiai = false; });
+  }
+  function capNhatNhac(giay) {
+    if (!ac || !NH.buf) return;
+    var dich = NH.batNhac ? NH.muc : 0;
+    if (!NH.src && dich > 0) {
+      NH.g = ac.createGain();
+      NH.g.gain.value = 0.0001;
+      NH.g.connect(tong);
+      NH.src = ac.createBufferSource();
+      NH.src.buffer = NH.buf;
+      NH.src.loop = true;
+      NH.src.connect(NH.g);
+      NH.src.start();
+    }
+    if (NH.g) NH.g.gain.setTargetAtTime(Math.max(0.0001, dich), ac.currentTime, (giay || 0.8) / 3);
+  }
+  // độ to nhạc: 0 tắt, 0.32 bình thường, 0.12 khi học sinh nêu cách làm
+  A.nhacMuc = function (muc, giay) { NH.muc = muc; capNhatNhac(giay); };
+  A.batNhac = function (on) { NH.batNhac = !!on; capNhatNhac(0.6); };
+  A.nhacDangBat = function () { return NH.batNhac; };
   A.datBat = function (on) {
     A.bat = !!on;
     try { localStorage.setItem("rd-am", on ? "1" : "0"); } catch (e) { /* bỏ qua */ }
@@ -114,6 +153,17 @@
         ra(f, i === 3 ? 0.16 : 0.12, t + n[1], i === 3 ? 1.4 : 0.32);
         o.start(t + n[1]); o.stop(t + n[1] + 1.5);
       });
+    });
+  };
+  // "ting" khi quét xong
+  A.ting = function () {
+    if (!san()) return;
+    var t = ac.currentTime;
+    [[1318.5, 0], [1975.5, 0.11]].forEach(function (n) {
+      var o = ac.createOscillator();
+      o.type = "sine"; o.frequency.value = n[0];
+      ra(o, 0.22, t + n[1], 0.7);
+      o.start(t + n[1]); o.stop(t + n[1] + 0.75);
     });
   };
   A.lapLanh = function () {

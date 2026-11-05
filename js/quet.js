@@ -1,4 +1,4 @@
-/* Rước đuốc về trường: đọc thẻ trả lời.
+/* Rước đuốc: đọc thẻ trả lời.
    - Chụp ảnh (chạy được cả trong Claude): mỗi lần bấm một tấm, đọc ngay trên điện thoại.
    - Quét liên tục bằng camera (chỉ trên trang web thường như GitHub Pages): như Plickers.
    Ảnh và hình camera không gửi đi đâu, chỉ số thẻ và chữ cái được gửi lên màn hình. */
