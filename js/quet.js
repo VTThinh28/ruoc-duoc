@@ -152,7 +152,13 @@
   /* ---------- quét liên tục bằng camera ---------- */
   var L = Q.Live = {
     chay: false, ban: false, maxW: 1600, stream: null, track: null, video: null, phu: null,
-    cv: null, ctx: null, the: [], fw: 0, fh: 0, sc: 1, raf: 0, nhan: null, onKq: null, tg: [], moTa: ""
+    cv: null, ctx: null, the: [], fw: 0, fh: 0, sc: 1, raf: 0, nhan: null, onKq: null, tg: [], moTa: "", soZoom: 1
+  };
+  // thu phóng bằng phần mềm (cho máy không chỉnh được zoom camera): video phóng to quanh tâm,
+  // bộ đọc chỉ đọc đúng phần giữa đang thấy trên màn hình
+  L.zoomSo = function (z) {
+    L.soZoom = Math.max(1, Math.min(4, +z || 1));
+    if (L.video) L.video.style.transform = L.soZoom > 1 ? "scale(" + L.soZoom + ")" : "";
   };
   Q.coCamera = function () {
     return !RD.trongClaude && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false;
@@ -186,11 +192,13 @@
     L.raf = requestAnimationFrame(vong);
   }
   function chup() {
-    var v = L.video, vw = v.videoWidth, vh = v.videoHeight;
-    var sc = Math.min(1, L.maxW / Math.max(vw, vh));
-    var w = Math.round(vw * sc), h = Math.round(vh * sc);
+    var v = L.video, vw = v.videoWidth, vh = v.videoHeight, z = L.soZoom || 1;
+    var sw = vw / z, sh = vh / z;
+    // có thu phóng thì phần cắt được kéo to tới gấp đôi, để thẻ ở xa đủ lớn cho bộ đọc
+    var sc = Math.min(z > 1 ? 2 : 1, L.maxW / Math.max(sw, sh));
+    var w = Math.round(sw * sc), h = Math.round(sh * sc);
     if (L.cv.width !== w || L.cv.height !== h) { L.cv.width = w; L.cv.height = h; }
-    L.ctx.drawImage(v, 0, 0, w, h);
+    L.ctx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, w, h);
     var im = L.ctx.getImageData(0, 0, w, h), t0 = performance.now();
     L.ban = true;
     Q.quetAnh(im).then(function (cards) {
@@ -248,6 +256,7 @@
     cancelAnimationFrame(L.raf);
     if (L.stream) L.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) { /* bỏ qua */ } });
     L.stream = null; L.track = null; L.the = []; L.fw = 0;
+    L.zoomSo(1);
     if (L.video) { try { L.video.srcObject = null; } catch (e) { /* bỏ qua */ } }
     if (L.phu) { var x = L.phu.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, L.phu.width, L.phu.height); }
   };

@@ -187,7 +187,23 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 #dtCauHoi{margin:8px 0 0;font-size:15px;color:var(--muc2);line-height:1.45}
 .dt-cam{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;max-width:100%}
 .dt-cam video,.dt-cam canvas{position:absolute;inset:0;width:100%;height:100%}
-.dt-cam video{object-fit:cover}
+.dt-cam video{object-fit:cover;transform-origin:50% 50%}
+/* 5/11: bật camera là khung quét phủ kín màn hình, phía trên thanh nút dưới (vị trí, cỡ do vuaKhungCam tính);
+   ảnh chụp chạm vào cũng phóng to toàn màn hình */
+.dt-man-den{position:fixed;inset:0;background:#000;z-index:9}
+.dt-cam.lon{position:fixed;z-index:9;border-radius:0;max-width:none;margin:0}
+.dt-anh.lon{position:fixed;left:0;right:0;top:0;bottom:var(--dt-chan-h,80px);z-index:9;border-radius:0;display:grid;place-items:center;background:#000}
+.dt-anh.lon canvas{width:auto;height:auto;max-width:100%;max-height:100%}
+.dt-anh{cursor:zoom-in}.dt-anh.lon{cursor:zoom-out}
+.dt-anh::after{content:"Chạm ảnh để phóng to";position:absolute;right:8px;bottom:8px;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:12px;pointer-events:none}
+.dt-anh.lon::after{content:"Chạm để thu nhỏ";bottom:12px}
+html.dt-khoa,html.dt-khoa body{overflow:hidden}
+.dt-cam-dem{position:absolute;left:8px;right:8px;top:46px;display:none;flex-wrap:wrap;gap:6px;pointer-events:none}
+.dt-cam.lon .dt-cam-dem{display:flex}
+.dt-cam-dem span{padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-weight:800;font-size:14px;box-shadow:inset 0 0 0 2px var(--m)}
+.dt-cam-dem span.du{background:var(--d);box-shadow:inset 0 0 0 2px #fff}
+.dt-zoom b{min-width:36px;text-align:right}
+.dt-cam.lon .dt-zoom{bottom:14px}
 .dt-cam-tren{position:absolute;left:8px;right:8px;top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none}
 .dt-cam-tren>*{pointer-events:auto}
 .dt-rec{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-weight:700;font-size:13px}
@@ -196,7 +212,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .dt-cam-nut{display:flex;gap:6px}
 .dt-cam-nut button{border:0;border-radius:999px;padding:6px 12px;background:rgba(0,0,0,.55);color:#fff;font-weight:700;font-size:13px}
 .dt-cam-nut button[aria-pressed=true]{background:#ffd54a;color:#000}
-.dt-zoom{position:absolute;left:12px;right:12px;bottom:10px;display:flex;align-items:center;gap:8px;color:#fff;font-size:13px;font-weight:700}
+.dt-zoom{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:13px;font-weight:700}
 .dt-zoom input{flex:1}
 .dt-xoay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.6);color:#fff;font-weight:800;font-size:18px;text-align:center;padding:20px}
 .dt-anh{position:relative;border-radius:14px;overflow:hidden;background:#1d1610}
@@ -320,11 +336,13 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <p id="dtCauHoi"></p>
   </section>
   <section id="dtQuet" class="dt-the" hidden>
+    <div class="dt-man-den" id="dtManDen" hidden></div>
     <div class="dt-cam" id="dtCam" hidden>
       <video id="dtVideo" playsinline muted></video>
       <canvas id="dtPhu"></canvas>
-      <div class="dt-cam-tren"><span class="dt-rec" id="dtRec">Đang quét</span><div class="dt-cam-nut"><button type="button" id="dtDen" aria-pressed="false" hidden>Đèn</button></div></div>
-      <label class="dt-zoom" id="dtZoomKhung" hidden>Phóng to <input type="range" id="dtZoom" min="1" max="4" step="0.1" value="1"></label>
+      <div class="dt-cam-tren"><span class="dt-rec" id="dtRec">Đang quét</span><div class="dt-cam-nut"><button type="button" id="dtDen" aria-pressed="false" hidden>Đèn</button><button type="button" id="dtLon">Thu nhỏ</button></div></div>
+      <div class="dt-cam-dem" id="dtCamDem"></div>
+      <label class="dt-zoom" id="dtZoomKhung" hidden>Thu phóng <input type="range" id="dtZoom" min="1" max="3" step="0.1" value="1"><b id="dtZoomSo">1×</b></label>
       <div class="dt-xoay" id="dtXoayMay" hidden>Cầm điện thoại thẳng đứng để đọc đúng chữ trên thẻ</div>
     </div>
     <div class="dt-anh" id="dtAnhKhung" hidden><canvas id="dtAnh"></canvas></div>
@@ -351,14 +369,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=05721dea"></script>
-<script src="js/scanlib.js?v=05721dea"></script>
-<script src="js/du-lieu.js?v=05721dea"></script>
-<script src="js/dong-bo.js?v=05721dea"></script>
-<script src="js/am-thanh.js?v=05721dea"></script>
-<script src="js/quet.js?v=05721dea"></script>
-<script src="js/cay-cau.js?v=05721dea"></script>
-<script src="js/san-khau.js?v=05721dea"></script>
-<script src="js/tro-choi.js?v=05721dea"></script>
+<script src="js/cau-hinh.js?v=33b708c0"></script>
+<script src="js/scanlib.js?v=33b708c0"></script>
+<script src="js/du-lieu.js?v=33b708c0"></script>
+<script src="js/dong-bo.js?v=33b708c0"></script>
+<script src="js/am-thanh.js?v=33b708c0"></script>
+<script src="js/quet.js?v=33b708c0"></script>
+<script src="js/cay-cau.js?v=33b708c0"></script>
+<script src="js/san-khau.js?v=33b708c0"></script>
+<script src="js/tro-choi.js?v=33b708c0"></script>
 </body>
 </html>

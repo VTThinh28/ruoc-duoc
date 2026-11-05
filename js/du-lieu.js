@@ -188,37 +188,41 @@
     if (names.length <= 1) return names.join("");
     return names.slice(0, -1).join(", ") + " và " + names[names.length - 1];
   }
-  // Lời bình ngắn gọn theo mẫu của thầy Thịnh (4/11, 13:08):
-  //   "Ở câu 2, Tổ 2 có nhiều bạn đúng nhất. Nhưng tổng điểm thì Tổ 1 đang dẫn đầu. Tổ 2, 3, 4 cố lên nào!"
-  //   cùng một tổ: "Ở câu 1, Tổ 1 có nhiều bạn đúng nhất. Xin chúc mừng! Tổ 2, 3, 4 cố lên nào!"
-  //   câu 5 (hết trò chơi): "... Nhưng tổng điểm thì Tổ 2 về nhất. Chúc mừng Tổ 2!"
-  // Tổ được nêu là tổ nhận miếng sáng (điểm câu cao nhất). Các tổ có số bạn khác nhau, nên nếu tổ đó không phải tổ
-  // có nhiều bạn đúng nhất tính theo số người thì ghi "có tỉ lệ bạn đúng cao nhất" cho đúng sự thật.
-  function dsTo(ds) {      // [0,2,3] -> "Tổ 1, 3, 4"; [1] -> "Tổ 2"
-    var so = ds.slice().sort().map(function (t) { return RD.TO[t].n; });
-    return "Nhóm " + so.join(", ");      // 5/11 Thịnh: "Tổ đổi thành nhóm"
+  // Lời bình theo mẫu mới của thầy Thịnh (5/11, 16:10; thầy viết "Tổ", trang ghi "Nhóm" như thầy đã dặn trước đó):
+  //   "Ở câu hỏi này, Nhóm 1 và 2 có số bạn trả lời đúng nhiều nhất nhưng tổng điểm vẫn thua Nhóm 3. Cố lên nào!"
+  // Các trường hợp khác viết tương tự:
+  //   nhóm đúng nhiều nhất cũng đang dẫn đầu: "Ở câu hỏi này, Nhóm 2 có số bạn trả lời đúng nhiều nhất và đang dẫn đầu
+  //     tổng điểm. Các nhóm khác cố lên nào!"
+  //   chỉ trùng một phần: "Ở câu hỏi này, Nhóm 1 và 2 có số bạn trả lời đúng nhiều nhất, còn tổng điểm thì Nhóm 2 đang
+  //     dẫn đầu. Các nhóm khác cố lên nào!"
+  //   câu 5 (hết trò chơi): "... nhưng tổng điểm vẫn thua Nhóm 3. Chúc mừng Nhóm 3 về nhất!" hoặc "... và về nhất chung
+  //     cuộc. Chúc mừng Nhóm 2!"
+  // Nhóm được nêu là nhóm nhận miếng vàng (điểm câu cao nhất). Các nhóm có số bạn khác nhau (11 hoặc 12), nên nếu nhóm đó
+  // không có nhiều bạn đúng nhất tính theo số người thì ghi "có tỉ lệ bạn trả lời đúng cao nhất" cho đúng sự thật.
+  function dsTo(ds) {      // [1] -> "Nhóm 2"; [0,1] -> "Nhóm 1 và 2"; [0,2,3] -> "Nhóm 1, 3 và 4"; đủ 4 -> "cả bốn nhóm"
+    if (ds.length === 4) return "cả bốn nhóm";
+    var so = ds.slice().sort().map(function (t) { return String(RD.TO[t].n); });
+    return "Nhóm " + noi(so);
   }
-  // trả về cả các phần của lời bình để Claude viết lại đúng khuôn: dau (vế mở đầu), cuoi (câu kết), danChu (nhóm dẫn đầu)
+  // trả về cả các phần của lời bình để Claude giữ đúng lời thầy: dau (câu đầu), cuoi (câu kết), danChu (nhóm dẫn đầu)
   RD.loiBinhPhan = function (q, truoc, sau) {
     var vang = RD.toVang(sau, q);
-    var dau = RD.xepHang(sau).nhat;
-    if (!vang.length) return { chu: "Ở câu " + q + ", chưa có thẻ nào được quét.", dau: "", cuoi: "", danChu: "" };
+    var dan = RD.xepHang(sau).nhat;
+    if (!vang.length) return { chu: "Ở câu hỏi này, chưa có thẻ nào được quét.", dau: "", cuoi: "", danChu: "" };
     var maxDung = Math.max.apply(null, [0, 1, 2, 3].map(function (t) { return (sau[t].cau[q] && sau[t].cau[q].dung) || 0; }));
     var nhieuNhat = vang.every(function (t) { return sau[t].cau[q].dung === maxDung; });
-    var cau1 = "Ở câu " + q + ", " + dsTo(vang) + (nhieuNhat ? " có nhiều bạn đúng nhất" : " có tỉ lệ bạn đúng cao nhất");
-    var cungTo = dau.length === vang.length && dau.every(function (t) { return vang.indexOf(t) >= 0; });
-    var conLai = [0, 1, 2, 3].filter(function (t) { return dau.indexOf(t) < 0; });
-    var cung = dau.length > 1 ? " cùng" : "";
-    var giua, cuoi;
-    if (q === 5) {
-      giua = cungTo ? " và về nhất chung cuộc." : ". Nhưng tổng điểm thì " + dsTo(dau) + cung + " về nhất.";
-      cuoi = "Chúc mừng " + dsTo(dau) + "!";
-    } else {
-      giua = cungTo ? (q === 1 ? ". Xin chúc mừng!" : " và đang dẫn đầu tổng điểm. Xin chúc mừng!")
-                    : ". Nhưng tổng điểm thì " + dsTo(dau) + cung + " đang dẫn đầu.";
-      cuoi = conLai.length ? dsTo(conLai) + " cố lên nào!" : "";
-    }
-    return { chu: cau1 + giua + (cuoi ? " " + cuoi : ""), dau: cau1, cuoi: cuoi, danChu: dsTo(dau) };
+    var cau1 = "Ở câu hỏi này, " + (vang.length === 4 ? "cả bốn nhóm có tỉ lệ bạn trả lời đúng ngang nhau" :
+      dsTo(vang) + (nhieuNhat ? " có số bạn trả lời đúng nhiều nhất" : " có tỉ lệ bạn trả lời đúng cao nhất"));
+    var trung = vang.filter(function (t) { return dan.indexOf(t) >= 0; });
+    var cungNhau = trung.length === vang.length && trung.length === dan.length;     // nhóm đúng nhiều nhất cũng là nhóm dẫn đầu
+    var ca4 = dan.length === 4, Ls = dsTo(dan), giua, cuoi;
+    if (cungNhau) giua = ca4 ? " và tổng điểm vẫn đang bằng nhau." : q === 5 ? " và về nhất chung cuộc." : " và đang dẫn đầu tổng điểm.";
+    else if (!trung.length) giua = " nhưng tổng điểm vẫn thua " + Ls + ".";
+    else giua = ca4 ? ", còn tổng điểm thì cả bốn nhóm vẫn đang bằng nhau." : ", còn tổng điểm thì " + Ls + (q === 5 ? " về nhất." : " đang dẫn đầu.");
+    if (q === 5) cuoi = ca4 ? "Chúc mừng cả bốn nhóm!" : !trung.length ? "Chúc mừng " + Ls + " về nhất!" : "Chúc mừng " + Ls + "!";
+    else cuoi = (!trung.length || ca4) ? "Cố lên nào!" : "Các nhóm khác cố lên nào!";
+    var dau = cau1 + giua;
+    return { chu: dau + " " + cuoi, dau: dau, cuoi: cuoi, danChu: Ls };
   };
   RD.loiBinhMau = function (q, truoc, sau) { return RD.loiBinhPhan(q, truoc, sau).chu; };
 })();

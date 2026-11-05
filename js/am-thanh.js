@@ -57,7 +57,7 @@
     }
     if (NH.g) NH.g.gain.setTargetAtTime(Math.max(0.0001, dich), ac.currentTime, (giay || 0.8) / 3);
   }
-  // độ to nhạc: 0 tắt, 0.32 bình thường, 0.12 khi học sinh nêu cách làm
+  // độ to nhạc: 0 tắt, 0.22 bình thường, 0.08 khi học sinh nêu cách làm (5/11: nhỏ lại theo ý thầy Thịnh, trước là 0.32 và 0.12)
   A.nhacMuc = function (muc, giay) { NH.muc = muc; capNhatNhac(giay); };
   A.batNhac = function (on) { NH.batNhac = !!on; capNhatNhac(0.6); };
   A.nhacDangBat = function () { return NH.batNhac; };
@@ -87,23 +87,57 @@
     s.start(t, Math.random() * 0.5);
     s.stop(t + len + 0.05);
   }
-  // một tiếng trống hội: mạnh 0..1
+  // một tiếng trống hội êm: mạnh 0..1
+  // (5/11: thầy Thịnh thấy tiếng trống cũ nghe như tiếng nổ, nhức đầu. Bỏ tiếng rền sâu 48 Hz và tiếng xoẹt nhiễu,
+  //  trống giờ tròn tiếng hơn, nhỏ hơn và chỉ còn ở lúc mở đầu, về đích, báo tường)
   A.trong = function (manh, luc) {
     if (!san()) return;
-    var t = luc || ac.currentTime, m = manh == null ? 1 : manh;
+    var t = luc || ac.currentTime, m = (manh == null ? 1 : manh) * 0.55;
     var o = ac.createOscillator();
     o.type = "sine";
-    o.frequency.setValueAtTime(120, t);
-    o.frequency.exponentialRampToValueAtTime(48, t + 0.32);
-    ra(o, 0.9 * m, t, 0.55);
-    o.start(t); o.stop(t + 0.6);
+    o.frequency.setValueAtTime(175, t);
+    o.frequency.exponentialRampToValueAtTime(98, t + 0.22);
+    ra(o, 0.7 * m, t, 0.38);
+    o.start(t); o.stop(t + 0.42);
     var o2 = ac.createOscillator();
-    o2.type = "triangle";
-    o2.frequency.setValueAtTime(190, t);
-    o2.frequency.exponentialRampToValueAtTime(90, t + 0.12);
-    ra(o2, 0.35 * m, t, 0.18);
-    o2.start(t); o2.stop(t + 0.2);
-    tiengNhieu(t, 0.12, "lowpass", 900, 200, 0.7, 0.35 * m);
+    o2.type = "sine";
+    o2.frequency.setValueAtTime(350, t);
+    o2.frequency.exponentialRampToValueAtTime(230, t + 0.07);
+    ra(o2, 0.1 * m, t, 0.09);
+    o2.start(t); o2.stop(t + 0.11);
+  };
+  // âm giai ngũ cung Đô Rê Mi Son La (quãng tám 5 và 6) cho tiếng mộc cầm
+  var NGU = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
+  // một tiếng gõ mộc cầm êm (thay tiếng trống khi mảnh ghép đáp xuống cầu); bac: bậc trong âm giai, mạnh 0..1
+  A.go = function (bac, manh, luc) {
+    if (!san()) return;
+    var t = luc || ac.currentTime, m = manh == null ? 1 : manh;
+    var f = NGU[Math.max(0, Math.min(NGU.length - 1, bac | 0))];
+    var o = ac.createOscillator();
+    o.type = "sine"; o.frequency.value = f;
+    ra(o, 0.1 * m, t, 0.5);
+    o.start(t); o.stop(t + 0.55);
+    var o2 = ac.createOscillator();     // tiếng gõ nhẹ đầu nốt (mộc cầm có họa âm gần gấp 4)
+    o2.type = "sine"; o2.frequency.value = f * 3.93;
+    ra(o2, 0.018 * m, t, 0.06);
+    o2.start(t); o2.stop(t + 0.09);
+  };
+  // chuông nhỏ trong trẻo, ngân nhẹ (như hộp nhạc)
+  A.chuong = function (manh, luc) {
+    if (!san()) return;
+    var t = luc || ac.currentTime, m = manh == null ? 1 : manh;
+    [[1046.5, 0.065, 1.3], [2093, 0.019, 0.8], [3139.5, 0.009, 0.45]].forEach(function (p) {
+      var o = ac.createOscillator();
+      o.type = "sine"; o.frequency.value = p[0];
+      ra(o, p[1] * m, t, p[2]);
+      o.start(t); o.stop(t + p[2] + 0.05);
+    });
+  };
+  // báo câu hỏi mới: hai nốt mộc cầm Son, Đô và một tiếng chuông
+  A.baoCau = function () {
+    if (!san()) return;
+    var t = ac.currentTime;
+    A.go(3, 0.25, t); A.go(5, 0.28, t + 0.16); A.chuong(0.17, t + 0.16);
   };
   // trống dồn: dài (giây), tiếng dồn nhanh dần
   A.trongDon = function (dai) {
@@ -117,7 +151,7 @@
     o.type = "sine";
     o.frequency.setValueAtTime(1320, t);
     o.frequency.exponentialRampToValueAtTime(1760, t + 0.05);
-    ra(o, 0.25, t, 0.09);
+    ra(o, 0.16, t, 0.09);
     o.start(t); o.stop(t + 0.1);
   };
   A.buoc = function () {
@@ -126,43 +160,37 @@
   };
   A.vut = function () {
     if (!san()) return;
-    tiengNhieu(ac.currentTime, 0.9, "bandpass", 300, 2400, 1.4, 0.5);
+    tiengNhieu(ac.currentTime, 0.9, "bandpass", 300, 2400, 1.4, 0.3);
   };
+  // đuốc bén lửa: tiếng "phừng" nhẹ, vài tiếng lách tách và một tiếng chuông (trước đây là tiếng nổ trầm kèm trống)
   A.bungLua = function () {
     if (!san()) return;
     var t = ac.currentTime;
-    tiengNhieu(t, 1.6, "lowpass", 2400, 300, 0.6, 0.8);
-    A.trong(1, t);
+    tiengNhieu(t, 0.8, "bandpass", 450, 1500, 0.9, 0.2);
+    A.lachTach(0.6);
+    A.chuong(0.6, t + 0.12);
   };
   A.lachTach = function (dai) {
     if (!san()) return;
     var t = ac.currentTime, het = t + (dai || 2);
     while (t < het) { tiengNhieu(t, 0.03, "highpass", 2500, 0, 0.7, 0.05 + Math.random() * 0.08); t += 0.04 + Math.random() * 0.15; }
   };
-  // kèn: hợp âm đi lên, vui
+  // khúc vui ngắn: hợp âm rải Đô Mi Son Đô bằng tiếng mộc cầm, nốt cuối ngân như chuông
+  // (trước đây là tiếng kèn răng cưa, nghe chói)
   A.ken = function () {
     if (!san()) return;
-    var t = ac.currentTime, not = [[523.25, 0], [659.25, 0.16], [783.99, 0.32], [1046.5, 0.5]];
-    not.forEach(function (n, i) {
-      [1, 1.005].forEach(function (lech) {
-        var o = ac.createOscillator(), f = ac.createBiquadFilter();
-        o.type = "sawtooth";
-        o.frequency.value = n[0] * lech;
-        f.type = "lowpass"; f.frequency.value = 2200;
-        o.connect(f);
-        ra(f, i === 3 ? 0.16 : 0.12, t + n[1], i === 3 ? 1.4 : 0.32);
-        o.start(t + n[1]); o.stop(t + n[1] + 1.5);
-      });
-    });
+    var t = ac.currentTime;
+    [0, 2, 3, 5].forEach(function (b, i) { A.go(b, i === 3 ? 0.5 : 0.4, t + i * 0.14); });
+    A.chuong(0.45, t + 0.42);
   };
-  // "ting" khi quét xong
+  // "ting" khi quét xong (5/11: nhỏ lại, trước là 0.22, to nhất trong các tiếng)
   A.ting = function () {
     if (!san()) return;
     var t = ac.currentTime;
     [[1318.5, 0], [1975.5, 0.11]].forEach(function (n) {
       var o = ac.createOscillator();
       o.type = "sine"; o.frequency.value = n[0];
-      ra(o, 0.22, t + n[1], 0.7);
+      ra(o, 0.065, t + n[1], 0.7);
       o.start(t + n[1]); o.stop(t + n[1] + 0.75);
     });
   };
@@ -173,7 +201,7 @@
       var o = ac.createOscillator(), at = t + i * 0.07 + Math.random() * 0.04;
       o.type = "sine";
       o.frequency.value = 1500 + Math.random() * 1800;
-      ra(o, 0.06, at, 0.25);
+      ra(o, 0.045, at, 0.25);
       o.start(at); o.stop(at + 0.3);
     }
   };

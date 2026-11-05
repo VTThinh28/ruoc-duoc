@@ -148,8 +148,9 @@
   function lamSach(t) {
     return String(t || "").replace(/\s+/g, " ").replace(/^["“”'«»\s]+|["“”'«»\s]+$/g, "").slice(0, 320);
   }
-  // Lời bình theo mẫu của thầy Thịnh (RD.loiBinhPhan). Trong Claude: Claude viết lại cho sinh động hơn nhưng giữ
-  // đúng khuôn: mở đầu "Ở câu q, Nhóm x có nhiều bạn đúng nhất", nói nhóm dẫn đầu tổng điểm, kết bằng câu cổ vũ của mẫu.
+  // Lời bình theo mẫu của thầy Thịnh (RD.loiBinhPhan, mẫu mới 5/11 16:10: "Ở câu hỏi này, Nhóm 1 và 2 có số bạn trả lời
+  // đúng nhiều nhất nhưng tổng điểm vẫn thua Nhóm 3. Cố lên nào!"). Trong Claude: Claude giữ nguyên câu đầu và câu cuối
+  // của thầy, chỉ được chèn vào giữa nhiều nhất một câu ngắn cho vui (không số, không tên nhóm, để không nói sai).
   function nhacClaude(q, sau, P) {
     var hang = RD.xepHang(sau);
     var dong = sau.map(function (r, t) {
@@ -160,23 +161,25 @@
       "Bốn nhóm trả lời 5 câu hỏi bằng thẻ Plickers; sau mỗi câu, mỗi nhóm nhận một mảnh ghép lấp khúc cầu còn thiếu để đại diện của nhóm đi tiếp, nhóm nhiều điểm hơn tiến nhanh hơn. " +
       "Điểm mỗi câu là phần trăm bạn trong nhóm trả lời đúng (tối đa 100), câu 5 nhân đôi (tối đa 200).\n" +
       "Vừa công bố câu " + q + "/5. Số liệu:\n" + dong + "\n" +
-      "Thầy giáo đã viết lời bình theo mẫu của thầy, đúng số liệu:\n" + P.chu + "\n" +
-      "Hãy viết lại lời bình này cho vui và sinh động hơn một chút, nhưng giữ đúng khuôn của thầy:\n" +
+      "Thầy giáo đã viết sẵn lời bình theo mẫu của thầy, đúng số liệu:\n" + P.chu + "\n" +
+      "Giữ nguyên từng chữ câu đầu và câu cuối của thầy. Chỉ được chèn vào giữa hai câu đó nhiều nhất một câu ngắn (tối đa 12 từ) cho vui, sinh động, ví dụ khen cả lớp hay nói cuộc đua đang gay cấn; câu chèn không có chữ số, không nêu tên nhóm. Không chèn cũng được.\n" +
       "1. Bắt đầu đúng bằng: " + P.dau + "\n" +
-      "2. Tiếp theo nói " + (q === 5 ? "nhóm về nhất chung cuộc" : "nhóm đang dẫn đầu tổng điểm") + " là " + P.danChu + ", có thể kèm tổng điểm.\n" +
-      (P.cuoi ? "3. Kết thúc đúng bằng: " + P.cuoi + "\n" : "") +
-      "Chỉ dùng số liệu ở trên. Tối đa 40 từ, tiếng Việt có dấu, không emoji, không dấu ngoặc kép, không nhắc đáp án hay phép tính, không chê nhóm nào. Chỉ trả về lời bình.";
+      "2. Kết thúc đúng bằng: " + P.cuoi + "\n" +
+      "Tiếng Việt có dấu, không emoji, không dấu ngoặc kép, không nhắc đáp án hay phép tính, không chê nhóm nào. Chỉ trả về lời bình.";
   }
-  // lời Claude viết phải giữ đúng khuôn và chỉ dùng số có thật, nếu không thì dùng lời bình theo mẫu
+  // lời Claude viết phải giữ nguyên câu đầu, câu cuối của thầy; phần chèn giữa ngắn, không số, không tên nhóm.
+  // Lệch thì dùng đúng lời theo mẫu.
   function hopKhuon(t, P, q, sau) {
     var n = function (x) { return String(x || "").normalize("NFC").toLowerCase().replace(/[\s\u00a0]+/g, " ").trim(); };
-    var tt = n(t);
-    if (!P.dau || tt.length < P.dau.length || tt.length > 320 || t.split(/\s+/).length > 50) return false;
-    if (tt.indexOf(n(P.dau)) !== 0 || tt.indexOf(n(P.danChu)) < 0) return false;
-    if (P.cuoi) { var c = n(P.cuoi); if (tt.slice(-c.length) !== c) return false; }
-    var so = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 100: 1, 200: 1, 600: 1 };
-    sau.forEach(function (r) { so[r.tram] = 1; var x = r.cau[q]; if (x) { so[x.dung] = 1; so[x.thay] = 1; so[x.tram] = 1; } });
-    return (t.match(/\d+/g) || []).every(function (x) { return so[+x] === 1; });
+    var tt = n(t), d = n(P.dau), c = n(P.cuoi);
+    if (!P.dau || !P.cuoi || tt.length > 320 || tt.length < d.length + c.length) return false;
+    if (tt.indexOf(d) !== 0 || tt.slice(-c.length) !== c) return false;
+    var giua = tt.slice(d.length, tt.length - c.length).trim();
+    if (!giua) return true;
+    // ("tổng điểm" vẫn được, chỉ cấm chữ "tổ" đứng riêng)
+    if (giua.split(" ").length > 15 || /\d/.test(giua) || /nhóm/.test(giua) || /(^|[\s,.;:!?])tổ([\s,.;:!?]|$)/.test(giua)) return false;
+    void q; void sau;
+    return true;
   }
   var BL = {}, lanBL = 0;
   function binhLuan(q, truoc, sau) {
@@ -468,9 +471,12 @@
     $("#chuanBiTV").hidden = !(step === "setup" || moCB);
     capNhatChuanBi($("#cbTV"));
     A.batNhac(cfg().nhac !== false);
-    A.nhacMuc(step === "setup" ? 0 : loai === "a" ? 0.12 : 0.32, loai === "a" ? 1.5 : 1);
+    A.nhacMuc(step === "setup" ? 0 : loai === "a" ? 0.08 : 0.22, loai === "a" ? 1.5 : 1);
     var laCau = loai === "q" || loai === "k" || loai === "a";
     $('[data-tv="thu"]').hidden = !(laCau && cfg().thu);
+    // chơi thử: bấm qua màn câu hỏi trước khi TV kịp điền thì điền nốt ngay khi sang bước sau,
+    // để bước quét xong, đáp án và di chuyển luôn có kết quả (dienThu chỉ thêm thẻ còn thiếu)
+    if (doi && q && loai !== "q" && cfg().thu) dienThu(q, true);
     if (doi) vaoBuocTV(step, cu, loai, q, rev);
     if (laCau) capNhatManCau(q, loai);
     if (loai === "q" && cfg().thu && doi) { clearTimeout(henThu); henThu = setTimeout(function () { dienThu(q, false); }, 1600); }
@@ -616,7 +622,7 @@
     } else SK.phu(true);
     var nt = $("#mcNuocTo");
     if (cauMoi && moi) {
-      A.trong(0.7);
+      A.baoCau();
       if (q === 5 && loai === "q") {
         nt.hidden = false;
         A.trongDon(0.9);
@@ -698,6 +704,7 @@
       var p = 0.5 + Math.random() * 0.48;
       x.coMat.forEach(function (id) { if (!sc.cards["t" + id]) ds.push({ id: id, l: Math.random() < p ? dungChu : RD.CHU[(RD.CHU.indexOf(dungChu) + 1 + Math.floor(Math.random() * 3)) % 4] }); });
     });
+    if (!ds.length) return;
     ds.sort(function () { return Math.random() - 0.5; });
     var ghi = function () { sc.at = Date.now(); sc.by = TAB; sc.n = Object.keys(sc.cards).length; DB.set("s" + q, sc); };
     if (ngay) { ds.forEach(function (d) { sc.cards["t" + d.id] = d.l; }); ghi(); return; }
@@ -720,6 +727,7 @@
   var ROT = { doc: 0, ngang: 0, live: 0 };
   try { var rr = JSON.parse(lsGet("rd-xoay", "null")); if (rr) { ROT.doc = rr.doc | 0; ROT.ngang = rr.ngang | 0; } } catch (e) { /* bỏ qua */ }
   var NGHIENG = false;
+  var ZOOM_MAY = false, dtBuocCu = null;   // ZOOM_MAY: camera tự chỉnh zoom được; không thì thu phóng bằng phần mềm
 
   function khoiDT() {
     $("#dt").hidden = false;
@@ -743,8 +751,18 @@
       Q.Live.den(on).then(function () { b.setAttribute("aria-pressed", on ? "true" : "false"); }, function () { b.hidden = true; });
     });
     $("#dtVideo").addEventListener("resize", vuaKhungCam);
+    $("#dtVideo").addEventListener("loadedmetadata", vuaKhungCam);
     window.addEventListener("resize", function () { if (Q.Live.chay) vuaKhungCam(); });
-    $("#dtZoom").addEventListener("input", function () { Q.Live.phongTo(+this.value).catch(function () { /* bỏ qua */ }); });
+    $("#dtZoom").addEventListener("input", function () {
+      var z = +this.value;
+      $("#dtZoomSo").textContent = soZoomChu(z);
+      if (ZOOM_MAY) Q.Live.phongTo(z).catch(function () { /* bỏ qua */ });
+      else Q.Live.zoomSo(z);
+    });
+    // camera to toàn màn hình hoặc thu nhỏ vào thẻ; ảnh chụp chạm để phóng to, chạm lần nữa để thu nhỏ
+    $("#dtLon").addEventListener("click", function () { datCamLon(!$("#dtCam").classList.contains("lon")); });
+    $("#dtAnhKhung").addEventListener("click", function () { datAnhLon(!this.classList.contains("lon")); });
+    $("#dtManDen").addEventListener("click", function () { datAnhLon(false); });
     $("#dtXoayChu").addEventListener("click", function () {
       var d = anhCuoi ? anhCuoi.dang : "doc";
       ROT[d] = (ROT[d] + 1) % 4;
@@ -805,6 +823,11 @@
   }
   function veDT() {
     var now = nowHopLe(), step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
+    // bấm Quét xong (hay sang bước khác): camera đang toàn màn hình thì thu nhỏ để thấy bảng thẻ còn thiếu
+    if (step !== dtBuocCu) {
+      if (dtBuocCu !== null && loai !== "q" && $("#dtCam").classList.contains("lon")) datCamLon(false);
+      dtBuocCu = step;
+    }
     $("#dtBuoc").textContent = tenBuoc(step);
     var nn = $("#dtNhac"), nhacOn = cfg().nhac !== false;
     nn.setAttribute("aria-pressed", nhacOn ? "true" : "false");
@@ -849,6 +872,7 @@
     }
     $("#dtGhi").hidden = !html;
     if (ghi.dataset.html !== html) { ghi.innerHTML = html; ghi.dataset.html = html; }
+    capManDen();
   }
 
   /* ---------- quét trên điện thoại ---------- */
@@ -894,7 +918,7 @@
   function veBangTo() {
     if (!PQ) return;
     var lb = RD.loaiBuoc(nowHopLe().step), lop = RD.lop(cfg()), m = theHienTai(), man = PQ.man, hien = lb === "a", hienPB = lb === "k" || lb === "a";
-    var dungChu = RD.CAU[PQ.q - 1].dung, tongThay = 0, tongCo = 0;
+    var dungChu = RD.CAU[PQ.q - 1].dung, tongThay = 0, tongCo = 0, demCam = [];
     var html = lop.to.map(function (x, t) {
       var T = RD.TO[t], thay = 0, dung = 0, chua = [], dd = [];
       x.coMat.forEach(function (id) {
@@ -905,6 +929,7 @@
       var tong = x.coMat.length - dd.filter(function (d) { return d.m === "V"; }).length;
       tongThay += thay; tongCo += tong;
       var du = tong > 0 && !chua.length;
+      demCam.push('<span class="' + (du ? "du" : "") + '" style="--m:' + T.mau + ";--d:" + T.dam + '">' + T.ten + " · " + thay + "/" + tong + "</span>");
       var chips = chua.map(function (id) { return '<button type="button" data-id="' + id + '" aria-label="Thẻ ' + id + ' chưa đọc được, chạm để ghi">' + id + "</button>"; }).join("") +
         dd.map(function (d) { return '<button type="button" data-id="' + d.id + '" class="' + d.m + '" aria-label="Thẻ ' + d.id + ' đã ghi ' + ({ D: "đúng", S: "sai", V: "vắng" })[d.m] + '">' + d.id + " " + ({ D: "đúng", S: "sai", V: "vắng" })[d.m] + "</button>"; }).join("");
       return '<div class="dt-hang" style="--m:' + T.mau + ";--d:" + T.dam + ";--n:" + T.nhat + '"><div class="dt-hang-dau"><b>' + T.ten + '</b><span class="dt-thanh"><i style="width:' + (tong ? Math.round(100 * thay / tong) : 0) + '%"></i></span><span class="' + (du ? "du" : "") + '">' +
@@ -913,6 +938,9 @@
     }).join("");
     var el = $("#dtTo");
     if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
+    // số thẻ đã đọc của từng nhóm, hiện ngay trên khung camera lúc toàn màn hình
+    var dc = $("#dtCamDem"), hdc = demCam.join("");
+    if (dc.dataset.html !== hdc) { dc.innerHTML = hdc; dc.dataset.html = hdc; }
     // phân bố đáp án (chỉ giáo viên thấy, sau khi hiện đáp án)
     var pb = $("#dtPhanBo");
     pb.hidden = !hienPB;
@@ -997,15 +1025,16 @@
       nut.removeAttribute("aria-disabled");
       nut.textContent = "Dừng quét";
       trangThai("ok", "Đang quét: lia chậm qua từng cụm nhóm, giữ máy cách thẻ 1 đến 4 mét.");
-      var kn = Q.Live.khaNang();
+      var kn = Q.Live.khaNang(), z = $("#dtZoom");
       $("#dtDen").hidden = !kn.torch;
-      if (kn.zoom && kn.zoom.max > kn.zoom.min) {
-        var z = $("#dtZoom");
-        z.min = kn.zoom.min; z.max = Math.min(kn.zoom.max, 8); z.step = kn.zoom.step || 0.1; z.value = kn.zoom.min;
-        $("#dtZoomKhung").hidden = false;
-      }
+      // thanh thu phóng: dùng zoom của camera nếu máy cho, không thì phóng bằng phần mềm (1 đến 3 lần)
+      ZOOM_MAY = !!(kn.zoom && kn.zoom.max > kn.zoom.min);
+      if (ZOOM_MAY) { z.min = kn.zoom.min; z.max = Math.min(kn.zoom.max, 8); z.step = kn.zoom.step || 0.1; z.value = kn.zoom.min; }
+      else { z.min = 1; z.max = 3; z.step = 0.1; z.value = 1; Q.Live.zoomSo(1); }
+      $("#dtZoomSo").textContent = soZoomChu(+z.value);
+      $("#dtZoomKhung").hidden = false;
       $("#dtXoayMay").hidden = !NGHIENG;
-      vuaKhungCam();
+      datCamLon(true);
       giuManHinh();
     }, function (e) {
       nut.removeAttribute("aria-disabled");
@@ -1015,19 +1044,61 @@
         ten === "NotFoundError" ? "Không tìm thấy camera trên máy này." : "Không mở được camera (" + (ten || e) + "). Dùng nút Chụp một tấm ảnh.");
     });
   }
-  // khung xem camera theo đúng tỉ lệ ảnh camera (dọc hay ngang), không cao quá 60% màn hình
+  // khung xem camera theo đúng tỉ lệ ảnh camera (dọc hay ngang) để thấy trọn khung đang đọc:
+  // toàn màn hình thì to hết cỡ phía trên thanh nút dưới; thu nhỏ thì nằm trong thẻ, không cao quá 60% màn hình
   function vuaKhungCam() {
     var v = $("#dtVideo"), k = $("#dtCam");
     if (!v.videoWidth || !v.videoHeight) return;
-    var r = v.videoWidth / v.videoHeight, maxH = Math.round(window.innerHeight * 0.6), w = k.parentNode.clientWidth;
+    var r = v.videoWidth / v.videoHeight;
     k.style.aspectRatio = v.videoWidth + " / " + v.videoHeight;
-    k.style.width = w / r > maxH ? Math.round(maxH * r) + "px" : "";
-    k.style.margin = "0 auto";
+    if (k.classList.contains("lon")) {
+      var rong = document.documentElement.clientWidth || window.innerWidth;
+      var cao = window.innerHeight - ($(".dt-chan").offsetHeight || 0);
+      var w = Math.min(rong, cao * r), h = w / r;
+      k.style.width = Math.round(w) + "px"; k.style.height = Math.round(h) + "px";
+      k.style.left = Math.round((rong - w) / 2) + "px"; k.style.top = Math.max(0, Math.round((cao - h) / 2)) + "px";
+      k.style.margin = "0";
+    } else {
+      var cha = k.parentNode, cs = getComputedStyle(cha);
+      var w2 = cha.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+      var maxH = Math.round(window.innerHeight * 0.6);
+      k.style.height = ""; k.style.left = ""; k.style.top = "";
+      k.style.width = w2 / r > maxH ? Math.round(maxH * r) + "px" : "";
+      k.style.margin = "0 auto";
+    }
     Q.Live.ve();
   }
+  // lon: khung camera phủ màn hình (mặc định khi vừa bật camera) hay nằm gọn trong thẻ quét
+  function datCamLon(lon) {
+    var k = $("#dtCam");
+    lon = !!lon && !!Q.Live.chay;
+    k.classList.toggle("lon", lon);
+    $("#dtLon").textContent = lon ? "Thu nhỏ" : "Toàn màn hình";
+    capManDen();
+    vuaKhungCam();
+    if (!lon && Q.Live.chay) k.scrollIntoView({ block: "nearest" });
+  }
+  function datAnhLon(lon) {
+    var k = $("#dtAnhKhung");
+    k.classList.toggle("lon", !!lon && !k.hidden);
+    capManDen();
+  }
+  // nền đen phía sau khung lớn; khóa cuộn trang khi đang phóng to
+  function capManDen() {
+    var cam = $("#dtCam"), anh = $("#dtAnhKhung"), coQuet = !$("#dtQuet").hidden;
+    if (cam.classList.contains("lon") && (cam.hidden || !coQuet || !Q.Live.chay)) { cam.classList.remove("lon"); $("#dtLon").textContent = "Toàn màn hình"; }
+    if (anh.classList.contains("lon") && (anh.hidden || !coQuet)) anh.classList.remove("lon");
+    var lon = cam.classList.contains("lon") || anh.classList.contains("lon");
+    var den = $("#dtManDen");
+    if (den.hidden === lon) den.hidden = !lon;
+    document.documentElement.classList.toggle("dt-khoa", lon);
+    if (lon) document.documentElement.style.setProperty("--dt-chan-h", ($(".dt-chan").offsetHeight || 0) + "px");
+  }
+  function soZoomChu(z) { return (Math.round(z * 10) / 10).toString().replace(".", ",") + "×"; }
   function dungCam() {
     Q.Live.dung();
     $("#dtCam").hidden = true;
+    datCamLon(false);
     $("#dtZoomKhung").hidden = true;
     var nut = $("#dtBatCam");
     nut.textContent = "Bật camera quét liên tục";

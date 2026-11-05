@@ -539,9 +539,12 @@
   function buocChan(t0, dai, so) { for (let k = 0; k < so; k++) hen(t0 + dai * (k + .5) / so, () => am().buoc && am().buoc()); }
   function tiengCau() {
     const L = S.L, R0 = S.R0;
+    // mảnh ghép đáp xuống cầu: mảnh vàng kêu chuông, các mảnh sau gõ mộc cầm đi lên Mi, Son, La
+    // (5/11: thay tiếng trống trầm, thầy Thịnh nghe như tiếng nổ sau mỗi câu)
+    let j = 0;
     L.bay.forEach(b => {
-      if (b.vang) { hen(R0 + b.t0, () => am().vut && am().vut()); hen(R0 + b.t0 + b.d, () => { am().trong && am().trong(.55); am().lapLanh && am().lapLanh(); }); }
-      else hen(R0 + b.t0 + b.d, () => am().trong && am().trong(.32));
+      if (b.vang) { hen(R0 + b.t0, () => am().vut && am().vut()); hen(R0 + b.t0 + b.d, () => { am().chuong && am().chuong(.9); am().lapLanh && am().lapLanh(); }); }
+      else { const bac = 2 + Math.min(j++, 2); hen(R0 + b.t0 + b.d, () => am().go && am().go(bac, .7)); }
     });
     // nhóm đi bộ: tiếng bước chân; nhóm tốc biến: tiếng lấp lánh
     buocChan(R0 + L.kid0, L.kidDur, 4);
