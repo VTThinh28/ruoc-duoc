@@ -5,8 +5,9 @@
   var A = RD.AmThanh = { bat: true, muc: 1 };
   var ac = null, tong = null, nhieu = null;
   try { A.bat = localStorage.getItem("rd-am") !== "0"; } catch (e) { /* bỏ qua */ }
-  // 6/11 chiều, thầy Thịnh: "trong game có nút tăng giảm âm lượng". muc: 0 … 1,5 (100% = độ to cũ), mỗi nấc 10%, nhớ trên máy
-  try { var m0 = parseFloat(localStorage.getItem("rd-am-muc")); if (m0 >= 0 && m0 <= 1.5) A.muc = m0; } catch (e) { /* bỏ qua */ }
+  // 6/11 chiều, thầy Thịnh: "trong game có nút tăng giảm âm lượng". muc: 0 … 1, mỗi nấc 10%, nhớ trên máy.
+  //   6/11 trưa: "tăng giảm âm lượng cho tối đa là 100 thôi" (trước cho tới 150%; số cũ lớn hơn 100% thì về 100%)
+  try { var m0 = parseFloat(localStorage.getItem("rd-am-muc")); if (m0 >= 0) A.muc = Math.min(1, m0); } catch (e) { /* bỏ qua */ }
   var DO_TO = 0.9;
   function doTo() { return A.bat ? DO_TO * A.muc : 0; }
 
@@ -23,10 +24,10 @@
       var len = ac.sampleRate * 1.5, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
       for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       nhieu = b;
-      setTimeout(function () { if (!voTayBuf) voTayBuf = taoVoTay(); }, 2000);   // tạo sẵn tiếng vỗ tay lúc rảnh
     }
     if (ac.state === "suspended") ac.resume();
     giaiMaNhac();
+    giaiMaVoTay();
   };
 
   /* ---------- nhạc nền ---------- */
@@ -71,9 +72,10 @@
     try { localStorage.setItem("rd-am", on ? "1" : "0"); } catch (e) { /* bỏ qua */ }
     if (tong) tong.gain.setTargetAtTime(doTo(), ac.currentTime, 0.05);
   };
-  // đặt độ to (0 … 1,5); trả về độ to mới. Đang tắt tiếng mà bấm tăng thì bật lại tiếng
+  // đặt độ to (0 … 1); trả về độ to mới. Đang tắt tiếng mà bấm tăng thì bật lại tiếng
+  A.MUC_MAX = 1;
   A.datMuc = function (v) {
-    A.muc = Math.round(Math.max(0, Math.min(1.5, v)) * 10) / 10;
+    A.muc = Math.round(Math.max(0, Math.min(A.MUC_MAX, v)) * 10) / 10;
     try { localStorage.setItem("rd-am-muc", String(A.muc)); } catch (e) { /* bỏ qua */ }
     if (tong) tong.gain.setTargetAtTime(doTo(), ac.currentTime, 0.05);
     return A.muc;
@@ -205,46 +207,32 @@
       o.start(t + n[1]); o.stop(t + n[1] + 0.75);
     });
   };
-  // tiếng cả lớp vỗ tay (6/11 thầy Thịnh: "bạn về nhất thì có tiếng vỗ tay"): khoảng 20 bạn vỗ lệch nhịp nhau,
-  // ngồi rải trái phải, to dần rồi thưa dần trong hơn 3 giây. Tạo một lần thành đoạn âm thanh rồi phát lại.
-  var voTayBuf = null;
-  function taoVoTay() {
-    var sr = ac.sampleRate, dai = 3.6, n = Math.floor(sr * dai), dv = Math.floor(sr * 0.026);
-    var b = ac.createBuffer(2, n, sr), L = b.getChannelData(0), R = b.getChannelData(1);
-    for (var p = 0; p < 20; p++) {
-      var bd = Math.random() * 0.3, kt = 1.6 + Math.random() * 1.8;          // lúc bạn này bắt đầu và thôi vỗ
-      var nhip = 1 / (3.2 + Math.random() * 1.8), to = 0.55 + Math.random() * 0.45;
-      var goc = Math.random() * Math.PI / 2, gl = Math.cos(goc), gr = Math.sin(goc);
-      var fc = 900 + Math.random() * 1200;                                   // mỗi đôi bàn tay một giọng
-      for (var t = bd; t < Math.min(kt, dai - 0.05); t += nhip * (0.88 + Math.random() * 0.24)) {
-        var tang = t < 0.3 ? t / 0.3 : 1, giam = kt - t < 0.7 ? (kt - t) / 0.7 : 1;
-        var a = to * Math.max(0, Math.min(tang, giam)) * (0.75 + Math.random() * 0.25);
-        if (a < 0.03) continue;
-        // một tiếng vỗ: nhiễu ngắn tắt nhanh, lọc dải quanh giọng của bạn đó
-        var f = fc * (0.9 + Math.random() * 0.2), Q = 1 + Math.random() * 0.8, w = 2 * Math.PI * f / sr, al = Math.sin(w) / (2 * Q), a0 = 1 + al;
-        var b0 = al / a0, b2 = -al / a0, a1 = -2 * Math.cos(w) / a0, a2 = (1 - al) / a0;
-        var tat = Math.exp(-1 / (sr * (0.003 + Math.random() * 0.003))), vao = sr * 0.0005, bao = 1;
-        var x1 = 0, x2 = 0, y1 = 0, y2 = 0, o = Math.floor(t * sr);
-        for (var k = 0; k < dv && o + k < n; k++, bao *= tat) {
-          var x = (Math.random() * 2 - 1) * bao * (k < vao ? k / vao : 1);
-          var y = b0 * x + b2 * x2 - a1 * y1 - a2 * y2;
-          x2 = x1; x1 = x; y2 = y1; y1 = y;
-          var v = a * (y + 0.08 * x);            // thêm chút tiếng giòn, không để rít
-          L[o + k] += v * gl; R[o + k] += v * gr;
-        }
-      }
-    }
-    var dinh = 0, i;
-    for (i = 0; i < n; i++) dinh = Math.max(dinh, Math.abs(L[i]), Math.abs(R[i]));
-    if (dinh > 0) for (i = 0; i < n; i++) { L[i] /= dinh; R[i] /= dinh; }
-    return b;
+  // tiếng cả lớp vỗ tay khi bạn về nhất bước lên thảm VỀ ĐÍCH (6/11 thầy Thịnh: "bạn về nhất thì có tiếng vỗ tay").
+  //   6/11 trưa: "tiếng vỗ tay hiện tại nghe ghê quá đổi đi": bỏ tiếng vỗ tay tự tạo bằng nhiễu, dùng bản thu thật:
+  //   nhac/vo-tay.ogg (6,25 giây, vỗ tay to dần rồi thưa dần), cắt từ "Applause in a large hall or church" của eXpl0it3r
+  //   trên OpenGameArt.org, giấy phép CC0 (dùng tự do). Tải sẵn lúc mở trang, giải mã sau lần chạm đầu tiên.
+  var VT = { url: "nhac/vo-tay.ogg", tai: null, ab: null, buf: null, dangGiai: false };
+  A.taiVoTay = function (url) {
+    if (url) VT.url = url;
+    if (VT.tai || VT.buf) return;
+    VT.tai = fetch(VT.url).then(function (r) { if (!r.ok) throw new Error("vo tay " + r.status); return r.arrayBuffer(); })
+      .then(function (ab) { VT.ab = ab; giaiMaVoTay(); })
+      .catch(function () { VT.tai = null; });
+  };
+  function giaiMaVoTay() {
+    if (!ac || !VT.ab || VT.buf || VT.dangGiai) return;
+    VT.dangGiai = true;
+    var ab = VT.ab;
+    var xong = function (b) { VT.buf = b; VT.ab = null; VT.dangGiai = false; };
+    var p = ac.decodeAudioData(ab, xong, function () { VT.dangGiai = false; });
+    if (p && p.then) p.catch(function () { VT.dangGiai = false; });
   }
+  A.coVoTay = function () { return !!VT.buf; };
   A.voTay = function (manh) {
-    if (!san()) return;
-    if (!voTayBuf) voTayBuf = taoVoTay();
+    if (!san() || !VT.buf) return;
     var s = ac.createBufferSource(), g = ac.createGain();
-    s.buffer = voTayBuf;
-    g.gain.value = 0.38 * (manh == null ? 1 : manh);     // nhỉnh hơn nhạc nền một chút
+    s.buffer = VT.buf;
+    g.gain.value = 0.55 * (manh == null ? 1 : manh);     // to hơn nhạc nền khoảng 4 dB (đo độ to LUFS của hai tệp)
     s.connect(g); g.connect(tong);
     s.start(ac.currentTime);
   };

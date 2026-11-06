@@ -396,6 +396,7 @@
     $("#tv").hidden = false;
     SK.khoiTao();
     A.taiNhac();
+    if (A.taiVoTay) A.taiVoTay();
     dungChuanBi($("#cbTV"));
     napAnhBao().then(function () { if (RD.anhBao) SK.anhBao(RD.anhBao); ve(); });
     for (var q = 1; q <= 5; q++) taoVideo(q);      // tải sẵn hình chuyển động của 5 câu
@@ -457,7 +458,7 @@
     b.dataset.muc = !A.bat || A.muc <= 0 ? "0" : A.muc < 0.7 ? "1" : "2";
     b.setAttribute("aria-label", "Bật hoặc tắt âm thanh (phím M), đang " + (A.bat ? pt + "%" : "tắt tiếng"));
     $('[data-tv="nho"]').disabled = A.muc <= 0;
-    $('[data-tv="to"]').disabled = A.muc >= 1.5;
+    $('[data-tv="to"]').disabled = A.muc >= (A.MUC_MAX || 1);
     if (baoTin) thongBao(A.bat ? "Âm lượng " + pt + "%" : "Đã tắt tiếng (bấm nút loa hoặc phím M để bật lại)");
   }
   function doiAm(d) {
@@ -840,8 +841,8 @@
     if (l === "q") return "Câu " + q + " · đọc đề, quét thẻ";
     if (l === "k") return "Câu " + q + " · quét xong, TV hiện số em chọn";
     if (l === "a") return "Câu " + q + " · đã hiện đáp án";
-    if (l === "r") return "Câu " + q + " · đang qua cầu";
-    return { finish: "Về đích · nhóm nhất thắp đuốc", rank: "Thứ hạng · lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Báo tường đầy đủ" }[step] || step;
+    if (l === "r") return q < 5 ? "Câu " + q + " · đang qua cầu" : "Câu 5 · qua cầu, nhóm về nhất bước lên thảm VỀ ĐÍCH";
+    return { finish: "Đốt đuốc · nhóm về nhất thắp ngọn đuốc đầu tiên", rank: "Thứ hạng · lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Báo tường đầy đủ" }[step] || step;
   }
   function nhanTiep(step) {
     var l = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -850,7 +851,7 @@
     if (l === "q") return "Quét xong";
     if (l === "k") return "Đáp án";
     if (l === "a") return "Di chuyển";
-    if (l === "r") return q < 5 ? "Hiện câu " + (q + 1) : "Về đích";
+    if (l === "r") return q < 5 ? "Hiện câu " + (q + 1) : "Đốt đuốc";      // 6/11 trưa: thầy bấm thì nhóm về nhất thắp đuốc
     return { finish: "Thứ hạng các nhóm", rank: "Hiện báo tường" }[step] || "Đã xong phần khởi động";
   }
   function veDT() {
@@ -870,6 +871,7 @@
     chip.title = NOI.chu;
     var t = $("#dtTiep");
     t.textContent = nhanTiep(step);
+    t.classList.toggle("lua", step === "r5");
     t.disabled = step === "bao";
     $("#dtLui").disabled = step === "setup";
     // câu hỏi
@@ -895,8 +897,9 @@
     else if (loai === "q") html = Q.coCamera() ? "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Bấm <b>Bật camera quét liên tục</b>, đưa điện thoại lia chậm qua từng cụm nhóm cho đến khi nhóm báo đủ, rồi bấm <b>Quét xong</b>." : "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>.";
     else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>.";
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của từng nhóm. Mời một em nêu cách làm, rồi bấm <b>Di chuyển</b>.";
+    else if (loai === "r" && q === 5) html = "Miếng ghép cuối cùng bay vào cầu, các bạn qua khúc cầu cuối. Nhóm về nhất tự bước lên thảm VỀ ĐÍCH, cả lớp vỗ tay. Chờ Claude bình luận xong rồi bấm <b>Đốt đuốc</b> để nhóm về nhất thắp ngọn đuốc đầu tiên.";
     else if (loai === "r") html = "Miếng ghép đang bay vào cầu, 4 bạn cùng qua khúc cầu. Chờ Claude bình luận xong rồi bấm tiếp.";
-    else if (step === "finish") html = "Bạn về nhất đã bước lên thảm VỀ ĐÍCH và thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Thứ hạng các nhóm</b> để các nhóm còn lại lần lượt thắp đuốc.";
+    else if (step === "finish") html = "Nhóm về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Thứ hạng các nhóm</b> để các nhóm còn lại lần lượt thắp đuốc.";
     else if (step === "rank") html = "Bốn ngọn đuốc cùng sáng, 4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (dải băng còn che dòng chữ). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Hiện báo tường</b>.";
     else if (step === "bao") {
       var hang = RD.xepHang(tinh());

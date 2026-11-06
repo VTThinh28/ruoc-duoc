@@ -27,7 +27,7 @@
   // che: dau (chuẩn bị, giới thiệu) · hoi (màn câu hỏi che cảnh) · cau (di chuyển câu q) · dich (về đích) · hang (thứ hạng) · bao (hiện báo tường)
   const S = {
     che: "dau", tieu: false, luat: false, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
-    R0: XA, L: null, E0: CHUA, B0: CHUA, H0: CHUA, K: null,
+    R0: XA, L: null, E0: CHUA, B0: CHUA, H0: CHUA, W0: CHUA, K: null,
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
     ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
   };
@@ -144,17 +144,21 @@
     L.board = L.kid0 + L.kidDur;
     return L;
   }
-  // các mốc phần kết: E0 bắt đầu về đích, B0 bấm "Thứ hạng các nhóm", H0 bấm "Hiện báo tường"
+  // các mốc phần kết: W0 bạn về nhất bắt đầu bước lên thảm VỀ ĐÍCH, E0 bấm "Đốt đuốc", B0 bấm "Thứ hạng các nhóm",
+  //   H0 bấm "Hiện báo tường".
+  // 6/11 trưa (thầy Thịnh: "khi nào có nhóm về nhất thì nhóm đó sẽ tự bước tới ô về đích luôn và có tiếng vỗ tay", "trên điện thoại
+  //   sẽ hiện nút đốt đuốc, tôi ấn vô thì nhóm đó sẽ đốt đuốc"): W0 nay tính từ lúc công bố câu 5 (S.W0, đặt trong SK.dat). Bạn về
+  //   nhất tự bước lên thảm (vỗ tay), rồi tới đứng cạnh đuốc chờ; TN là lúc thắp đuốc: sau khi bấm "Đốt đuốc" và bạn đã tới đuốc.
   function mocKet() {
     if (!S.ls || S.ls.length < 6) return null;
-    const xh = S.hg[5], NHAT = xh.nhat, W0 = S.E0 + 1, W1 = W0 + 2;
+    const xh = S.hg[5], NHAT = xh.nhat, W0 = S.W0, W1 = W0 + 2, TN = Math.max(S.E0 + .45, W1 + .65);
     const CHAY = [CHUA, CHUA, CHUA, CHUA];
-    NHAT.forEach(i => { CHAY[i] = W1 + .65; });
+    NHAT.forEach(i => { CHAY[i] = TN; });
     // các nhóm còn lại thắp đuốc theo hạng; bằng điểm thì cùng hạng, thắp cùng lúc
     const nhom = xh.nhom.filter(g => xh.hang[g[0]] !== 1);
     nhom.forEach((g, j) => g.forEach(i => { CHAY[i] = S.B0 + 1.35 + j * 1.25; }));
     const F0 = (nhom.length ? S.B0 + 1.35 + (nhom.length - 1) * 1.25 : S.B0) + 1.2;
-    return { hang: xh.hang, NHAT, nhom, W0, W1, CHAY, F0, BURN0: F0 + 1, BURN1: F0 + 4.1, S0: F0 + 4.2, HTH: W1 + 1.6, HB: F0 + 4.2 + 2.6 };
+    return { hang: xh.hang, NHAT, nhom, W0, W1, TN, CHAY, F0, BURN0: F0 + 1, BURN1: F0 + 4.1, S0: F0 + 4.2, HTH: TN + 1, HB: F0 + 4.2 + 2.6 };
   }
 
   /* ---------- trạng thái cây cầu ở thời điểm t ---------- */
@@ -764,10 +768,11 @@
       else { const bac = 2 + Math.min(j++, 2); hen(S.R0 + b.t0 + b.d, () => am().go && am().go(bac, .7)); }
     });
   }
+  // bạn về nhất bước lên thảm VỀ ĐÍCH (ngay sau câu 5): cả lớp vỗ tay
+  function tiengVeDich() { hen(S.K.W0 + .85, () => am().voTay && am().voTay()); }
   function tiengDich() {
-    const KK = S.K;
-    hen(KK.W0 + .85, () => am().voTay && am().voTay());           // bạn về nhất bước lên thảm VỀ ĐÍCH: cả lớp vỗ tay
-    hen(KK.W1 + .65, () => am().bungLua && am().bungLua());       // thắp đuốc
+    if (S.K.W0 + .85 > dongHo()) tiengVeDich();                 // bấm "Đốt đuốc" sớm, lúc bạn về nhất chưa tới thảm
+    hen(S.K.TN, () => am().bungLua && am().bungLua());          // nhóm về nhất thắp đuốc
   }
   function tiengHang() {
     const KK = S.K;
@@ -809,7 +814,24 @@
   //   không chạm bảng điểm.
   const BX_S = 1.35, BX_W = 284, BX_H = 246, BX_TREN = 14, BX_PHAI = 1622 + 284;
   const BINH_PHAI = Math.round(BX_PHAI - BX_W * BX_S - 18);
-  const CAU_TREN = Math.round(BX_TREN + BX_H * BX_S + 24);   // 370
+  const CAU_TREN = Math.round(BX_TREN + BX_H * BX_S + 24);   // 370: mép trên cầu không cao hơn mức này (thảm, cột đuốc nhô 10, 18 px)
+  // 6/11 trưa (thầy Thịnh: "bảng điểm đè lên đuốc rồi nên hãy cho đường chạy nhỏ xuống"): đuốc nhóm 1 (kể cả mấy đốm sáng quanh
+  //   miệng đuốc) nhô lên khỏi mặt cầu một đoạn (doanNho, tuỳ chiều cao làn) và nằm ngay dưới bảng tổng điểm, nên mép trên cầu phải
+  //   thấp hơn đáy bảng một đoạn bằng đó cộng 10 px. Chọn làn cao nhất (190 trở xuống) mà cầu vẫn nằm trên hàng nút; cửa sổ thấp
+  //   (trình duyệt không toàn màn hình, có thanh dấu trang) thì làn thấp tới 104 px. Laptop 16:10 toàn màn hình khoảng 145 px,
+  //   cửa sổ 1280×640 khoảng 109 px, TV 16:9 khoảng 123 px, khung Claude 830×630 vẫn 190 px.
+  const BANG_DAY = BX_TREN + BX_H * BX_S, LH_MIN = 104;
+  const doanNho = lh => { const ks = Math.min(lh / 120, 1.4), ds = 1 + .4 * (ks - 1); return 190 * ds - (CC.BEAM + lh / 2 + 40 * ks); };
+  function chonLan(tren, y1) {
+    let lh = 190, y0 = 0;
+    for (; lh >= LH_MIN; lh--) {
+      y0 = tren + Math.max(CAU_TREN, BANG_DAY + 10 + doanNho(lh));
+      if (y0 + 4 * lh + 5 * CC.BEAM <= y1) return { y0, lh };
+    }
+    return { y0: tren + Math.max(CAU_TREN, BANG_DAY + 10 + doanNho(LH_MIN)), lh: LH_MIN };
+  }
+  // vương miện vàng đội trên ảnh nhóm đang dẫn đầu bảng tổng điểm (CSS .dong.nhat .vm)
+  const VUONG_MIEN = '<svg class="vm" viewBox="0 0 28 21" aria-hidden="true"><path d="M3 16.5L1.6 5.2l7 5.4L14 2.2l5.4 8.4 7-5.4L25 16.5z" fill="#ffd23a" stroke="#8a5200" stroke-width="1.3" stroke-linejoin="round"/><path d="M5 14.6l-.8-6 3.9 3z" fill="#fff3b0" opacity=".8"/><rect x="3" y="15.6" width="22" height="4.2" rx="1.6" fill="#eaa21c" stroke="#8a5200" stroke-width="1.1"/><circle cx="14" cy="17.7" r="1.5" fill="#e2402e"/><circle cx="8.6" cy="17.7" r="1" fill="#fff3c4"/><circle cx="19.4" cy="17.7" r="1" fill="#fff3c4"/><circle cx="14" cy="2.4" r="1.9" fill="#fff6cf" stroke="#8a5200" stroke-width=".8"/><circle cx="1.8" cy="5.2" r="1.5" fill="#fff6cf" stroke="#8a5200" stroke-width=".7"/><circle cx="26.2" cy="5.2" r="1.5" fill="#fff6cf" stroke="#8a5200" stroke-width=".7"/></svg>';
   const NUT_DUOI = 74;               // hàng nút góc trái dưới (cao 52 px, cách đáy 14 px) + 8 px, tính bằng điểm ảnh CSS
   SK.doNet = 1;
   SK.khoiTao = function () {
@@ -818,7 +840,7 @@
     UI.nutTH = $("#nutThuHang"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut");
     UI.dong = RD.TO.map(T => {
       const d = document.createElement("div"); d.className = "dong"; d.style.setProperty("--m", T.mau); d.style.setProperty("--n", T.nhat);
-      d.innerHTML = '<span class="h">1</span><img src="' + T.mat + '" alt=""><span class="t">' + T.ten + '</span><span class="d">0</span>';
+      d.innerHTML = '<i class="quang"></i><i class="luot"></i><span class="h">1</span><img src="' + T.mat + '" alt=""><span class="t">' + T.ten + '</span><span class="d">0</span>' + VUONG_MIEN;
       UI.bx.appendChild(d);
       return { el: d, h: d.querySelector(".h"), d: d.querySelector(".d") };
     });
@@ -844,8 +866,8 @@
     const bn = Math.max(0, (vw / k - W) / 2), bd = Math.max(0, (vh / k - H) / 2);
     wd.style.setProperty("--bdT", bd.toFixed(2) + "px");          // chữ và nút neo theo đỉnh, đáy màn hình thật
     // làn cầu theo khung xem
-    const tren = -bd, duoi = H + bd, y0 = tren + CAU_TREN, y1 = duoi - Math.max(20, NUT_DUOI / k) - 4;
-    const lh = cl((y1 - y0 - 5 * CC.BEAM) / 4, 120, 190), du = Math.max(0, y1 - y0 - (4 * lh + 5 * CC.BEAM));
+    const tren = -bd, duoi = H + bd, y1 = duoi - Math.max(20, NUT_DUOI / k) - 4;
+    const { y0, lh } = chonLan(tren, y1), du = Math.max(0, y1 - y0 - (4 * lh + 5 * CC.BEAM));
     if (CC.datHinh(y0 + du / 2, lh, tren, duoi) && S.ls) datSoLieu(S.ls);
     // báo tường lúc "Hiện báo tường": cả viền gỗ (16 px quanh ảnh) cao vừa màn hình, cách mép 8 px; hai bên chừa 76 px cho
     //   cột nút; toạ độ thế giới
@@ -860,6 +882,7 @@
   // o = { che, q, ls (kết quả sau từng câu: ls[0..n]), hoatCanh, gioiThieu }
   SK.dat = function (o) {
     const t = dongHo(), hc = !!o.hoatCanh;
+    const cheCu = S.che, qCu = S.q, w0Cu = S.W0;
     S.cues = [];
     S.che = o.che;
     S.tieu = o.che === "dau";
@@ -878,9 +901,15 @@
     S.E0 = o.che === "dich" ? (hc ? t : XA) : (o.che === "hang" || o.che === "bao") ? XA : CHUA;
     S.B0 = o.che === "hang" ? (hc ? t : XA) : o.che === "bao" ? XA : CHUA;
     S.H0 = o.che === "bao" ? (hc ? t : XA) : CHUA;
+    // bạn về nhất bước lên thảm VỀ ĐÍCH ngay sau khi các bạn qua khúc cầu cuối và bảng tổng điểm cập nhật (câu 5, có hoạt cảnh).
+    //   Vào thẳng câu 5 hay các bước sau (tải lại trang, lùi lại) thì bạn đó đã đứng sẵn cạnh đuốc.
+    if (o.che === "cau" && o.q === 5) S.W0 = S.R0 + S.L.board + .8;
+    else if (o.che === "dich") S.W0 = (hc && cheCu === "cau" && qCu === 5 && w0Cu < CHUA) ? w0Cu : XA;
+    else if (o.che === "hang" || o.che === "bao") S.W0 = XA;
+    else S.W0 = CHUA;
     S.K = mocKet();
     if (hc) {
-      if (o.che === "cau") tiengCau();
+      if (o.che === "cau") { tiengCau(); if (o.q === 5 && S.K) tiengVeDich(); }
       else if (o.che === "dich" && S.K) tiengDich();
       else if (o.che === "hang" && S.K) tiengHang();
       else if (o.che === "bao") tiengBao();

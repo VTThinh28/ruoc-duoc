@@ -539,23 +539,30 @@
     let g = ctx.createLinearGradient(XS, 0, xe, 0);
     g.addColorStop(0, "rgba(255,205,90," + (.07 * a) + ")"); g.addColorStop(.85, "rgba(255,215,100," + (.20 * a * nh) + ")"); g.addColorStop(1, "rgba(255,215,100,0)");
     ctx.fillStyle = g; ctx.fillRect(XS, y0, xe - XS, LH);
-    const L = xe - XS + 420, xs = XS - 210 + ((t * 380) % L);
+    // 6/11 trưa (thầy Thịnh: "đường đi của nhóm đang dẫn đầu thường bị giật hình"): chu kỳ vệt sáng trước đây tính theo đoạn
+    //   đang sáng; lúc các bạn đang đi, đoạn đó dài thêm từng khung hình nên vệt sáng nhảy lung tung. Nay chu kỳ cố định theo
+    //   cả chiều dài làn (đoạn chưa sáng bị cắt đi, vệt sáng chỉ lướt qua phần đã sáng)
+    const XF = CC.THAM[0] - 10, mep = x => Math.min(1, (xe - 10 - x) / 50);
+    const L = XF + 60 - XS + 420, xs = XS - 210 + ((t * 380) % L);
     g = ctx.createLinearGradient(xs - 90, 0, xs + 90, 0);
     g.addColorStop(0, "rgba(255,245,200,0)"); g.addColorStop(.5, "rgba(255,245,200," + (.30 * a) + ")"); g.addColorStop(1, "rgba(255,245,200,0)");
     ctx.fillStyle = g; ctx.fillRect(xs - 90, y0, 180, LH);
     let s = 31 + i * 7; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
     const bui = domTron("bui", "255,240,170", "255,200,80");   // 6/11: đốm sáng vẽ sẵn, không tạo dải màu mỗi khung hình
-    for (let k = 0; k < 24; k++) {     // bụi vàng bay lên
-      const x = XS + 20 + rnd() * (xe - XS - 40), ph = rnd(), q = (t * .45 + ph) % 1, y = y1 - 8 - q * (LH - 10);
-      const rr = 7 * (1 - q * .5);
-      ctx.globalAlpha = .9 * a * (1 - q); ctx.drawImage(bui, x - rr, y - rr, 2 * rr, 2 * rr);
+    // bụi và sao đứng chỗ cố định trên cả chiều dài làn (trước đây co giãn theo đoạn đang sáng nên trượt ngang lúc các bạn đi);
+    //   đoạn sáng dài ra tới đâu thì hiện dần tới đó
+    for (let k = 0; k < 34; k++) {     // bụi vàng bay lên
+      const x = XS + 20 + rnd() * (XF - XS - 40), ph = rnd(), q = (t * .45 + ph) % 1, y = y1 - 8 - q * (LH - 10);
+      const rr = 7 * (1 - q * .5), m = mep(x);
+      if (m <= 0) continue;
+      ctx.globalAlpha = .9 * a * m * Math.min(1, q / .15) * (1 - q); ctx.drawImage(bui, x - rr, y - rr, 2 * rr, 2 * rr);   // 6/11 trưa: hiện dần, không bật ra đột ngột
     }
     ctx.restore();
     ctx.save();
-    for (let k = 0; k < 22; k++) {     // sao lấp lánh
-      const x = XS + 30 + rnd() * (xe - XS - 60), y = y0 + 14 + rnd() * (LH - 28), ph = rnd() * 6.3;
+    for (let k = 0; k < 30; k++) {     // sao lấp lánh
+      const x = XS + 30 + rnd() * (XF - XS - 60), y = y0 + 14 + rnd() * (LH - 28), ph = rnd() * 6.3;
       const tw = Math.pow(Math.max(0, Math.sin(t * 2.3 + ph)), 3);
-      const sz = 9 + 10 * rnd(); if (tw > .05) sao(ctx, x, y, sz * tw, a * tw);
+      const sz = 9 + 10 * rnd(), m = mep(x); if (tw > .05 && m > 0) sao(ctx, x, y, sz * tw, a * tw * m);
     }
     // hai mép đường viền vàng: một nét sáng vẽ sẵn (đầu, thân, cuối), thân kéo dài theo chiều dài đường
     const len = xe - 30 - XS;
@@ -628,18 +635,23 @@
     let s = 97 + i * 13; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
     ctx.save();
     ctx.beginPath(); ctx.rect(XS, y0 - 26, xe - XS + 20, LH + 26); ctx.clip();   // chỉ rơi trong làn của tổ dẫn đầu
-    for (let k = 0; k < 18; k++) {
-      const xd = XS + 30 + rnd() * (xe - XS - 60), yd = y0 + 16 + rnd() * (LH - 32);
+    const XF = CC.THAM[0] - 10;            // 6/11 trưa: sao rơi đứng chỗ cố định trên cả làn, đoạn sáng tới đâu hiện tới đó
+    for (let k = 0; k < 24; k++) {
+      const xd = XS + 30 + rnd() * (XF - XS - 60), yd = y0 + 16 + rnd() * (LH - 32);
       const P = 2.4 + rnd() * 1.4, ph = rnd(), r0 = 8 + rnd() * 7, quay = (rnd() - .5) * 3, goc0 = rnd() * 6.3;
       const c = CC.MAU_SAO[Math.floor(rnd() * CC.MAU_SAO.length)];
+      const m = Math.min(1, (xe - 10 - xd) / 50); if (m <= 0) continue;
       const q = ((t / P + ph) % 1), roi = .55;
       let x, y, al, r = r0, goc;
+      // 6/11 trưa (thầy Thịnh: "đường đi của nhóm đang dẫn đầu thường bị giật hình"): trước đây sao vừa chạm cầu thì góc xoay
+      //   nhảy sang góc khác (lấy theo bội số chu kỳ, không theo lúc chạm), đang nằm trên cầu cũng có lúc nhảy; nay sao xoay theo
+      //   thời gian trong chu kỳ và nằm yên đúng góc lúc chạm cầu
       if (q < roi) {                       // đang rơi, lắc nhẹ, xoay chậm
         const p = q / roi;
-        x = xd + 10 * Math.sin(t * 2 + k) * (1 - p); y = yd - 95 * (1 - p); al = Math.min(1, p / .25); goc = goc0 + quay * t;
+        x = xd + 10 * Math.sin(t * 2 + k) * (1 - p); y = yd - 95 * (1 - p); al = Math.min(1, p / .25); goc = goc0 + quay * q * P;
       } else {                             // chạm mặt cầu: lấp lánh rồi mờ dần
         const p = (q - roi) / (1 - roi);
-        x = xd; y = yd; al = 1 - p * p; r = r0 * (1 + .25 * Math.sin(p * Math.PI)); goc = goc0 + quay * (Math.floor(t / P) * P);
+        x = xd; y = yd; al = 1 - p * p; r = r0 * (1 + .25 * Math.sin(p * Math.PI)); goc = goc0 + quay * roi * P;
       }
       // ngôi sao có quầng sáng vẽ sẵn theo từng màu (bán kính 16), rồi thu phóng theo r
       const anh = veSan("saoRoi" + c, 32, 32, 18, (c2, pad) => {
@@ -648,7 +660,7 @@
         sao5(c2, 16); c2.fillStyle = c; c2.fill();
         c2.shadowBlur = 0; c2.lineWidth = 1.5 * 16 / 11.5; c2.strokeStyle = "rgba(190,120,20,.7)"; c2.stroke();
       });
-      ctx.save(); ctx.globalAlpha = a * al;
+      ctx.save(); ctx.globalAlpha = a * al * m;
       ctx.translate(x, y); ctx.rotate(goc); ctx.scale(r / 16, r / 16);
       ctx.drawImage(anh, -34, -34);
       ctx.restore();
