@@ -356,7 +356,8 @@
     CC.veBeDa(ctx);                                  // 5/11: bệ đá sáng màu để đuốc nổi lên, không lẫn với gỗ
     for (let i = 0; i < 4; i++) veDuocTinh(ctx, i);
   };
-  CC.veCauDong = function (ctx, A, st, cot) {
+  // khongDuoc: bỏ lửa đuốc (phần kết vẽ sẵn cả cây cầu, lửa đuốc vẽ riêng mỗi khung bằng CC.veLuaDuoc)
+  CC.veCauDong = function (ctx, A, st, cot, khongDuoc) {
     const t0 = st.t || 0;
     const trong = [], phun = [];
     for (let i = 0; i < 4; i++) for (let k = 0; k < 5; k++) {
@@ -384,8 +385,9 @@
     CC.veTham(ctx, t0, "dong");
     // miếng đang bay (vẽ trên dầm)
     if (st.bay && st.bay.length) { const pat = ctx.createPattern(A.go, "repeat"); st.bay.forEach(b => veMieng(ctx, A, pat, b.i, b.k, b.m, b.tr)); }
-    for (let i = 0; i < 4; i++) veDuocDong(ctx, i, (st.duoc && st.duoc[i]) || {}, t0);
+    if (!khongDuoc) for (let i = 0; i < 4; i++) veDuocDong(ctx, i, (st.duoc && st.duoc[i]) || {}, t0);
   };
+  CC.veLuaDuoc = function (ctx, st) { for (let i = 0; i < 4; i++) veDuocDong(ctx, i, (st.duoc && st.duoc[i]) || {}, st.t || 0); };
   // vẽ cả cây cầu một lần (phần kết khi lửa đốt màn đêm, ảnh phác thảo)
   CC.veCau = function (ctx, A, st) { CC.veCauTinh(ctx, A, st, -1); CC.veCauDong(ctx, A, st, -1); };
 

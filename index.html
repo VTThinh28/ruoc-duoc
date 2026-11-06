@@ -47,6 +47,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 /* 6/11 thầy Thịnh (hai viền đen trên dưới): khung xem không đúng 16:9 thì phần dư vẽ tiếp dòng sông bằng ảnh nền lật gương, tối dần ra ngoài.
    --bd, --bn: bề dày phần dư trên dưới, hai bên (san-khau.js tính theo cỡ cửa sổ). Màn câu hỏi dùng cùng cách, làm mờ cả khối. */
 .nen-ngoai,.mc-nen{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none}
+#nenNgoai{will-change:opacity}
 .nen-ngoai i,.mc-nen i{position:absolute;display:block;background-repeat:no-repeat}
 .nn-giua{left:0;top:0;width:1920px;height:1080px;background-image:url(anh/song-dem.webp);background-size:1920px 1080px}
 .nn-tren,.nn-duoi{left:0;width:1920px;height:var(--bd,40px);transform:scaleY(-1)}
@@ -74,7 +75,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 #world .binh .cho i:nth-child(2){animation-delay:.15s}
 #world .binh .cho i:nth-child(3){animation-delay:.3s}
 @keyframes nhay{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-8px);opacity:1}}
-#world .bx{position:absolute;left:1622px;top:calc(14px - var(--bdT,0px));width:284px;height:246px;padding:9px 12px 8px;border-radius:22px;background:rgba(255,250,236,.96);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#world .bx{position:absolute;left:1622px;top:calc(14px - var(--bdT,0px));width:284px;height:246px;transform:scale(1.35);transform-origin:100% 0;padding:9px 12px 8px;border-radius:22px;background:rgba(255,250,236,.96);box-shadow:0 8px 24px rgba(0,0,0,.45)}
 #world .bx h3{margin:0;text-align:center;font:800 28px/1 var(--f-tieu);color:#6b3f00}
 #world .dong{position:absolute;left:12px;right:12px;height:44px;display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:14px;background:var(--n)}
 #world .dong .h{width:22px;font:800 26px/1 var(--f-tieu);color:#6b3f00;text-align:center}
@@ -400,14 +401,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=e9d7625d"></script>
-<script src="js/scanlib.js?v=e9d7625d"></script>
-<script src="js/du-lieu.js?v=e9d7625d"></script>
-<script src="js/dong-bo.js?v=e9d7625d"></script>
-<script src="js/am-thanh.js?v=e9d7625d"></script>
-<script src="js/quet.js?v=e9d7625d"></script>
-<script src="js/cay-cau.js?v=e9d7625d"></script>
-<script src="js/san-khau.js?v=e9d7625d"></script>
-<script src="js/tro-choi.js?v=e9d7625d"></script>
+<script src="js/cau-hinh.js?v=03944018"></script>
+<script src="js/scanlib.js?v=03944018"></script>
+<script src="js/du-lieu.js?v=03944018"></script>
+<script src="js/dong-bo.js?v=03944018"></script>
+<script src="js/am-thanh.js?v=03944018"></script>
+<script src="js/quet.js?v=03944018"></script>
+<script src="js/cay-cau.js?v=03944018"></script>
+<script src="js/san-khau.js?v=03944018"></script>
+<script src="js/tro-choi.js?v=03944018"></script>
 </body>
 </html>

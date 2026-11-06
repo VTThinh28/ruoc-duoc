@@ -31,7 +31,7 @@
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
     ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
   };
-  let cv, ctx, A = null, rDo = 1, cvDem, cvCau, bao = null, baoKhung = null, daSanSang = false;
+  let cv, ctx, A = null, rDo = 1, bao = null, baoSo = 0, baoKhung = null, daSanSang = false;
   const UI = {};
 
   /* ---------- tải hình ---------- */
@@ -83,14 +83,29 @@
     });
     return c;
   }
+  // việc nặng chỉ làm một lần: đợi lúc máy rảnh (giữa hai khung hình) để khỏi làm khựng hoạt cảnh
+  const henRanh = fn => (window.requestIdleCallback ? requestIdleCallback(() => fn(), { timeout: 700 }) : setTimeout(fn, 60));
+  // 6/11 tối (thầy Thịnh: "phần chuyển cảnh sang báo tường bị lag với giật"): ảnh báo tường (ảnh thầy chọn trên GitHub có thể là
+  //   ảnh in rất lớn) được giải mã và thu về đúng cỡ dùng trên sân khấu (K.w × K.h) ngay lúc nạp, khung báo tường dựng sẵn lúc
+  //   máy rảnh; trước đây đợi tới khung hình đầu tiên của lửa đốt mới làm nên hình khựng lại.
+  async function vuaCoBao(im) {
+    try {
+      if (window.createImageBitmap) return await createImageBitmap(im, { resizeWidth: K.w, resizeHeight: K.h, resizeQuality: "high" });
+    } catch (e) { /* không thu nhỏ được bằng cách này: dùng khung vẽ */ }
+    const c = document.createElement("canvas"); c.width = K.w; c.height = K.h;
+    const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(im, 0, 0, K.w, K.h);
+    return c;
+  }
   let baoLan = 0;
   SK.anhBao = async function (url) {
     const lan = ++baoLan;
-    const im = url ? await tai(url) : null;
+    let im = url ? await tai(url) : null;
+    if (im) { try { im = await vuaCoBao(im); } catch (e) { /* giữ ảnh gốc */ } }
     const moi = im || await baoGia();
     if (lan !== baoLan) return;
-    bao = moi; baoKhung = null;
+    bao = moi; baoSo++; baoKhung = null;
     SK.coAnhBao = !!im;
+    henRanh(khungBao);
   };
   // khung báo tường (viền gỗ vàng, bóng đổ) vẽ sẵn một lần cho mỗi ảnh
   function khungBao() {
@@ -272,8 +287,8 @@
     const u = lin(t, S.K.BURN0, S.K.BURN1);
     return u < .25 ? 130 * (u / .25) : 130 + 1600 * em((u - .25) / .75);
   }
-  function duongChay(c, R, t) {
-    c.beginPath();
+  function duongChay(c, R, t, noi) {
+    if (!noi) c.beginPath();
     for (let k = 0; k <= 160; k++) {
       const th = k / 160 * 6.2832;
       const r = R * (1 + .10 * Math.sin(5 * th + 1.3) + .06 * Math.sin(9 * th + t * 2) + .04 * Math.sin(17 * th + .7));
@@ -289,12 +304,33 @@
     EMB = []; for (let j = 0; j < 170; j++) EMB.push({ tb: rnd(), th: rnd() * 6.2832, life: 1 + rnd() * .7, v: .6 + rnd(), r: 2.2 + rnd() * 2.6, ph: rnd() * 6 });
     return EMB;
   }
-  // mép giấy cháy: viền nâu, viền cam rực, chỉ vàng (vẽ nhiều nét chồng nhau thay cho bóng mờ)
+  // đường mép cháy chỉ gồm phần nằm trong khung vẽ (6/11 tối): lỗ cháy lớn dần quá màn hình thì phần lớn vòng tròn ở ngoài,
+  //   khỏi tính nét cho phần đó. Lỗ còn nhỏ (cả vòng thấy được) thì vẫn là vòng kín như duongChay.
+  function duongMep(c, R, t) {
+    const E = S.ext, x0 = -E.bn - 90, y0 = -E.bd - 90, x1 = W + E.bn + 90, y1 = H + E.bd + 90, N = 160, P = [];
+    for (let k = 0; k < N; k++) {
+      const th = k / N * 6.2832;
+      const r = R * (1 + .10 * Math.sin(5 * th + 1.3) + .06 * Math.sin(9 * th + t * 2) + .04 * Math.sin(17 * th + .7));
+      const x = C51[0] + r * Math.cos(th), y = C51[1] + r * Math.sin(th);
+      P.push([x, y, x > x0 && x < x1 && y > y0 && y < y1]);
+    }
+    c.beginPath();
+    const s = P.findIndex(p => !p[2]);
+    if (s < 0) { P.forEach((p, k) => (k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); return; }
+    let dang = false;
+    for (let j = 1; j <= N; j++) {
+      const p = P[(s + j) % N], q = P[(s + j - 1) % N];
+      if (p[2]) { if (!dang) { c.moveTo(q[0], q[1]); dang = true; } c.lineTo(p[0], p[1]); }
+      else if (dang) { c.lineTo(p[0], p[1]); dang = false; }
+    }
+  }
+  // mép giấy cháy: viền nâu, viền cam rực, chỉ vàng (vẽ nhiều nét chồng nhau thay cho bóng mờ).
+  //   6/11 tối: 9 nét thay 11, tổng bề rộng 290 thay 424 (dải mờ ngoài cùng gộp lại), độ đậm từng dải gần như cũ
   function veMepChay(c, R, t) {
-    c.save(); duongChay(c, R, t); c.lineJoin = "round";
-    [[78, "rgba(60,20,0,.10)"], [60, "rgba(60,20,0,.16)"], [44, "rgba(60,20,0,.24)"], [30, "rgba(80,34,8,.85)"]].forEach(([w, m]) => { c.lineWidth = w; c.strokeStyle = m; c.stroke(); });
+    c.save(); duongMep(c, R, t); c.lineJoin = "round";
+    [[72, "rgba(60,20,0,.16)"], [44, "rgba(60,20,0,.30)"], [30, "rgba(80,34,8,.85)"]].forEach(([w, m]) => { c.lineWidth = w; c.strokeStyle = m; c.stroke(); });
     c.globalCompositeOperation = "lighter";
-    [[74, "rgba(255,154,46,.07)"], [52, "rgba(255,154,46,.11)"], [34, "rgba(255,154,46,.16)"], [14, "rgba(255,120,30,.9)"]].forEach(([w, m]) => { c.lineWidth = w; c.strokeStyle = m; c.stroke(); });
+    [[66, "rgba(255,154,46,.10)"], [38, "rgba(255,154,46,.22)"], [14, "rgba(255,120,30,.9)"]].forEach(([w, m]) => { c.lineWidth = w; c.strokeStyle = m; c.stroke(); });
     [[22, "rgba(255,233,160,.14)"], [12, "rgba(255,233,160,.28)"], [4, "rgba(255,236,150,.95)"]].forEach(([w, m]) => { c.lineWidth = w; c.strokeStyle = m; c.stroke(); });
     c.restore();
   }
@@ -311,38 +347,100 @@
     const cx0 = K.x + K.w / 2, cy0 = K.y + K.h / 2;
     return { p, s: 1 + (F.w / K.w - 1) * p, cx0, cy0, cx: cx0 + (F.x + F.w / 2 - cx0) * p, cy: cy0 + (F.y + F.h / 2 - cy0) * p };
   }
-  let baoMo = null, baoMoCua = null;
-  function veBaoMo(c, a) {             // báo tường nhoè phủ kín khung xem (vẽ sẵn nhỏ rồi phóng to: tự nhoè)
-    if (!bao || a <= 0) return;
-    if (baoMoCua !== bao) {
-      baoMo = document.createElement("canvas"); baoMo.width = 120; baoMo.height = 85;
-      const g = baoMo.getContext("2d");
-      try { g.filter = "blur(2px)"; } catch (e) { /* bỏ qua */ }
-      g.drawImage(bao, -6, -6, 132, 97); g.filter = "none";
-      g.fillStyle = "rgba(30,17,6,.66)"; g.fillRect(0, 0, 120, 85);
-      baoMoCua = bao;
+  // báo tường nhoè phủ kín khung vẽ (vẽ nhỏ rồi phóng to thì tự nhoè). 6/11 tối: phóng to một lần ra đúng cỡ khung vẽ rồi giữ lại;
+  //   trước đây phóng to mỗi khung hình, mất khoảng 9 ms mỗi khung trên máy không có card đồ hoạ.
+  let moLon = null, khoaMo = "";
+  function nenMo() {
+    if (!bao || !cv) return null;
+    const E = S.ext, khoa = [cv.width, cv.height, baoSo, E.EW.toFixed(1), E.EH.toFixed(1)].join("|");
+    if (moLon && khoa === khoaMo) return moLon;
+    const nho = document.createElement("canvas"); nho.width = 120; nho.height = 85;
+    let g = nho.getContext("2d");
+    try { g.filter = "blur(2px)"; } catch (e) { /* bỏ qua */ }
+    g.drawImage(bao, -6, -6, 132, 97); g.filter = "none";
+    g.fillStyle = "rgba(30,17,6,.66)"; g.fillRect(0, 0, 120, 85);
+    if (!moLon) moLon = document.createElement("canvas");
+    moLon.width = cv.width; moLon.height = cv.height;
+    g = moLon.getContext("2d");
+    g.fillStyle = "#130c06"; g.fillRect(0, 0, moLon.width, moLon.height);      // phủ kín (ảnh có chỗ trong suốt cũng không lộ)
+    const s = Math.max(moLon.width / 120, moLon.height / 85), w = 120 * s, h = 85 * s;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(nho, (moLon.width - w) / 2, (moLon.height - h) / 2, w, h);
+    khoaMo = khoa;
+    return moLon;
+  }
+  const nenBao = () => CC.veSan("nenBao", W, H, 0, g => {
+    const bg = g.createRadialGradient(960, 432, 50, 960, 432, 1150);
+    bg.addColorStop(0, "#3b2a17"); bg.addColorStop(.75, "#130c06"); bg.addColorStop(1, "#130c06");
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  });
+  // nền tối và khung báo tường vẽ chung một tấm đúng cỡ, đúng độ nét khung vẽ (6/11 tối): lúc lửa đốt và lúc chờ bấm "Hiện báo
+  //   tường" mỗi khung chỉ chép một tấm này (trước đây chép hai tấm lớn, một tấm có bóng đổ trong suốt)
+  let cvCanhBao = null, khoaCanhBao = "";
+  function canhBao() {
+    const kb = khungBao(); if (!kb || !cv) return null;
+    const E = S.ext, khoa = [cv.width, cv.height, rDo.toFixed(4), baoSo, E.bn.toFixed(2), E.bd.toFixed(2)].join("|");
+    if (!cvCanhBao || khoa !== khoaCanhBao) {
+      if (!cvCanhBao) cvCanhBao = document.createElement("canvas");
+      cvCanhBao.width = cv.width; cvCanhBao.height = cv.height;
+      const g = cvCanhBao.getContext("2d");
+      g.setTransform(rDo, 0, 0, rDo, Math.round(E.bn * rDo), Math.round(E.bd * rDo));
+      g.drawImage(nenBao(), 0, 0); g.drawImage(kb.c, kb.dx, kb.dy);
+      khoaCanhBao = khoa;
     }
-    const E = S.ext, s = Math.max(E.EW / 120, E.EH / 85), w = 120 * s, h = 85 * s;
-    c.save(); c.globalAlpha = a; c.imageSmoothingQuality = "high";
-    c.drawImage(baoMo, W / 2 - w / 2, H / 2 - h / 2, w, h);
-    c.restore();
+    return cvCanhBao;
+  }
+  // cây cầu lúc lửa đốt màn đêm (6/11 tối): vẽ sẵn cả cây cầu một tấm ở bước thứ hạng (thảm đỏ, số điểm, nhãn nhóm đã xong;
+  //   vệt sáng trên miếng vàng đứng yên), mỗi khung chỉ vẽ lửa bốn ngọn đuốc. Trước đây vẽ lại cả cây cầu mỗi khung (khoảng 20 ms).
+  let cvCauKet = null, khoaCauKet = "";
+  function cauKet(st) {
+    const rong = Math.round(W * rDo), cao = Math.round(H * rDo);
+    const khoa = [rong, cao, rDo.toFixed(4), CC.banSan, CC.Y0, CC.LH, S.B0, S.E0,
+      st.lap.map(r => [0, 1, 2, 3, 4].map(k => (r[k] ? (r[k].vang ? 2 : 1) : 0)).join("")).join(",")].join("|");
+    if (!cvCauKet || khoa !== khoaCauKet) {
+      if (!cvCauKet) cvCauKet = document.createElement("canvas");
+      if (cvCauKet.width !== rong) cvCauKet.width = rong;
+      if (cvCauKet.height !== cao) cvCauKet.height = cao;
+      const g = cvCauKet.getContext("2d");
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cvCauKet.width, cvCauKet.height);
+      g.setTransform(rDo, 0, 0, rDo, 0, 0);
+      CC.veCauTinh(g, A, st, -1); CC.veCauDong(g, A, st, -1, true); veDo(g, st, st.t); CC.veSo(g, st); CC.nhan(g, RD.TO);
+      khoaCauKet = khoa;
+    }
+    return cvCauKet;
+  }
+  // những thứ nặng của phần kết (lớp cầu đứng yên, nền tối, khung báo tường, nền nhoè) dựng sẵn lúc máy rảnh ngay khi bắt đầu
+  //   về đích, không đợi tới khung hình đầu tiên cần tới
+  let khoaHenKet = "";
+  function chuanBiKet() {
+    const khoa = [S.che, cv.width, cv.height, baoSo, CC.Y0, CC.LH].join("|");
+    if (khoa === khoaHenKet) return;
+    khoaHenKet = khoa;
+    henRanh(() => { if (S.che === "hang" && daSanSang && S.ls && S.ls.length >= 6) cauKet(trangThai(dongHo()).st); });
+    henRanh(() => { nenBao(); khungBao(); });
+    henRanh(canhBao);
+    henRanh(nenMo);
   }
   function veBao(c, t, nguoi) {
     const KK = S.K;
-    c.drawImage(CC.veSan("nenBao", W, H, 0, g => {
-      const bg = g.createRadialGradient(960, 432, 50, 960, 432, 1150);
-      bg.addColorStop(0, "#3b2a17"); bg.addColorStop(.75, "#130c06"); bg.addColorStop(1, "#130c06");
-      g.fillStyle = bg; g.fillRect(0, 0, W, H);
-    }), 0, 0);
-    const kb = khungBao(); if (!kb) return;
     const to = baoTo(t);
-    c.save();
-    if (to) { veBaoMo(c, to.p); c.translate(to.cx, to.cy); c.scale(to.s, to.s); c.translate(-to.cx0, -to.cy0); }
     // phóng to phần tiêu đề sau khi hiện báo tường, rồi thu về
     const z = 1 + .75 * (em(lin(t, S.H0 + 1.0, S.H0 + 2.4)) - em(lin(t, S.H0 + 4.0, S.H0 + 5.4)));
+    const dung = !to && z === 1;                                     // báo tường đứng yên: chép tấm vẽ sẵn
+    if (dung) {
+      const cb = canhBao(); if (!cb) return;
+      c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(cb, 0, 0); c.restore();
+    } else if (!(to && to.p >= 1)) c.drawImage(nenBao(), 0, 0);     // nền tối (nền nhoè đã phủ kín thì khỏi vẽ)
+    const kb = khungBao(); if (!kb) return;
+    c.save();
+    if (to) {
+      const m = nenMo();
+      if (m) { c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = to.p; c.drawImage(m, 0, 0); c.restore(); }
+      c.translate(to.cx, to.cy); c.scale(to.s, to.s); c.translate(-to.cx0, -to.cy0);
+    }
     const ox = K.x + .5 * K.w, oy = K.y + .07 * K.h;
     c.save(); c.translate(ox, oy); c.scale(z, z); c.translate(-ox, -oy);
-    c.drawImage(kb.c, kb.dx, kb.dy);
+    if (!dung) c.drawImage(kb.c, kb.dx, kb.dy);
     // 4 bạn vào ô thiệp: che chữ "Ô dán thiệp n" để ghi tên nhóm
     const trang = CC.veSan("oTrang", 250, 60, 22, (g, pad) => {
       g.fillStyle = "#fffbf2"; g.shadowColor = "#fffbf2"; g.shadowBlur = 14;
@@ -501,6 +599,7 @@
     ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
     if (!sanSang) { ctx.fillStyle = "#0b1428"; ctx.fillRect(-E.bn, -E.bd, E.EW, E.EH); return; }
     const { st, no } = trangThai(t);
+    if (S.che === "dich" || S.che === "hang") chuanBiKet();
     if (dem) {
       const cot = cotBay(t), tinh = lopTinh(st, cot, rDo);
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(tinh, ox - tinhMx, oy - tinhMy);
@@ -520,15 +619,21 @@
       }
     } else {
       const R = banKinh(t), u = lin(t, KK.BURN0, KK.BURN1);
-      veBao(ctx, t, t >= KK.S0);
       if (u < 1) {
-        const d = cvDem.getContext("2d");
-        d.setTransform(1, 0, 0, 1, 0, 0); d.globalCompositeOperation = "source-over"; d.clearRect(0, 0, cvDem.width, cvDem.height);
-        d.setTransform(rDo, 0, 0, rDo, 0, 0); CC.veNen(d, A, t);
-        d.globalCompositeOperation = "destination-out"; duongChay(d, R, t); d.fill();
-        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(cvDem, ox, oy); ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
+        // 6/11 tối (thầy Thịnh: "phần chuyển cảnh sang báo tường bị lag với giật"): trên máy không có card đồ hoạ mỗi khung lửa đốt
+        //   mất khoảng 50 ms. Nay báo tường chỉ vẽ trong khung bao quanh lỗ cháy (chỗ khác màn đêm còn che); màn đêm vẽ thẳng lên
+        //   khung vẽ, cắt bỏ phần đã cháy (trước đây vẽ ra lớp riêng, khoét lỗ rồi chép cả khung); cây cầu dùng lớp vẽ sẵn.
+        const m = Math.ceil(1.2 * R + 60);
+        ctx.save(); ctx.beginPath(); ctx.rect(C51[0] - m, C51[1] - m, 2 * m, 2 * m); ctx.clip();
+        veBao(ctx, t, t >= KK.S0);
+        ctx.restore();
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+        ctx.beginPath(); ctx.rect(0, 0, W, H); duongChay(ctx, R, t, true); ctx.clip("evenodd");
+        CC.veNen(ctx, A, t);
+        ctx.restore();
         veMepChay(ctx, R, t);
-      }
+      } else veBao(ctx, t, t >= KK.S0);
       // tàn lửa lấp lánh bay lên
       const dom = domSang("tan", "rgba(255,240,170,1)", "rgba(255,140,40,0)");
       ctx.save(); ctx.globalCompositeOperation = "lighter";
@@ -539,13 +644,15 @@
         ctx.globalAlpha = 1 - q; ctx.drawImage(dom, x - e.r * 3, y - e.r * 3, e.r * 6, e.r * 6);
       });
       ctx.restore();
-      // cây cầu không bị đốt: mờ dần khi báo tường đã lộ gần hết
+      // cây cầu không bị đốt: mờ dần khi báo tường đã lộ gần hết. Cả cây cầu đã vẽ sẵn thành một tấm phẳng (cauKet) nên chép thẳng
+      //   lên khung vẽ với độ mờ là cả cây cầu mờ đều; mỗi khung chỉ vẽ thêm lửa bốn ngọn đuốc
       const ac = 1 - lin(t, KK.F0 + 2.4, KK.F0 + 4.0);
       if (ac > 0) {
-        const c2 = cvCau.getContext("2d");
-        c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, cvCau.width, cvCau.height); c2.setTransform(rDo, 0, 0, rDo, 0, 0);
-        CC.veCau(c2, A, st); veDo(c2, st, t); CC.veSo(c2, st); CC.nhan(c2, RD.TO);
-        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ac; ctx.drawImage(cvCau, ox, oy); ctx.restore();
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ac;
+        ctx.drawImage(cauKet(st), ox, oy);
+        ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
+        CC.veLuaDuoc(ctx, st);
+        ctx.restore();
       }
       if (t < KK.S0) CC.veNguoi(ctx, A, [0, 1, 2, 3].map(i => ({ i, x: choDuoc(i)[0], y: choDuoc(i)[1], hang: KK.hang[i] })), t);
       veTiaLua(ctx, t);
@@ -579,7 +686,7 @@
     if (coBang) {
       const vao = cau && S.q === 1 ? lin(t, bang0, bang0 + .4) : 1;
       datKieu(UI.bx, "opacity", String(Math.min(vao, moDich)));
-      datKieu(UI.bx, "transform", "translateX(" + (60 * (1 - vao)).toFixed(1) + "px)");
+      datKieu(UI.bx, "transform", "translateX(" + (60 * (1 - vao)).toFixed(1) + "px) scale(" + BX_S + ")");
       veBang(t, q);
     }
     // bóng nói lời bình (chữ hiện dần như đang gõ)
@@ -588,7 +695,7 @@
     datAn(UI.binh, !coBinh);
     if (coBinh) {
       const L0 = Math.max(306, (UI.pillW || 0) + 24);
-      datKieu(UI.binh, "left", L0 + "px"); datKieu(UI.binh, "width", (1602 - L0) + "px");
+      datKieu(UI.binh, "left", L0 + "px"); datKieu(UI.binh, "width", (BINH_PHAI - L0) + "px");
       datKieu(UI.binh, "opacity", String(moDich));
       const B = S.binh;
       if (B.q !== q || !B.chu) { if (UI.binh.dataset.cho !== "1") { UI.binh.dataset.cho = "1"; UI.binh.innerHTML = '<span class="cho"><i></i><i></i><i></i></span>'; } }
@@ -696,12 +803,17 @@
   //   Mép trên cầu cách đỉnh màn hình CAU_TREN (toạ độ thế giới) để nhãn câu, lời Claude và bảng điểm nằm trên cầu;
   //   mép dưới cầu nằm trên hàng nút góc trái. Làn cao 120 tới 190 px (laptop 16:10 khoảng 184, TV 16:9 khoảng 163);
   //   làn chạm 190 px thì cầu nằm giữa khoảng đó.
-  const CAU_TREN = 270;
+  // 6/11 tối (thầy Thịnh: "cho đường chơi nhỏ xuống 1 chút và phóng to bảng điểm lên"): bảng điểm to 1,35 lần, neo góc phải trên
+  //   (CSS .bx: rộng 284, cao 246, cách đỉnh 14); cầu bắt đầu ngay dưới bảng điểm (chừa 24 px vì cột đuốc nhô lên 18 px trên mặt
+  //   cầu) nên làn thấp đi một chút (laptop 16:10 khoảng 159 px thay 184, TV 16:9 khoảng 138 thay 163). Lời Claude hẹp lại để
+  //   không chạm bảng điểm.
+  const BX_S = 1.35, BX_W = 284, BX_H = 246, BX_TREN = 14, BX_PHAI = 1622 + 284;
+  const BINH_PHAI = Math.round(BX_PHAI - BX_W * BX_S - 18);
+  const CAU_TREN = Math.round(BX_TREN + BX_H * BX_S + 24);   // 370
   const NUT_DUOI = 74;               // hàng nút góc trái dưới (cao 52 px, cách đáy 14 px) + 8 px, tính bằng điểm ảnh CSS
   SK.doNet = 1;
   SK.khoiTao = function () {
     cv = $("#cv"); ctx = cv.getContext("2d");
-    cvDem = document.createElement("canvas"); cvCau = document.createElement("canvas");
     UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
     UI.nutTH = $("#nutThuHang"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut");
     UI.dong = RD.TO.map(T => {
@@ -742,7 +854,6 @@
     datKieu(cv, "left", (-bn).toFixed(1) + "px"); datKieu(cv, "top", (-bd).toFixed(1) + "px");
     datKieu(cv, "width", S.ext.EW.toFixed(1) + "px"); datKieu(cv, "height", S.ext.EH.toFixed(1) + "px");
     { const w = Math.round(S.ext.EW * rDo), h = Math.round(S.ext.EH * rDo); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; }
-    [cvDem, cvCau].forEach(c => { const w = Math.round(W * rDo), h = Math.round(H * rDo); if (c.width !== w) c.width = w; if (c.height !== h) c.height = h; });
   };
 
   /* ---------- điều khiển từ trò chơi ---------- */
