@@ -2,9 +2,13 @@
 (function () {
   "use strict";
   var RD = window.RD = window.RD || {};
-  var A = RD.AmThanh = { bat: true };
+  var A = RD.AmThanh = { bat: true, muc: 1 };
   var ac = null, tong = null, nhieu = null;
   try { A.bat = localStorage.getItem("rd-am") !== "0"; } catch (e) { /* bỏ qua */ }
+  // 6/11 chiều, thầy Thịnh: "trong game có nút tăng giảm âm lượng". muc: 0 … 1,5 (100% = độ to cũ), mỗi nấc 10%, nhớ trên máy
+  try { var m0 = parseFloat(localStorage.getItem("rd-am-muc")); if (m0 >= 0 && m0 <= 1.5) A.muc = m0; } catch (e) { /* bỏ qua */ }
+  var DO_TO = 0.9;
+  function doTo() { return A.bat ? DO_TO * A.muc : 0; }
 
   // chỉ gọi sau một lần chạm hoặc bấm phím (trình duyệt chặn âm thanh tự phát)
   A.mo = function () {
@@ -13,7 +17,7 @@
       if (!C) return;
       ac = new C();
       tong = ac.createGain();
-      tong.gain.value = A.bat ? 0.9 : 0;
+      tong.gain.value = doTo();
       var nen = ac.createDynamicsCompressor();
       tong.connect(nen); nen.connect(ac.destination);
       var len = ac.sampleRate * 1.5, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
@@ -65,9 +69,16 @@
   A.datBat = function (on) {
     A.bat = !!on;
     try { localStorage.setItem("rd-am", on ? "1" : "0"); } catch (e) { /* bỏ qua */ }
-    if (tong) tong.gain.setTargetAtTime(on ? 0.9 : 0, ac.currentTime, 0.05);
+    if (tong) tong.gain.setTargetAtTime(doTo(), ac.currentTime, 0.05);
   };
-  function san() { return ac && ac.state === "running" && A.bat; }
+  // đặt độ to (0 … 1,5); trả về độ to mới. Đang tắt tiếng mà bấm tăng thì bật lại tiếng
+  A.datMuc = function (v) {
+    A.muc = Math.round(Math.max(0, Math.min(1.5, v)) * 10) / 10;
+    try { localStorage.setItem("rd-am-muc", String(A.muc)); } catch (e) { /* bỏ qua */ }
+    if (tong) tong.gain.setTargetAtTime(doTo(), ac.currentTime, 0.05);
+    return A.muc;
+  };
+  function san() { return ac && ac.state === "running" && A.bat && A.muc > 0; }
   function ra(node, gain, t, len) {
     var g = ac.createGain();
     g.gain.setValueAtTime(0.0001, t);

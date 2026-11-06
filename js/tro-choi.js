@@ -53,11 +53,12 @@
     c.at = Date.now();
     DB.set("cfg", c);
   }
-  function vanMoi(giuLop) {
+  // buoc: bước bắt đầu của ván mới (mặc định "setup"; nút "Chơi lại từ đầu" của chế độ chơi thử vào thẳng "intro")
+  function vanMoi(giuLop, buoc) {
     var s = ngauNhien(8), c = giuLop && S.cfg ? clone(S.cfg) : RD.cfgMacDinh(s);
     c.ses = s; c.at = Date.now();
     DB.set("cfg", c);
-    DB.set("now", { ses: s, step: "setup", pub: {}, at: Date.now(), by: TAB });
+    DB.set("now", { ses: s, step: buoc || "setup", pub: {}, at: Date.now(), by: TAB });
     for (var q = 1; q <= 5; q++) DB.set("s" + q, { ses: s, q: q, cards: {}, man: {}, at: Date.now(), by: TAB });
     BL = {};
   }
@@ -408,11 +409,14 @@
       if (k === "tiep") { if (choXacNhan) choXacNhan(true); else tiep(); }
       else if (k === "lui") { if (choXacNhan) choXacNhan(false); else lui(); }
       else if (k === "full") toanManHinh();
-      else if (k === "am") { A.datBat(!A.bat); b.setAttribute("aria-pressed", A.bat ? "true" : "false"); }
+      else if (k === "am") { A.datBat(!A.bat); veNutAm(true); }
+      else if (k === "nho") doiAm(-0.1);
+      else if (k === "to") doiAm(0.1);
       else if (k === "cb") { moCB = !moCB; ve(); }
       else if (k === "thu") dienThu(RD.cauCuaBuoc(nowHopLe().step), true);
+      else if (k === "lai") choiLaiTuDau();
     });
-    $('[data-tv="am"]').setAttribute("aria-pressed", A.bat ? "true" : "false");
+    veNutAm(false);
     $("#nutThuHang").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "finish") tiep(); });
     $("#nutHienBao").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "rank") tiep(); });
     $("#cbVan").addEventListener("click", function () { if (choXacNhan) choXacNhan(true); });
@@ -430,7 +434,9 @@
         if (choXacNhan) choXacNhan(false); else lui();
       } else if (k === "Escape") { if (choXacNhan) choXacNhan(false); else if (moCB) { moCB = false; ve(); } }
       else if (k === "f" || k === "F") toanManHinh();
-      else if (k === "m" || k === "M") { A.datBat(!A.bat); $('[data-tv="am"]').setAttribute("aria-pressed", A.bat ? "true" : "false"); }
+      else if (k === "m" || k === "M") { A.datBat(!A.bat); veNutAm(true); }
+      else if (k === "+" || k === "=") doiAm(0.1);
+      else if (k === "-" || k === "_") doiAm(-0.1);
     });
     document.addEventListener("pointerdown", function () { A.mo(); }, { passive: true });
     // ẩn con trỏ chuột khi không dùng; các nút góc trái dưới luôn hiện (6/11 thầy Thịnh: "mấy nút này mặc định là luôn hiện")
@@ -443,6 +449,33 @@
     document.addEventListener("mousemove", hien, { passive: true });
     hien();
     giuManHinh();
+  }
+  // 6/11 chiều, thầy Thịnh: "trong game có nút tăng giảm âm lượng". Nút loa giữa: bật/tắt tiếng; vạch sóng trên loa theo độ to.
+  function veNutAm(baoTin) {
+    var b = $('[data-tv="am"]'), pt = Math.round(A.muc * 100);
+    b.setAttribute("aria-pressed", A.bat ? "true" : "false");
+    b.dataset.muc = !A.bat || A.muc <= 0 ? "0" : A.muc < 0.7 ? "1" : "2";
+    b.setAttribute("aria-label", "Bật hoặc tắt âm thanh (phím M), đang " + (A.bat ? pt + "%" : "tắt tiếng"));
+    $('[data-tv="nho"]').disabled = A.muc <= 0;
+    $('[data-tv="to"]').disabled = A.muc >= 1.5;
+    if (baoTin) thongBao(A.bat ? "Âm lượng " + pt + "%" : "Đã tắt tiếng (bấm nút loa hoặc phím M để bật lại)");
+  }
+  function doiAm(d) {
+    A.datMuc(A.muc + d);
+    if (d > 0 && !A.bat) A.datBat(true);         // đang tắt tiếng mà bấm tăng thì bật lại tiếng
+    veNutAm(true);
+  }
+  // 6/11 chiều, thầy Thịnh: "trong chế độ chơi thử có thêm nút chơi lại từ đầu". Xóa kết quả chơi thử, giữ danh sách lớp và
+  //   chế độ chơi thử, vào lại màn giới thiệu (luật chơi).
+  var choiLaiCho = false;
+  function choiLaiTuDau() {
+    if (!cfg().thu || nowHopLe().step === "setup") return;
+    hoi("Chơi lại từ đầu? Kết quả chơi thử sẽ được xóa.", "Chơi lại", "Thôi").then(function (ok) {
+      if (!ok) return;
+      clearTimeout(henThu);
+      choiLaiCho = true;
+      vanMoi(true, "intro");
+    });
   }
   function toanManHinh() {
     var d = document;
@@ -473,6 +506,7 @@
     A.nhacMuc(step === "setup" ? 0 : loai === "a" ? 0.08 : 0.22, loai === "a" ? 1.5 : 1);
     var laCau = loai === "q" || loai === "k" || loai === "a";
     $('[data-tv="thu"]').hidden = !(laCau && cfg().thu);
+    $('[data-tv="lai"]').hidden = !(cfg().thu && step !== "setup");
     // chơi thử: bấm qua màn câu hỏi trước khi TV kịp điền thì điền nốt ngay khi sang bước sau,
     // để bước quét xong, đáp án và di chuyển luôn có kết quả (dienThu chỉ thêm thẻ còn thiếu)
     if (doi && q && loai !== "q" && cfg().thu) dienThu(q, true);
@@ -503,7 +537,8 @@
     }
     anManCau();
     if (step === "setup" || step === "intro") {
-      var vao = step === "intro" && cu === "setup";
+      var vao = step === "intro" && (cu === "setup" || choiLaiCho);
+      if (step === "intro") choiLaiCho = false;
       SK.dat({ che: "dau", ls: ls, gioiThieu: step === "intro", hoatCanh: vao });
       // 6/11: bỏ tiếng trống lúc bắt đầu, nhạc nền đã vào (thầy Thịnh chỉ muốn tiếng ở câu hỏi mới, ô ghép vào cầu, bạn về nhất)
       return;

@@ -29,7 +29,7 @@
     che: "dau", tieu: false, luat: false, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
     R0: XA, L: null, E0: CHUA, B0: CHUA, H0: CHUA, K: null,
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
-    ext: { bn: 0, bd: 0, EW: W, EH: H, s: 1 }
+    ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
   };
   let cv, ctx, A = null, rDo = 1, cvDem, cvCau, bao = null, baoKhung = null, daSanSang = false;
   const UI = {};
@@ -179,15 +179,15 @@
   function nguoiCau(t) {
     const di = dangDi(t), xong = xongDen(t), KK = S.K;
     return [0, 1, 2, 3].map(i => {
-      const y = CC.laneMid(i) + 40, hang = di ? hangSau(S.q, i) : (xong ? hangSau(xong, i) : 0);
+      const y = CC.yChan(i), hang = di ? hangSau(S.q, i) : (xong ? hangSau(xong, i) : 0);
       let o;
       if (di) o = CC.diChuyen(i, S.vt[S.q - 1][i], y, S.vt[S.q][i], y, (t - S.R0 - S.L.kid0) / S.L.kidDur, 4);
       else {
         const x = S.vt[xong][i];
         if (xong === 5 && KK && KK.NHAT.indexOf(i) >= 0 && t >= KK.W0) {      // về nhất: đi bộ lên thảm, đứng đó, rồi tới đuốc
           const X_THAM = (CC.THAM[0] + CC.THAM[1]) / 2;
-          o = t < KK.W1 ? CC.diChuyen(i, x, y, X_THAM, y, (t - KK.W0) / .85, 3, "di") : CC.diChuyen(i, X_THAM, y, CC.X_CANH_DUOC, y, (t - KK.W1) / .55, 2, "di");
-        } else o = (xong === 5 && KK && t >= KK.CHAY[i] - 1.15) ? CC.diChuyen(i, x, y, CC.X_CANH_DUOC, y, (t - KK.CHAY[i] + 1.15) / 1.05, 4) : { i, x, y };
+          o = t < KK.W1 ? CC.diChuyen(i, x, y, X_THAM, y, (t - KK.W0) / .85, 3, "di") : CC.diChuyen(i, X_THAM, y, CC.xCanhDuoc(i), y, (t - KK.W1) / .55, 2, "di");
+        } else o = (xong === 5 && KK && t >= KK.CHAY[i] - 1.15) ? CC.diChuyen(i, x, y, CC.xCanhDuoc(i), y, (t - KK.CHAY[i] + 1.15) / 1.05, 4) : { i, x, y };
       }
       o.hang = hang;
       return o;
@@ -209,10 +209,9 @@
     cu.forEach(i => { if (moi.indexOf(i) < 0) ds.push({ i, x: CC.cho(xong), a: 1 - a }); });
     return ds;
   }
-  // xTrai: chữ "Nhóm n về nhất" canh giữa phần làn nằm bên phải chỗ này (máy quay phóng to: không để nhãn nhóm che chữ)
-  function veDo(c, st, t, xTrai) {
+  function veDo(c, st, t) {
     if (!S.K) return;
-    S.K.NHAT.forEach(i => CC.veDuongDo(c, i, st.do[i] || 0, lin(t, S.K.W0 + 1.3, S.K.W0 + 1.8), t, RD.TO[i].ten + " về nhất", xTrai));
+    S.K.NHAT.forEach(i => CC.veDuongDo(c, i, st.do[i] || 0, lin(t, S.K.W0 + 1.3, S.K.W0 + 1.8), t, RD.TO[i].ten + " về nhất"));
   }
   function veNo(c, no) {
     no.forEach(n => {
@@ -247,7 +246,7 @@
     c.save(); c.globalCompositeOperation = "lighter";
     for (let i = 0; i < 4; i++) {
       const t0 = KK.F0 + i * .06, p = lin(t, t0, t0 + .9); if (p <= 0 || (p >= 1 && t > t0 + 1.2)) continue;
-      const x0 = CC.xDuocI(i), y0 = CC.laneMid(i) + 40 - CC.DUOC_H - 60;
+      const m = CC.mieng(i), x0 = m[0], y0 = m[1] - 60 * CC.DS;
       const cx = (x0 + C51[0]) / 2 + 60 - i * 30, cy = Math.min(y0, C51[1]) - 110;
       const P = u => [(1 - u) * (1 - u) * x0 + 2 * (1 - u) * u * cx + u * u * C51[0], (1 - u) * (1 - u) * y0 + 2 * (1 - u) * u * cy + u * u * C51[1]];
       const h = em(p), fade = 1 - lin(t, t0 + .9, t0 + 1.2);
@@ -301,6 +300,33 @@
   }
 
   /* ---------- báo tường trên sân khấu ---------- */
+  // 6/11 chiều (thầy Thịnh: "cái màn hình cuối sao không full màn hình vậy"): bấm "Hiện báo tường" thì báo tường to dần trong
+  //   1 giây cho cao vừa màn hình (cách mép 8 px; hai bên chừa 76 px cho cột nút bên trái), mọi thứ trên báo tường to theo;
+  //   phía sau là chính báo tường phóng to, nhoè và tối, phủ kín hai bên. Khung to S.ext.KF tính trong vuaManHinh().
+  function baoTo(t) {
+    const F = S.ext.KF;
+    if (S.che !== "bao" || !F) return null;
+    const p = em(lin(t, S.H0, S.H0 + 1.0));
+    if (p <= 0) return null;
+    const cx0 = K.x + K.w / 2, cy0 = K.y + K.h / 2;
+    return { p, s: 1 + (F.w / K.w - 1) * p, cx0, cy0, cx: cx0 + (F.x + F.w / 2 - cx0) * p, cy: cy0 + (F.y + F.h / 2 - cy0) * p };
+  }
+  let baoMo = null, baoMoCua = null;
+  function veBaoMo(c, a) {             // báo tường nhoè phủ kín khung xem (vẽ sẵn nhỏ rồi phóng to: tự nhoè)
+    if (!bao || a <= 0) return;
+    if (baoMoCua !== bao) {
+      baoMo = document.createElement("canvas"); baoMo.width = 120; baoMo.height = 85;
+      const g = baoMo.getContext("2d");
+      try { g.filter = "blur(2px)"; } catch (e) { /* bỏ qua */ }
+      g.drawImage(bao, -6, -6, 132, 97); g.filter = "none";
+      g.fillStyle = "rgba(30,17,6,.66)"; g.fillRect(0, 0, 120, 85);
+      baoMoCua = bao;
+    }
+    const E = S.ext, s = Math.max(E.EW / 120, E.EH / 85), w = 120 * s, h = 85 * s;
+    c.save(); c.globalAlpha = a; c.imageSmoothingQuality = "high";
+    c.drawImage(baoMo, W / 2 - w / 2, H / 2 - h / 2, w, h);
+    c.restore();
+  }
   function veBao(c, t, nguoi) {
     const KK = S.K;
     c.drawImage(CC.veSan("nenBao", W, H, 0, g => {
@@ -309,6 +335,9 @@
       g.fillStyle = bg; g.fillRect(0, 0, W, H);
     }), 0, 0);
     const kb = khungBao(); if (!kb) return;
+    const to = baoTo(t);
+    c.save();
+    if (to) { veBaoMo(c, to.p); c.translate(to.cx, to.cy); c.scale(to.s, to.s); c.translate(-to.cx0, -to.cy0); }
     // phóng to phần tiêu đề sau khi hiện báo tường, rồi thu về
     const z = 1 + .75 * (em(lin(t, S.H0 + 1.0, S.H0 + 2.4)) - em(lin(t, S.H0 + 4.0, S.H0 + 5.4)));
     const ox = K.x + .5 * K.w, oy = K.y + .07 * K.h;
@@ -353,15 +382,16 @@
     }
     if (nguoi) veNguoiBao(c, t);
     c.restore();
+    c.restore();
   }
-  const choDuoc = i => [CC.X_CANH_DUOC, CC.laneMid(i) + 40];
+  const choDuoc = i => [CC.xCanhDuoc(i), CC.yChan(i)];
   function nguoiBao(t) {
     const KK = S.K;
     return [0, 1, 2, 3].map(i => {
       const p = lin(t, KK.S0 + i * .12, KK.S0 + i * .12 + 2.0);
       const [x0, y0] = choDuoc(i), [x1, y1] = choO(i);
       const o = CC.diChuyen(i, x0, y0, x1, y1, p, 6);
-      o.h = 172 + 8 * p;
+      o.h = 172 * CC.KS + (180 - 172 * CC.KS) * p;
       if (p >= 1) o.lat = i % 2 === 1;      // đứng yên: quay mặt vào giữa báo tường
       o.hang = KK.hang[i];
       return o;
@@ -390,10 +420,11 @@
     const t0 = S.H0 + .8; if (t < t0 || t > t0 + 6) return;
     let s = 5; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
     const MAU = ["#ffd76a", "#e9532f", "#2f9a58", "#2f6fd6", "#8b52cc", "#ff8fb1", "#ffffff"];
+    const E = S.ext;                    // 6/11 chiều: rơi khắp khung xem (cả phần dư ngoài khung 16:9)
     for (let j = 0; j < 240; j++) {
-      const x0 = rnd() * 1920, de = rnd() * 1.4, v = 260 + rnd() * 220, w = 9 + rnd() * 8, h = 14 + rnd() * 10, m = MAU[Math.floor(rnd() * MAU.length)], ph = rnd() * 6, sp = 2 + rnd() * 5;
+      const x0 = -E.bn + rnd() * E.EW, de = rnd() * 1.4, v = (260 + rnd() * 220) * E.EH / H, w = 9 + rnd() * 8, h = 14 + rnd() * 10, m = MAU[Math.floor(rnd() * MAU.length)], ph = rnd() * 6, sp = 2 + rnd() * 5;
       const tt = t - t0 - de; if (tt < 0) continue;
-      const y = -30 + tt * v, x = x0 + Math.sin(tt * 2 + ph) * 40; if (y > 1110) continue;
+      const y = -E.bd - 30 + tt * v, x = x0 + Math.sin(tt * 2 + ph) * 40; if (y > H + E.bd + 30) continue;
       c.save(); c.translate(x, y); c.rotate(tt * sp + ph); c.scale(1, Math.cos(tt * sp * 1.3 + ph));
       c.fillStyle = m; c.fillRect(-w / 2, -h / 2, w, h); c.restore();
     }
@@ -405,11 +436,8 @@
   let cvTinh = null, khoaTinh = "";
   // cột chỗ thiếu đang có miếng ghép bay vào: vẽ ở phần chuyển động cho tới khi miếng cuối đáp xuống
   const cotBay = t => (S.che === "cau" && S.R0 > XA && S.L && t < S.R0 + S.L.pEnd + .5) ? S.q - 1 : -1;
-  //   Lớp này vẽ cả thế giới 1920×1080 ở độ nét f rồi chép phần đang thấy: lúc máy quay phóng to (hoặc đang thu về)
-  //   thì f = rDo × độ phóng để chép 1:1 cho nét; lúc thấy toàn cảnh thì f = rDo như cũ.
-  const fTinh = c => rDo * (c.s > 1.001 ? S.ext.s : 1);
-  //   Màn hình không đúng 16:9 (cửa sổ Claude) thì lớp này dư thêm mép (mx, my điểm ảnh) quanh thế giới: ảnh nền soi gương,
-  //   tối dần ra ngoài như #nenNgoai. Máy quay phóng to hay lùi ra thì phần nhìn thấy vẫn nằm trọn trong lớp, không có đường nối.
+  //   Màn hình không đúng 16:9 (laptop 16:10, cửa sổ Claude) thì lớp này dư thêm mép (mx, my điểm ảnh) quanh thế giới:
+  //   ảnh nền soi gương, tối dần ra ngoài như #nenNgoai.
   let tinhMx = 0, tinhMy = 0;
   function lopTinh(st, cot, f) {
     const mx = Math.ceil(S.ext.bn * f) + (S.ext.bn > 0 ? 2 : 0), my = Math.ceil(S.ext.bd * f) + (S.ext.bd > 0 ? 2 : 0);
@@ -461,71 +489,34 @@
     }
   }
 
-  /* ---------- máy quay ----------
-     6/11 thầy Thịnh: "làm cây cầu, người, các ô to lên, không cần phải hiện dòng nước". Lúc chơi (công bố kết quả, về đích),
-     máy quay phóng to vào cây cầu: mép trên cầu nằm ngay dưới bảng điểm và lời Claude (y = CAM_TREN trong khung 16:9),
-     mép dưới cầu nằm trên hàng nút góc trái. TV 16:9 to khoảng 1,3 lần; khung cao hơn 16:9 (cửa sổ Claude 830×630 khoảng
-     1,47 lần) thì phóng to hơn và cảnh phủ kín cả phần dư. Cầu dài hơn khung nhìn nên máy quay trượt theo các bạn: bạn dẫn
-     đầu đứng ở 62% bề ngang.
-     Màn mở đầu và phần kết (thắp đuốc theo hạng, lửa đốt, báo tường) thấy toàn cảnh như cũ.
-     c = { s: độ phóng, x, y: điểm của thế giới nằm ở góc trên trái khung vẽ (khung vẽ phủ cả phần dư) } */
-  const CAM_TREN = 270;
-  const NUT_DUOI = 74;               // hàng nút góc trái dưới (cao 52 px, cách đáy 14 px) + 8 px: mép dưới cầu nằm trên hàng nút
-  const camToan = () => ({ s: 1, x: -S.ext.bn, y: -S.ext.bd });
-  function camDua(q) {               // sau câu q (0..5); q = 6: nhìn về đích
-    const E = S.ext, s = E.s, VW = E.EW / s;
-    const F = q > 5 ? W : CC.cho(q);
-    const x = VW >= W ? (W - VW) / 2 : cl(F - .62 * VW, 0, W - VW);
-    return { s, x, y: CC.Y0 - (E.bd + CAM_TREN) / s };
-  }
-  const tron = (a, b, p) => ({ s: a.s + (b.s - a.s) * p, x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p });
-  function cam(t) {
-    if (S.ext.s <= 1.001) return camToan();
-    switch (S.che) {
-      case "hoi": return S.q <= 1 ? camToan() : camDua(S.q - 1);
-      case "cau": {
-        const b = camDua(S.q);
-        if (S.R0 <= XA || !S.L) return b;
-        return tron(camDua(S.q - 1), b, em(lin(t, S.R0 + S.L.kid0 - .3, S.R0 + S.L.kid0 + S.L.kidDur + .4)));
-      }
-      case "dich": return camDua(6);
-      case "hang": return tron(camDua(6), camToan(), em(lin(t, S.B0, S.B0 + 1.4)));
-      default: return camToan();
-    }
-  }
-  SK.cam = cam;
-
   /* ---------- vẽ một khung hình ---------- */
+  // 6/11 chiều: bỏ máy quay phóng to (thầy Thịnh: "chỉnh đường chạy dài lên trên và xuống dưới chứ không phải phóng to");
+  //   cả cây cầu luôn nằm trọn trong màn hình, làn cao ra theo khung xem (vuaManHinh).
   function veKhung(t) {
-    const E = S.ext, ox = E.bn * rDo, oy = E.bd * rDo;          // gốc khung 16:9 trong khung vẽ
+    const E = S.ext, ox = Math.round(E.bn * rDo), oy = Math.round(E.bd * rDo);   // gốc khung 16:9 trong khung vẽ
     const KK = S.K, ket = (S.che === "hang" || S.che === "bao") && KK, dem = !ket || t < KK.BURN0;
-    const c = dem ? cam(t) : camToan(), sanSang = daSanSang && S.ls;
+    const sanSang = daSanSang && S.ls;
     // lúc vẽ cầu, lớp đứng yên (ảnh nền + mép soi gương) phủ kín khung vẽ nên khỏi xoá
     if (!(dem && sanSang)) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); }
     ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
-    if (!sanSang) { ctx.fillStyle = "#0b1428"; ctx.fillRect(0, 0, W, H); return; }
+    if (!sanSang) { ctx.fillStyle = "#0b1428"; ctx.fillRect(-E.bn, -E.bd, E.EW, E.EH); return; }
     const { st, no } = trangThai(t);
     if (dem) {
-      const cot = cotBay(t), f = fTinh(c), tinh = lopTinh(st, cot, f);
-      // máy quay dừng ở điểm ảnh tròn: chép lớp đứng yên khỏi phải nội suy, lớp động đi cùng nên không lệch nhau
-      const r = rDo * c.s, tx = Math.round(-r * c.x), ty = Math.round(-r * c.y);
-      ctx.setTransform(r / f, 0, 0, r / f, tx, ty); ctx.drawImage(tinh, -tinhMx, -tinhMy);
-      ctx.setTransform(r, 0, 0, r, tx, ty);
-      // nhãn nhóm: sát đầu cầu như cũ, máy quay đi sang phải thì dừng ở mép trái màn hình (Lx: toạ độ khung 16:9)
-      const Lx = Math.max(4 - E.bn, (4 - c.x) * c.s - E.bn);
-      CC.veNenDong(ctx, A, t); CC.veCauDong(ctx, A, st, cot); veDo(ctx, st, t, c.x + (Lx + 200 + E.bn) / c.s); veNo(ctx, no);
+      const cot = cotBay(t), tinh = lopTinh(st, cot, rDo);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(tinh, ox - tinhMx, oy - tinhMy);
+      ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
+      CC.veNenDong(ctx, A, t); CC.veCauDong(ctx, A, st, cot); veDo(ctx, st, t); veNo(ctx, no);
       CC.veNguoi(ctx, A, nguoiCau(t), t);
       (st.sang || []).forEach(d => CC.veSaoRoi(ctx, d.i, d.x, t, d.a == null ? 1 : d.a));
       CC.veSo(ctx, st);
       if (ket) veTiaLua(ctx, t);
-      // phần đứng yên trên màn hình (không theo máy quay): nhãn nhóm ở mép trái, ngang giữa làn; Claude cạnh bóng nói
-      ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
-      CC.nhan(ctx, RD.TO, i => (CC.laneMid(i) - c.y) * c.s - E.bd, Lx);
-      // Claude nhảy múa thổi kèn bên trái bóng nói (mỗi câu một kiểu nhảy); mờ dần khi bắt đầu về đích
+      CC.nhan(ctx, RD.TO);
+      // Claude nhảy múa thổi kèn bên trái bóng nói (mỗi câu một kiểu nhảy); mờ dần khi bắt đầu về đích.
+      //   Bóng nói neo theo đỉnh màn hình (--bdT) nên Claude cũng vậy.
       const qB = S.che === "cau" ? S.q : (S.che === "dich" ? 5 : 0);
       if (qB && S.L && S.L.q === qB) {
         const p = t - (S.R0 + S.L.board + .2), mo = S.che === "dich" ? 1 - lin(t, S.E0, S.E0 + .5) : 1;
-        if (p >= 0 && mo > 0) { ctx.save(); ctx.globalAlpha = mo; CC.veClaude(ctx, A, p, 118, 176, 196, qB - 1); ctx.restore(); }
+        if (p >= 0 && mo > 0) { ctx.save(); ctx.globalAlpha = mo; CC.veClaude(ctx, A, p, 118, 176 - E.bd, 196, qB - 1); ctx.restore(); }
       }
     } else {
       const R = banKinh(t), u = lin(t, KK.BURN0, KK.BURN1);
@@ -535,7 +526,7 @@
         d.setTransform(1, 0, 0, 1, 0, 0); d.globalCompositeOperation = "source-over"; d.clearRect(0, 0, cvDem.width, cvDem.height);
         d.setTransform(rDo, 0, 0, rDo, 0, 0); CC.veNen(d, A, t);
         d.globalCompositeOperation = "destination-out"; duongChay(d, R, t); d.fill();
-        ctx.setTransform(1, 0, 0, 1, ox, oy); ctx.drawImage(cvDem, 0, 0); ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(cvDem, ox, oy); ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
         veMepChay(ctx, R, t);
       }
       // tàn lửa lấp lánh bay lên
@@ -554,7 +545,7 @@
         const c2 = cvCau.getContext("2d");
         c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, cvCau.width, cvCau.height); c2.setTransform(rDo, 0, 0, rDo, 0, 0);
         CC.veCau(c2, A, st); veDo(c2, st, t); CC.veSo(c2, st); CC.nhan(c2, RD.TO);
-        ctx.save(); ctx.setTransform(1, 0, 0, 1, ox, oy); ctx.globalAlpha = ac; ctx.drawImage(cvCau, 0, 0); ctx.restore();
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ac; ctx.drawImage(cvCau, ox, oy); ctx.restore();
       }
       if (t < KK.S0) CC.veNguoi(ctx, A, [0, 1, 2, 3].map(i => ({ i, x: choDuoc(i)[0], y: choDuoc(i)[1], hang: KK.hang[i] })), t);
       veTiaLua(ctx, t);
@@ -618,6 +609,8 @@
     if (KK && S.che === "bao" && t < S.H0 + .25) { hbHien = true; hbBam = true; hbS = .93; }
     datAn(UI.nutHB, !hbHien);
     if (hbHien) { UI.nutHB.classList.toggle("bam", hbBam); datKieu(UI.nutHB, "transform", "scale(" + hbS.toFixed(3) + ")"); datKieu(UI.nutHB, "opacity", String(hbA)); }
+    // báo tường đã lộ ra: hàng nút góc trái dựng thành cột sát mép trái, khỏi che góc báo tường
+    if (UI.tvNut) UI.tvNut.classList.toggle("doc", !!KK && (S.che === "bao" || (S.che === "hang" && t >= KK.BURN1)));
     // dòng sông vẽ tiếp ở phần dư ngoài khung 16:9: tắt dần khi lửa đốt tan màn đêm (nửa sau), tới báo tường thì hết hẳn
     if (UI.nenNgoai) {
       const an = S.che === "bao" ? 0 : (S.che === "hang" && KK) ? 1 - lin(t, (KK.BURN0 + KK.BURN1) / 2, KK.BURN1) : 1;
@@ -632,7 +625,7 @@
     const sau = qq > 0 ? S.hg[qq] : null, truoc = qTruoc > 0 ? S.hg[qTruoc] : null;
     UI.dong.forEach((d, i) => {
       const a = truoc ? truoc.thuTu.indexOf(i) : i, b = sau ? sau.thuTu.indexOf(i) : i, r = a + (b - a) * p;
-      datKieu(d.el, "top", (40 + r * 50).toFixed(1) + "px");      // 6/11: bảng điểm gọn lại cho máy quay phóng to cầu
+      datKieu(d.el, "top", (40 + r * 50).toFixed(1) + "px");      // 6/11: bảng điểm gọn, nằm trên mép cầu
       const h = String(sau ? sau.hang[i] : 1), dc = qTruoc > 0 ? S.ls[qTruoc][i].tram : 0, ds = qq > 0 ? S.ls[qq][i].tram : 0;
       const so = String(Math.round(dc + (ds - dc) * pd));
       if (d.h.textContent !== h) d.h.textContent = h;
@@ -698,12 +691,19 @@
   }
 
   /* ---------- khởi tạo, vừa màn hình ---------- */
+  // 6/11 chiều, thầy Thịnh (laptop 2560×1600, tức 1280×800 điểm ảnh CSS, 16:10): "phần trên và dưới bị chừa chỗ nhiều quá nên hãy
+  //   chỉnh đường chạy dài lên trên và xuống dưới", "không phải vừa màn hình mà canh vừa đủ thôi, còn chừa chỗ cho Claude nhận xét".
+  //   Mép trên cầu cách đỉnh màn hình CAU_TREN (toạ độ thế giới) để nhãn câu, lời Claude và bảng điểm nằm trên cầu;
+  //   mép dưới cầu nằm trên hàng nút góc trái. Làn cao 120 tới 190 px (laptop 16:10 khoảng 184, TV 16:9 khoảng 163);
+  //   làn chạm 190 px thì cầu nằm giữa khoảng đó.
+  const CAU_TREN = 270;
+  const NUT_DUOI = 74;               // hàng nút góc trái dưới (cao 52 px, cách đáy 14 px) + 8 px, tính bằng điểm ảnh CSS
   SK.doNet = 1;
   SK.khoiTao = function () {
     cv = $("#cv"); ctx = cv.getContext("2d");
     cvDem = document.createElement("canvas"); cvCau = document.createElement("canvas");
     UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
-    UI.nutTH = $("#nutThuHang"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai");
+    UI.nutTH = $("#nutThuHang"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut");
     UI.dong = RD.TO.map(T => {
       const d = document.createElement("div"); d.className = "dong"; d.style.setProperty("--m", T.mau); d.style.setProperty("--n", T.nhat);
       d.innerHTML = '<span class="h">1</span><img src="' + T.mat + '" alt=""><span class="t">' + T.ten + '</span><span class="d">0</span>';
@@ -728,10 +728,17 @@
     if (wd.parentNode && wd.parentNode.style) wd.parentNode.style.setProperty("--k", String(k));   // nền báo tường kéo dài ra phần dư
     // độ nét của cảnh theo cỡ màn hình thật (màn nhỏ thì vẽ nhỏ cho nhẹ máy), tối đa 1920×1080
     rDo = Math.max(.5, Math.min(1, k * (window.devicePixelRatio || 1))) * SK.doNet;
-    // khung vẽ phủ cả phần dư (để máy quay phóng to lấp kín màn hình); khung 16:9 nằm giữa, lệch (bn, bd)
+    // khung vẽ phủ cả phần dư; khung 16:9 nằm giữa, lệch (bn, bd)
     const bn = Math.max(0, (vw / k - W) / 2), bd = Math.max(0, (vh / k - H) / 2);
-    const s = cl((H + bd - Math.max(20, NUT_DUOI / k) - CAM_TREN) / (CC.Y1 + 4 - CC.Y0), 1, 1.9);
-    S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, s };
+    wd.style.setProperty("--bdT", bd.toFixed(2) + "px");          // chữ và nút neo theo đỉnh, đáy màn hình thật
+    // làn cầu theo khung xem
+    const tren = -bd, duoi = H + bd, y0 = tren + CAU_TREN, y1 = duoi - Math.max(20, NUT_DUOI / k) - 4;
+    const lh = cl((y1 - y0 - 5 * CC.BEAM) / 4, 120, 190), du = Math.max(0, y1 - y0 - (4 * lh + 5 * CC.BEAM));
+    if (CC.datHinh(y0 + du / 2, lh, tren, duoi) && S.ls) datSoLieu(S.ls);
+    // báo tường lúc "Hiện báo tường": cả viền gỗ (16 px quanh ảnh) cao vừa màn hình, cách mép 8 px; hai bên chừa 76 px cho
+    //   cột nút; toạ độ thế giới
+    const sb = Math.max(1, Math.min(vh - 16, (vw - 152) * (K.h + 32) / (K.w + 32)) / k / (K.h + 32)), hb = K.h * sb, wb = K.w * sb;
+    S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, KF: { x: W / 2 - wb / 2, y: H / 2 - hb / 2, w: wb, h: hb } };
     datKieu(cv, "left", (-bn).toFixed(1) + "px"); datKieu(cv, "top", (-bd).toFixed(1) + "px");
     datKieu(cv, "width", S.ext.EW.toFixed(1) + "px"); datKieu(cv, "height", S.ext.EH.toFixed(1) + "px");
     { const w = Math.round(S.ext.EW * rDo), h = Math.round(S.ext.EH * rDo); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; }

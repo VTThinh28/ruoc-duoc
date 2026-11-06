@@ -2,27 +2,69 @@
 // Mỗi làn thiếu 5 khúc: vuông, chữ nhật, bình hành, thoi, thang cân (đúng thứ tự 5 câu).
 (function () {
   const CC = {};
-  const LH = 120, BEAM = 16, Y0 = 430;          // chiều cao làn, bề dày dầm, mép trên cầu
+  // 6/11 chiều, thầy Thịnh: "chỉnh đường chạy dài lên trên và xuống dưới chứ không phải phóng to", "canh vừa đủ thôi, còn chừa
+  //   chỗ cho Claude nhận xét" (laptop 16:10). Mép trên cầu Y0 và chiều cao làn LH do san-khau.js tính theo khung màn hình rồi
+  //   gọi CC.datHinh(y0, lh, tren, duoi); mặc định là cầu cũ (làn 120 px, mép trên 430). Bề ngang cầu giữ nguyên.
+  //   TL = LH / 120; KS: độ to của các bạn nhỏ (tối đa 1,4 lần); DS: độ to của đuốc; NS: cỡ chữ số điểm.
+  let LH = 120, Y0 = 430;
+  const BEAM = 16;                               // bề dày dầm
   const XS = 60, XE = 1880;                      // đầu cầu, cuối bệ đuốc (4/11 13:08: đuốc lùi về sau, có thảm VỀ ĐÍCH; 5/11: thảm rộng gấp đôi)
-  CC.LH = LH; CC.BEAM = BEAM; CC.Y0 = Y0; CC.XS = XS; CC.XE = XE;
+  CC.BEAM = BEAM; CC.XS = XS; CC.XE = XE;
+  CC.TL = 1; CC.KS = 1; CC.DS = 1; CC.NS = 1; CC.TREN = 0; CC.DUOI = 1080;
   CC.laneTop = i => Y0 + BEAM + i * (LH + BEAM);
   CC.laneMid = i => CC.laneTop(i) + LH / 2;
-  CC.Y1 = CC.laneTop(3) + LH + BEAM;              // mép dưới cầu
+  CC.yChan = i => CC.laneMid(i) + 40 * CC.KS;     // chân các bạn nhỏ (và chân đế đuốc) trong làn i
 
-  // 5 chỗ thiếu, toạ độ trong một làn (y: 0 = mép trên làn, LH = mép dưới làn)
+  // 5 chỗ thiếu, toạ độ trong một làn (y: 0 = mép trên làn, LH = mép dưới làn), xếp từ x = 272 tới 1508, ván nối giữa các chỗ bằng nhau.
+  //   Làn cao hơn 120 px thì hình đổi theo để vẫn đúng tên: vuông có cạnh bằng chiều cao làn; chữ nhật dài 1,4 lần chiều cao;
+  //   thoi đứng dọc (hai đường chéo 0,62 : 1, khỏi trông như hình vuông xoay); bình hành, thang cân giữ bề ngang.
   const G = [];
-  (function () {
-    let x = 272;                                   // hết ván đầu cầu
-    G.push({ ten: "vuông", pts: [[x, 0], [x + 120, 0], [x + 120, LH], [x, LH]] }); x += 120 + 64;
-    G.push({ ten: "chữ nhật", pts: [[x, 0], [x + 200, 0], [x + 200, LH], [x, LH]] }); x += 200 + 64;
-    G.push({ ten: "bình hành", pts: [[x + 60, 0], [x + 240, 0], [x + 180, LH], [x, LH]] }); x += 240 + 64;
-    G.push({ ten: "thoi", pts: [[x + 110, 0], [x + 220, LH / 2], [x + 110, LH], [x, LH / 2]] }); x += 220 + 64;
-    G.push({ ten: "thang cân", pts: [[x + 45, 0], [x + 155, 0], [x + 200, LH], [x, LH]] });
-  })();
+  let HOP = [], CHO = [];
+  function dungHinh() {
+    const h = LH, X0 = 272, X1 = 1508;
+    const wCN = Math.max(200, Math.round(1.4 * h)), lech = Math.round(60 + .3 * (h - 120)), wBH = 180 + lech;
+    const wT = h > 140 ? Math.round(.62 * h) : 220;
+    const van = Math.round((X1 - X0 - (h + wCN + wBH + wT + 200)) / 4);
+    G.length = 0;
+    let x = X0;                                    // hết ván đầu cầu
+    G.push({ ten: "vuông", pts: [[x, 0], [x + h, 0], [x + h, h], [x, h]] }); x += h + van;
+    G.push({ ten: "chữ nhật", pts: [[x, 0], [x + wCN, 0], [x + wCN, h], [x, h]] }); x += wCN + van;
+    G.push({ ten: "bình hành", pts: [[x + lech, 0], [x + wBH, 0], [x + wBH - lech, h], [x, h]] }); x += wBH + van;
+    G.push({ ten: "thoi", pts: [[x + wT / 2, 0], [x + wT, h / 2], [x + wT / 2, h], [x, h / 2]] }); x += wT + van;
+    G.push({ ten: "thang cân", pts: [[x + 45, 0], [x + 155, 0], [x + 200, h], [x, h]] });
+    // khung bao của chỗ thiếu k (toạ độ trong làn)
+    HOP = G.map(g => { const xs = g.pts.map(p => p[0]), x = Math.floor(Math.min.apply(null, xs)); return { x, w: Math.ceil(Math.max.apply(null, xs)) - x }; });
+    // chỗ đứng sau câu k: giữa tấm ván nối hai chỗ thiếu (đo ở ngang giữa làn); 0 = đầu cầu, 5 = trước thảm VỀ ĐÍCH
+    const ngang = g => {
+      const xs = [];
+      g.pts.forEach((p, k) => {
+        const q = g.pts[(k + 1) % g.pts.length], y = h / 2;
+        if (p[1] !== q[1] && (p[1] - y) * (q[1] - y) <= 0) xs.push(p[0] + (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1]));
+      });
+      return [Math.min.apply(null, xs), Math.max.apply(null, xs)];
+    };
+    CHO = [X0 - 58 + Math.round(45 * (CC.KS - 1))];      // các bạn to hơn thì đứng lùi vào trong, khỏi lấn nhãn nhóm
+    for (let k = 1; k < 5; k++) CHO.push(Math.round((ngang(G[k - 1])[1] + ngang(G[k])[0]) / 2));
+    CHO.push(1530);
+    CC.LH = LH; CC.Y0 = Y0;
+    CC.Y1 = CC.laneTop(3) + LH + BEAM;              // mép dưới cầu
+    datConVat();
+  }
   CC.GAP = G;
-  // khung bao của chỗ thiếu k (toạ độ trong làn)
-  const HOP = G.map(g => { const xs = g.pts.map(p => p[0]), x = Math.floor(Math.min.apply(null, xs)); return { x, w: Math.ceil(Math.max.apply(null, xs)) - x }; });
   const hopGap = k => HOP[k];
+  // y0: mép trên cầu, lh: chiều cao làn, tren/duoi: mép trên, mép dưới của phần màn hình nhìn thấy (toạ độ thế giới 1920×1080)
+  // trả về true nếu cầu đổi hình (phải vẽ lại các hình vẽ sẵn, tính lại chỗ đứng)
+  CC.datHinh = function (y0, lh, tren, duoi) {
+    y0 = Math.round(y0); lh = Math.round(lh);
+    CC.TREN = tren == null ? 0 : tren; CC.DUOI = duoi == null ? 1080 : duoi;
+    if (y0 === Y0 && lh === LH && G.length) { datConVat(); return false; }
+    Y0 = y0; LH = lh;
+    CC.TL = LH / 120; CC.KS = Math.min(CC.TL, 1.4); CC.DS = 1 + .4 * (CC.KS - 1); CC.NS = Math.min(CC.TL, 1.4);
+    dungHinh();
+    BE_DA = null;
+    CC.xoaSan();
+    return true;
+  };
   // 5/11: hình có bộ lọc hoặc bóng mờ (shadowBlur) được vẽ sẵn MỘT lần rồi dùng lại: vẽ lại mỗi khung hình thì rất chậm
   //   (đo trên máy không có card đồ hoạ: 250 ms một khung, bỏ bóng mờ còn 20 ms)
   const SAN = new Map();
@@ -42,8 +84,8 @@
   }
   // tâm (để ghi điểm, đặt nhân vật)
   CC.tam = g => { let sx = 0, sy = 0; g.pts.forEach(p => { sx += p[0]; sy += p[1]; }); return [sx / g.pts.length, sy / g.pts.length]; };
-  // chỗ đứng sau câu k (0 = đầu cầu, 1..5 = sau khúc k; 5 = trước đuốc)
-  CC.cho = k => [214, 424, 688, 977, 1287, 1530][k];
+  // chỗ đứng sau câu k (0 = đầu cầu, 1..5 = sau khúc k; 5 = trước đuốc), tính trong dungHinh()
+  CC.cho = k => CHO[k];
   // tổ đang thua đứng lùi sau tổ dẫn đầu theo thứ hạng: hạng 2 lùi 110 px, hạng 3 lùi 210 px, hạng 4 lùi 300 px
   //   (bằng điểm thì cùng hạng, đứng ngang nhau; sau câu 1 cầu còn ngắn nên các khoảng lùi co lại cho vừa từ đầu cầu)
   CC.LUI_HANG = [0, 110, 210, 300];
@@ -56,6 +98,8 @@
   // thảm đỏ dọc VỀ ĐÍCH nằm giữa khúc cầu cuối và hàng đuốc; bạn nhỏ bước qua thảm tới đứng cạnh đuốc
   CC.THAM = [1548, 1708];                        // 5/11 Thịnh: thảm VỀ ĐÍCH to bề ngang (80 → 160 px)
   CC.X_CANH_DUOC = 1740;
+  // 6/11 chiều: các bạn to hơn nên đứng lùi sang trái đuốc của mình, khỏi che huy chương thứ hạng trên cán đuốc
+  CC.xCanhDuoc = i => Math.round(CC.xDuocI(i) - 46 - 40 * CC.KS);
   CC.DUOC_H = 150;                                // 5/11: đuốc mới, từ chân đế tới miệng đuốc
 
   // đường bao mặt cầu của một làn = hình chữ nhật trừ 5 chỗ thiếu (vẽ bằng evenodd)
@@ -131,16 +175,22 @@
     ctx.restore();
     if (m.diem != null && m.chu !== false) {
       ctx.save();
-      ctx.font = "800 46px 'Baloo 2'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
-      if (m.vang) { ctx.lineWidth = 8; ctx.strokeStyle = "#fff8d6"; ctx.strokeText(m.diem, c[0], t + c[1] + 3); ctx.fillStyle = "#6b3f00"; }
-      else { ctx.lineWidth = 8; ctx.strokeStyle = "#3a2410"; ctx.strokeText(m.diem, c[0], t + c[1] + 3); ctx.fillStyle = "#fff"; }
+      ctx.font = fontSo(); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+      if (m.vang) { ctx.lineWidth = 8 * CC.NS; ctx.strokeStyle = "#fff8d6"; ctx.strokeText(m.diem, c[0], t + c[1] + 3); ctx.fillStyle = "#6b3f00"; }
+      else { ctx.lineWidth = 8 * CC.NS; ctx.strokeStyle = "#3a2410"; ctx.strokeText(m.diem, c[0], t + c[1] + 3); ctx.fillStyle = "#fff"; }
       ctx.fillText(m.diem, c[0], t + c[1] + 3);
       ctx.restore();
     }
-    if (m.vang && !m.tinh) { const tw = m.tw == null ? 1 : m.tw; sao(ctx, c[0] - 46, t + 24, 11 * tw, .9); sao(ctx, c[0] + 50, t + LH - 26, 9 * (1.4 - tw * .4), .85); }
+    if (m.vang && !m.tinh) saoVang(ctx, c, t, m.tw == null ? 1 : m.tw);
     ctx.restore();
   }
   CC.veMieng = veMieng;
+  const fontSo = () => "800 " + Math.round(46 * CC.NS) + "px 'Baloo 2'";
+  // hai ngôi sao lấp lánh trên miếng vàng (c: tâm miếng trong làn, t: mép trên làn)
+  function saoVang(ctx, c, t, tw) {
+    const n = CC.NS;
+    sao(ctx, c[0] - 46 * n, t + 24 * CC.TL, 11 * tw * n, .9); sao(ctx, c[0] + 50 * n, t + LH - 26 * CC.TL, 9 * (1.4 - tw * .4) * n, .85);
+  }
   // vệt sáng lướt qua và hai ngôi sao trên miếng vàng đã vẽ sẵn trong lớp đứng yên
   function veMiengSang(ctx, i, k, tw, sh) {
     const g = G[k], t = CC.laneTop(i), c = CC.tam(g);
@@ -151,7 +201,7 @@
       ctx.fillStyle = s; ctx.fill();
       ctx.restore();
     }
-    sao(ctx, c[0] - 46, t + 24, 11 * tw, .9); sao(ctx, c[0] + 50, t + LH - 26, 9 * (1.4 - tw * .4), .85);
+    saoVang(ctx, c, t, tw);
   }
   // số điểm vẽ sau cùng (trên đầu nhân vật) để bạn nhỏ đứng trên miếng ghép không che số
   CC.veSo = function (ctx, st) {
@@ -160,8 +210,8 @@
       if (st.do && st.do[i] && CC.tam(G[k])[0] > CC.THAM[0] - (CC.THAM[0] - XS) * st.do[i]) continue;   // đã phủ thảm đỏ
       const g = G[k], t = CC.laneTop(i), c = CC.tam(g);
       ctx.save();
-      ctx.font = "800 46px 'Baloo 2'"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
-      ctx.lineWidth = 8; ctx.strokeStyle = m.vang ? "#fff8d6" : "#3a2410"; ctx.strokeText(m.diem, c[0], t + c[1] + 3);
+      ctx.font = fontSo(); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+      ctx.lineWidth = 8 * CC.NS; ctx.strokeStyle = m.vang ? "#fff8d6" : "#3a2410"; ctx.strokeText(m.diem, c[0], t + c[1] + 3);
       ctx.fillStyle = m.vang ? "#6b3f00" : "#fff"; ctx.fillText(m.diem, c[0], t + c[1] + 3);
       ctx.restore();
     }
@@ -340,30 +390,33 @@
   CC.veCau = function (ctx, A, st) { CC.veCauTinh(ctx, A, st, -1); CC.veCauDong(ctx, A, st, -1); };
 
   // đuốc cuối cầu (5/11 04:53–04:59 Thịnh: vẽ theo hình mẫu, bỏ quyển sách)
-  const choDuocI = i => { const y = CC.laneMid(i) + 40; return [CC.xDuocI(i), y, y - CC.DUOC_H]; };   // x, y chân đế, yM miệng đuốc
+  // 6/11 chiều: đuốc to theo làn (DS), chân đế ngang chân các bạn nhỏ
+  const choDuocI = i => { const y = CC.yChan(i); return [CC.xDuocI(i), y, y - CC.DUOC_H * CC.DS]; };   // x, y chân đế, yM miệng đuốc
+  CC.mieng = i => { const d = choDuocI(i); return [d[0], d[2]]; };
   function veDuocTinh(ctx, i) {
-    const [x, y, yM] = choDuocI(i);
+    const [x, y, yM] = choDuocI(i), Z = CC.DS;
     // quầng sáng ấm sau đuốc để đuốc nổi trên nền đá
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    let rg = ctx.createRadialGradient(x, yM + 34, 0, x, yM + 34, 105);
+    let rg = ctx.createRadialGradient(x, yM + 34 * Z, 0, x, yM + 34 * Z, 105 * Z);
     rg.addColorStop(0, "rgba(255,225,130,.5)"); rg.addColorStop(.4, "rgba(255,190,70,.22)"); rg.addColorStop(1, "rgba(255,160,40,0)");
-    ctx.fillStyle = rg; ctx.fillRect(x - 105, yM - 71, 210, 210);
-    rg = ctx.createRadialGradient(x, y - 4, 0, x, y - 4, 60);
+    ctx.fillStyle = rg; ctx.fillRect(x - 105 * Z, yM - 71 * Z, 210 * Z, 210 * Z);
+    rg = ctx.createRadialGradient(x, y - 4, 0, x, y - 4, 60 * Z);
     rg.addColorStop(0, "rgba(255,210,100,.42)"); rg.addColorStop(1, "rgba(255,180,60,0)");
-    ctx.fillStyle = rg; ctx.beginPath(); ctx.ellipse(x, y - 4, 60, 22, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.ellipse(x, y - 4, 60 * Z, 22 * Z, 0, 0, 7); ctx.fill();
     ctx.restore();
-    // thân đuốc: vẽ sẵn một lần rồi dùng lại
-    ctx.drawImage(veSan("than-duoc", 130, 200, 20, (g, pad) => { g.translate(pad + 65, pad + 186); veThanDuoc(g); }), x - 85, y - 206);
+    // thân đuốc: vẽ sẵn một lần (đúng cỡ) rồi dùng lại
+    const P = Math.round(20 * Z), ox = Math.round(65 * Z) + P, oy = Math.round(186 * Z) + P;
+    ctx.drawImage(veSan("than-duoc" + Z.toFixed(3), Math.round(130 * Z), Math.round(200 * Z), P, (g) => { g.translate(ox, oy); g.scale(Z, Z); veThanDuoc(g); }), x - ox, y - oy);
   }
   function veDuocDong(ctx, i, D, t0) {
-    const [x, y, yM] = choDuocI(i);
+    const [x, y, yM] = choDuocI(i), Z = CC.DS;
     if (D.chay > 0) {
       const p = D.chay, s = p < .35 ? (p / .35) * 1.25 : 1.25 - .25 * Math.min(1, (p - .35) / .3);
-      CC.veLua(ctx, x, yM + 2, s * .86, t0, i * 1.7, 1, D.hang);
+      CC.veLua(ctx, x, yM + 2 * Z, s * .86 * Z, t0, i * 1.7, 1, D.hang);
       if (p < .5) {   // bùng lửa: vòng sáng nở ra
         ctx.save(); ctx.globalCompositeOperation = "lighter";
-        const r = (40 + p * 360) * (D.hang ? CC.LUA_HANG[D.hang].s : 1), al = (1 - p / .5) * .8 * (D.hang ? Math.min(1, CC.LUA_HANG[D.hang].quang[1] + .2) : 1);
+        const r = (40 + p * 360) * Z * (D.hang ? CC.LUA_HANG[D.hang].s : 1), al = (1 - p / .5) * .8 * (D.hang ? Math.min(1, CC.LUA_HANG[D.hang].quang[1] + .2) : 1);
         const rr = ctx.createRadialGradient(x, yM, 0, x, yM, r);
         rr.addColorStop(0, "rgba(255,240,180," + al + ")"); rr.addColorStop(1, "rgba(255,170,60,0)");
         ctx.fillStyle = rr; ctx.fillRect(x - r, yM - r, 2 * r, 2 * r); ctx.restore();
@@ -372,10 +425,10 @@
       // than hồng âm ỉ trong miệng đuốc, chờ được thắp
       const nh = .55 + .45 * Math.sin(t0 * 3.1 + i * 1.3);
       ctx.save(); ctx.globalCompositeOperation = "lighter";
-      const eg = ctx.createRadialGradient(x, yM - 2, 0, x, yM - 2, 30);
+      const eg = ctx.createRadialGradient(x, yM - 2 * Z, 0, x, yM - 2 * Z, 30 * Z);
       eg.addColorStop(0, "rgba(255,130,50," + (.55 * nh) + ")"); eg.addColorStop(1, "rgba(255,80,20,0)");
-      ctx.fillStyle = eg; ctx.fillRect(x - 30, yM - 32, 60, 60); ctx.restore();
-      sao(ctx, x - 44, yM - 4, 11, .95); sao(ctx, x + 46, yM + 30, 9, .9); sao(ctx, x + 30, yM - 34, 6, .8);
+      ctx.fillStyle = eg; ctx.fillRect(x - 30 * Z, yM - 32 * Z, 60 * Z, 60 * Z); ctx.restore();
+      sao(ctx, x - 44 * Z, yM - 4 * Z, 11 * Z, .95); sao(ctx, x + 46 * Z, yM + 30 * Z, 9 * Z, .9); sao(ctx, x + 30 * Z, yM - 34 * Z, 6 * Z, .8);
     }
     if (D.hang && D.huy > 0) {    // huy chương thứ hạng gắn giữa cán đuốc
       const q = Math.min(1, D.huy), sc = q < .6 ? q / .6 * 1.25 : 1.25 - .25 * (q - .6) / .4;
@@ -389,7 +442,7 @@
         c2.font = "800 44px 'Baloo 2'"; c2.textAlign = "center"; c2.textBaseline = "middle"; c2.fillStyle = "#6b3f00";
         c2.fillText(D.hang, 0, 4);
       });
-      ctx.save(); ctx.translate(x, y - 78); ctx.scale(sc, sc);
+      ctx.save(); ctx.translate(x, y - 78 * Z); ctx.scale(sc * Z, sc * Z);
       ctx.drawImage(huy, -63, -63);
       ctx.restore();
     }
@@ -541,7 +594,7 @@
       c.fillStyle = "rgba(232,182,74,.55)"; c.fillRect(x0 + 20, y0, 2, y1 - y0); c.fillRect(x1 - 22, y0, 2, y1 - y0);
       // chữ VỀ ĐÍCH viết dọc, mỗi chữ cái đứng thẳng
       const chu = ["V", "Ề", "", "Đ", "Í", "C", "H"], cao = (y1 - y0 - 60) / chu.length;
-      c.font = "800 76px 'Baloo 2'"; c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
+      c.font = "800 " + Math.round(76 * Math.min(1.3, CC.TL)) + "px 'Baloo 2'"; c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
       chu.forEach((ch, k) => {
         if (!ch) return;
         const cx = (x0 + x1) / 2, cy = y0 + 40 + cao * (k + .5) + (k > 2 ? -cao * .2 : k < 2 ? cao * .2 : 0);   // khoảng trống giữa VỀ và ĐÍCH hẹp lại, chữ to đỡ chật
@@ -604,7 +657,7 @@
   // ---------- nhân vật: ds = [{i, x, y (chân), h, a, lat, ghost:[{x,y,a}], sx, sy, rot}] ----------
   CC.veNguoi = function (ctx, A, ds, t) {
     ds.forEach(n => {
-      const im = A.to[n.i], h = n.h || 172, w = h * im.width / im.height;
+      const im = A.to[n.i], h = n.h || 172 * CC.KS, w = h * im.width / im.height;
       const T = (window.RD && RD.TO[n.i]) || null;
       const ve = (x, y, a, bong) => {
         ctx.save(); ctx.globalAlpha = a;
@@ -636,30 +689,30 @@
   CC.diChuyen = function (i, x0, y0, x1, y1, p, soBuoc, kieuEp) {
     p = Math.max(0, Math.min(1, p)); soBuoc = soBuoc || 4;
     const kieu = kieuEp || (window.RD && RD.TO[i] && RD.TO[i].kieu) || ["di", "bien", "di", "bien"][i];
-    const lat = x1 < x0 - 2;
+    const lat = x1 < x0 - 2, Z = CC.KS;
     const o = { i, lat, x: x0, y: y0, dat: null };
     if (kieu === "di") {
       const q = em(p); o.x = x0 + (x1 - x0) * q; o.y = y0 + (y1 - y0) * q;
-      o.dat = o.y; o.y -= Math.abs(Math.sin(Math.PI * soBuoc * p)) * 7 * (p > 0 && p < 1 ? 1 : 0);
+      o.dat = o.y; o.y -= Math.abs(Math.sin(Math.PI * soBuoc * p)) * 7 * Z * (p > 0 && p < 1 ? 1 : 0);
       o.rot = Math.sin(Math.PI * 2 * soBuoc * p) * .035 * (p > 0 && p < 1 ? 1 : 0);
     } else if (kieu === "luot") {
       const q = em(p); o.x = x0 + (x1 - x0) * q; o.y = y0 + (y1 - y0) * q; o.dat = o.y;
-      o.y -= Math.sin(Math.PI * p) * 14; o.rot = (lat ? -1 : 1) * Math.sin(Math.PI * p) * .06;
-      if (p > 0 && p < 1) o.ghost = [1, 2, 3].map(j => { const qq = em(Math.max(0, p - .05 * j)); return { x: x0 + (x1 - x0) * qq, y: y0 + (y1 - y0) * qq - Math.sin(Math.PI * Math.max(0, p - .05 * j)) * 14, a: .28 / j }; });
+      o.y -= Math.sin(Math.PI * p) * 14 * Z; o.rot = (lat ? -1 : 1) * Math.sin(Math.PI * p) * .06;
+      if (p > 0 && p < 1) o.ghost = [1, 2, 3].map(j => { const qq = em(Math.max(0, p - .05 * j)); return { x: x0 + (x1 - x0) * qq, y: y0 + (y1 - y0) * qq - Math.sin(Math.PI * Math.max(0, p - .05 * j)) * 14 * Z, a: .28 / j }; });
     } else if (kieu === "bien") {
       const ra = p < .3 ? 1 : p < .42 ? 1 - (p - .3) / .12 : p < .58 ? 0 : p < .7 ? (p - .58) / .12 : 1;
       const o2 = p < .5 ? 0 : 1;
       o.x = o2 ? x1 : x0 + (x1 - x0) * .06 * Math.min(1, p / .3); o.y = o2 ? y1 : y0; o.dat = o.y;
       o.a = ra; o.sx = .4 + .6 * ra; o.sy = 1 + (1 - ra) * .25;
       o.sparks = [];
-      const no = (cx, cy, q) => { for (let k = 0; k < 9; k++) { const an = k / 9 * 6.283 + 0.4, d = 30 + q * 80; o.sparks.push({ x: cx + Math.cos(an) * d, y: cy - 90 + Math.sin(an) * d * .9, r: 14 * (1 - q), a: 1 - q }); } };
+      const no = (cx, cy, q) => { for (let k = 0; k < 9; k++) { const an = k / 9 * 6.283 + 0.4, d = (30 + q * 80) * Z; o.sparks.push({ x: cx + Math.cos(an) * d, y: cy - 90 * Z + Math.sin(an) * d * .9, r: 14 * Z * (1 - q), a: 1 - q }); } };
       if (p > .3 && p < .55) no(x0, y0, (p - .3) / .25);
       if (p > .56 && p < .82) no(x1, y1, (p - .56) / .26);
     } else {
       const q = em(p), n = Math.max(1, Math.round(soBuoc / 2));
       o.x = x0 + (x1 - x0) * q; const yb = y0 + (y1 - y0) * q; o.dat = yb;
       const ph = (p * n) % 1, hop = p >= 1 ? 0 : Math.sin(Math.PI * ph);
-      o.y = yb - hop * 46; o.sy = 1 + (hop > .1 ? .04 : -.06 * (1 - hop / .1)); o.sx = 1 / o.sy;
+      o.y = yb - hop * 46 * Z; o.sy = 1 + (hop > .1 ? .04 : -.06 * (1 - hop / .1)); o.sx = 1 / o.sy;
       o.bongS = 1 - hop * .35;
     }
     return o;
@@ -669,7 +722,7 @@
   CC.ve = function (ctx, A, st) {
     CC.veNen(ctx, A, st.t || 0);
     CC.veCau(ctx, A, st);
-    CC.veNguoi(ctx, A, [0, 1, 2, 3].map(i => ({ i, x: CC.cho(st.dung || 0), y: CC.laneMid(i) + 40 })), st.t || 0);
+    CC.veNguoi(ctx, A, [0, 1, 2, 3].map(i => ({ i, x: CC.cho(st.dung || 0), y: CC.yChan(i) })), st.t || 0);
   };
 
   // con vật quanh cầu: thỏ trên bờ, cá koi và cá nhảy dưới sông, ếch trên lá sen, đom đóm (t: giây, để chuyển động)
@@ -685,6 +738,21 @@
     { a: "thoNgoi", x: 1866, y: 1036, h: 47 },
     { a: "thoNhay", nhayBo: [1842, 1892, 394, 3.1], h: 38 }
   ];
+  // 6/11 chiều: cầu cao ra nên con vật đặt theo mép cầu. Phía trên cầu (lúc chơi có bảng điểm và lời Claude che) chỉ còn một cá
+  //   koi và thỏ ở bờ trái; cá koi thứ hai, ếch và thỏ nhảy bờ phải xuống khoảng nước dưới cầu (khoảng này hẹp: cá nhảy thấp hơn).
+  function datConVat() {
+    const V = CC.CON_VAT, Y1 = CC.laneTop(3) + LH + BEAM, duoi = Math.max(Y1 + 60, CC.DUOI);
+    const yD = Math.min(Y1 + 46, (Y1 + duoi) / 2 + 4);
+    V[0].y = Y0 - 110; V[0].cao = 58;
+    V[1].x = 1130; V[1].y = yD + 2; V[1].cao = 34;
+    V[2].x = 1350; V[2].y = yD;
+    V[3].nhayBo[2] = Y0 - 130;
+    V[4].y = yD;
+    V[5].nhayBo = [1700, 1800, yD + 2, 3.1];
+    // gợn nước trên mặt sông: giữ chỗ cũ theo tỉ lệ, phía trên cầu dồn vào khoảng (TREN, Y0 - 30), phía dưới vào (Y1 + 16, DUOI)
+    const tren = CC.TREN || 0;
+    CC.GON = GON0.map(([x, y, P, ph]) => [x, y < 700 ? tren + (y / 430) * (Y0 - 30 - tren) : Y1 + 16 + ((y - 990) / 90) * (duoi - Y1 - 16) * .8, P, ph]);
+  }
   // ---------- nước trong chỗ thiếu + vòi nước phun (5/11 Thịnh: "cho nước phun lên ... giống kiểu không qua được") ----------
   function hat(i, k) { let s = 31 + i * 97 + k * 13; return () => (s = (s * 9301 + 49297) % 233280) / 233280; }
   // thêm hình chỗ thiếu vào đường đang vẽ (không bắt đầu đường mới), để cắt nhiều chỗ thiếu trong một lần
@@ -740,9 +808,9 @@
   };
   CC.veVoiNuoc = function (ctx, i, k, t) { CC.veVoiNuocNhieu(ctx, [[i, k]], t); };
   function voiNuoc(ctx, i, k, t) {
-    const r = hat(i, k), P = 3.4 + r() * 2.0, ph = r() * P, D = 1.6, Hm = 50 + r() * 10, lech = r() * 6.3;
+    const r = hat(i, k), P = 3.4 + r() * 2.0, ph = r() * P, D = 1.6, Hm = (50 + r() * 10) * CC.TL, lech = r() * 6.3;
     const u = (((t + ph) % P) + P) % P / D;
-    const g = G[k], c = CC.tam(g), cx = c[0], cy = CC.laneTop(i) + 88;
+    const g = G[k], c = CC.tam(g), cx = c[0], cy = CC.laneTop(i) + LH * (k === 3 && LH > 140 ? .62 : .733);
     // gợn nước luôn có ở chân vòi (kể cả lúc nghỉ) cho biết chỗ này là nước
     for (let j = 0; j < 2; j++) {
       const q = ((t * .55 + j * .5 + lech) % 1);
@@ -951,8 +1019,9 @@
 
   // ---------- gợn nước nhẹ trên mặt sông (5/11 Thịnh: "mặt nước cho thêm vài chỗ có gợn nước nhẹ") ----------
   // mỗi chỗ: 3 vòng elip mảnh nở ra rồi mờ dần, lặp lại theo chu kỳ riêng; chỉ ở chỗ có nước (trên và dưới cây cầu)
-  CC.GON = [[560, 140, 5.2, 0], [1130, 92, 6.1, 1.7], [870, 228, 5.6, 3.1], [1385, 250, 6.6, .8], [655, 335, 5.9, 2.4],
+  const GON0 = [[560, 140, 5.2, 0], [1130, 92, 6.1, 1.7], [870, 228, 5.6, 3.1], [1385, 250, 6.6, .8], [655, 335, 5.9, 2.4],
             [1215, 372, 6.3, 4.2], [735, 1046, 5.4, 1.2], [1300, 1052, 6.0, 3.6]];
+  CC.GON = GON0.slice();
   CC.veGon = function (ctx, t) {
     ctx.save(); ctx.lineCap = "round";
     CC.GON.forEach(([x, y, P, ph]) => {
@@ -995,7 +1064,7 @@
     }
     if (c > 0 && chu) {
       const cx = (Math.max(XS, xTrai || XS) + xe) / 2, cy = y0 + LH / 2 + 5;
-      const s = c < .6 ? .55 + .55 * (c / .6) : 1.1 - .1 * Math.min(1, (c - .6) / .4);
+      const s = (c < .6 ? .55 + .55 * (c / .6) : 1.1 - .1 * Math.min(1, (c - .6) / .4)) * Math.min(1.25, CC.TL);
       ctx.translate(cx, cy); ctx.scale(s, s);
       ctx.globalAlpha = Math.min(1, c * 2.5);
       // chữ có quầng sáng vẽ sẵn một lần
@@ -1033,7 +1102,7 @@
         ctx.restore();
         if (ph > d) return;
         const p = ph / d, chieu = c.lat ? 1 : -1;      // đầu cá đi trước
-        x = c.x + chieu * 70 * p; y = c.y - 58 * Math.sin(Math.PI * p); r = -chieu * (.55 - 1.1 * p); lat = !!c.lat;
+        x = c.x + chieu * 70 * p; y = c.y - (c.cao || 58) * Math.sin(Math.PI * p); r = -chieu * (.55 - 1.1 * p); lat = !!c.lat;
         // giọt nước văng lúc lao lên và lúc rơi xuống
         ctx.save(); ctx.fillStyle = "rgba(215,240,255,.8)";
         [[p, 0], [p - .85, 70]].forEach(([q, dx]) => { if (q < 0 || q > .3) return; const k = q / .3;
@@ -1081,33 +1150,34 @@
     ctx.save(); ctx.globalCompositeOperation = "lighter";
     const dom = domTron("gon", "255,250,170", "220,255,120");   // 6/11: đốm sáng vẽ sẵn
     for (let k = 0; k < 46; k++) {
-      let x = rnd() * 1920, y = rnd() < .5 ? rnd() * 420 : 990 + rnd() * 90;
+      const tren = CC.TREN || 0, Y1 = CC.Y1, duoi = Math.max(Y1 + 30, CC.DUOI);
+      let x = rnd() * 1920, y = rnd() < .5 ? tren + rnd() * Math.max(10, Y0 - 20 - tren) : Y1 + 10 + rnd() * (duoi - Y1 - 10);
       x += Math.sin(t * .35 + k * 1.7) * 16; y += Math.cos(t * .28 + k * 2.3) * 10;
       ctx.globalAlpha = .35 + .6 * Math.abs(Math.sin(t * 1.3 + k));
       ctx.drawImage(dom, x - 12, y - 12, 24, 24);
     }
     ctx.restore();
   };
-  // nhãn "Tổ n" ở đầu làn (vẽ sau nhân vật)
-  // yLan(i): tâm dọc của nhãn làn i, x0: mép trái (6/11: sân khấu có máy quay; nhãn sát đầu cầu, máy quay đi sang phải
-  //   thì nhãn dừng ở mép trái màn hình)
+  // nhãn "Nhóm n" ở đầu làn (vẽ sau nhân vật); yLan(i): tâm dọc của nhãn làn i (mặc định giữa làn), x0: mép trái (mặc định 4)
   CC.nhan = function (ctx, TO, yLan, x0) {
+    const s = Math.min(1.15, CC.TL), P = 22;
     for (let i = 0; i < 4; i++) {
       const y = yLan ? yLan(i) : CC.laneMid(i), x = x0 == null ? 4 : x0;
-      // nhãn có bóng mờ vẽ sẵn một lần
-      ctx.drawImage(veSan("nhan" + TO[i].ten + TO[i].mau, 260, 64, 22, (c, pad) => {
-        c.translate(pad - x, pad - (y - 32));
+      // nhãn có bóng mờ vẽ sẵn một lần (6/11 chiều: to theo làn, tối đa 1,15 lần)
+      ctx.drawImage(veSan("nhan" + TO[i].ten + TO[i].mau + s.toFixed(3), 260 * s, 64 * s, P, (c) => {
+        c.translate(P, P); c.scale(s, s);
         c.font = "800 40px 'Baloo 2'"; c.textBaseline = "middle";      // 5/11: "Nhóm n" dài hơn "Tổ n"
         const w = Math.max(128, Math.ceil(c.measureText(TO[i].ten).width) + 30);
         c.shadowColor = "rgba(0,0,0,.5)"; c.shadowBlur = 10; c.shadowOffsetY = 3;
         c.fillStyle = TO[i].mau; c.strokeStyle = "#fff"; c.lineWidth = 4;
-        c.beginPath(); c.roundRect(x, y - 32, w, 64, 32); c.fill(); c.shadowColor = "transparent"; c.stroke();
-        c.fillStyle = "#fff"; c.textAlign = "center"; c.fillText(TO[i].ten, x + w / 2, y + 3);
-      }), x - 22, y - 32 - 22);
+        c.beginPath(); c.roundRect(0, 0, w, 64, 32); c.fill(); c.shadowColor = "transparent"; c.stroke();
+        c.fillStyle = "#fff"; c.textAlign = "center"; c.fillText(TO[i].ten, w / 2, 35);
+      }), x - P, Math.round(y - 32 * s) - P);
     }
   };
   // gọi lại khi phông chữ vừa tải xong (chữ trong hình vẽ sẵn); CC.banSan đổi để lớp đứng yên của sân khấu vẽ lại
   CC.banSan = 0;
   CC.xoaSan = () => { SAN.clear(); CC.banSan++; };
+  dungHinh();
   window.CC = CC;
 })();
