@@ -397,6 +397,30 @@
     }
   }
 
+  /* ---------- lớp đứng yên: ảnh nền + phần cây cầu không chuyển động ----------
+     6/11 (thầy Thịnh: "game hơi lag"): đo trên máy không có card đồ hoạ, mỗi khung hình mất 24 ms, riêng cây cầu đứng yên đã 12 ms.
+     Nay vẽ sẵn một lần vào lớp này, chỉ vẽ lại khi có miếng ghép mới đặt xuống (hoặc đổi độ nét, phông chữ vừa tải xong). */
+  let cvTinh = null, khoaTinh = "";
+  // cột chỗ thiếu đang có miếng ghép bay vào: vẽ ở phần chuyển động cho tới khi miếng cuối đáp xuống
+  const cotBay = t => (S.che === "cau" && S.R0 > XA && S.L && t < S.R0 + S.L.pEnd + .5) ? S.q - 1 : -1;
+  function lopTinh(st, cot) {
+    const khoa = [cv.width, cv.height, cot, CC.banSan,
+      st.lap.map(r => [0, 1, 2, 3, 4].map(k => (k === cot ? "-" : r[k] ? (r[k].vang ? 2 : 1) : 0)).join("")).join(",")].join("|");
+    if (khoa !== khoaTinh || !cvTinh) {
+      if (!cvTinh) cvTinh = document.createElement("canvas");
+      if (cvTinh.width !== cv.width) cvTinh.width = cv.width;
+      if (cvTinh.height !== cv.height) cvTinh.height = cv.height;
+      const g = cvTinh.getContext("2d");
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cvTinh.width, cvTinh.height);
+      g.setTransform(rDo, 0, 0, rDo, 0, 0);
+      g.drawImage(A.nen, 0, 0, W, H);
+      CC.veCauTinh(g, A, st, cot);
+      khoaTinh = khoa;
+      SK.soLanVeTinh = (SK.soLanVeTinh || 0) + 1;
+    }
+    return cvTinh;
+  }
+
   /* ---------- vẽ một khung hình ---------- */
   function veKhung(t) {
     ctx.setTransform(rDo, 0, 0, rDo, 0, 0);
@@ -404,7 +428,9 @@
     const KK = S.K, ket = (S.che === "hang" || S.che === "bao") && KK;
     const { st, no } = trangThai(t);
     if (!ket || t < KK.BURN0) {
-      CC.veNen(ctx, A, t); CC.veCau(ctx, A, st); veDo(ctx, st, t); veNo(ctx, no);
+      const cot = cotBay(t);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(lopTinh(st, cot), 0, 0); ctx.setTransform(rDo, 0, 0, rDo, 0, 0);
+      CC.veNenDong(ctx, A, t); CC.veCauDong(ctx, A, st, cot); veDo(ctx, st, t); veNo(ctx, no);
       CC.veNguoi(ctx, A, nguoiCau(t), t);
       (st.sang || []).forEach(d => CC.veSaoRoi(ctx, d.i, d.x, t, d.a == null ? 1 : d.a));
       CC.veSo(ctx, st);
@@ -507,6 +533,11 @@
     if (KK && S.che === "bao" && t < S.H0 + .25) { hbHien = true; hbBam = true; hbS = .93; }
     datAn(UI.nutHB, !hbHien);
     if (hbHien) { UI.nutHB.classList.toggle("bam", hbBam); datKieu(UI.nutHB, "transform", "scale(" + hbS.toFixed(3) + ")"); datKieu(UI.nutHB, "opacity", String(hbA)); }
+    // dòng sông vẽ tiếp ở phần dư ngoài khung 16:9: tắt dần khi lửa đốt tan màn đêm (nửa sau), tới báo tường thì hết hẳn
+    if (UI.nenNgoai) {
+      const an = S.che === "bao" ? 0 : (S.che === "hang" && KK) ? 1 - lin(t, (KK.BURN0 + KK.BURN1) / 2, KK.BURN1) : 1;
+      datKieu(UI.nenNgoai, "opacity", an.toFixed(3));
+    }
   }
   // bảng điểm: các dòng trượt tới chỗ mới theo thứ hạng, số điểm tăng dần
   function veBang(t, q) {
@@ -536,51 +567,30 @@
     });
     S.cues = con;
   }
-  function buocChan(t0, dai, so) { for (let k = 0; k < so; k++) hen(t0 + dai * (k + .5) / so, () => am().buoc && am().buoc()); }
+  // 6/11 thầy Thịnh: "chỉ kêu tiếng ở những chỗ quan trọng thôi", "âm thanh nên có lúc hiện ra câu hỏi mới, lúc ghép ô
+  //   vào cây cầu. Bạn về nhất thì có tiếng vỗ tay". Bỏ tiếng bước chân, vút, tích tắc, lấp lánh, lách tách
+  //   (danh sách đủ ở DOC-TRUOC.md, mục "Âm thanh").
   function tiengCau() {
-    const L = S.L, R0 = S.R0;
-    // mảnh ghép đáp xuống cầu: mảnh vàng kêu chuông, các mảnh sau gõ mộc cầm đi lên Mi, Son, La
-    // (5/11: thay tiếng trống trầm, thầy Thịnh nghe như tiếng nổ sau mỗi câu)
+    // ghép ô vào cầu: mỗi miếng đáp xuống kêu một tiếng; miếng vàng (nhóm đúng nhiều nhất) kêu chuông,
+    // các miếng gỗ gõ mộc cầm đi lên Mi, Son, La
     let j = 0;
-    L.bay.forEach(b => {
-      if (b.vang) { hen(R0 + b.t0, () => am().vut && am().vut()); hen(R0 + b.t0 + b.d, () => { am().chuong && am().chuong(.9); am().lapLanh && am().lapLanh(); }); }
-      else { const bac = 2 + Math.min(j++, 2); hen(R0 + b.t0 + b.d, () => am().go && am().go(bac, .7)); }
+    S.L.bay.forEach(b => {
+      if (b.vang) hen(S.R0 + b.t0 + b.d, () => am().chuong && am().chuong(.9));
+      else { const bac = 2 + Math.min(j++, 2); hen(S.R0 + b.t0 + b.d, () => am().go && am().go(bac, .7)); }
     });
-    // nhóm đi bộ: tiếng bước chân; nhóm tốc biến: tiếng lấp lánh
-    buocChan(R0 + L.kid0, L.kidDur, 4);
-    hen(R0 + L.kid0 + L.kidDur * .3, () => am().lapLanh && am().lapLanh());
-    for (let k = 0; k < 4; k++) hen(R0 + L.board + k * .18, () => am().tich && am().tich());
-    hen(R0 + L.board + .25, () => am().ken && am().ken());
   }
   function tiengDich() {
     const KK = S.K;
-    buocChan(KK.W0, .85, 3);
-    hen(KK.W0 + .85, () => am().vut && am().vut());
-    hen(KK.W0 + 1.3, () => { am().trong && am().trong(.9); am().ken && am().ken(); });
-    buocChan(KK.W1, .55, 2);
-    hen(KK.W1 + .65, () => am().bungLua && am().bungLua());
-    hen(KK.W1 + 1.15, () => am().ting && am().ting());
+    hen(KK.W0 + .85, () => am().voTay && am().voTay());           // bạn về nhất bước lên thảm VỀ ĐÍCH: cả lớp vỗ tay
+    hen(KK.W1 + .65, () => am().bungLua && am().bungLua());       // thắp đuốc
   }
   function tiengHang() {
     const KK = S.K;
-    KK.nhom.forEach(g => {
-      const c = KK.CHAY[g[0]];
-      if (g.some(i => RD.TO[i].kieu === "bien")) hen(c - 1.15 + .3, () => am().lapLanh && am().lapLanh());
-      if (g.some(i => RD.TO[i].kieu !== "bien")) buocChan(c - 1.15, 1.05, 4);
-      hen(c, () => am().bungLua && am().bungLua());
-      hen(c + .5, () => am().ting && am().ting());
-    });
-    hen(KK.F0, () => am().vut && am().vut());
-    hen(KK.F0 + .9, () => { am().trong && am().trong(1); am().lapLanh && am().lapLanh(); });
-    hen(KK.BURN0, () => am().lachTach && am().lachTach(3.2));
-    hen(KK.BURN0 + .2, () => am().vut && am().vut());
-    buocChan(KK.S0, 2, 6);
-    hen(KK.S0 + 1.7, () => am().lapLanh && am().lapLanh());
+    KK.nhom.forEach(g => hen(KK.CHAY[g[0]], () => am().bungLua && am().bungLua()));   // mỗi lượt thắp đuốc theo hạng
+    hen(KK.F0 + .9, () => am().trong && am().trong(1));                                 // bốn tia lửa chạm số 51
   }
   function tiengBao() {
-    hen(S.H0, () => { am().trong && am().trong(1); am().ken && am().ken(); });
-    hen(S.H0 + .8, () => am().lapLanh && am().lapLanh());
-    hen(S.H0 + 1.2, () => am().lapLanh && am().lapLanh());
+    hen(S.H0, () => { am().trong && am().trong(1); am().ken && am().ken(); });         // mở dải băng báo tường
   }
 
   /* ---------- vòng vẽ ---------- */
@@ -596,7 +606,7 @@
       dts.push(t - S.tCu); if (dts.length > 90) dts.shift();
       if (dts.length >= 90 && t > hThap + 3) {
         const tb = dts.reduce((a, b) => a + b, 0) / dts.length;
-        if (tb > .03 && SK.doNet > .7) { SK.doNet = Math.max(.7, SK.doNet - .15); hThap = t; dts = []; SK.vuaManHinh(); }
+        if (tb > .024 && SK.doNet > .7) { SK.doNet = Math.max(.7, SK.doNet - .15); hThap = t; dts = []; SK.vuaManHinh(); }
       }
     }
     S.tCu = t;
@@ -608,7 +618,7 @@
     cv = $("#cv"); ctx = cv.getContext("2d");
     cvDem = document.createElement("canvas"); cvCau = document.createElement("canvas");
     UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
-    UI.nutTH = $("#nutThuHang"); UI.nutHB = $("#nutHienBao");
+    UI.nutTH = $("#nutThuHang"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai");
     UI.dong = RD.TO.map(T => {
       const d = document.createElement("div"); d.className = "dong"; d.style.setProperty("--m", T.mau); d.style.setProperty("--n", T.nhat);
       d.innerHTML = '<span class="h">1</span><img src="' + T.mat + '" alt=""><span class="t">' + T.ten + '</span><span class="d">0</span>';
@@ -622,9 +632,15 @@
     requestAnimationFrame(vong);
   };
   SK.vuaManHinh = function () {
-    const k = Math.min(window.innerWidth / W, window.innerHeight / H);
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const k = Math.min(vw / W, vh / H), wd = $("#world");
     SK.k = k;
-    $("#world").style.transform = "translate(-50%,-50%) scale(" + k + ")";
+    wd.style.transform = "translate(-50%,-50%) scale(" + k + ")";
+    // 6/11 thầy Thịnh: khung xem không đúng tỉ lệ 16:9 (cửa sổ Claude, máy 16:10) thì phần dư trên dưới (hoặc hai bên)
+    //   vẽ tiếp dòng sông bằng ảnh nền lật gương, không còn hai viền đen. Dư thêm 40 px cho màn câu hỏi làm mờ không bị viền tối.
+    wd.style.setProperty("--bd", (Math.max(0, Math.ceil((vh / k - H) / 2)) + 40) + "px");
+    wd.style.setProperty("--bn", (Math.max(0, Math.ceil((vw / k - W) / 2)) + 40) + "px");
+    if (wd.parentNode && wd.parentNode.style) wd.parentNode.style.setProperty("--k", String(k));   // nền báo tường kéo dài ra phần dư
     // độ nét của cảnh theo cỡ màn hình thật (màn nhỏ thì vẽ nhỏ cho nhẹ máy), tối đa 1920×1080
     rDo = Math.max(.5, Math.min(1, k * (window.devicePixelRatio || 1))) * SK.doNet;
     [cv, cvDem, cvCau].forEach(c => { const w = Math.round(W * rDo), h = Math.round(H * rDo); if (c.width !== w) c.width = w; if (c.height !== h) c.height = h; });

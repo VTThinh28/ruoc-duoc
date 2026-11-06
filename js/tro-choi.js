@@ -433,13 +433,12 @@
       else if (k === "m" || k === "M") { A.datBat(!A.bat); $('[data-tv="am"]').setAttribute("aria-pressed", A.bat ? "true" : "false"); }
     });
     document.addEventListener("pointerdown", function () { A.mo(); }, { passive: true });
-    // ẩn chuột và nút khi không dùng
+    // ẩn con trỏ chuột khi không dùng; các nút góc trái dưới luôn hiện (6/11 thầy Thịnh: "mấy nút này mặc định là luôn hiện")
     var henChuot = 0;
     var hien = function () {
       $("#tv").classList.remove("an-chuot");
-      $("#tvNut").classList.remove("an");
       clearTimeout(henChuot);
-      henChuot = setTimeout(function () { $("#tv").classList.add("an-chuot"); $("#tvNut").classList.add("an"); }, 3500);
+      henChuot = setTimeout(function () { $("#tv").classList.add("an-chuot"); }, 3500);
     };
     document.addEventListener("mousemove", hien, { passive: true });
     hien();
@@ -506,7 +505,7 @@
     if (step === "setup" || step === "intro") {
       var vao = step === "intro" && cu === "setup";
       SK.dat({ che: "dau", ls: ls, gioiThieu: step === "intro", hoatCanh: vao });
-      if (vao) { A.trong(0.9); setTimeout(function () { A.trong(1); }, 260); }
+      // 6/11: bỏ tiếng trống lúc bắt đầu, nhạc nền đã vào (thầy Thịnh chỉ muốn tiếng ở câu hỏi mới, ô ghép vào cầu, bạn về nhất)
       return;
     }
     if (loai === "r") {
@@ -621,12 +620,12 @@
       hoat(the, [{ transform: "translateY(40px)" }, { transform: "none" }], 450, DE, function () { huyHoat(the); });
     } else SK.phu(true);
     var nt = $("#mcNuocTo");
+    // 6/11 thầy Thịnh: chỉ kêu ở chỗ quan trọng. Màn câu hỏi chỉ còn một tiếng lúc câu hỏi mới hiện ra
+    //   (bỏ trống dồn, tiếng ting lúc quét, tiếng kèn câu 5 và tiếng chuông lúc hiện đáp án)
     if (cauMoi && moi) {
       A.baoCau();
       if (q === 5 && loai === "q") {
         nt.hidden = false;
-        A.trongDon(0.9);
-        setTimeout(function () { A.ken(); }, 900);
         hoat(nt, [
           { offset: 0, opacity: 0, transform: "scale(.4)" },
           { offset: 0.1, opacity: 0, transform: "scale(.4)", easing: NAY },
@@ -637,9 +636,7 @@
       }
     }
     if (loai !== "q") { huyHoat(nt); nt.hidden = true; }
-    if (loai === "k" && cu === "q" + q) A.ting();
     if (loai === "a" && cu === "k" + q) {
-      A.lapLanh();
       var o2 = m.querySelector('.mc-o[data-l="' + c.dung + '"]');
       if (o2) hoat(o2, [{ transform: "scale(.94)" }, { transform: "scale(1)" }], 500, NAY, function () { huyHoat(o2); });
     }

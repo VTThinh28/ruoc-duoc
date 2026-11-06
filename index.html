@@ -40,9 +40,21 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .vai-ghi{margin-top:18px!important;font-size:15px!important}
 
 /* ---------- màn hình TV: sân khấu cây cầu (clip bản 8, thầy Thịnh duyệt 5/11/2026) ---------- */
-#tv{position:fixed;inset:0;overflow:hidden;background:var(--nentoi);user-select:none;-webkit-user-select:none}
+/* nền ngoài khung 16:9 = nền báo tường kéo dài (chỉ lộ ra ở phần kết, khi dòng sông vẽ tiếp đã tắt); --k: tỉ lệ thu phóng của sân khấu */
+#tv{position:fixed;inset:0;overflow:hidden;background:#130c06 radial-gradient(circle farthest-corner at 50% calc(50% - var(--k,1) * 108px),#3b2a17 calc(var(--k,1) * 50px),#130c06 calc(var(--k,1) * 875px));user-select:none;-webkit-user-select:none}
 #tv.an-chuot,#tv.an-chuot *{cursor:none!important}
-#world{position:absolute;left:50%;top:50%;width:1920px;height:1080px;overflow:hidden;background:#0b1428;transform-origin:50% 50%}
+#world{position:absolute;left:50%;top:50%;width:1920px;height:1080px;overflow:visible;background:#0b1428;transform-origin:50% 50%}
+/* 6/11 thầy Thịnh (hai viền đen trên dưới): khung xem không đúng 16:9 thì phần dư vẽ tiếp dòng sông bằng ảnh nền lật gương, tối dần ra ngoài.
+   --bd, --bn: bề dày phần dư trên dưới, hai bên (san-khau.js tính theo cỡ cửa sổ). Màn câu hỏi dùng cùng cách, làm mờ cả khối. */
+.nen-ngoai,.mc-nen{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none}
+.nen-ngoai i,.mc-nen i{position:absolute;display:block;background-repeat:no-repeat}
+.nn-giua{left:0;top:0;width:1920px;height:1080px;background-image:url(anh/song-dem.webp);background-size:1920px 1080px}
+.nn-tren,.nn-duoi{left:0;width:1920px;height:var(--bd,40px);transform:scaleY(-1)}
+.nn-trai,.nn-phai{top:0;height:1080px;width:var(--bn,40px);transform:scaleX(-1)}
+.nn-tren{bottom:100%;background-image:linear-gradient(to bottom,rgba(3,8,20,0),rgba(3,8,20,.5)),url(anh/song-dem.webp);background-size:100% 100%,1920px 1080px;background-position:0 0,0 0}
+.nn-duoi{top:100%;background-image:linear-gradient(to top,rgba(3,8,20,0),rgba(3,8,20,.5)),url(anh/song-dem.webp);background-size:100% 100%,1920px 1080px;background-position:0 0,0 100%}
+.nn-trai{right:100%;background-image:linear-gradient(to right,rgba(3,8,20,0),rgba(3,8,20,.5)),url(anh/song-dem.webp);background-size:100% 100%,1920px 1080px;background-position:0 0,0 0}
+.nn-phai{left:100%;background-image:linear-gradient(to left,rgba(3,8,20,0),rgba(3,8,20,.5)),url(anh/song-dem.webp);background-size:100% 100%,1920px 1080px;background-position:0 0,100% 0}
 #world img{max-width:none}
 #cv{position:absolute;left:0;top:0;width:1920px;height:1080px}
 #world .tieu{position:absolute;left:0;right:0;top:46px;text-align:center;color:#fff;pointer-events:none}
@@ -85,7 +97,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 
 /* ---------- màn câu hỏi ---------- */
 #manCau{position:absolute;inset:0;z-index:6000;--ac:#2a5fb8;--fs:72px;--fo:54px;--wh:560px}
-.mc-nen{position:absolute;inset:-30px;background:url(anh/song-dem.webp) center/cover;filter:blur(10px) brightness(.6)}
+.mc-nen{filter:blur(10px) brightness(.6)}
 .mc-the{position:absolute;left:14px;top:14px;width:1892px;height:1052px;padding:16px 30px 22px;border-radius:30px;background:linear-gradient(#fffaf0,#fff3dc);border:5px solid var(--ac);box-shadow:0 20px 60px rgba(0,0,0,.45);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:64px minmax(0,1fr) 124px;gap:14px}
 .mc-dau{display:flex;align-items:center;gap:16px;min-width:0}
 .mc-pill{padding:6px 26px;border-radius:999px;background:var(--ac);color:#fff;font:800 40px/1.1 var(--f-tieu);white-space:nowrap}
@@ -271,6 +283,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 
 <div id="tv" hidden>
   <div id="world">
+    <div class="nen-ngoai" id="nenNgoai" aria-hidden="true"><i class="nn-tren"></i><i class="nn-duoi"></i><i class="nn-trai"></i><i class="nn-phai"></i></div>
     <canvas id="cv" width="1920" height="1080" aria-label="Cây cầu bốn làn của bốn nhóm, mỗi nhóm một bạn cầm đuốc"></canvas>
     <div class="tieu" id="tieu" hidden><h1>RƯỚC ĐUỐC</h1></div>
     <div class="luat" id="luat" hidden>
@@ -290,7 +303,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <button type="button" class="nut-tv" id="nutThuHang" hidden>Thứ hạng các nhóm <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <button type="button" class="nut-tv" id="nutHienBao" hidden>Hiện báo tường <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <div id="manCau" hidden>
-      <div class="mc-nen"></div>
+      <div class="mc-nen"><i class="nn-giua"></i><i class="nn-tren"></i><i class="nn-duoi"></i><i class="nn-trai"></i><i class="nn-phai"></i></div>
       <div class="mc-the" id="mcThe">
         <div class="mc-dau"><span class="mc-pill" id="mcPill">Câu 1/5</span><div class="mc-tien" id="mcTien"></div></div>
         <div class="mc-than">
@@ -369,14 +382,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=33b708c0"></script>
-<script src="js/scanlib.js?v=33b708c0"></script>
-<script src="js/du-lieu.js?v=33b708c0"></script>
-<script src="js/dong-bo.js?v=33b708c0"></script>
-<script src="js/am-thanh.js?v=33b708c0"></script>
-<script src="js/quet.js?v=33b708c0"></script>
-<script src="js/cay-cau.js?v=33b708c0"></script>
-<script src="js/san-khau.js?v=33b708c0"></script>
-<script src="js/tro-choi.js?v=33b708c0"></script>
+<script src="js/cau-hinh.js?v=b919e793"></script>
+<script src="js/scanlib.js?v=b919e793"></script>
+<script src="js/du-lieu.js?v=b919e793"></script>
+<script src="js/dong-bo.js?v=b919e793"></script>
+<script src="js/am-thanh.js?v=b919e793"></script>
+<script src="js/quet.js?v=b919e793"></script>
+<script src="js/cay-cau.js?v=b919e793"></script>
+<script src="js/san-khau.js?v=b919e793"></script>
+<script src="js/tro-choi.js?v=b919e793"></script>
 </body>
 </html>

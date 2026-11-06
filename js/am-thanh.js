@@ -19,6 +19,7 @@
       var len = ac.sampleRate * 1.5, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
       for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       nhieu = b;
+      setTimeout(function () { if (!voTayBuf) voTayBuf = taoVoTay(); }, 2000);   // tạo sẵn tiếng vỗ tay lúc rảnh
     }
     if (ac.state === "suspended") ac.resume();
     giaiMaNhac();
@@ -162,12 +163,11 @@
     if (!san()) return;
     tiengNhieu(ac.currentTime, 0.9, "bandpass", 300, 2400, 1.4, 0.3);
   };
-  // đuốc bén lửa: tiếng "phừng" nhẹ, vài tiếng lách tách và một tiếng chuông (trước đây là tiếng nổ trầm kèm trống)
+  // đuốc bén lửa: tiếng "phừng" nhẹ và một tiếng chuông (trước đây là tiếng nổ trầm kèm trống; 6/11 bỏ tiếng lách tách)
   A.bungLua = function () {
     if (!san()) return;
     var t = ac.currentTime;
     tiengNhieu(t, 0.8, "bandpass", 450, 1500, 0.9, 0.2);
-    A.lachTach(0.6);
     A.chuong(0.6, t + 0.12);
   };
   A.lachTach = function (dai) {
@@ -193,6 +193,49 @@
       ra(o, 0.065, t + n[1], 0.7);
       o.start(t + n[1]); o.stop(t + n[1] + 0.75);
     });
+  };
+  // tiếng cả lớp vỗ tay (6/11 thầy Thịnh: "bạn về nhất thì có tiếng vỗ tay"): khoảng 20 bạn vỗ lệch nhịp nhau,
+  // ngồi rải trái phải, to dần rồi thưa dần trong hơn 3 giây. Tạo một lần thành đoạn âm thanh rồi phát lại.
+  var voTayBuf = null;
+  function taoVoTay() {
+    var sr = ac.sampleRate, dai = 3.6, n = Math.floor(sr * dai), dv = Math.floor(sr * 0.026);
+    var b = ac.createBuffer(2, n, sr), L = b.getChannelData(0), R = b.getChannelData(1);
+    for (var p = 0; p < 20; p++) {
+      var bd = Math.random() * 0.3, kt = 1.6 + Math.random() * 1.8;          // lúc bạn này bắt đầu và thôi vỗ
+      var nhip = 1 / (3.2 + Math.random() * 1.8), to = 0.55 + Math.random() * 0.45;
+      var goc = Math.random() * Math.PI / 2, gl = Math.cos(goc), gr = Math.sin(goc);
+      var fc = 900 + Math.random() * 1200;                                   // mỗi đôi bàn tay một giọng
+      for (var t = bd; t < Math.min(kt, dai - 0.05); t += nhip * (0.88 + Math.random() * 0.24)) {
+        var tang = t < 0.3 ? t / 0.3 : 1, giam = kt - t < 0.7 ? (kt - t) / 0.7 : 1;
+        var a = to * Math.max(0, Math.min(tang, giam)) * (0.75 + Math.random() * 0.25);
+        if (a < 0.03) continue;
+        // một tiếng vỗ: nhiễu ngắn tắt nhanh, lọc dải quanh giọng của bạn đó
+        var f = fc * (0.9 + Math.random() * 0.2), Q = 1 + Math.random() * 0.8, w = 2 * Math.PI * f / sr, al = Math.sin(w) / (2 * Q), a0 = 1 + al;
+        var b0 = al / a0, b2 = -al / a0, a1 = -2 * Math.cos(w) / a0, a2 = (1 - al) / a0;
+        var tat = Math.exp(-1 / (sr * (0.003 + Math.random() * 0.003))), vao = sr * 0.0005, bao = 1;
+        var x1 = 0, x2 = 0, y1 = 0, y2 = 0, o = Math.floor(t * sr);
+        for (var k = 0; k < dv && o + k < n; k++, bao *= tat) {
+          var x = (Math.random() * 2 - 1) * bao * (k < vao ? k / vao : 1);
+          var y = b0 * x + b2 * x2 - a1 * y1 - a2 * y2;
+          x2 = x1; x1 = x; y2 = y1; y1 = y;
+          var v = a * (y + 0.08 * x);            // thêm chút tiếng giòn, không để rít
+          L[o + k] += v * gl; R[o + k] += v * gr;
+        }
+      }
+    }
+    var dinh = 0, i;
+    for (i = 0; i < n; i++) dinh = Math.max(dinh, Math.abs(L[i]), Math.abs(R[i]));
+    if (dinh > 0) for (i = 0; i < n; i++) { L[i] /= dinh; R[i] /= dinh; }
+    return b;
+  }
+  A.voTay = function (manh) {
+    if (!san()) return;
+    if (!voTayBuf) voTayBuf = taoVoTay();
+    var s = ac.createBufferSource(), g = ac.createGain();
+    s.buffer = voTayBuf;
+    g.gain.value = 0.38 * (manh == null ? 1 : manh);     // nhỉnh hơn nhạc nền một chút
+    s.connect(g); g.connect(tong);
+    s.start(ac.currentTime);
   };
   A.lapLanh = function () {
     if (!san()) return;
