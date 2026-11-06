@@ -28,7 +28,8 @@
   const S = {
     che: "dau", tieu: false, luat: false, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
     R0: XA, L: null, E0: CHUA, B0: CHUA, H0: CHUA, K: null,
-    binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0
+    binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
+    ext: { bn: 0, bd: 0, EW: W, EH: H, s: 1 }
   };
   let cv, ctx, A = null, rDo = 1, cvDem, cvCau, bao = null, baoKhung = null, daSanSang = false;
   const UI = {};
@@ -208,9 +209,10 @@
     cu.forEach(i => { if (moi.indexOf(i) < 0) ds.push({ i, x: CC.cho(xong), a: 1 - a }); });
     return ds;
   }
-  function veDo(c, st, t) {
+  // xTrai: chữ "Nhóm n về nhất" canh giữa phần làn nằm bên phải chỗ này (máy quay phóng to: không để nhãn nhóm che chữ)
+  function veDo(c, st, t, xTrai) {
     if (!S.K) return;
-    S.K.NHAT.forEach(i => CC.veDuongDo(c, i, st.do[i] || 0, lin(t, S.K.W0 + 1.3, S.K.W0 + 1.8), t, RD.TO[i].ten + " về nhất"));
+    S.K.NHAT.forEach(i => CC.veDuongDo(c, i, st.do[i] || 0, lin(t, S.K.W0 + 1.3, S.K.W0 + 1.8), t, RD.TO[i].ten + " về nhất", xTrai));
   }
   function veNo(c, no) {
     no.forEach(n => {
@@ -403,44 +405,127 @@
   let cvTinh = null, khoaTinh = "";
   // cột chỗ thiếu đang có miếng ghép bay vào: vẽ ở phần chuyển động cho tới khi miếng cuối đáp xuống
   const cotBay = t => (S.che === "cau" && S.R0 > XA && S.L && t < S.R0 + S.L.pEnd + .5) ? S.q - 1 : -1;
-  function lopTinh(st, cot) {
-    const khoa = [cv.width, cv.height, cot, CC.banSan,
+  //   Lớp này vẽ cả thế giới 1920×1080 ở độ nét f rồi chép phần đang thấy: lúc máy quay phóng to (hoặc đang thu về)
+  //   thì f = rDo × độ phóng để chép 1:1 cho nét; lúc thấy toàn cảnh thì f = rDo như cũ.
+  const fTinh = c => rDo * (c.s > 1.001 ? S.ext.s : 1);
+  //   Màn hình không đúng 16:9 (cửa sổ Claude) thì lớp này dư thêm mép (mx, my điểm ảnh) quanh thế giới: ảnh nền soi gương,
+  //   tối dần ra ngoài như #nenNgoai. Máy quay phóng to hay lùi ra thì phần nhìn thấy vẫn nằm trọn trong lớp, không có đường nối.
+  let tinhMx = 0, tinhMy = 0;
+  function lopTinh(st, cot, f) {
+    const mx = Math.ceil(S.ext.bn * f) + (S.ext.bn > 0 ? 2 : 0), my = Math.ceil(S.ext.bd * f) + (S.ext.bd > 0 ? 2 : 0);
+    const rong = Math.round(W * f) + 2 * mx, cao = Math.round(H * f) + 2 * my;
+    const khoa = [rong, cao, f.toFixed(4), mx, my, cot, CC.banSan,
       st.lap.map(r => [0, 1, 2, 3, 4].map(k => (k === cot ? "-" : r[k] ? (r[k].vang ? 2 : 1) : 0)).join("")).join(",")].join("|");
     if (khoa !== khoaTinh || !cvTinh) {
       if (!cvTinh) cvTinh = document.createElement("canvas");
-      if (cvTinh.width !== cv.width) cvTinh.width = cv.width;
-      if (cvTinh.height !== cv.height) cvTinh.height = cv.height;
+      if (cvTinh.width !== rong) cvTinh.width = rong;
+      if (cvTinh.height !== cao) cvTinh.height = cao;
       const g = cvTinh.getContext("2d");
       g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cvTinh.width, cvTinh.height);
-      g.setTransform(rDo, 0, 0, rDo, 0, 0);
+      if (mx || my) veGuongNen(g, f, mx, my);
+      g.setTransform(f, 0, 0, f, mx, my);
       g.drawImage(A.nen, 0, 0, W, H);
       CC.veCauTinh(g, A, st, cot);
-      khoaTinh = khoa;
+      khoaTinh = khoa; tinhMx = mx; tinhMy = my;
       SK.soLanVeTinh = (SK.soLanVeTinh || 0) + 1;
     }
     return cvTinh;
   }
 
+  // ảnh nền soi gương ra mép dư (vẽ trước ảnh nền chính, lấn vào trong 2 điểm ảnh để chỗ nối không hở), tối dần ra ngoài
+  //   giống hệt #nenNgoai (dải tối kéo dài thêm 40 px ngoài màn hình) để lúc đốt cầu chuyển sang #nenNgoai không thấy khác
+  function veGuongNen(g, f, mx, my) {
+    const N = A.nen, nw = N.naturalWidth || N.width, nh = N.naturalHeight || N.height, LAN = 2 / f;
+    const toi = (x0, y0, x1, y1, w, h, x, y) => {
+      const gr = g.createLinearGradient(x0, y0, x1, y1);
+      gr.addColorStop(0, "rgba(3,8,20,0)"); gr.addColorStop(1, "rgba(3,8,20,.5)");
+      g.fillStyle = gr; g.fillRect(x, y, w, h);
+    };
+    if (my) {
+      const h = Math.min(H, my / f), sh = h * nh / H;
+      g.setTransform(f, 0, 0, -f, mx, my);                       // trên: lật quanh y = 0
+      g.drawImage(N, 0, 0, nw, sh, 0, -LAN, W, h + LAN);
+      g.setTransform(f, 0, 0, -f, mx, my + 2 * H * f);           // dưới: lật quanh y = H
+      g.drawImage(N, 0, nh - sh, nw, sh, 0, H - h, W, h + LAN);
+      g.setTransform(f, 0, 0, f, mx, my);
+      toi(0, 0, 0, -h - 40, W, h, 0, -h); toi(0, H, 0, H + h + 40, W, h, 0, H);
+    }
+    if (mx) {
+      const w = Math.min(W, mx / f), sw = w * nw / W;
+      g.setTransform(-f, 0, 0, f, mx, my);                       // trái: lật quanh x = 0
+      g.drawImage(N, 0, 0, sw, nh, -LAN, 0, w + LAN, H);
+      g.setTransform(-f, 0, 0, f, mx + 2 * W * f, my);           // phải: lật quanh x = W
+      g.drawImage(N, nw - sw, 0, sw, nh, W - w, 0, w + LAN, H);
+      g.setTransform(f, 0, 0, f, mx, my);
+      toi(0, 0, -w - 40, 0, w, H, -w, 0); toi(W, 0, W + w + 40, 0, w, H, W, 0);
+    }
+  }
+
+  /* ---------- máy quay ----------
+     6/11 thầy Thịnh: "làm cây cầu, người, các ô to lên, không cần phải hiện dòng nước". Lúc chơi (công bố kết quả, về đích),
+     máy quay phóng to vào cây cầu: mép trên cầu nằm ngay dưới bảng điểm và lời Claude (y = CAM_TREN trong khung 16:9),
+     mép dưới cầu nằm trên hàng nút góc trái. TV 16:9 to khoảng 1,3 lần; khung cao hơn 16:9 (cửa sổ Claude 830×630 khoảng
+     1,47 lần) thì phóng to hơn và cảnh phủ kín cả phần dư. Cầu dài hơn khung nhìn nên máy quay trượt theo các bạn: bạn dẫn
+     đầu đứng ở 62% bề ngang.
+     Màn mở đầu và phần kết (thắp đuốc theo hạng, lửa đốt, báo tường) thấy toàn cảnh như cũ.
+     c = { s: độ phóng, x, y: điểm của thế giới nằm ở góc trên trái khung vẽ (khung vẽ phủ cả phần dư) } */
+  const CAM_TREN = 270;
+  const NUT_DUOI = 74;               // hàng nút góc trái dưới (cao 52 px, cách đáy 14 px) + 8 px: mép dưới cầu nằm trên hàng nút
+  const camToan = () => ({ s: 1, x: -S.ext.bn, y: -S.ext.bd });
+  function camDua(q) {               // sau câu q (0..5); q = 6: nhìn về đích
+    const E = S.ext, s = E.s, VW = E.EW / s;
+    const F = q > 5 ? W : CC.cho(q);
+    const x = VW >= W ? (W - VW) / 2 : cl(F - .62 * VW, 0, W - VW);
+    return { s, x, y: CC.Y0 - (E.bd + CAM_TREN) / s };
+  }
+  const tron = (a, b, p) => ({ s: a.s + (b.s - a.s) * p, x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p });
+  function cam(t) {
+    if (S.ext.s <= 1.001) return camToan();
+    switch (S.che) {
+      case "hoi": return S.q <= 1 ? camToan() : camDua(S.q - 1);
+      case "cau": {
+        const b = camDua(S.q);
+        if (S.R0 <= XA || !S.L) return b;
+        return tron(camDua(S.q - 1), b, em(lin(t, S.R0 + S.L.kid0 - .3, S.R0 + S.L.kid0 + S.L.kidDur + .4)));
+      }
+      case "dich": return camDua(6);
+      case "hang": return tron(camDua(6), camToan(), em(lin(t, S.B0, S.B0 + 1.4)));
+      default: return camToan();
+    }
+  }
+  SK.cam = cam;
+
   /* ---------- vẽ một khung hình ---------- */
   function veKhung(t) {
-    ctx.setTransform(rDo, 0, 0, rDo, 0, 0);
-    if (!daSanSang || !S.ls) { ctx.fillStyle = "#0b1428"; ctx.fillRect(0, 0, W, H); return; }
-    const KK = S.K, ket = (S.che === "hang" || S.che === "bao") && KK;
+    const E = S.ext, ox = E.bn * rDo, oy = E.bd * rDo;          // gốc khung 16:9 trong khung vẽ
+    const KK = S.K, ket = (S.che === "hang" || S.che === "bao") && KK, dem = !ket || t < KK.BURN0;
+    const c = dem ? cam(t) : camToan(), sanSang = daSanSang && S.ls;
+    // lúc vẽ cầu, lớp đứng yên (ảnh nền + mép soi gương) phủ kín khung vẽ nên khỏi xoá
+    if (!(dem && sanSang)) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); }
+    ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
+    if (!sanSang) { ctx.fillStyle = "#0b1428"; ctx.fillRect(0, 0, W, H); return; }
     const { st, no } = trangThai(t);
-    if (!ket || t < KK.BURN0) {
-      const cot = cotBay(t);
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(lopTinh(st, cot), 0, 0); ctx.setTransform(rDo, 0, 0, rDo, 0, 0);
-      CC.veNenDong(ctx, A, t); CC.veCauDong(ctx, A, st, cot); veDo(ctx, st, t); veNo(ctx, no);
+    if (dem) {
+      const cot = cotBay(t), f = fTinh(c), tinh = lopTinh(st, cot, f);
+      // máy quay dừng ở điểm ảnh tròn: chép lớp đứng yên khỏi phải nội suy, lớp động đi cùng nên không lệch nhau
+      const r = rDo * c.s, tx = Math.round(-r * c.x), ty = Math.round(-r * c.y);
+      ctx.setTransform(r / f, 0, 0, r / f, tx, ty); ctx.drawImage(tinh, -tinhMx, -tinhMy);
+      ctx.setTransform(r, 0, 0, r, tx, ty);
+      // nhãn nhóm: sát đầu cầu như cũ, máy quay đi sang phải thì dừng ở mép trái màn hình (Lx: toạ độ khung 16:9)
+      const Lx = Math.max(4 - E.bn, (4 - c.x) * c.s - E.bn);
+      CC.veNenDong(ctx, A, t); CC.veCauDong(ctx, A, st, cot); veDo(ctx, st, t, c.x + (Lx + 200 + E.bn) / c.s); veNo(ctx, no);
       CC.veNguoi(ctx, A, nguoiCau(t), t);
       (st.sang || []).forEach(d => CC.veSaoRoi(ctx, d.i, d.x, t, d.a == null ? 1 : d.a));
       CC.veSo(ctx, st);
-      CC.nhan(ctx, RD.TO);
       if (ket) veTiaLua(ctx, t);
+      // phần đứng yên trên màn hình (không theo máy quay): nhãn nhóm ở mép trái, ngang giữa làn; Claude cạnh bóng nói
+      ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
+      CC.nhan(ctx, RD.TO, i => (CC.laneMid(i) - c.y) * c.s - E.bd, Lx);
       // Claude nhảy múa thổi kèn bên trái bóng nói (mỗi câu một kiểu nhảy); mờ dần khi bắt đầu về đích
       const qB = S.che === "cau" ? S.q : (S.che === "dich" ? 5 : 0);
       if (qB && S.L && S.L.q === qB) {
         const p = t - (S.R0 + S.L.board + .2), mo = S.che === "dich" ? 1 - lin(t, S.E0, S.E0 + .5) : 1;
-        if (p >= 0 && mo > 0) { ctx.save(); ctx.globalAlpha = mo; CC.veClaude(ctx, A, p, 150, 256, 250, qB - 1); ctx.restore(); }
+        if (p >= 0 && mo > 0) { ctx.save(); ctx.globalAlpha = mo; CC.veClaude(ctx, A, p, 118, 176, 196, qB - 1); ctx.restore(); }
       }
     } else {
       const R = banKinh(t), u = lin(t, KK.BURN0, KK.BURN1);
@@ -450,7 +535,7 @@
         d.setTransform(1, 0, 0, 1, 0, 0); d.globalCompositeOperation = "source-over"; d.clearRect(0, 0, cvDem.width, cvDem.height);
         d.setTransform(rDo, 0, 0, rDo, 0, 0); CC.veNen(d, A, t);
         d.globalCompositeOperation = "destination-out"; duongChay(d, R, t); d.fill();
-        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(cvDem, 0, 0); ctx.setTransform(rDo, 0, 0, rDo, 0, 0);
+        ctx.setTransform(1, 0, 0, 1, ox, oy); ctx.drawImage(cvDem, 0, 0); ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
         veMepChay(ctx, R, t);
       }
       // tàn lửa lấp lánh bay lên
@@ -469,7 +554,7 @@
         const c2 = cvCau.getContext("2d");
         c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, cvCau.width, cvCau.height); c2.setTransform(rDo, 0, 0, rDo, 0, 0);
         CC.veCau(c2, A, st); veDo(c2, st, t); CC.veSo(c2, st); CC.nhan(c2, RD.TO);
-        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ac; ctx.drawImage(cvCau, 0, 0); ctx.restore();
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, ox, oy); ctx.globalAlpha = ac; ctx.drawImage(cvCau, 0, 0); ctx.restore();
       }
       if (t < KK.S0) CC.veNguoi(ctx, A, [0, 1, 2, 3].map(i => ({ i, x: choDuoc(i)[0], y: choDuoc(i)[1], hang: KK.hang[i] })), t);
       veTiaLua(ctx, t);
@@ -547,7 +632,7 @@
     const sau = qq > 0 ? S.hg[qq] : null, truoc = qTruoc > 0 ? S.hg[qTruoc] : null;
     UI.dong.forEach((d, i) => {
       const a = truoc ? truoc.thuTu.indexOf(i) : i, b = sau ? sau.thuTu.indexOf(i) : i, r = a + (b - a) * p;
-      datKieu(d.el, "top", (54 + r * 66).toFixed(1) + "px");
+      datKieu(d.el, "top", (40 + r * 50).toFixed(1) + "px");      // 6/11: bảng điểm gọn lại cho máy quay phóng to cầu
       const h = String(sau ? sau.hang[i] : 1), dc = qTruoc > 0 ? S.ls[qTruoc][i].tram : 0, ds = qq > 0 ? S.ls[qq][i].tram : 0;
       const so = String(Math.round(dc + (ds - dc) * pd));
       if (d.h.textContent !== h) d.h.textContent = h;
@@ -643,7 +728,14 @@
     if (wd.parentNode && wd.parentNode.style) wd.parentNode.style.setProperty("--k", String(k));   // nền báo tường kéo dài ra phần dư
     // độ nét của cảnh theo cỡ màn hình thật (màn nhỏ thì vẽ nhỏ cho nhẹ máy), tối đa 1920×1080
     rDo = Math.max(.5, Math.min(1, k * (window.devicePixelRatio || 1))) * SK.doNet;
-    [cv, cvDem, cvCau].forEach(c => { const w = Math.round(W * rDo), h = Math.round(H * rDo); if (c.width !== w) c.width = w; if (c.height !== h) c.height = h; });
+    // khung vẽ phủ cả phần dư (để máy quay phóng to lấp kín màn hình); khung 16:9 nằm giữa, lệch (bn, bd)
+    const bn = Math.max(0, (vw / k - W) / 2), bd = Math.max(0, (vh / k - H) / 2);
+    const s = cl((H + bd - Math.max(20, NUT_DUOI / k) - CAM_TREN) / (CC.Y1 + 4 - CC.Y0), 1, 1.9);
+    S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, s };
+    datKieu(cv, "left", (-bn).toFixed(1) + "px"); datKieu(cv, "top", (-bd).toFixed(1) + "px");
+    datKieu(cv, "width", S.ext.EW.toFixed(1) + "px"); datKieu(cv, "height", S.ext.EH.toFixed(1) + "px");
+    { const w = Math.round(S.ext.EW * rDo), h = Math.round(S.ext.EH * rDo); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; }
+    [cvDem, cvCau].forEach(c => { const w = Math.round(W * rDo), h = Math.round(H * rDo); if (c.width !== w) c.width = w; if (c.height !== h) c.height = h; });
   };
 
   /* ---------- điều khiển từ trò chơi ---------- */

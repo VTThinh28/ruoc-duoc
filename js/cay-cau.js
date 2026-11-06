@@ -970,7 +970,7 @@
 
   // ---------- đường của tổ về nhất chuyển đỏ, ghi "Tổ n về nhất" (5/11 Thịnh) ----------
   // p: 0..1 thảm đỏ trải từ thảm VỀ ĐÍCH ngược về đầu cầu; c: 0..1 chữ hiện ra
-  CC.veDuongDo = function (ctx, i, p, c, t, chu) {
+  CC.veDuongDo = function (ctx, i, p, c, t, chu, xTrai) {
     if (p <= 0) return;
     const y0 = CC.laneTop(i), y1 = y0 + LH, xe = CC.THAM[0], xa = xe - (xe - XS) * p;
     ctx.save();
@@ -994,7 +994,7 @@
       ctx.globalCompositeOperation = "source-over";
     }
     if (c > 0 && chu) {
-      const cx = (XS + xe) / 2, cy = y0 + LH / 2 + 5;
+      const cx = (Math.max(XS, xTrai || XS) + xe) / 2, cy = y0 + LH / 2 + 5;
       const s = c < .6 ? .55 + .55 * (c / .6) : 1.1 - .1 * Math.min(1, (c - .6) / .4);
       ctx.translate(cx, cy); ctx.scale(s, s);
       ctx.globalAlpha = Math.min(1, c * 2.5);
@@ -1089,9 +1089,11 @@
     ctx.restore();
   };
   // nhãn "Tổ n" ở đầu làn (vẽ sau nhân vật)
-  CC.nhan = function (ctx, TO) {
+  // yLan(i): tâm dọc của nhãn làn i, x0: mép trái (6/11: sân khấu có máy quay; nhãn sát đầu cầu, máy quay đi sang phải
+  //   thì nhãn dừng ở mép trái màn hình)
+  CC.nhan = function (ctx, TO, yLan, x0) {
     for (let i = 0; i < 4; i++) {
-      const y = CC.laneMid(i), x = 4;
+      const y = yLan ? yLan(i) : CC.laneMid(i), x = x0 == null ? 4 : x0;
       // nhãn có bóng mờ vẽ sẵn một lần
       ctx.drawImage(veSan("nhan" + TO[i].ten + TO[i].mau, 260, 64, 22, (c, pad) => {
         c.translate(pad - x, pad - (y - 32));
