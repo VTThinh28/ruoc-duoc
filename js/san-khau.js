@@ -591,6 +591,25 @@
     }
   }
 
+  // Claude nhảy múa thổi kèn trong lúc bình luận (mỗi câu một kiểu nhảy); mờ dần khi bắt đầu về đích.
+  //   7/11 (thầy Thịnh: "chỉnh cho claude đứng thấp xuống dưới gần sát cây cầu và nhích qua bên phải 1 chút"): trước đây Claude
+  //   neo theo đỉnh màn hình, ngay dưới nhãn câu (tâm x 118, y 176). Nay chân hình cách mép trên cây cầu 4 px, tâm x 165 (giữa
+  //   hai cột đèn đầu cầu). Vẽ trước các bạn nhỏ và cắt ở mép cầu: quầng sáng, tia sáng, pháo giấy không tràn xuống làn cầu;
+  //   bạn ở làn trên cùng đi ngang qua thì đầu và đuốc nằm phía trước Claude.
+  const CLAUDE_X = 165, CLAUDE_W = 196, CLAUDE_HO = 4;
+  function veClaudeCau(t, E) {
+    const qB = S.che === "cau" ? S.q : (S.che === "dich" ? 5 : 0);
+    if (!qB || !S.L || S.L.q !== qB || !A.claude) return;
+    const p = t - (S.R0 + S.L.board + .2), mo = S.che === "dich" ? 1 - lin(t, S.E0, S.E0 + .5) : 1;
+    if (p < 0 || mo <= 0) return;
+    const im = A.claude[0], h = CLAUDE_W * im.height / im.width;
+    ctx.save(); ctx.globalAlpha = mo;
+    ctx.beginPath(); ctx.rect(-E.bn, -E.bd, E.EW, CC.Y0 + E.bd + 2); ctx.clip();
+    CC.veClaude(ctx, A, p, CLAUDE_X, CC.Y0 - CLAUDE_HO - h / 2, CLAUDE_W, qB - 1);
+    ctx.restore();
+  }
+  SK.choClaude = () => { const im = A && A.claude && A.claude[0]; return im ? { x: CLAUDE_X, y: CC.Y0 - CLAUDE_HO - CLAUDE_W * im.height / im.width / 2, w: CLAUDE_W, h: CLAUDE_W * im.height / im.width } : null; };
+
   /* ---------- vẽ một khung hình ---------- */
   // 6/11 chiều: bỏ máy quay phóng to (thầy Thịnh: "chỉnh đường chạy dài lên trên và xuống dưới chứ không phải phóng to");
   //   cả cây cầu luôn nằm trọn trong màn hình, làn cao ra theo khung xem (vuaManHinh).
@@ -609,18 +628,12 @@
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(tinh, ox - tinhMx, oy - tinhMy);
       ctx.setTransform(rDo, 0, 0, rDo, ox, oy);
       CC.veNenDong(ctx, A, t); CC.veCauDong(ctx, A, st, cot); veDo(ctx, st, t); veNo(ctx, no);
+      veClaudeCau(t, E);
       CC.veNguoi(ctx, A, nguoiCau(t), t);
       (st.sang || []).forEach(d => CC.veSaoRoi(ctx, d.i, d.x, t, d.a == null ? 1 : d.a));
       CC.veSo(ctx, st);
       if (ket) veTiaLua(ctx, t);
       CC.nhan(ctx, RD.TO);
-      // Claude nhảy múa thổi kèn bên trái bóng nói (mỗi câu một kiểu nhảy); mờ dần khi bắt đầu về đích.
-      //   Bóng nói neo theo đỉnh màn hình (--bdT) nên Claude cũng vậy.
-      const qB = S.che === "cau" ? S.q : (S.che === "dich" ? 5 : 0);
-      if (qB && S.L && S.L.q === qB) {
-        const p = t - (S.R0 + S.L.board + .2), mo = S.che === "dich" ? 1 - lin(t, S.E0, S.E0 + .5) : 1;
-        if (p >= 0 && mo > 0) { ctx.save(); ctx.globalAlpha = mo; CC.veClaude(ctx, A, p, 118, 176 - E.bd, 196, qB - 1); ctx.restore(); }
-      }
     } else {
       const R = banKinh(t), u = lin(t, KK.BURN0, KK.BURN1);
       if (u < 1) {

@@ -983,8 +983,9 @@
     }
     // câu 5 (nhân đôi điểm): pháo hoa nhỏ nổ quanh Claude
     if (kieu === 4) {
-      // chỗ nổ: quanh hình và khoảng trống bên phải (bong bóng lời bình câu 5 bắt đầu từ x ≈ 554)
-      const CHO = [[200, -30], [-80, 105], [290, 75], [120, 125], [235, 150], [-25, 150]];
+      // chỗ nổ (7/11: Claude đứng sát mép trên cây cầu): phía trên và bên phải hình, dưới nhãn câu 5, bên trái bong bóng
+      //   lời bình (câu 5 bắt đầu từ x ≈ 554), không chạm cầu
+      const CHO = [[220, -83], [-80, -158], [305, -148], [-60, -100], [125, -153], [155, -13]];
       for (let n = Math.max(0, Math.floor((p - 1) / .5)); n * .5 <= p; n++) {
         const tn = p - n * .5; if (tn < 0 || tn > 1) continue;
         const c0 = CHO[n % CHO.length], bx = cx + c0[0], by = cy + c0[1], v = tn / 1, R = 16 + 56 * (1 - Math.pow(1 - v, 2.2)), roi = 22 * tn * tn;
