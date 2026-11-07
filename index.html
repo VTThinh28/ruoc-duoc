@@ -123,11 +123,16 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .mc-tien span.thieu{--m:#b23a2a}
 .mc-tien span.du{--m:#2b8550}
 .mc-than{display:grid;grid-template-columns:var(--wh) minmax(0,1fr);gap:34px;min-height:0}
-.mc-hinh{background:var(--trang);border-radius:22px;border:3px solid #c9d6ee;display:flex;align-items:center;justify-content:center;padding:10px;min-height:0;overflow:hidden}
+.mc-hinh{background:#fcfcfc;border-radius:22px;border:3px solid #c9d6ee;display:flex;align-items:center;justify-content:center;padding:10px;min-height:0;overflow:hidden}
 .mc-hinh img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
-.mc-khung{position:relative;flex:none}
+.mc-khung{position:relative;flex:none;overflow:hidden}
 .mc-khung img,.mc-khung video{position:absolute;max-width:none;max-height:none}
 #mcNhan{left:0;top:0;width:100%;height:100%}
+/* 7/11: số đo trên hình viết bằng chữ thật, to khoảng 60 px; nằm trên hình thì có nền trắng */
+.mc-so{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.mc-so span{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-chu);font-weight:700;line-height:1.12;color:#1565c0;white-space:nowrap}
+.mc-so span[data-a="t"]{transform:translate(0,-50%)}
+.mc-so span.nen{background:rgba(255,255,255,.95);border:.05em solid #9db7e0;border-radius:.3em;padding:.02em .3em .08em;box-shadow:0 .06em .16em rgba(0,0,0,.2)}
 .mc-chu{display:flex;flex-direction:column;justify-content:center;gap:18px;min-width:0;min-height:0;overflow:hidden}
 .mc-chu p{margin:0;font:600 var(--fs)/1.27 var(--f-chu);color:var(--muc)}
 .mc-chu b{color:inherit;font-weight:inherit;white-space:nowrap}   /* 5/11 Thịnh: số liệu không tô màu, chỉ tô màu câu hỏi */
@@ -337,7 +342,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
       <div class="mc-the" id="mcThe">
         <div class="mc-dau"><span class="mc-pill" id="mcPill">Câu 1/5</span><div class="mc-tien" id="mcTien"></div></div>
         <div class="mc-than">
-          <div class="mc-hinh" id="mcHop"><div class="mc-khung" id="mcKhung" hidden><img id="mcNhan" alt=""></div><img id="mcAnh" alt="" hidden></div>
+          <div class="mc-hinh" id="mcHop"><div class="mc-khung" id="mcKhung" role="img" hidden><img id="mcNhan" alt=""><div class="mc-so" id="mcSo"></div></div><img id="mcAnh" alt="" hidden></div>
           <div class="mc-chu" id="mcChu"><p id="mcBoiCanh"></p><p id="mcHoi" class="mc-hoi"></p></div>
         </div>
         <div class="mc-chon" id="mcChon"></div>
@@ -417,14 +422,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=f7e75cce"></script>
-<script src="js/scanlib.js?v=f7e75cce"></script>
-<script src="js/du-lieu.js?v=f7e75cce"></script>
-<script src="js/dong-bo.js?v=f7e75cce"></script>
-<script src="js/am-thanh.js?v=f7e75cce"></script>
-<script src="js/quet.js?v=f7e75cce"></script>
-<script src="js/cay-cau.js?v=f7e75cce"></script>
-<script src="js/san-khau.js?v=f7e75cce"></script>
-<script src="js/tro-choi.js?v=f7e75cce"></script>
+<script src="js/cau-hinh.js?v=ded2ea55"></script>
+<script src="js/scanlib.js?v=ded2ea55"></script>
+<script src="js/du-lieu.js?v=ded2ea55"></script>
+<script src="js/dong-bo.js?v=ded2ea55"></script>
+<script src="js/am-thanh.js?v=ded2ea55"></script>
+<script src="js/quet.js?v=ded2ea55"></script>
+<script src="js/cay-cau.js?v=ded2ea55"></script>
+<script src="js/san-khau.js?v=ded2ea55"></script>
+<script src="js/tro-choi.js?v=ded2ea55"></script>
 </body>
 </html>

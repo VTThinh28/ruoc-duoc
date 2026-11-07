@@ -49,15 +49,24 @@
       chon: ["12 mét vuông", "24 mét vuông", "6 mét vuông", "8 mét vuông"]
     }
   ];
-  // hình chuyển động của 5 câu (video 8 giây lặp lại): W×H là khung của lớp nhãn số đo anh/chuyen-dong/nhan-cau-N.webp,
-  // x, y, w, h là chỗ đặt video trong khung đó (theo anh/chuyen-dong/khung.json)
+  // hình chuyển động của 5 câu (video 8 giây lặp lại). Khung W×H tính theo điểm ảnh video; video đặt ở (x, y), cỡ w×h
+  // (x, y âm là cắt bớt lề trắng của video). 7/11 thầy Thịnh: "những cái số trong các hình ảnh cho to lên"
+  //   -> số đo viết bằng chữ thật trên trang (so: tâm x, y; a "t" thì x là mép trái; f cỡ chữ; nen: nền trắng khi nằm trên hình),
+  //      khoảng 60 px trên khung 1920 (trước khoảng 20 px); lớp phủ anh/chuyen-dong/nhan-cau-N.webp (nhan) chỉ còn nét đứt,
+  //      góc vuông, viền hình thang; ảnh chờ anh/chuyen-dong/tinh-cau-N.webp là khung đầu của video
   RD.KHUNG = {
-    1: { W: 954, H: 906, x: 12, y: 12, w: 930, h: 862 },
-    2: { W: 954, H: 742, x: 12, y: 24, w: 930, h: 706 },
-    3: { W: 954, H: 866, x: 12, y: 12, w: 930, h: 842 },
-    4: { W: 954, H: 792, x: 12, y: 11, w: 930, h: 768 },
-    5: { W: 884, H: 491, x: 12, y: 74, w: 860, h: 342 }
+    1: { W: 820, H: 929, x: -44, y: 0, w: 930, h: 862, so: [{ t: "2 mét", x: 432, y: 880, f: 73 }] },
+    2: { W: 873, H: 692, x: -30, y: 27, w: 930, h: 706, so: [{ t: "12 mét", x: 436, y: 40, f: 56 }] },
+    3: { W: 930, H: 869, x: 0, y: 0, w: 930, h: 842, nhan: true,
+      so: [{ t: "5 mét", x: 379, y: 418, f: 68, nen: 1, a: "t" }, { t: "3 mét", x: 362.5, y: 820, f: 68, nen: 1 }] },
+    4: { W: 772, H: 600, x: -80, y: -88, w: 930, h: 768, nhan: true,
+      so: [{ t: "12 mét", x: 220, y: 252, f: 50, nen: 1 }, { t: "9 mét", x: 396, y: 392, f: 50, nen: 1, a: "t" }] },
+    5: { W: 860, H: 502, x: 0, y: 80, w: 860, h: 342, nhan: true,
+      so: [{ t: "6 mét", x: 348.8, y: 41, f: 55 }, { t: "10 mét", x: 427.8, y: 461, f: 55 }, { t: "3 mét", x: 100.5, y: 280, f: 55, nen: 1, a: "t" }] }
   };
+  // 7/11 thầy Thịnh: "phần chữ cho dịch qua phải, rồi cho hình to lên" -> cột hình rộng tới 960 px (trước 560, câu 5 700),
+  // hình cao kín ô; chữ đề nằm bên phải
+  RD.COT_HINH = 960;
   // Điểm câu = phần trăm bạn có mặt của tổ trả lời đúng (số nguyên); câu 5 nhân đôi. Tối đa 600 (thiết kế cây cầu 4/11/2026).
   RD.HE_SO = [1, 1, 1, 1, 2];
   RD.TONG_DIEM = 600;

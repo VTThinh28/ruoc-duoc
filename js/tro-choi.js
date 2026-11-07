@@ -586,30 +586,40 @@
     var tran = function () { return $$(".mc-o>span", m).some(function (x) { return x.scrollWidth > x.clientWidth + 1; }); };
     while (fo > 32 && tran()) { fo -= 2; m.style.setProperty("--fo", fo + "px"); }
   }
-  // video hình động của câu q (webm, máy không chạy được thì mp4); không chạy được video thì dùng hình đứng yên
+  // video hình động của câu q (webm, máy không chạy được thì mp4). Ảnh chờ (poster) là khung đầu của video:
+  // hiện ngay khi video chưa tải xong, và ở lại nếu máy không chạy được video (số đo, nét vẽ vẫn nằm đúng chỗ)
   function taoVideo(q) {
     if (q in VID) return VID[q];
-    var I = RD.KHUNG && RD.KHUNG[q], v = document.createElement("video"), co = false;
+    var I = RD.KHUNG && RD.KHUNG[q];
+    if (!I) { VID[q] = null; return null; }
+    var v = document.createElement("video");
     v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = "auto";
     v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
+    v.poster = "anh/chuyen-dong/tinh-cau-" + q + ".webp";
     [["webm", 'video/webm; codecs="vp9"'], ["mp4", 'video/mp4; codecs="avc1.640028"']].forEach(function (k) {
       if (!v.canPlayType || !v.canPlayType(k[1])) return;
       var s = document.createElement("source");
       s.src = "anh/chuyen-dong/cau-" + q + "." + k[0]; s.type = k[1];
-      v.appendChild(s); co = true;
+      v.appendChild(s);
     });
-    if (!co || !I) { VID[q] = null; return null; }
-    var hong = function () { v.hong = true; if (mcHien && mcDang === q) datHinh(q); };
-    v.lastChild.addEventListener("error", hong);
-    v.addEventListener("error", hong);
     v.load();
     VID[q] = v;
     return v;
   }
+  // 7/11: cột hình rộng vừa đủ cho hình cao kín ô (không quá RD.COT_HINH), chữ đề dịch sang phải
+  function datCot(q) {
+    var I = RD.KHUNG && RD.KHUNG[q], m = $("#manCau"), hop = $("#mcHop"), cot = RD.COT_HINH || 960;
+    if (!I) { m.style.setProperty("--wh", (q === 5 ? 700 : 560) + "px"); return; }
+    m.style.setProperty("--wh", cot + "px");
+    var bw = hop.clientWidth - 20, bh = hop.clientHeight - 20;
+    if (bw <= 0 || bh <= 0) return;
+    var s = Math.min(bw / I.W, bh / I.H);
+    m.style.setProperty("--wh", Math.min(cot, Math.ceil(I.W * s) + cot - bw) + "px");
+  }
   function datHinh(q) {
-    var I = RD.KHUNG && RD.KHUNG[q], v = taoVideo(q), k = $("#mcKhung"), anh = $("#mcAnh"), hop = $("#mcHop"), nhan = $("#mcNhan");
+    var I = RD.KHUNG && RD.KHUNG[q], v = taoVideo(q), k = $("#mcKhung"), anh = $("#mcAnh"), hop = $("#mcHop"), nhan = $("#mcNhan"), so = $("#mcSo");
     Object.keys(VID).forEach(function (j) { var x = VID[j]; if (x && +j !== q && x.parentNode) { x.pause(); x.parentNode.removeChild(x); } });
-    var coVideo = !!(v && !v.hong && I);
+    var coVideo = !!(v && I);
     k.hidden = !coVideo; anh.hidden = coVideo;
     if (!coVideo) {
       if (v && v.parentNode) { v.pause(); v.parentNode.removeChild(v); }
@@ -617,15 +627,27 @@
       anh.alt = "Hình minh họa câu " + q;
       return;
     }
+    // số đo: chữ thật nằm trên hình, cỡ chữ và chỗ đặt theo tỉ lệ hình
+    if (so.dataset.q !== String(q)) {
+      so.dataset.q = q;
+      so.innerHTML = (I.so || []).map(function (n) {
+        return "<span" + (n.nen ? ' class="nen"' : "") + (n.a === "t" ? ' data-a="t"' : "") + ">" + esc(n.t) + "</span>";
+      }).join("");
+    }
     var bw = hop.clientWidth - 20, bh = hop.clientHeight - 20;
     if (bw > 0 && bh > 0) {
       var s = Math.min(bw / I.W, bh / I.H);
       k.style.width = I.W * s + "px"; k.style.height = I.H * s + "px";
       v.style.left = I.x * s + "px"; v.style.top = I.y * s + "px"; v.style.width = I.w * s + "px"; v.style.height = I.h * s + "px";
+      $$("span", so).forEach(function (el, i) {
+        var n = I.so[i];
+        el.style.left = n.x * s + "px"; el.style.top = n.y * s + "px"; el.style.fontSize = n.f * s + "px";
+      });
     }
-    var src = "anh/chuyen-dong/nhan-cau-" + q + ".webp";
-    if (nhan.getAttribute("src") !== src) nhan.src = src;
-    nhan.alt = "Hình minh họa câu " + q;
+    // lớp nét vẽ (nét đứt, góc vuông, viền): chỉ câu 3, 4, 5 có
+    nhan.hidden = !I.nhan;
+    if (I.nhan) { var src = "anh/chuyen-dong/nhan-cau-" + q + ".webp"; if (nhan.getAttribute("src") !== src) nhan.src = src; }
+    k.setAttribute("aria-label", "Hình minh họa câu " + q);
     if (v.parentNode !== k) k.insertBefore(v, nhan);
     if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () { /* hiện khung đầu */ }); }
   }
@@ -639,13 +661,14 @@
       var pill = $("#mcPill");
       pill.textContent = RD.nhanCau(q);
       pill.classList.toggle("vang", q === 5);
-      m.style.setProperty("--wh", (q === 5 ? 700 : 560) + "px");
+      datCot(q);
       $("#mcBoiCanh").innerHTML = chuDe(c.boiCanh);
       $("#mcHoi").innerHTML = chuDe(c.hoi);
       $("#mcChon").innerHTML = c.chon.map(function (t, i) {
         return '<div class="mc-o" data-l="' + RD.CHU[i] + '"><b>' + RD.CHU[i] + "</b><span>" + esc(t) + "</span><em hidden></em></div>";
       }).join("");
-      $("#mcTien").dataset.html = "";
+      // câu mới: xoá hẳn dòng kết quả của câu trước (7/11: trước đây chỉ đặt lại bộ nhớ nên lúc đọc đề câu sau vẫn còn "HS đúng" của câu trước)
+      delete $("#mcTien").dataset.html;
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (mcHien && mcDang === q) vuaChu(q); });
     }
     vuaChu(q);
