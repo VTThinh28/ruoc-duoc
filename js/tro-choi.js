@@ -207,6 +207,43 @@
     }).catch(function () { clearTimeout(hen); dung(P.chu); });
   }
   function dangOR(q) { var n = nowHopLe(); return VAI === "tv" && n.step === "r" + q; }
+  // 8/11 thầy Thịnh: "tôi bấm vào thì cả 4 nhóm lên đốt đuốc, claude bình luận về thứ hạng". Lời bình thứ hạng theo mẫu
+  //   (RD.loiBinhHang); trong Claude, Claude giữ nguyên câu đầu (thứ hạng) và câu kết, chỉ được chèn vào giữa một câu ngắn
+  //   không số, không tên nhóm (như lời bình từng câu). Hiện ở bước Tổng kết khi ngọn đuốc cuối đã sáng.
+  function nhacClaudeHang(sau, P) {
+    var hang = RD.xepHang(sau);
+    var dong = hang.thuTu.map(function (t) { return "- " + RD.TO[t].ten + ": tổng " + RD.vietDiem(sau[t].tram) + " điểm, hạng " + hang.hang[t] + "."; }).join("\n");
+    return "Bạn là bình luận viên vui vẻ của trò chơi \"Rước đuốc\" trong tiết Toán lớp 6/3 (học sinh 11-12 tuổi). " +
+      "Bốn nhóm vừa trả lời xong 5 câu hỏi, cả bốn nhóm đã lên thắp đuốc theo thứ hạng. Kết quả chung cuộc:\n" + dong + "\n" +
+      "Thầy giáo đã viết sẵn lời bình thứ hạng, đúng kết quả:\n" + P.chu + "\n" +
+      "Giữ nguyên từng chữ câu đầu và câu cuối của thầy. Chỉ được chèn vào giữa hai câu đó nhiều nhất một câu ngắn (tối đa 12 từ) cho vui, ví dụ khen tinh thần thi đua của cả lớp; câu chèn không có chữ số, không nêu tên nhóm. Không chèn cũng được.\n" +
+      "1. Bắt đầu đúng bằng: " + P.dau + "\n" +
+      "2. Kết thúc đúng bằng: " + P.cuoi + "\n" +
+      "Tiếng Việt có dấu, không emoji, không dấu ngoặc kép, không chê nhóm nào. Chỉ trả về lời bình.";
+  }
+  function khoaHang(sau) { return ses() + ":hang:" + sau.map(function (r) { return r.tram; }).join(","); }
+  function binhLuanHang(sau) {
+    var key = khoaHang(sau), P = RD.loiBinhHang(sau), lan = ++lanBL, xong = false, ctl = null;
+    var dung = function (chu, tuClaude) {
+      if (xong) return;
+      xong = true;
+      BL[key] = { chu: chu, claude: !!tuClaude };
+      if (lan === lanBL && VAI === "tv" && nowHopLe().step === "rank") SK.binh(6, chu);
+    };
+    if (!RD.trongClaude) { dung(P.chu); return; }
+    SK.binh(6, "");      // bóng nói hiện dấu chờ cho tới khi Claude viết xong
+    var hen = setTimeout(function () { if (ctl) try { ctl.abort(); } catch (e) { /* bỏ qua */ } dung(P.chu); }, 10000);
+    layMau().then(function (sample) {
+      if (!sample) throw { code: "khong_co" };
+      ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      return sample(nhacClaudeHang(sau, P), { modelTier: "quick", cache: false, signal: ctl ? ctl.signal : undefined });
+    }).then(function (r) {
+      clearTimeout(hen);
+      var t = lamSach(r && r.text);
+      if (!hopKhuon(t, P)) throw { code: "lech_mau" };
+      dung(t, true);
+    }).catch(function () { clearTimeout(hen); dung(P.chu); });
+  }
 
   /* ---------- khung chuẩn bị (dùng chung cho TV và điện thoại) ---------- */
   function dungChuanBi(el) {
@@ -217,18 +254,24 @@
     }).join("");
     el.innerHTML =
       '<div class="cb">' +
-      '<div class="cb-khoi"><h3>1. Sĩ số và 4 nhóm</h3>' +
+      // 8/11 thầy Thịnh: "ở trang đầu sẽ cho chọn Đề cơ bản và nâng cao"
+      '<div class="cb-khoi"><h3>1. Chọn đề</h3><div class="cb-de-nut" role="radiogroup" aria-label="Chọn đề">' +
+      RD.THU_TU_DE.map(function (k) {
+        return '<button type="button" role="radio" aria-checked="false" data-de="' + k + '"><span class="dau"><i aria-hidden="true"></i><b>' +
+          esc(RD.TEN_DE[k]) + '</b></span><small>' + esc(RD.MO_TA_DE[k]) + '</small></button>';
+      }).join("") + '</div><p class="cb-ghi" data-cb="deGhi"></p></div>' +
+      '<div class="cb-khoi"><h3>2. Sĩ số và 4 nhóm</h3>' +
       '<div class="cb-hang"><label>Sĩ số lớp <input type="number" min="4" max="46" data-cb="siSo"></label>' +
       '<button type="button" class="nut" data-cb="chia">Chia lại 4 nhóm theo sĩ số</button></div>' +
       '<div class="cb-to">' + to + '</div>' +
       '<p class="cb-ghi">Ghi số thẻ của từng nhóm, ví dụ 1-11 hoặc 1-10, 46 (thẻ 46 là thẻ dự phòng).</p>' +
       '<p class="cb-loi" data-cb="loi" hidden></p></div>' +
-      '<div class="cb-khoi"><h3>2. Chạm vào số thẻ của bạn vắng hôm nay</h3><div class="cb-luoi" data-cb="luoi"></div><p class="cb-tom" data-cb="tom"></p></div>' +
-      '<div class="cb-khoi"><h3>3. Nối điện thoại với TV</h3><div data-cb="noi"></div></div>' +
-      '<div class="cb-khoi" data-cb="khoiClaude" hidden><h3>4. Claude bình luận trên TV</h3>' +
+      '<div class="cb-khoi"><h3>3. Chạm vào số thẻ của bạn vắng hôm nay</h3><div class="cb-luoi" data-cb="luoi"></div><p class="cb-tom" data-cb="tom"></p></div>' +
+      '<div class="cb-khoi"><h3>4. Nối điện thoại với TV</h3><div data-cb="noi"></div></div>' +
+      '<div class="cb-khoi" data-cb="khoiClaude" hidden><h3>5. Claude bình luận trên TV</h3>' +
       '<div class="cb-hang"><button type="button" class="nut" data-cb="claude">Kiểm tra Claude</button><span class="chip" data-cb="claudeTT">Chưa kiểm tra</span></div>' +
       '<p class="cb-ghi">Bấm một lần trên laptop nối TV trước giờ học: nếu Claude cần xin phép thì hộp xin phép hiện lúc này, không hiện giữa tiết.</p></div>' +
-      '<div class="cb-khoi" data-cb="khoiAnh" hidden><h3>4. Ảnh báo tường</h3>' +
+      '<div class="cb-khoi" data-cb="khoiAnh" hidden><h3>5. Ảnh báo tường</h3>' +
       '<div class="cb-hang"><label class="nut"><input type="file" accept="image/*" data-cb="anh" hidden>Chọn ảnh báo tường từ máy</label><span class="chip" data-cb="anhTT"></span></div>' +
       '<p class="cb-ghi">Ảnh có hình thầy cô nên không đưa lên mạng: ảnh chỉ nằm trong trình duyệt của máy này. Chưa chọn thì trang dùng tấm báo tường vẽ tạm.</p></div>' +
       '<div class="cb-khoi"><h3>Chơi thử và ván mới</h3>' +
@@ -284,6 +327,15 @@
       this.value = "";
     });
     q("thu").addEventListener("change", function () { var on = this.checked; ghiCfg(function (c) { c.thu = on; }); });
+    $$("[data-de]", el).forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = this.dataset.de;
+        if (!duocDoiDe() || k === RD.deDang) return;
+        RD.chonDe(k);
+        ghiCfg(function (c) { c.de = k; });
+        ve();
+      });
+    });
     var bVM = q("vanMoi"), henVM = 0;
     bVM.addEventListener("click", function () {
       if (!bVM.dataset.cho) {
@@ -352,6 +404,26 @@
     att.className = "chip " + (RD.anhBao ? "ok" : "");
     att.textContent = RD.anhBao ? "Đã có ảnh trên máy này" : "Chưa chọn ảnh";
     q("thu").checked = !!c.thu;
+    // bộ đề: chọn được cho tới khi hiện câu 1; đang chơi thì chỉ còn sáng ô đề đang dùng
+    var doiDuoc = duocDoiDe();
+    $$("[data-de]", el).forEach(function (b) {
+      var on = b.dataset.de === RD.deDang;
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.disabled = !doiDuoc && !on;
+    });
+    var dg = q("deGhi"), dgChu = doiDuoc ? "TV và điện thoại dùng chung đề này. Đổi được cho tới lúc hiện câu 1." :
+      "Đang chơi " + RD.TEN_DE[RD.deDang] + ". Muốn đổi đề thì bấm Ván mới ở dưới.";
+    if (dg.textContent !== dgChu) dg.textContent = dgChu;
+  }
+  // đổi đề chỉ được trước khi hiện câu 1 (ván này chưa có thẻ nào được quét), để các câu đã chơi không bị chấm lại theo đáp án khác
+  function duocDoiDe() {
+    var st = nowHopLe().step;
+    if (st !== "setup" && st !== "intro") return false;
+    for (var q = 1; q <= 5; q++) {
+      var sc = scanHopLe(q);
+      if (sc && (Object.keys(sc.cards || {}).length || Object.keys(sc.man || {}).length)) return false;
+    }
+    return true;
   }
 
   /* ---------- ảnh báo tường ---------- */
@@ -402,7 +474,8 @@
     for (var q = 1; q <= 5; q++) taoVideo(q);      // tải sẵn hình chuyển động của 5 câu
     $("#nutBatDau").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "setup") tiep(); else { moCB = false; ve(); } });
     $("#nutFullTV").addEventListener("click", toanManHinh);
-    $("#tvNut").addEventListener("click", function (e) {
+    // 8/11: hai cụm nút (góc trái #tvNut, góc phải #tvNutPhai: Cài đặt, Chơi lại từ đầu) dùng chung một cách bấm
+    $$(".tv-nut").forEach(function (bar) { bar.addEventListener("click", function (e) {
       var b = e.target.closest("button");
       if (!b) return;
       A.mo();
@@ -416,10 +489,12 @@
       else if (k === "cb") { moCB = !moCB; ve(); }
       else if (k === "thu") dienThu(RD.cauCuaBuoc(nowHopLe().step), true);
       else if (k === "lai") choiLaiTuDau();
-    });
+    }); });
+    datGoiNut();
     veNutAm(false);
     $("#nutThuHang").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "finish") tiep(); });
-    $("#nutHienBao").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "rank") tiep(); });
+    $("#nutTiepTheo").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "rank") tiep(); });
+    $("#nutHienBao").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "tuong") tiep(); });
     $("#cbVan").addEventListener("click", function () { if (choXacNhan) choXacNhan(true); });
     $("#cbThem").addEventListener("click", function () { if (choXacNhan) choXacNhan(false); });
     document.addEventListener("keydown", function (e) {
@@ -443,13 +518,19 @@
     // ẩn con trỏ chuột khi không dùng; các nút góc trái dưới luôn hiện (6/11 thầy Thịnh: "mấy nút này mặc định là luôn hiện")
     var henChuot = 0;
     var hien = function () {
-      $("#tv").classList.remove("an-chuot");
+      var tv = $("#tv"), daAn = tv.classList.contains("an-chuot");
+      tv.classList.remove("an-chuot");
+      if (daAn) veGoi();                 // chuột cử động lại: hiện lại bóng chữ của nút đang trỏ
       clearTimeout(henChuot);
-      henChuot = setTimeout(function () { $("#tv").classList.add("an-chuot"); }, 3500);
+      henChuot = setTimeout(function () { $("#tv").classList.add("an-chuot"); veGoi(); }, 3500);
     };
     document.addEventListener("mousemove", hien, { passive: true });
     hien();
     giuManHinh();
+    // 8/11 thầy Thịnh: "thu nhỏ lại thì phần phím bị đè lên đáp án". Thẻ câu hỏi dừng trên hai cụm nút (san-khau.js đặt
+    //   --dayThe theo cỡ cửa sổ, chạy trước hàm này), nên đổi cỡ cửa sổ thì xếp lại hình và cỡ chữ của câu đang hiện
+    window.addEventListener("resize", function () { if (mcHien && mcDang) xepLaiManCau(mcDang); veGoi(); });
+    document.addEventListener("fullscreenchange", function () { if (mcHien && mcDang) xepLaiManCau(mcDang); });
   }
   // 6/11 chiều, thầy Thịnh: "trong game có nút tăng giảm âm lượng". Nút loa giữa: bật/tắt tiếng; vạch sóng trên loa theo độ to.
   function veNutAm(baoTin) {
@@ -459,7 +540,81 @@
     b.setAttribute("aria-label", "Bật hoặc tắt âm thanh (phím M), đang " + (A.bat ? pt + "%" : "tắt tiếng"));
     $('[data-tv="nho"]').disabled = A.muc <= 0;
     $('[data-tv="to"]').disabled = A.muc >= (A.MUC_MAX || 1);
-    if (baoTin) thongBao(A.bat ? "Âm lượng " + pt + "%" : "Đã tắt tiếng (bấm nút loa hoặc phím M để bật lại)");
+    if (baoTin) baoAm(A.bat ? "Âm lượng " + pt + "%" : "Đã tắt tiếng (bấm nút loa hoặc phím M để bật lại)");
+    else veGoi();
+  }
+  // 8/11 thầy Thịnh: "các nút bấm bên dưới khi tôi để chuột vào thì sẽ hiện lên công dụng. Âm lượng để sát vào bên trái".
+  //   Một bóng chữ (#tvGoi): trỏ chuột vào nút nào thì hiện công dụng ngay trên nút đó (cụm góc phải: canh mép phải nút;
+  //   hai cụm dựng cột lúc báo tường thì hiện bên cạnh nút, phía trong màn hình). Đổi âm lượng (nút hay phím) thì bóng chữ
+  //   hiện "Âm lượng …%" sát mép trái hàng nút trong 2 giây (trước đây hiện ở góc phải dưới màn hình).
+  var GOI_NUT = {
+    lui: "Lùi lại một bước (phím ←)",
+    tiep: "Sang bước tiếp theo (phím → hoặc dấu cách)",
+    thu: "Điền kết quả chơi thử cho câu này",
+    lai: "Chơi lại từ đầu, xóa kết quả chơi thử",
+    nho: "Giảm âm lượng (phím −)",
+    to: "Tăng âm lượng (phím +)",
+    cb: "Mở cài đặt: chọn đề, sĩ số, nhóm, nối điện thoại"
+  };
+  function chuGoi(b) {
+    var k = b.dataset.tv;
+    if (k === "am") return (A.bat ? "Tắt tiếng" : "Bật tiếng") + " (phím M), âm lượng " + Math.round(A.muc * 100) + "%";
+    if (k === "full") return document.fullscreenElement ? "Thoát toàn màn hình (phím F)" : "Chiếu toàn màn hình (phím F)";
+    return GOI_NUT[k] || b.getAttribute("aria-label") || "";
+  }
+  var GOI = { nut: null, amDen: 0, amChu: "", hen: 0 };
+  function veGoi() {
+    var el = $("#tvGoi");
+    if (!el) return;
+    var am = Date.now() < GOI.amDen, nut = am ? $('[data-tv="am"]') : GOI.nut;
+    var anChuot = $("#tv").classList.contains("an-chuot");
+    var bar = nut && nut.closest(".tv-nut");
+    if (!nut || !bar || nut.hidden || !nut.offsetParent || (!am && anChuot)) { el.hidden = true; return; }
+    var chu = am ? GOI.amChu : chuGoi(nut), doc = bar.classList.contains("doc"), phai = bar.id === "tvNutPhai";
+    if (el.textContent !== chu) el.textContent = chu;
+    el.classList.toggle("am", am && !doc);
+    el.classList.toggle("doc", doc);
+    el.classList.toggle("phai", phai);
+    el.hidden = false;
+    var rb = bar.getBoundingClientRect(), rn = nut.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth || window.innerWidth, vh = window.innerHeight;
+    if (doc) {                                       // cột nút sát mép: bóng chữ bên cạnh nút, phía trong màn hình
+      el.style.top = (rn.top + rn.height / 2) + "px"; el.style.bottom = "auto";
+      if (phai) { el.style.left = "auto"; el.style.right = (vw - rn.left + 12) + "px"; }
+      else { el.style.right = "auto"; el.style.left = (rn.right + 12) + "px"; }
+    } else {                                         // hàng nút dưới đáy: bóng chữ ngay trên nút
+      el.style.top = "auto"; el.style.bottom = (vh - rb.top + 12) + "px";
+      if (phai) {
+        el.style.left = "auto"; el.style.right = (vw - rn.right) + "px";
+        el.style.setProperty("--mui", (rn.width / 2) + "px");
+      } else {
+        var trai = am ? rb.left : rn.left;           // chữ âm lượng sát mép trái hàng nút
+        el.style.right = "auto"; el.style.left = trai + "px";
+        el.style.setProperty("--mui", (rn.left - trai + rn.width / 2) + "px");
+      }
+    }
+  }
+  function baoAm(chu) {
+    GOI.amChu = chu; GOI.amDen = Date.now() + 2000;
+    clearTimeout(GOI.hen); GOI.hen = setTimeout(veGoi, 2050);
+    veGoi();
+  }
+  function datGoiNut() {
+    $$(".tv-nut").forEach(datGoiCum);
+    document.addEventListener("fullscreenchange", veGoi);
+  }
+  function datGoiCum(bar) {
+    bar.addEventListener("pointerover", function (e) {
+      var b = e.target.closest && e.target.closest("button");
+      if (e.pointerType === "touch" || !b || !bar.contains(b) || b === GOI.nut) return;
+      GOI.nut = b; veGoi();
+    });
+    bar.addEventListener("pointerout", function (e) {
+      var b = e.target.closest && e.target.closest("button");
+      if (!b || b !== GOI.nut || (e.relatedTarget && b.contains(e.relatedTarget))) return;
+      GOI.nut = null; veGoi();
+    });
+    bar.addEventListener("click", function () { setTimeout(veGoi, 0); });     // chữ đổi theo (bật/tắt tiếng, toàn màn hình)
   }
   function doiAm(d) {
     A.datMuc(A.muc + d);
@@ -556,13 +711,24 @@
       return;
     }
     if (step === "finish") { SK.dat({ che: "dich", ls: ls, hoatCanh: cu === "r5" }); return; }
-    if (step === "rank") { SK.dat({ che: "hang", ls: ls, hoatCanh: cu === "finish" }); return; }
-    SK.dat({ che: "bao", ls: ls, hoatCanh: cu === "rank" });
+    // 8/11 thầy Thịnh: "sau khi cả 4 bạn đốt đuốc, hiện thêm nút tiếp theo, tôi bấm vô thì mới hiện báo tường".
+    //   rank (nút "Tổng kết"): các nhóm còn lại thắp đuốc, Claude bình luận thứ hạng, chữ trên nút đổi thành "Tiếp theo"
+    //   tuong: tia lửa lên số 51, lửa đốt màn đêm, báo tường
+    if (step === "rank") {
+      SK.dat({ che: "hang", ls: ls, hoatCanh: cu === "finish" });
+      // 8/11: Claude bình luận thứ hạng (bóng nói hiện khi ngọn đuốc cuối đã sáng); đã có lời bình đúng kết quả này thì dùng lại
+      var blH = BL[khoaHang(ls[5])];
+      if (cu === "finish" && !blH) binhLuanHang(ls[5]);
+      else SK.binh(6, blH ? blH.chu : RD.loiBinhHang(ls[5]).chu, cu !== "finish");
+      return;
+    }
+    if (step === "tuong") { SK.dat({ che: "hang", tiep: true, ls: ls, hoatCanh: cu === "rank" }); return; }
+    SK.dat({ che: "bao", ls: ls, hoatCanh: cu === "tuong" });
   }
 
   /* ---------- màn câu hỏi (chữ to; hình chuyển động: video 8 giây lặp lại, lớp nhãn số đo đứng yên bên trên) ---------- */
   // loai: q đọc đề · k quét xong (số em chọn mỗi đáp án) · a đáp án (ô đúng sáng, số bạn đúng mỗi nhóm)
-  var mcDang = 0, mcHien = false, VID = {};
+  var mcDang = 0, mcDe = "", mcHien = false, VID = {};
   var DE = "cubic-bezier(.45,0,.55,1)", NAY = "cubic-bezier(.34,1.56,.64,1)";
   function hoat(el, kf, ms, de, xong) {
     huyHoat(el);
@@ -628,10 +794,12 @@
       return;
     }
     // số đo: chữ thật nằm trên hình, cỡ chữ và chỗ đặt theo tỉ lệ hình
-    if (so.dataset.q !== String(q)) {
-      so.dataset.q = q;
-      so.innerHTML = (I.so || []).map(function (n) {
-        return "<span" + (n.nen ? ' class="nen"' : "") + (n.a === "t" ? ' data-a="t"' : "") + ">" + esc(n.t) + "</span>";
+    //   (8/11: đề cơ bản ghi thêm số đo cho sẵn, themSo của câu; a "t" x là mép trái chữ, a "p" x là mép phải)
+    var dsSo = (I.so || []).concat(RD.CAU[q - 1].themSo || []), khoaSo = RD.deDang + ":" + q;
+    if (so.dataset.q !== khoaSo) {
+      so.dataset.q = khoaSo;
+      so.innerHTML = dsSo.map(function (n) {
+        return "<span" + (n.nen ? ' class="nen"' : "") + (n.a ? ' data-a="' + n.a + '"' : "") + ">" + esc(n.t) + "</span>";
       }).join("");
     }
     var bw = hop.clientWidth - 20, bh = hop.clientHeight - 20;
@@ -640,7 +808,7 @@
       k.style.width = I.W * s + "px"; k.style.height = I.H * s + "px";
       v.style.left = I.x * s + "px"; v.style.top = I.y * s + "px"; v.style.width = I.w * s + "px"; v.style.height = I.h * s + "px";
       $$("span", so).forEach(function (el, i) {
-        var n = I.so[i];
+        var n = dsSo[i];
         el.style.left = n.x * s + "px"; el.style.top = n.y * s + "px"; el.style.fontSize = n.f * s + "px";
       });
     }
@@ -651,13 +819,14 @@
     if (v.parentNode !== k) k.insertBefore(v, nhan);
     if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () { /* hiện khung đầu */ }); }
   }
+  function xepLaiManCau(q) { datCot(q); vuaChu(q); datHinh(q); }
   function dungVideo() { Object.keys(VID).forEach(function (j) { var x = VID[j]; if (x && !x.paused) x.pause(); }); }
   function hienManCau(q, loai, cu) {
-    var c = RD.CAU[q - 1], m = $("#manCau"), the = $("#mcThe"), moi = !mcHien, cauMoi = mcDang !== q;
+    var c = RD.CAU[q - 1], m = $("#manCau"), the = $("#mcThe"), moi = !mcHien, cauMoi = mcDang !== q || mcDe !== RD.deDang;
     mcHien = true;
     m.hidden = false;
     if (cauMoi) {
-      mcDang = q;
+      mcDang = q; mcDe = RD.deDang;
       var pill = $("#mcPill");
       pill.textContent = RD.nhanCau(q);
       pill.classList.toggle("vang", q === 5);
@@ -695,11 +864,12 @@
       }
     }
     if (loai !== "q") { huyHoat(nt); nt.hidden = true; }
-    if (loai === "a" && cu === "k" + q) {
+    var moDapAn = loai === "a" && cu === "k" + q;
+    if (moDapAn) {
       var o2 = m.querySelector('.mc-o[data-l="' + c.dung + '"]');
       if (o2) hoat(o2, [{ transform: "scale(.94)" }, { transform: "scale(1)" }], 500, NAY, function () { huyHoat(o2); });
     }
-    capNhatManCau(q, loai);
+    capNhatManCau(q, loai, moDapAn);
   }
   // rời màn câu hỏi: sân khấu vẽ lại ngay, màn câu hỏi mờ dần và thu nhỏ một chút
   function anManCau() {
@@ -711,7 +881,7 @@
     hoat(m, [{ opacity: 1 }, { opacity: 0 }], 550, DE, function () { if (!mcHien) { m.hidden = true; dungVideo(); } huyHoat(m); });
     hoat(the, [{ transform: "none" }, { transform: "scale(.92)" }], 550, DE, function () { huyHoat(the); });
   }
-  function capNhatManCau(q, loai) {
+  function capNhatManCau(q, loai, moDapAn) {
     var c = RD.CAU[q - 1], m = $("#manCau");
     var lop = RD.lop(cfg()), sc = scanHopLe(q), kq = RD.ketQuaCau(q, lop, sc);
     var cards = (sc && sc.cards) || {}, man = (sc && sc.man) || {};
@@ -729,6 +899,19 @@
       var dung = o.dataset.l === c.dung, em = o.querySelector("em");
       o.classList.toggle("dung", hien && dung);
       o.classList.toggle("mo", hien && !dung);
+      // 8/11 thầy Thịnh: "khi tôi bấm nút đáp án, đáp án đúng đã hiện ra rồi thì các đáp án kia biến mất": vừa bấm Đáp án thì
+      //   ô đúng sáng lên, ba ô kia mờ đi (0,4 giây) rồi tan hẳn (từ giây 0,9 đến 1,5); vào lại bước đáp án (lùi về, mở lại
+      //   trang) thì ba ô kia đã ẩn sẵn. Lùi về bước quét xong thì cả bốn ô hiện lại.
+      var bien = hien && !dung;
+      if (bien && !o.classList.contains("bien")) {
+        if (moDapAn) hoat(o, [
+          { offset: 0, opacity: 1, transform: "none" },
+          { offset: 0.27, opacity: 0.4, transform: "none" },
+          { offset: 0.6, opacity: 0.4, transform: "none", easing: "ease-in" },
+          { offset: 1, opacity: 0, transform: "scale(.9)" }
+        ], 1500, "ease-out", function () { huyHoat(o); });
+        o.classList.add("bien");
+      } else if (!bien && o.classList.contains("bien")) { huyHoat(o); o.classList.remove("bien"); }
       em.hidden = !hienDem;
       var t = dem[i] + " em";
       if (em.textContent !== t) em.textContent = t;
@@ -865,7 +1048,7 @@
     if (l === "k") return "Câu " + q + " · quét xong, TV hiện số em chọn";
     if (l === "a") return "Câu " + q + " · đã hiện đáp án";
     if (l === "r") return q < 5 ? "Câu " + q + " · đang qua cầu" : "Câu 5 · qua cầu, nhóm về nhất bước lên thảm VỀ ĐÍCH";
-    return { finish: "Đốt đuốc · nhóm về nhất thắp ngọn đuốc đầu tiên", rank: "Thứ hạng · lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Báo tường đầy đủ" }[step] || step;
+    return { finish: "Đốt đuốc · nhóm về nhất thắp ngọn đuốc đầu tiên", rank: "Tổng kết · các nhóm còn lại thắp đuốc, Claude bình luận thứ hạng", tuong: "Lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Báo tường đầy đủ" }[step] || step;
   }
   function nhanTiep(step) {
     var l = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -875,7 +1058,7 @@
     if (l === "k") return "Đáp án";
     if (l === "a") return "Di chuyển";
     if (l === "r") return q < 5 ? "Hiện câu " + (q + 1) : "Đốt đuốc";      // 6/11 trưa: thầy bấm thì nhóm về nhất thắp đuốc
-    return { finish: "Thứ hạng các nhóm", rank: "Hiện báo tường" }[step] || "Đã xong phần khởi động";
+    return { finish: "Tổng kết", rank: "Tiếp theo", tuong: "Hiện báo tường" }[step] || "Đã xong phần khởi động";
   }
   function veDT() {
     var now = nowHopLe(), step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -902,7 +1085,7 @@
     if (q) {
       var c = RD.CAU[q - 1];
       $("#dtCau").style.setProperty("--ac", c.mau);
-      $("#dtCauSo").textContent = RD.nhanCau(q);
+      $("#dtCauSo").textContent = RD.nhanCau(q) + " · " + RD.TEN_DE[RD.deDang];
       $("#dtDapAn").textContent = "Đáp án đúng: " + c.dung;
       $("#dtCauHoi").textContent = c.hoi;
     }
@@ -915,15 +1098,16 @@
     $("#dtNc").hidden = !(coQuet && anhCuoi);
     // hướng dẫn ngắn theo bước
     var ghi = $("#dtGhi"), html = "";
-    if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Kiểm tra sĩ số, danh sách 4 nhóm, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
+    if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề cơ bản</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, danh sách 4 nhóm, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
     else if (step === "intro") html = "TV đang hiện luật chơi. Đọc cho cả lớp nghe rồi bấm <b>Hiện câu 1</b>.";
     else if (loai === "q") html = Q.coCamera() ? "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Bấm <b>Bật camera quét liên tục</b>, đưa điện thoại lia chậm qua từng cụm nhóm cho đến khi nhóm báo đủ, rồi bấm <b>Quét xong</b>." : "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>.";
     else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>.";
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của từng nhóm. Mời một em nêu cách làm, rồi bấm <b>Di chuyển</b>.";
     else if (loai === "r" && q === 5) html = "Miếng ghép cuối cùng bay vào cầu, các bạn qua khúc cầu cuối. Nhóm về nhất tự bước lên thảm VỀ ĐÍCH, cả lớp vỗ tay. Chờ Claude bình luận xong rồi bấm <b>Đốt đuốc</b> để nhóm về nhất thắp ngọn đuốc đầu tiên.";
     else if (loai === "r") html = "Miếng ghép đang bay vào cầu, 4 bạn cùng qua khúc cầu. Chờ Claude bình luận xong rồi bấm tiếp.";
-    else if (step === "finish") html = "Nhóm về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Thứ hạng các nhóm</b> để các nhóm còn lại lần lượt thắp đuốc.";
-    else if (step === "rank") html = "Bốn ngọn đuốc cùng sáng, 4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (dải băng còn che dòng chữ). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Hiện báo tường</b>.";
+    else if (step === "finish") html = "Nhóm về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Tổng kết</b> để các nhóm còn lại lần lượt thắp đuốc.";
+    else if (step === "rank") html = "Các nhóm còn lại lần lượt thắp đuốc theo thứ hạng, rồi Claude bình luận thứ hạng. Khi nút trên TV đổi thành <b>Tiếp theo</b>, chúc mừng các nhóm rồi bấm <b>Tiếp theo</b>.";
+    else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (dải băng còn che dòng chữ). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Hiện báo tường</b> (có tiếng vỗ tay).";
     else if (step === "bao") {
       var hang = RD.xepHang(tinh());
       html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ".";
@@ -1199,6 +1383,7 @@
   function ganDongBo() {
     DB.on("cfg", function (v, chac) {
       S.cfg = v;
+      RD.chonDe(v && v.de);
       if (chac) chacCfg = true;
       if (chacCfg && !daKhoiTao) {
         daKhoiTao = true;
@@ -1236,6 +1421,6 @@
       vaoVai(b.dataset.vai);
     });
   }
-  RD._test = { S: S, tinh: tinh, lichSu: lichSu, tiep: tiep, lui: lui, datBuoc: datBuoc, nowHopLe: nowHopLe, xuLyAnh: xuLyAnh, nhanKhung: nhanKhung, hopKhuon: hopKhuon, nhacClaude: nhacClaude, BL: function () { return BL; } };
+  RD._test = { S: S, duocDoiDe: function () { return duocDoiDe(); }, tinh: tinh, lichSu: lichSu, tiep: tiep, lui: lui, datBuoc: datBuoc, nowHopLe: nowHopLe, xuLyAnh: xuLyAnh, nhanKhung: nhanKhung, hopKhuon: hopKhuon, nhacClaude: nhacClaude, BL: function () { return BL; } };
   batDau();
 })();

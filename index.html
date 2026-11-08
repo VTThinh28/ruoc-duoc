@@ -99,7 +99,9 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 #world .nut-tv{position:absolute;right:24px;top:calc(24px - var(--bdT,0px));display:inline-flex;align-items:center;gap:10px;padding:12px 24px;border-radius:16px;border:3px solid #fff0b8;background:linear-gradient(#ffcf4d,#f0a020);color:#4a2a00;font:800 32px/1 var(--f-tieu);box-shadow:0 6px 0 #9c6a07,0 10px 24px rgba(0,0,0,.5);transform-origin:100% 0;cursor:pointer}
 #world .nut-tv svg{width:26px;height:26px}
 #world .nut-tv.bam{box-shadow:0 2px 0 #9c6a07,0 6px 14px rgba(0,0,0,.5)}
-#world #nutHienBao{top:auto;right:8px;bottom:calc(8px - var(--bdT,0px));transform-origin:100% 100%}
+/* 8/11: nút Tổng kết đã bấm, đang chờ các nhóm thắp đuốc và Claude bình luận rồi đổi thành Tiếp theo */
+#world .nut-tv.cho{cursor:default;box-shadow:0 3px 0 #9c6a07,0 6px 14px rgba(0,0,0,.4)}
+#world #nutHienBao{top:auto;right:8px;bottom:calc(var(--hbDuoi,8px) - var(--bdT,0px));transform-origin:100% 100%}
 #goiY{position:absolute;right:36px;bottom:calc(30px - var(--bdT,0px));z-index:8000;padding:10px 22px;border-radius:999px;background:rgba(20,14,8,.6);color:#fff;font:700 28px/1.2 var(--f-chu)}
 #canhBao{position:absolute;inset:0;z-index:9500;display:grid;place-items:center;background:rgba(20,12,4,.55)}
 #canhBao>div{width:1100px;padding:40px 56px;border-radius:32px;background:var(--giay);border:5px solid var(--do);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -112,7 +114,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 /* ---------- màn câu hỏi ---------- */
 #manCau{position:absolute;inset:0;z-index:6000;--ac:#2a5fb8;--fs:72px;--fo:54px;--wh:560px}
 .mc-nen{filter:blur(10px) brightness(.6)}
-.mc-the{position:absolute;left:14px;top:14px;width:1892px;height:1052px;padding:16px 30px 22px;border-radius:30px;background:linear-gradient(#fffaf0,#fff3dc);border:5px solid var(--ac);box-shadow:0 20px 60px rgba(0,0,0,.45);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:64px minmax(0,1fr) 124px;gap:14px}
+.mc-the{position:absolute;left:14px;top:14px;width:1892px;height:calc(var(--dayThe,1066px) - 14px);padding:16px 30px 22px;border-radius:30px;background:linear-gradient(#fffaf0,#fff3dc);border:5px solid var(--ac);box-shadow:0 20px 60px rgba(0,0,0,.45);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:64px minmax(0,1fr) 124px;gap:14px}
 .mc-dau{display:flex;align-items:center;gap:16px;min-width:0}
 .mc-pill{padding:6px 26px;border-radius:999px;background:var(--ac);color:#fff;font:800 40px/1.1 var(--f-tieu);white-space:nowrap}
 .mc-pill.vang{background:linear-gradient(#f7d25d,#e3a51c);color:#5a3a00;font-size:32px}
@@ -132,6 +134,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .mc-so{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 .mc-so span{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-chu);font-weight:700;line-height:1.12;color:#1565c0;white-space:nowrap}
 .mc-so span[data-a="t"]{transform:translate(0,-50%)}
+.mc-so span[data-a="p"]{transform:translate(-100%,-50%)}
 .mc-so span.nen{background:rgba(255,255,255,.95);border:.05em solid #9db7e0;border-radius:.3em;padding:.02em .3em .08em;box-shadow:0 .06em .16em rgba(0,0,0,.2)}
 .mc-chu{display:flex;flex-direction:column;justify-content:center;gap:18px;min-width:0;min-height:0;overflow:hidden}
 .mc-chu p{margin:0;font:600 var(--fs)/1.27 var(--f-chu);color:var(--muc)}
@@ -149,29 +152,56 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .mc-o.dung{background:var(--dungnhat);border-color:var(--dung);box-shadow:0 0 0 7px rgba(43,133,80,.25)}
 .mc-o.dung b,.mc-o.dung em{background:var(--dung)}
 .mc-o.mo{opacity:.4}
+/* 8/11 thầy Thịnh: "khi tôi bấm nút đáp án, đáp án đúng đã hiện ra rồi thì các đáp án kia biến mất" (hoạt cảnh trong tro-choi.js) */
+.mc-o.bien{opacity:0;transform:scale(.9);transition:none;pointer-events:none}
 
 /* ---------- nút điều khiển trên TV ---------- */
-#tvNut{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));   /* góc trái: không che nút Hiện báo tường ở góc phải */
-  display:flex;gap:8px;z-index:20;transition:opacity .4s}
-#tvNut.an{opacity:0;pointer-events:none}
-#tvNut button{width:52px;height:52px;border-radius:14px;border:2px solid rgba(255,235,190,.5);background:rgba(28,19,11,.72);color:#ffeccb;display:grid;place-items:center;cursor:pointer;padding:0}
-#tvNut button:hover{background:rgba(60,40,20,.9)}
-#tvNut button:disabled{opacity:.4;cursor:default}
-#tvNut svg{width:26px;height:26px}
-#tvNut button[aria-pressed="false"] .gach{display:block}
-#tvNut .gach{display:none}
+/* 8/11 thầy Thịnh: "phím chơi lại từ đầu nguy hiểm quá chuyển phím đó sang góc phải, kế phím đó là phím mở phần chuẩn bị
+   (đổi tên thành cài đặt nhé)": cụm góc trái (lùi, tiếp, điền thử, âm lượng, toàn màn hình) và cụm góc phải (Cài đặt, rồi
+   Chơi lại từ đầu sát góc). Màn câu hỏi chừa chỗ cho hai cụm nút ở dưới (--dayThe trong san-khau.js) */
+#tv{--nutDuoi:74px}   /* chỗ chừa dưới đáy cho các nút (cao 52 + cách đáy 14 + 8), tính bằng điểm ảnh CSS; san-khau.js đọc */
+.tv-nut{--n:52px;--n2:42px;position:fixed;bottom:max(14px,env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:20;transition:opacity .4s}
+#tvNut{left:max(14px,env(safe-area-inset-left,0px))}
+#tvNutPhai{right:max(14px,env(safe-area-inset-right,0px))}
+.tv-nut.an{opacity:0;pointer-events:none}
+.tv-nut button{width:var(--n);height:var(--n);border-radius:14px;border:2px solid rgba(255,235,190,.5);background:rgba(28,19,11,.72);color:#ffeccb;display:grid;place-items:center;cursor:pointer;padding:0}
+.tv-nut button:hover{background:rgba(60,40,20,.9)}
+.tv-nut button:disabled{opacity:.4;cursor:default}
+.tv-nut svg{width:26px;height:26px}
+.tv-nut button[aria-pressed="false"] .gach{display:block}
+.tv-nut .gach{display:none}
 /* 6/11 chiều: nút âm lượng (bớt, bật/tắt, thêm) đứng sát nhau; vạch sóng trên loa theo độ to */
-#tvNut .nhom-am{display:flex;gap:2px}
-#tvNut .nhom-am [data-tv="nho"],#tvNut .nhom-am [data-tv="to"]{width:42px}
-#tvNut [data-muc="0"] .song1,#tvNut [data-muc="0"] .song2,#tvNut [data-muc="1"] .song2{display:none}
-/* nút có chữ: Chơi lại từ đầu (chế độ chơi thử) */
-#tvNut .nut-chu{width:auto;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;font:700 20px/1 var(--f-chu);white-space:nowrap}
-/* báo tường hiện ra: các nút dựng thành cột sát mép trái, khỏi che góc báo tường */
-#tvNut.doc{flex-direction:column;bottom:auto;top:50%;transform:translateY(-50%)}
-#tvNut.doc .nhom-am{flex-direction:column}
-#tvNut.doc .nhom-am [data-tv="nho"],#tvNut.doc .nhom-am [data-tv="to"]{width:52px;height:42px}
-#tvNut.doc .nut-chu{width:52px;padding:0;justify-content:center}
-#tvNut.doc .nut-chu span{display:none}
+.tv-nut .nhom-am{display:flex;gap:2px}
+.tv-nut .nhom-am [data-tv="nho"],.tv-nut .nhom-am [data-tv="to"]{width:var(--n2)}
+.tv-nut [data-muc="0"] .song1,.tv-nut [data-muc="0"] .song2,.tv-nut [data-muc="1"] .song2{display:none}
+/* nút có chữ: Cài đặt, Chơi lại từ đầu (chế độ chơi thử) */
+.tv-nut .nut-chu{width:auto;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;font:700 20px/1 var(--f-chu);white-space:nowrap}
+/* cửa sổ hẹp: hai cụm nút sắp chạm nhau thì nút góc phải chỉ còn hình (trỏ chuột vẫn hiện tên) */
+@media (max-width:820px){#tvNutPhai .nut-chu{width:var(--n);padding:0;justify-content:center}#tvNutPhai .nut-chu span{display:none}}
+/* 8/11 chiều thầy Thịnh (mở trên điện thoại cầm dọc): "mấy cái phím điều khiển nó bị đè lên nhau kìa ... Chuyển vị trí các phím
+   điều khiển lại": màn hình hẹp thì cụm góc phải (Cài đặt, Chơi lại từ đầu) lên hàng thứ hai, vẫn sát mép phải (xa nút lùi, tiếp);
+   hẹp nữa (điện thoại) thì nút nhỏ lại còn 44 px. Chỗ chừa dưới đáy tăng theo (hai hàng nút) */
+@media (max-width:560px){#tv{--nutDuoi:136px}#tvNutPhai:not(.doc){bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + var(--n) + 10px)}}
+@media (max-width:430px){#tv{--nutDuoi:120px}.tv-nut{--n:44px;--n2:34px;gap:6px}.tv-nut button{border-radius:12px}.tv-nut svg{width:22px;height:22px}}
+@media (max-width:350px){#tv{--nutDuoi:112px}.tv-nut{--n:40px;--n2:30px}#tvNut{left:max(10px,env(safe-area-inset-left,0px))}#tvNutPhai{right:max(10px,env(safe-area-inset-right,0px))}}
+/* báo tường hiện ra: hai cụm nút dựng thành cột sát mép trái và mép phải, khỏi che góc báo tường */
+.tv-nut.doc{flex-direction:column;bottom:auto;top:50%;transform:translateY(-50%)}
+.tv-nut.doc .nhom-am{flex-direction:column}
+.tv-nut.doc .nhom-am [data-tv="nho"],.tv-nut.doc .nhom-am [data-tv="to"]{width:var(--n);height:var(--n2)}
+.tv-nut.doc .nut-chu{width:var(--n);padding:0;justify-content:center}
+.tv-nut.doc .nut-chu span{display:none}
+/* 8/11 thầy Thịnh: "các nút bấm bên dưới khi tôi để chuột vào thì sẽ hiện lên công dụng. Âm lượng để sát vào bên trái":
+   bóng chữ nhỏ ngay trên nút đang trỏ chuột (cụm góc phải: canh mép phải nút); chữ "Âm lượng …%" hiện sát mép trái hàng nút;
+   hai cụm nút dựng cột thì bóng chữ hiện bên cạnh nút, phía trong màn hình */
+#tvGoi{position:fixed;z-index:25;padding:9px 15px;border-radius:12px;background:rgba(20,14,8,.9);color:#fff;font:700 18px/1.25 var(--f-chu);white-space:nowrap;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+#tvGoi::after{content:"";position:absolute;left:var(--mui,24px);top:100%;margin-left:-8px;border:8px solid transparent;border-top-color:rgba(20,14,8,.9)}
+#tvGoi.phai::after{left:auto;right:var(--mui,24px);margin:0 -8px 0 0}
+#tvGoi.am{font-size:20px}
+@media (max-width:560px){#tvGoi{white-space:normal;max-width:calc(100vw - 28px)}}
+#tvGoi.am::after{display:none}
+#tvGoi.doc{transform:translateY(-50%)}
+#tvGoi.doc::after{left:auto;right:100%;top:50%;margin:-8px 0 0;border-color:transparent;border-right-color:rgba(20,14,8,.9)}
+#tvGoi.doc.phai::after{right:auto;left:100%;border-right-color:transparent;border-left-color:rgba(20,14,8,.9)}
 
 /* ---------- khung chuẩn bị (TV và điện thoại) ---------- */
 #chuanBiTV{position:fixed;inset:0;z-index:30;overflow:auto;background:rgba(20,13,6,.55);padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
@@ -196,6 +226,18 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .cb-luoi button.vang::after{content:"vắng";position:absolute;left:0;right:0;bottom:2px;font:700 10px/1 var(--f-chu);text-decoration:none}
 .cb-tom{margin:10px 0 0;font-weight:600;color:var(--muc2)}
 .cb-loi{color:var(--sai);font-weight:700}
+/* 8/11: chọn Đề cơ bản / Đề nâng cao */
+.cb-de-nut{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.cb-de-nut button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:14px 18px;border-radius:16px;border:3px solid var(--vien);background:#fffdf8;color:var(--muc);font:inherit;text-align:left;cursor:pointer}
+.cb-de-nut button:hover{border-color:var(--vang)}
+.cb-de-nut .dau{display:flex;align-items:center;gap:10px}
+.cb-de-nut i{width:24px;height:24px;border-radius:50%;border:3px solid var(--vien);background:#fff;flex:none}
+.cb-de-nut b{font:800 24px/1.15 var(--f-tieu)}
+.cb-de-nut small{font-size:16px;color:var(--muc2);padding-left:34px}
+.cb-de-nut button[aria-checked="true"]{border-color:var(--do);background:#fff1e6;box-shadow:0 0 0 4px rgba(200,50,42,.16)}
+.cb-de-nut button[aria-checked="true"] i{border-color:var(--do);background:radial-gradient(circle,var(--do) 0 42%,#fff 47%)}
+.cb-de-nut button[aria-checked="true"] b{color:var(--do)}
+.cb-de-nut button:disabled{opacity:.45;cursor:not-allowed}
 .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#efe6d6;color:var(--muc2);font-weight:700;font-size:14px;line-height:1.2}
 .nut-nhac{border:0;cursor:pointer;font-family:inherit}
 .nut-nhac[aria-pressed="false"]{background:#f3d9d2;color:var(--sai)}
@@ -335,7 +377,8 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <div class="pill" id="pill" hidden></div>
     <div class="binh" id="binh" hidden></div>
     <div class="bx" id="bx" hidden><h3>Bảng tổng điểm</h3></div>
-    <button type="button" class="nut-tv" id="nutThuHang" hidden>Thứ hạng các nhóm <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button type="button" class="nut-tv" id="nutThuHang" hidden>Tổng kết <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button type="button" class="nut-tv" id="nutTiepTheo" hidden>Tiếp theo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <button type="button" class="nut-tv" id="nutHienBao" hidden>Hiện báo tường <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <div id="manCau" hidden>
       <div class="mc-nen"><i class="nn-giua"></i><i class="nn-tren"></i><i class="nn-duoi"></i><i class="nn-trai"></i><i class="nn-phai"></i></div>
@@ -352,19 +395,22 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <div id="goiY" hidden></div>
     <div id="canhBao" hidden><div><p id="cbChu"></p><div class="cb-nut"><button type="button" id="cbVan">Vẫn công bố</button><button type="button" id="cbThem">Quét thêm</button></div></div></div>
   </div>
-  <div id="tvNut">
+  <div id="tvNut" class="tv-nut">
     <button type="button" data-tv="lui" aria-label="Lùi lại (phím mũi tên trái)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button type="button" data-tv="tiep" aria-label="Tiếp theo (phím mũi tên phải hoặc dấu cách)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
     <button type="button" data-tv="thu" aria-label="Điền kết quả thử cho câu này" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/><circle cx="15" cy="15" r="1.4" fill="currentColor"/><circle cx="15" cy="9" r="1.4" fill="currentColor"/><circle cx="9" cy="15" r="1.4" fill="currentColor"/></svg></button>
-    <button type="button" data-tv="lai" class="nut-chu" aria-label="Chơi lại từ đầu (xóa kết quả chơi thử)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><span>Chơi lại từ đầu</span></button>
     <div class="nhom-am">
       <button type="button" data-tv="nho" aria-label="Giảm âm lượng (phím -)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
       <button type="button" data-tv="am" aria-label="Bật hoặc tắt âm thanh (phím M)" aria-pressed="true" data-muc="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9h3.5l5-4v14l-5-4H3.5z"/><path class="song1" d="M15.5 9.5a3.6 3.6 0 0 1 0 5"/><path class="song2" d="M18.2 7a7.2 7.2 0 0 1 0 10"/><path class="gach" d="M3 3l18 18"/></svg></button>
       <button type="button" data-tv="to" aria-label="Tăng âm lượng (phím +)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12M12 6v12"/></svg></button>
     </div>
     <button type="button" data-tv="full" aria-label="Toàn màn hình (phím F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
-    <button type="button" data-tv="cb" aria-label="Mở phần chuẩn bị"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></button>
   </div>
+  <div id="tvNutPhai" class="tv-nut">
+    <button type="button" data-tv="cb" class="nut-chu" aria-label="Cài đặt: chọn đề, sĩ số, nhóm, nối điện thoại"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Cài đặt</span></button>
+    <button type="button" data-tv="lai" class="nut-chu" aria-label="Chơi lại từ đầu (xóa kết quả chơi thử)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><span>Chơi lại từ đầu</span></button>
+  </div>
+  <div id="tvGoi" role="tooltip" hidden></div>
   <div id="chuanBiTV" hidden>
     <div class="cb-hop">
       <h2>Chuẩn bị trước giờ học</h2>
@@ -422,14 +468,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=ded2ea55"></script>
-<script src="js/scanlib.js?v=ded2ea55"></script>
-<script src="js/du-lieu.js?v=ded2ea55"></script>
-<script src="js/dong-bo.js?v=ded2ea55"></script>
-<script src="js/am-thanh.js?v=ded2ea55"></script>
-<script src="js/quet.js?v=ded2ea55"></script>
-<script src="js/cay-cau.js?v=ded2ea55"></script>
-<script src="js/san-khau.js?v=ded2ea55"></script>
-<script src="js/tro-choi.js?v=ded2ea55"></script>
+<script src="js/cau-hinh.js?v=06265fa4"></script>
+<script src="js/scanlib.js?v=06265fa4"></script>
+<script src="js/du-lieu.js?v=06265fa4"></script>
+<script src="js/dong-bo.js?v=06265fa4"></script>
+<script src="js/am-thanh.js?v=06265fa4"></script>
+<script src="js/quet.js?v=06265fa4"></script>
+<script src="js/cay-cau.js?v=06265fa4"></script>
+<script src="js/san-khau.js?v=06265fa4"></script>
+<script src="js/tro-choi.js?v=06265fa4"></script>
 </body>
 </html>

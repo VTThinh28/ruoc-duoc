@@ -16,39 +16,93 @@
     { n: 4, ten: "Nhóm 4", mau: "#8b52cc", nhat: "#eee2f9", dam: "#5b2f93", anh: "anh/to-4.webp", mat: "anh/mat-4.webp", w: 342, h: 520, lua: [320, 44], kieu: "bien", mo: "bạn nữ áo thể dục" }
   ];
 
-  // 5 câu (bản cuối 1/11/2026). Màn hình không ghi "chu vi", "diện tích", không hiện lời giải.
-  RD.CAU = [
-    {
-      so: 1, mau: "#1f5fae", hinh: "anh/cau-1.webp", dung: "C",
-      boiCanh: "Các bạn học sinh dự định mua ruy băng để dán xung quanh viền một khung ảnh hình vuông có cạnh **2 mét**. Biết giá 1 mét ruy băng là **5 000 đồng**.",
-      hoi: "Hỏi các bạn học sinh cần bao nhiêu tiền để mua ruy băng?",
-      chon: ["20 000 đồng", "10 000 đồng", "40 000 đồng", "30 000 đồng"]
-    },
-    {
-      so: 2, mau: "#c4860a", hinh: "anh/cau-2.webp", dung: "A",
-      boiCanh: "Một sân khấu hình chữ nhật có chiều dài **12 mét**, chiều rộng bằng **{2/3}** chiều dài. Người ta mắc dây đèn xung quanh sân khấu.",
-      hoi: "Hỏi dây đèn dài bao nhiêu mét?",
-      chon: ["40 mét", "20 mét", "96 mét", "32 mét"]
-    },
-    {
-      so: 3, mau: "#2b7a4b", hinh: "anh/cau-3.webp", dung: "D",
-      boiCanh: "Người ta sơn kín một ô đậu xe hình bình hành có cạnh **3 mét**, chiều cao tương ứng là **5 mét**. Biết cứ 1 lít sơn thì sơn được **3 mét vuông**.",
-      hoi: "Hỏi cần bao nhiêu lít sơn?",
-      chon: ["45 lít", "15 lít", "2,5 lít", "5 lít"]
-    },
-    {
-      so: 4, mau: "#bd3a2c", hinh: "anh/cau-4.webp", dung: "B",
-      boiCanh: "Một bồn hoa hình thoi có độ dài hai đường chéo là **12 mét** và **9 mét**.",
-      hoi: "Hỏi nếu mỗi mét vuông trồng 5 cây hoa thì cần bao nhiêu cây hoa để trồng hết bồn hoa đó?",
-      chon: ["540 cây", "270 cây", "54 cây", "105 cây"]
-    },
-    {
-      so: 5, mau: "#7a3fb4", hinh: "anh/cau-5.webp", dung: "C",
-      boiCanh: "Một mảnh đất hình thang có đáy lớn **10 mét**, đáy nhỏ **6 mét**, chiều cao **3 mét**. Người ta chia đều mảnh đất đó cho **4 người thợ** để trồng cỏ.",
-      hoi: "Hỏi mỗi người thợ phải trồng bao nhiêu mét vuông cỏ?",
-      chon: ["12 mét vuông", "24 mét vuông", "6 mét vuông", "8 mét vuông"]
-    }
-  ];
+  // Hai bộ đề, mỗi bộ 5 câu. Màn hình không gắn nhãn "chu vi" / "diện tích" cho từng câu, không hiện lời giải.
+  //   Đề nâng cao: 5 câu bản cuối 1/11/2026, mỗi câu 2 bước tính.
+  //   Đề cơ bản (8/11 thầy Thịnh: "5 câu đề bài tạo thêm 1 bản Dễ hơn, các câu chỉ có 1 bước tính ví dụ câu 1 là hỏi các bạn
+  //     học sinh cần mua bao nhiêu mét dây ruy băng", "ở trang đầu sẽ cho chọn Đề cơ bản và nâng cao"): cùng hình, mỗi câu
+  //     1 bước tính. themSo: số đo ghi thêm trên hình của câu đó.
+  //     Bản 2 (thầy thấy bản 1 "hơi bị kỳ", nhờ tra SGK, SBT; duyệt 8/11 09:37 UTC): hỏi theo kiểu SGK bài 4.18 (độ dài hàng
+  //     rào) và SBT bài 4.22, 4.25 (diện tích … bao nhiêu); mỗi đáp án sai là một lỗi hay gặp (de-co-ban-ban-2.md).
+  RD.DE = {
+    "nang-cao": [
+      {
+        so: 1, mau: "#1f5fae", hinh: "anh/cau-1.webp", dung: "C",
+        boiCanh: "Các bạn học sinh dự định mua ruy băng để dán xung quanh viền một khung ảnh hình vuông có cạnh **2 mét**. Biết giá 1 mét ruy băng là **5 000 đồng**.",
+        hoi: "Hỏi các bạn học sinh cần bao nhiêu tiền để mua ruy băng?",
+        chon: ["20 000 đồng", "10 000 đồng", "40 000 đồng", "30 000 đồng"]
+      },
+      {
+        so: 2, mau: "#c4860a", hinh: "anh/cau-2.webp", dung: "A",
+        boiCanh: "Một sân khấu hình chữ nhật có chiều dài **12 mét**, chiều rộng bằng **{2/3}** chiều dài. Người ta mắc dây đèn xung quanh sân khấu.",
+        hoi: "Hỏi dây đèn dài bao nhiêu mét?",
+        chon: ["40 mét", "20 mét", "96 mét", "32 mét"]
+      },
+      {
+        so: 3, mau: "#2b7a4b", hinh: "anh/cau-3.webp", dung: "D",
+        boiCanh: "Người ta sơn kín một ô đậu xe hình bình hành có cạnh **3 mét**, chiều cao tương ứng là **5 mét**. Biết cứ 1 lít sơn thì sơn được **3 mét vuông**.",
+        hoi: "Hỏi cần bao nhiêu lít sơn?",
+        chon: ["45 lít", "15 lít", "2,5 lít", "5 lít"]
+      },
+      {
+        so: 4, mau: "#bd3a2c", hinh: "anh/cau-4.webp", dung: "B",
+        boiCanh: "Một bồn hoa hình thoi có độ dài hai đường chéo là **12 mét** và **9 mét**.",
+        hoi: "Hỏi nếu mỗi mét vuông trồng 5 cây hoa thì cần bao nhiêu cây hoa để trồng hết bồn hoa đó?",
+        chon: ["540 cây", "270 cây", "54 cây", "105 cây"]
+      },
+      {
+        so: 5, mau: "#7a3fb4", hinh: "anh/cau-5.webp", dung: "C",
+        boiCanh: "Một mảnh đất hình thang có đáy lớn **10 mét**, đáy nhỏ **6 mét**, chiều cao **3 mét**. Người ta chia đều mảnh đất đó cho **4 người thợ** để trồng cỏ.",
+        hoi: "Hỏi mỗi người thợ phải trồng bao nhiêu mét vuông cỏ?",
+        chon: ["12 mét vuông", "24 mét vuông", "6 mét vuông", "8 mét vuông"]
+      }
+    ],
+    "co-ban": [
+      {
+        so: 1, mau: "#1f5fae", hinh: "anh/cau-1.webp", dung: "B",
+        boiCanh: "Các bạn học sinh mua dây ruy băng để dán vừa đủ một vòng quanh viền một khung ảnh hình vuông có cạnh **2 mét**.",
+        hoi: "Hỏi các bạn học sinh cần mua bao nhiêu mét dây ruy băng?",
+        chon: ["4 mét", "8 mét", "6 mét", "2 mét"]
+      },
+      {
+        so: 2, mau: "#c4860a", hinh: "anh/cau-2.webp", dung: "D",
+        boiCanh: "Một sân khấu hình chữ nhật có chiều dài **12 mét**, chiều rộng **8 mét**. Người ta mắc dây đèn vừa đủ một vòng quanh mép sân khấu.",
+        hoi: "Hỏi dây đèn dài bao nhiêu mét?",
+        chon: ["20 mét", "96 mét", "32 mét", "40 mét"],
+        // đề cho sẵn chiều rộng nên hình ghi thêm "8 mét" sát cạnh phải sân khấu (a "p": x là mép phải của chữ)
+        themSo: [{ t: "8 mét", x: 816, y: 384, f: 56, nen: 1, a: "p" }]
+      },
+      {
+        so: 3, mau: "#2b7a4b", hinh: "anh/cau-3.webp", dung: "A",
+        boiCanh: "Người ta sơn kín một ô đậu xe hình bình hành có độ dài một cạnh là **3 mét**, chiều cao tương ứng là **5 mét**.",
+        hoi: "Hỏi diện tích phần cần sơn là bao nhiêu mét vuông?",
+        chon: ["15 mét vuông", "8 mét vuông", "16 mét vuông", "7,5 mét vuông"]
+      },
+      {
+        so: 4, mau: "#bd3a2c", hinh: "anh/cau-4.webp", dung: "C",
+        boiCanh: "Một bồn hoa hình thoi có độ dài hai đường chéo là **12 mét** và **9 mét**.",
+        hoi: "Hỏi diện tích bồn hoa đó là bao nhiêu mét vuông?",
+        chon: ["108 mét vuông", "21 mét vuông", "54 mét vuông", "42 mét vuông"]
+      },
+      {
+        so: 5, mau: "#7a3fb4", hinh: "anh/cau-5.webp", dung: "B",
+        boiCanh: "Người ta trồng cỏ kín một mảnh đất hình thang có độ dài hai đáy là **10 mét** và **6 mét**, chiều cao **3 mét**.",
+        hoi: "Hỏi diện tích phần trồng cỏ là bao nhiêu mét vuông?",
+        chon: ["48 mét vuông", "24 mét vuông", "8 mét vuông", "30 mét vuông"]
+      }
+    ]
+  };
+  RD.THU_TU_DE = ["co-ban", "nang-cao"];
+  RD.TEN_DE = { "co-ban": "Đề cơ bản", "nang-cao": "Đề nâng cao" };
+  RD.MO_TA_DE = { "co-ban": "Mỗi câu 1 bước tính", "nang-cao": "Mỗi câu 2 bước tính" };
+  RD.DE_MAC_DINH = "nang-cao";
+  // bộ đề đang dùng: lưu ở cfg.de (TV và điện thoại dùng chung); RD.CAU là 5 câu của bộ đề đó
+  RD.chonDe = function (k) {
+    if (!RD.DE[k]) k = RD.DE_MAC_DINH;
+    RD.deDang = k;
+    RD.CAU = RD.DE[k];
+    return k;
+  };
+  RD.chonDe(RD.DE_MAC_DINH);
   // hình chuyển động của 5 câu (video 8 giây lặp lại). Khung W×H tính theo điểm ảnh video; video đặt ở (x, y), cỡ w×h
   // (x, y âm là cắt bớt lề trắng của video). 7/11 thầy Thịnh: "những cái số trong các hình ảnh cho to lên"
   //   -> số đo viết bằng chữ thật trên trang (so: tâm x, y; a "t" thì x là mép trái; f cỡ chữ; nen: nền trắng khi nằm trên hình),
@@ -76,8 +130,10 @@
   RD.BUOC = ["setup", "intro"];
   // mỗi câu: q đọc đề và quét thẻ · k quét xong (số em chọn mỗi đáp án) · a đáp án (số bạn đúng mỗi tổ) · r di chuyển qua cầu
   for (var q = 1; q <= 5; q++) RD.BUOC.push("q" + q, "k" + q, "a" + q, "r" + q);
-  // finish: 4 bạn tới cuối cầu, tổ nhất thắp đuốc · rank: 3 tổ còn lại thắp đuốc, lửa đốt tan màn đêm, báo tường chỉ hiện hình và số 51 · bao: hiện toàn bộ báo tường
-  RD.BUOC.push("finish", "rank", "bao");
+  // finish: 4 bạn tới cuối cầu, tổ nhất thắp đuốc · rank: 3 tổ còn lại thắp đuốc, đủ 4 ngọn đuốc thì hiện nút "Tiếp theo" ·
+  // tuong: 4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường chỉ hiện hình và số 51 · bao: hiện toàn bộ báo tường, vỗ tay
+  // (8/11 thầy Thịnh: "sau khi cả 4 bạn đốt đuốc, hiện thêm nút tiếp theo, tôi bấm vô thì mới hiện báo tường")
+  RD.BUOC.push("finish", "rank", "tuong", "bao");
   RD.cauCuaBuoc = function (b) { var m = /^[qkar]([1-5])$/.exec(b || ""); return m ? +m[1] : 0; };
   RD.loaiBuoc = function (b) { return /^[qkar][1-5]$/.test(b || "") ? b[0] : b; };
 
@@ -234,4 +290,18 @@
     return { chu: dau + " " + cuoi, dau: dau, cuoi: cuoi, danChu: Ls };
   };
   RD.loiBinhMau = function (q, truoc, sau) { return RD.loiBinhPhan(q, truoc, sau).chu; };
+  // 8/11 thầy Thịnh: "tôi bấm vào thì cả 4 nhóm lên đốt đuốc, claude bình luận về thứ hạng". Lời bình thứ hạng (bước Tổng kết,
+  //   hiện khi cả bốn ngọn đuốc đã sáng), viết theo kiểu lời bình từng câu của thầy:
+  //   "Chúc mừng Nhóm 1 về nhất! Nhóm 3 về nhì, Nhóm 2 về ba, Nhóm 4 về tư. Cả bốn ngọn đuốc đều đã sáng, cảm ơn các bạn đã
+  //   chơi hết mình!" Bằng điểm thì cùng hạng: "Chúc mừng Nhóm 1 và 3 cùng về nhất! Nhóm 2 về ba, Nhóm 4 về tư. …";
+  //   cả bốn nhóm bằng điểm: "Chúc mừng cả bốn nhóm cùng về nhất! …"
+  var TEN_HANG = ["", "nhất", "nhì", "ba", "tư"];
+  RD.loiBinhHang = function (sau) {
+    var xh = RD.xepHang(sau), nh = xh.nhom;
+    var veHang = function (g) { return dsTo(g) + (g.length > 1 ? " cùng" : "") + " về " + TEN_HANG[xh.hang[g[0]]]; };
+    var dau = nh.length === 1 ? "Chúc mừng cả bốn nhóm cùng về nhất!" :
+      "Chúc mừng " + veHang(nh[0]) + "! " + nh.slice(1).map(veHang).join(", ") + ".";
+    var cuoi = "Cả bốn ngọn đuốc đều đã sáng, cảm ơn các bạn đã chơi hết mình!";
+    return { chu: dau + " " + cuoi, dau: dau, cuoi: cuoi };
+  };
 })();

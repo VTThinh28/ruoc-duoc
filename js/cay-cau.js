@@ -360,6 +360,8 @@
   CC.veCauDong = function (ctx, A, st, cot, khongDuoc) {
     const t0 = st.t || 0;
     const trong = [], phun = [];
+    // 8/11: ván vàng trên đường đi của nhóm đang dẫn đầu (vẽ trước gợn nước, ánh sáng của miếng vàng và các bạn nhỏ)
+    (st.sang || []).forEach(d => CC.veVanVang(ctx, A, d.i, d.x, d.a == null ? 1 : d.a));
     for (let i = 0; i < 4; i++) for (let k = 0; k < 5; k++) {
       if (coMieng(st, i, k)) continue;
       trong.push([i, k]);                            // gợn nước: mọi chỗ còn trống, kể cả chỗ có miếng ghép đang bay tới
@@ -527,6 +529,44 @@
       la(1, 0, 11, 3.6);
     });
   }
+
+  // ---------- 8/11: đường đi của nhóm đang dẫn đầu tổng điểm thành ván vàng ----------
+  // Thầy Thịnh: "nhóm nào đang dẫn đầu tổng điểm thì đường đi chuyển thành màu vàng gold". Mặt cầu (ván quanh các khúc) của đoạn
+  //   các bạn đã đi qua chuyển thành ván vàng, mép cuối mờ dần ngay trước chân các bạn; miếng ghép trong các khúc giữ nguyên (miếng
+  //   vàng của từng câu vẫn sáng nhất). Ván vàng vẽ sẵn một lần theo hình làn (vẽ lại khi làn đổi cỡ), mỗi khung chỉ chép ra.
+  function vanVang(A) {
+    return veSan("vanVang", XE - XS, LH, 0, g => {
+      const t = CC.laneTop(0);
+      g.translate(-XS, -t);
+      lanePath(g, 0, G); g.clip("evenodd");
+      const gr = g.createLinearGradient(0, t, 0, t + LH);
+      gr.addColorStop(0, "#ffe7a0"); gr.addColorStop(.1, "#f6c955"); gr.addColorStop(.45, "#e0a930");
+      gr.addColorStop(.8, "#c18a1f"); gr.addColorStop(1, "#946515");
+      g.fillStyle = gr; g.fillRect(XS, t, XE - XS, LH);
+      if (A.go) {                                   // vân gỗ của mặt cầu, nhân lên nền vàng
+        g.globalCompositeOperation = "multiply"; g.globalAlpha = .42;
+        g.fillStyle = g.createPattern(A.go, "repeat"); g.fillRect(XS, t, XE - XS, LH);
+        g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+      }
+      const ng = g.createLinearGradient(0, t, 0, t + LH);       // ánh kim: dải sáng chéo nhẹ ở nửa trên
+      ng.addColorStop(0, "rgba(255,250,225,.55)"); ng.addColorStop(.22, "rgba(255,244,200,.12)"); ng.addColorStop(.5, "rgba(255,240,190,0)");
+      g.fillStyle = ng; g.fillRect(XS, t, XE - XS, LH);
+      g.strokeStyle = "rgba(120,78,10,.55)"; g.lineWidth = 3; lanePath(g, 0, G); g.stroke();   // viền tối quanh các khúc
+    });
+  }
+  CC.veVanVang = function (ctx, A, i, x1, a) {
+    if (a <= 0) return;
+    const anh = vanVang(A), y0 = CC.laneTop(i), x0 = Math.max(XS, Math.min(CC.THAM[0] - 30, x1 + 8)), xe = Math.min(CC.THAM[0], x0 + 32);
+    ctx.save();
+    ctx.globalAlpha = a;
+    if (x0 > XS) ctx.drawImage(anh, 0, 0, x0 - XS, LH, XS, y0, x0 - XS, LH);
+    const n = 8, w = (xe - x0) / n;                 // mép cuối mờ dần (8 lát)
+    for (let k = 0; k < n; k++) {
+      const xa = x0 + k * w; ctx.globalAlpha = a * (1 - (k + .5) / n);
+      ctx.drawImage(anh, xa - XS, 0, w, LH, xa, y0, w, LH);
+    }
+    ctx.restore();
+  };
 
   // ---------- đường chạy lấp lánh của tổ đang dẫn đầu: thảm ánh vàng, vệt sáng lướt qua, sao lấp lánh, bụi vàng bay lên ----------
   CC.veDuongSang = function (ctx, i, x1, t, a) {

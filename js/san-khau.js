@@ -3,9 +3,10 @@
    Mỗi câu: miếng ghép sáng màu của nhóm điểm cao nhất bay vào trước, rồi các miếng gỗ theo điểm từ cao xuống thấp;
    4 bạn cùng qua khúc vừa lấp (nhóm 1, 3 đi bộ; nhóm 2, 4 tốc biến), hạng sau đứng lùi dần; bảng điểm cập nhật;
    Claude nhảy múa thổi kèn và bình luận (mỗi câu một kiểu nhảy).
-   Kết thúc: bạn về nhất bước lên thảm VỀ ĐÍCH, cả làn chuyển đỏ "Nhóm n về nhất", thắp đuốc; bấm "Thứ hạng các nhóm":
-   các bạn còn lại thắp đuốc theo hạng, 4 tia lửa bay lên số 51, lửa đốt tan màn đêm hiện báo tường, 4 bạn về ô dán thiệp;
-   bấm "Hiện báo tường": dải băng mở ra, pháo giấy, phóng to dòng chữ.
+   Kết thúc: bạn về nhất bước lên thảm VỀ ĐÍCH, cả làn chuyển đỏ "Nhóm n về nhất", thắp đuốc; bấm "Tổng kết" (8/11, trước là "Thứ hạng các nhóm"):
+   các bạn còn lại thắp đuốc theo hạng rồi dừng, hiện nút "Tiếp theo" (8/11); bấm "Tiếp theo": 4 tia lửa bay lên số 51,
+   lửa đốt tan màn đêm hiện báo tường, 4 bạn về ô dán thiệp; bấm "Hiện báo tường": dải băng mở ra, pháo giấy, phóng to dòng
+   chữ, cả lớp vỗ tay (8/11).
    Hình vẽ bằng các hàm trong cay-cau.js. Thời điểm hoạt cảnh tính từ lúc giáo viên bấm. */
 (function () {
   "use strict";
@@ -27,7 +28,7 @@
   // che: dau (chuẩn bị, giới thiệu) · hoi (màn câu hỏi che cảnh) · cau (di chuyển câu q) · dich (về đích) · hang (thứ hạng) · bao (hiện báo tường)
   const S = {
     che: "dau", tieu: false, luat: false, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
-    R0: XA, L: null, E0: CHUA, B0: CHUA, H0: CHUA, W0: CHUA, K: null,
+    R0: XA, L: null, E0: CHUA, B0: CHUA, T0: CHUA, H0: CHUA, W0: CHUA, K: null, tiep: false,
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
     ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
   };
@@ -144,8 +145,8 @@
     L.board = L.kid0 + L.kidDur;
     return L;
   }
-  // các mốc phần kết: W0 bạn về nhất bắt đầu bước lên thảm VỀ ĐÍCH, E0 bấm "Đốt đuốc", B0 bấm "Thứ hạng các nhóm",
-  //   H0 bấm "Hiện báo tường".
+  // các mốc phần kết: W0 bạn về nhất bắt đầu bước lên thảm VỀ ĐÍCH, E0 bấm "Đốt đuốc", B0 bấm "Tổng kết" (trước là "Thứ hạng các nhóm"),
+  //   T0 bấm "Tiếp theo" (8/11), H0 bấm "Hiện báo tường".
   // 6/11 trưa (thầy Thịnh: "khi nào có nhóm về nhất thì nhóm đó sẽ tự bước tới ô về đích luôn và có tiếng vỗ tay", "trên điện thoại
   //   sẽ hiện nút đốt đuốc, tôi ấn vô thì nhóm đó sẽ đốt đuốc"): W0 nay tính từ lúc công bố câu 5 (S.W0, đặt trong SK.dat). Bạn về
   //   nhất tự bước lên thảm (vỗ tay), rồi tới đứng cạnh đuốc chờ; TN là lúc thắp đuốc: sau khi bấm "Đốt đuốc" và bạn đã tới đuốc.
@@ -157,9 +158,21 @@
     // các nhóm còn lại thắp đuốc theo hạng; bằng điểm thì cùng hạng, thắp cùng lúc
     const nhom = xh.nhom.filter(g => xh.hang[g[0]] !== 1);
     nhom.forEach((g, j) => g.forEach(i => { CHAY[i] = S.B0 + 1.35 + j * 1.25; }));
-    const F0 = (nhom.length ? S.B0 + 1.35 + (nhom.length - 1) * 1.25 : S.B0) + 1.2;
-    return { hang: xh.hang, NHAT, nhom, W0, W1, TN, CHAY, F0, BURN0: F0 + 1, BURN1: F0 + 4.1, S0: F0 + 4.2, HTH: TN + 1, HB: F0 + 4.2 + 2.6 };
+    // 8/11 thầy Thịnh: "sau khi cả 4 bạn đốt đuốc, hiện thêm nút tiếp theo, tôi bấm vô thì mới hiện báo tường".
+    //   L0 lượt thắp đuốc cuối, TT nút "Tiếp theo" hiện (ngọn đuốc cuối đã bùng hẳn), F0 tia lửa bay lên số 51: ngay sau khi bấm
+    //   "Tiếp theo" (bấm sớm lúc các nhóm còn đang thắp thì chờ ngọn đuốc cuối sáng xong, như trước)
+    const L0 = nhom.length ? S.B0 + 1.35 + (nhom.length - 1) * 1.25 : S.B0, TT = L0 + 1.2, F0 = Math.max(TT, S.T0 + .3);
+    return { hang: xh.hang, NHAT, nhom, W0, W1, TN, CHAY, L0, TT, F0, BURN0: F0 + 1, BURN1: F0 + 4.1, S0: F0 + 4.2, HTH: TN + 1, HB: F0 + 4.2 + 2.6 };
   }
+
+  // 8/11: lúc chữ "Tổng kết" đổi thành "Tiếp theo": bốn ngọn đuốc đã sáng (TT) và Claude đã gõ xong lời bình thứ hạng (48 chữ
+  //   một giây); Claude còn đang viết thì chờ, lâu nhất khoảng 11 giây sau ngọn đuốc cuối (quá 10 giây trang dùng lời theo mẫu)
+  function lucTiep(KK) {
+    const B = S.binh;
+    if (B.q !== 6 || !B.chu) return Math.max(KK.TT, KK.L0 + 11);
+    return Math.max(KK.TT, Math.max(KK.L0 + .4, B.luc) + B.chu.length / 48 + .5);
+  }
+  SK.lucTiep = () => S.K && S.che === "hang" ? lucTiep(S.K) : null;
 
   /* ---------- trạng thái cây cầu ở thời điểm t ---------- */
   function trangThai(t) {
@@ -598,14 +611,22 @@
   //   bạn ở làn trên cùng đi ngang qua thì đầu và đuốc nằm phía trước Claude.
   const CLAUDE_X = 165, CLAUDE_W = 196, CLAUDE_HO = 4;
   function veClaudeCau(t, E) {
-    const qB = S.che === "cau" ? S.q : (S.che === "dich" ? 5 : 0);
-    if (!qB || !S.L || S.L.q !== qB || !A.claude) return;
-    const p = t - (S.R0 + S.L.board + .2), mo = S.che === "dich" ? 1 - lin(t, S.E0, S.E0 + .5) : 1;
+    let p, mo, kieu;
+    if (S.che === "hang" && S.K) {
+      // 8/11 thầy Thịnh: "tôi bấm vào thì cả 4 nhóm lên đốt đuốc, claude bình luận về thứ hạng": bấm "Tổng kết" thì Claude
+      //   ra đứng chỗ cũ (bật lên xoay vòng, pháo giấy), bình luận thứ hạng; bấm "Tiếp theo" thì mờ dần
+      if (!A.claude) return;
+      p = t - (S.B0 + .3); mo = S.tiep ? 1 - lin(t, S.T0, S.T0 + .5) : 1; kieu = 2;
+    } else {
+      const qB = S.che === "cau" ? S.q : (S.che === "dich" ? 5 : 0);
+      if (!qB || !S.L || S.L.q !== qB || !A.claude) return;
+      p = t - (S.R0 + S.L.board + .2); mo = S.che === "dich" ? 1 - lin(t, S.E0, S.E0 + .5) : 1; kieu = qB - 1;
+    }
     if (p < 0 || mo <= 0) return;
     const im = A.claude[0], h = CLAUDE_W * im.height / im.width;
     ctx.save(); ctx.globalAlpha = mo;
     ctx.beginPath(); ctx.rect(-E.bn, -E.bd, E.EW, CC.Y0 + E.bd + 2); ctx.clip();
-    CC.veClaude(ctx, A, p, CLAUDE_X, CC.Y0 - CLAUDE_HO - h / 2, CLAUDE_W, qB - 1);
+    CC.veClaude(ctx, A, p, CLAUDE_X, CC.Y0 - CLAUDE_HO - h / 2, CLAUDE_W, kieu);
     ctx.restore();
   }
   SK.choClaude = () => { const im = A && A.claude && A.claude[0]; return im ? { x: CLAUDE_X, y: CC.Y0 - CLAUDE_HO - CLAUDE_W * im.height / im.width / 2, w: CLAUDE_W, h: CLAUDE_W * im.height / im.width } : null; };
@@ -707,34 +728,56 @@
       veBang(t, q);
     }
     // bóng nói lời bình (chữ hiện dần như đang gõ)
-    const b0 = L ? S.R0 + L.board + .2 : CHUA;
-    const coBinh = !!L && L.q === q && (cau || (dich && moDich > 0)) && t >= b0;
+    // 8/11 thầy Thịnh: "claude bình luận về thứ hạng": bước Tổng kết (cảnh thứ hạng) có lời bình thứ hạng (q = 6), hiện khi
+    //   ngọn đuốc cuối đã sáng, mờ dần khi bấm "Tiếp theo". Lúc này không có bảng điểm nên bóng nói rộng tới gần nút góc phải.
+    const KK = S.K, hangCanh = S.che === "hang" && !!KK;
+    const bq = hangCanh ? 6 : q, b0 = hangCanh ? KK.L0 + .4 : L ? S.R0 + L.board + .2 : CHUA;
+    const moBinh = hangCanh ? (S.tiep ? 1 - lin(t, S.T0, S.T0 + .5) : 1) : moDich;
+    const coBinh = (hangCanh ? moBinh > 0 : !!L && L.q === q && (cau || (dich && moDich > 0))) && t >= b0;
     datAn(UI.binh, !coBinh);
     if (coBinh) {
-      const L0 = Math.max(306, (UI.pillW || 0) + 24);
-      datKieu(UI.binh, "left", L0 + "px"); datKieu(UI.binh, "width", (BINH_PHAI - L0) + "px");
-      datKieu(UI.binh, "opacity", String(moDich));
+      const L0 = hangCanh ? 306 : Math.max(306, (UI.pillW || 0) + 24), R = hangCanh ? BINH_PHAI_HANG : BINH_PHAI;
+      datKieu(UI.binh, "left", L0 + "px"); datKieu(UI.binh, "width", (R - L0) + "px");
+      datKieu(UI.binh, "opacity", String(moBinh));
       const B = S.binh;
-      if (B.q !== q || !B.chu) { if (UI.binh.dataset.cho !== "1") { UI.binh.dataset.cho = "1"; UI.binh.innerHTML = '<span class="cho"><i></i><i></i><i></i></span>'; } }
+      if (B.q !== bq || !B.chu) { if (UI.binh.dataset.cho !== "1") { UI.binh.dataset.cho = "1"; UI.binh.innerHTML = '<span class="cho"><i></i><i></i><i></i></span>'; } }
       else {
         const bd = Math.max(b0, B.luc), n = Math.floor((t - bd) * 48), chu = B.chu.slice(0, Math.max(0, Math.min(B.chu.length, n)));
         if (UI.binh.dataset.cho === "1" || UI.binh.textContent !== chu) { UI.binh.dataset.cho = ""; UI.binh.textContent = chu; }
       }
     }
     // nút trên TV
-    const KK = S.K;
-    let thHien = false, thBam = false, thS = 1, thA = 1;
+    // 8/11 thầy Thịnh: "khi nhóm 1 đốt đuốc xong thì hiện lên chữ tổng kết. tôi bấm vào thì cả 4 nhóm lên đốt đuốc, claude bình
+    //   luận về thứ hạng. chữ tổng kết chuyển thành tiếp theo". Nút "Tổng kết" (trước là "Thứ hạng các nhóm") hiện khi nhóm về
+    //   nhất đã thắp đuốc; bấm rồi thì nút mờ đi đứng chờ các nhóm còn lại thắp đuốc và Claude nói xong, rồi chữ trên nút đổi
+    //   thành "Tiếp theo" (nút Tiếp theo hiện đúng chỗ đó, nảy nhẹ)
+    const TTL = hangCanh && !S.tiep ? lucTiep(KK) : CHUA;
+    const NT = (S.ext && S.ext.nutTo) || 1;
+    let thHien = false, thBam = false, thCho = false, thS = 1, thA = 1;
     if (KK && dich && t >= KK.HTH) { thHien = true; thA = lin(t, KK.HTH, KK.HTH + .3); thS = (.8 + .2 * eb(lin(t, KK.HTH, KK.HTH + .5))) * (1 + .03 * Math.sin(t * 4)); }
-    if (KK && S.che === "hang" && t < S.B0 + .25) { thHien = true; thBam = true; thS = .93; }
+    if (hangCanh && !S.tiep && t < TTL + .2) {
+      thHien = true;
+      if (t < S.B0 + .25) { thBam = true; thS = .93; }
+      else { thCho = true; thA = .62 * (1 - lin(t, TTL - .05, TTL + .2)); }
+    }
     datAn(UI.nutTH, !thHien);
-    if (thHien) { UI.nutTH.classList.toggle("bam", thBam); datKieu(UI.nutTH, "transform", "scale(" + thS.toFixed(3) + ")"); datKieu(UI.nutTH, "opacity", String(thA)); }
+    if (thHien) { UI.nutTH.classList.toggle("bam", thBam); UI.nutTH.classList.toggle("cho", thCho); datKieu(UI.nutTH, "transform", "scale(" + (thS * NT).toFixed(3) + ")"); datKieu(UI.nutTH, "opacity", String(thA)); }
+    // 8/11: nút "Tiếp theo" hiện khi cả bốn ngọn đuốc đã sáng và Claude đã bình luận xong; bấm thì mới tới tia lửa, lửa đốt màn
+    //   đêm và báo tường
+    let ttHien = false, ttBam = false, ttS = 1, ttA = 1;
+    if (hangCanh && !S.tiep && t >= TTL) { ttHien = true; ttA = lin(t, TTL, TTL + .3); ttS = (.8 + .2 * eb(lin(t, TTL, TTL + .5))) * (1 + .03 * Math.sin(t * 4)); }
+    if (KK && S.che === "hang" && S.tiep && t < S.T0 + .25) { ttHien = true; ttBam = true; ttS = .93; }
+    datAn(UI.nutTT, !ttHien);
+    if (ttHien) { UI.nutTT.classList.toggle("bam", ttBam); datKieu(UI.nutTT, "transform", "scale(" + (ttS * NT).toFixed(3) + ")"); datKieu(UI.nutTT, "opacity", String(ttA)); }
     let hbHien = false, hbBam = false, hbS = 1, hbA = 1;
     if (KK && S.che === "hang" && t >= KK.HB) { hbHien = true; hbA = lin(t, KK.HB, KK.HB + .3); hbS = (.8 + .2 * eb(lin(t, KK.HB, KK.HB + .5))) * (1 + .03 * Math.sin(t * 4)); }
     if (KK && S.che === "bao" && t < S.H0 + .25) { hbHien = true; hbBam = true; hbS = .93; }
     datAn(UI.nutHB, !hbHien);
-    if (hbHien) { UI.nutHB.classList.toggle("bam", hbBam); datKieu(UI.nutHB, "transform", "scale(" + hbS.toFixed(3) + ")"); datKieu(UI.nutHB, "opacity", String(hbA)); }
-    // báo tường đã lộ ra: hàng nút góc trái dựng thành cột sát mép trái, khỏi che góc báo tường
-    if (UI.tvNut) UI.tvNut.classList.toggle("doc", !!KK && (S.che === "bao" || (S.che === "hang" && t >= KK.BURN1)));
+    if (hbHien) { UI.nutHB.classList.toggle("bam", hbBam); datKieu(UI.nutHB, "transform", "scale(" + (hbS * NT).toFixed(3) + ")"); datKieu(UI.nutHB, "opacity", String(hbA)); }
+    // báo tường đã lộ ra: hai cụm nút (góc trái, góc phải) dựng thành cột sát mép trái và mép phải, khỏi che góc báo tường
+    const docNut = !!KK && !(S.ext && S.ext.nutHang) && (S.che === "bao" || (S.che === "hang" && t >= KK.BURN1));
+    if (UI.tvNut) UI.tvNut.classList.toggle("doc", docNut);
+    if (UI.tvNutPhai) UI.tvNutPhai.classList.toggle("doc", docNut);
     // dòng sông vẽ tiếp ở phần dư ngoài khung 16:9: tắt dần khi lửa đốt tan màn đêm (nửa sau), tới báo tường thì hết hẳn
     if (UI.nenNgoai) {
       const an = S.che === "bao" ? 0 : (S.che === "hang" && KK) ? 1 - lin(t, (KK.BURN0 + KK.BURN1) / 2, KK.BURN1) : 1;
@@ -788,12 +831,14 @@
     hen(S.K.TN, () => am().bungLua && am().bungLua());          // nhóm về nhất thắp đuốc
   }
   function tiengHang() {
-    const KK = S.K;
-    KK.nhom.forEach(g => hen(KK.CHAY[g[0]], () => am().bungLua && am().bungLua()));   // mỗi lượt thắp đuốc theo hạng
-    hen(KK.F0 + .9, () => am().trong && am().trong(1));                                 // bốn tia lửa chạm số 51
+    const KK = S.K, t = dongHo();
+    // mỗi lượt thắp đuốc theo hạng (bấm "Tiếp theo" lúc các nhóm còn đang thắp thì chỉ hẹn các lượt chưa tới, khỏi kêu hai lần)
+    KK.nhom.forEach(g => { if (KK.CHAY[g[0]] > t) hen(KK.CHAY[g[0]], () => am().bungLua && am().bungLua()); });
+    if (KK.F0 < CHUA) hen(KK.F0 + .9, () => am().trong && am().trong(1));               // bốn tia lửa chạm số 51 (sau "Tiếp theo")
   }
   function tiengBao() {
     hen(S.H0, () => { am().trong && am().trong(1); am().ken && am().ken(); });         // mở dải băng báo tường
+    hen(S.H0 + .35, () => am().voTay && am().voTay());     // 8/11 thầy Thịnh: "bấm nút hiện báo tường thì sẽ có tiếng vỗ tay"
   }
 
   /* ---------- vòng vẽ ---------- */
@@ -827,6 +872,7 @@
   //   không chạm bảng điểm.
   const BX_S = 1.35, BX_W = 284, BX_H = 246, BX_TREN = 14, BX_PHAI = 1622 + 284;
   const BINH_PHAI = Math.round(BX_PHAI - BX_W * BX_S - 18);
+  const BINH_PHAI_HANG = 1600;     // 8/11: bước Tổng kết không có bảng điểm, chỉ chừa chỗ cho nút Tổng kết / Tiếp theo ở góc phải
   const CAU_TREN = Math.round(BX_TREN + BX_H * BX_S + 24);   // 370: mép trên cầu không cao hơn mức này (thảm, cột đuốc nhô 10, 18 px)
   // 6/11 trưa (thầy Thịnh: "bảng điểm đè lên đuốc rồi nên hãy cho đường chạy nhỏ xuống"): đuốc nhóm 1 (kể cả mấy đốm sáng quanh
   //   miệng đuốc) nhô lên khỏi mặt cầu một đoạn (doanNho, tuỳ chiều cao làn) và nằm ngay dưới bảng tổng điểm, nên mép trên cầu phải
@@ -845,12 +891,17 @@
   }
   // vương miện vàng đội trên ảnh nhóm đang dẫn đầu bảng tổng điểm (CSS .dong.nhat .vm)
   const VUONG_MIEN = '<svg class="vm" viewBox="0 0 28 21" aria-hidden="true"><path d="M3 16.5L1.6 5.2l7 5.4L14 2.2l5.4 8.4 7-5.4L25 16.5z" fill="#ffd23a" stroke="#8a5200" stroke-width="1.3" stroke-linejoin="round"/><path d="M5 14.6l-.8-6 3.9 3z" fill="#fff3b0" opacity=".8"/><rect x="3" y="15.6" width="22" height="4.2" rx="1.6" fill="#eaa21c" stroke="#8a5200" stroke-width="1.1"/><circle cx="14" cy="17.7" r="1.5" fill="#e2402e"/><circle cx="8.6" cy="17.7" r="1" fill="#fff3c4"/><circle cx="19.4" cy="17.7" r="1" fill="#fff3c4"/><circle cx="14" cy="2.4" r="1.9" fill="#fff6cf" stroke="#8a5200" stroke-width=".8"/><circle cx="1.8" cy="5.2" r="1.5" fill="#fff6cf" stroke="#8a5200" stroke-width=".7"/><circle cx="26.2" cy="5.2" r="1.5" fill="#fff6cf" stroke="#8a5200" stroke-width=".7"/></svg>';
-  const NUT_DUOI = 74;               // hàng nút góc trái dưới (cao 52 px, cách đáy 14 px) + 8 px, tính bằng điểm ảnh CSS
+  // chỗ chừa dưới đáy cho các cụm nút, điểm ảnh CSS: 74 = nút cao 52 + cách đáy 14 + 8; màn hình hẹp (điện thoại cầm dọc) hai hàng
+  //   nút thì nhiều hơn. Lấy từ biến CSS --nutDuoi của #tv (đổi theo cỡ màn hình trong ruoc-duoc.html)
+  function nutDuoi() {
+    const tv = document.getElementById("tv"), v = tv ? parseFloat(getComputedStyle(tv).getPropertyValue("--nutDuoi")) : NaN;
+    return v > 0 ? v : 74;
+  }
   SK.doNet = 1;
   SK.khoiTao = function () {
     cv = $("#cv"); ctx = cv.getContext("2d");
     UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
-    UI.nutTH = $("#nutThuHang"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut");
+    UI.nutTH = $("#nutThuHang"); UI.nutTT = $("#nutTiepTheo"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut"); UI.tvNutPhai = $("#tvNutPhai");
     UI.dong = RD.TO.map(T => {
       const d = document.createElement("div"); d.className = "dong"; d.style.setProperty("--m", T.mau); d.style.setProperty("--n", T.nhat);
       d.innerHTML = '<i class="quang"></i><i class="luot"></i><span class="h">1</span><img src="' + T.mat + '" alt=""><span class="t">' + T.ten + '</span><span class="d">0</span>' + VUONG_MIEN;
@@ -878,17 +929,39 @@
     // khung vẽ phủ cả phần dư; khung 16:9 nằm giữa, lệch (bn, bd)
     const bn = Math.max(0, (vw / k - W) / 2), bd = Math.max(0, (vh / k - H) / 2);
     wd.style.setProperty("--bdT", bd.toFixed(2) + "px");          // chữ và nút neo theo đỉnh, đáy màn hình thật
+    // 8/11 thầy Thịnh: "thu nhỏ lại thì phần phím bị đè lên đáp án": đáy thẻ câu hỏi nằm trên hai cụm nút dưới đáy màn hình
+    //   (chừa 8 px); cửa sổ dư trên dưới đủ chỗ (16:10) thì thẻ vẫn cao như cũ (đáy ở 1066)
+    const ND = nutDuoi();
+    wd.style.setProperty("--dayThe", Math.min(H - 14, H + bd - ND / k).toFixed(1) + "px");
     // làn cầu theo khung xem
-    const tren = -bd, duoi = H + bd, y1 = duoi - Math.max(20, NUT_DUOI / k) - 4;
+    const tren = -bd, duoi = H + bd, y1 = duoi - Math.max(20, ND / k) - 4;
     const { y0, lh } = chonLan(tren, y1), du = Math.max(0, y1 - y0 - (4 * lh + 5 * CC.BEAM));
     if (CC.datHinh(y0 + du / 2, lh, tren, duoi) && S.ls) datSoLieu(S.ls);
     // báo tường lúc "Hiện báo tường": cả viền gỗ (16 px quanh ảnh) cao vừa màn hình, cách mép 8 px; hai bên chừa 76 px cho
-    //   cột nút; toạ độ thế giới
-    const sb = Math.max(1, Math.min(vh - 16, (vw - 152) * (K.h + 32) / (K.w + 32)) / k / (K.h + 32)), hb = K.h * sb, wb = K.w * sb;
-    S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, KF: { x: W / 2 - wb / 2, y: H / 2 - hb / 2, w: wb, h: hb } };
+    //   cột nút; toạ độ thế giới.
+    // 8/11 chiều (thầy mở trên điện thoại cầm dọc): hai cột nút hai bên che mép báo tường. Chọn cách cho báo tường to hơn: hai
+    //   cột nút hai bên (màn hình ngang) hay nút vẫn nằm dưới đáy (màn hình dọc: báo tường rộng gần hết bề ngang, trên dưới
+    //   còn nhiều chỗ). Nút nằm dưới đáy thì báo tường lúc chưa phóng to (khung K) cũng phải ở trên hàng nút.
+    const tl = (K.h + 32) / (K.w + 32);
+    const hCot = Math.min(vh - 16, (vw - 152) * tl), hHang = Math.min(vh - 2 * (ND + 8), (vw - 24) * tl);
+    const nutHang = hHang > hCot && vh / 2 + (K.y + K.h + 16 - H / 2) * k <= vh - ND - 8;
+    const sb = Math.max(1, (nutHang ? hHang : hCot) / k / (K.h + 32)), hb = K.h * sb, wb = K.w * sb;
+    S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, KF: { x: W / 2 - wb / 2, y: H / 2 - hb / 2, w: wb, h: hb }, nutHang,
+      // nút Tổng kết / Tiếp theo / Hiện báo tường: chữ trên màn hình thật không nhỏ hơn 16 px (điện thoại)
+      nutTo: Math.max(1, .5 / k) };
+    // nút "Hiện báo tường" (góc phải dưới): nút dưới đáy thì đứng trên các hàng nút
+    wd.style.setProperty("--hbDuoi", (nutHang ? ND / k : 8).toFixed(1) + "px");
     datKieu(cv, "left", (-bn).toFixed(1) + "px"); datKieu(cv, "top", (-bd).toFixed(1) + "px");
     datKieu(cv, "width", S.ext.EW.toFixed(1) + "px"); datKieu(cv, "height", S.ext.EH.toFixed(1) + "px");
     { const w = Math.round(S.ext.EW * rDo), h = Math.round(S.ext.EH * rDo); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; }
+  };
+
+  // cho bài thử: khung báo tường (kể cả viền gỗ) trên màn hình thật, điểm ảnh CSS; nutHang: nút vẫn nằm dưới đáy
+  SK.khungBao = function () {
+    const k = SK.k, vw = window.innerWidth, vh = window.innerHeight, E = S.ext;
+    const F = (S.che === "bao" && E && E.KF) ? E.KF : K, v = 16 * F.w / K.w;
+    return { l: vw / 2 + (F.x - v - W / 2) * k, t: vh / 2 + (F.y - v - H / 2) * k, r: vw / 2 + (F.x + F.w + v - W / 2) * k,
+      b: vh / 2 + (F.y + F.h + v - H / 2) * k, nutHang: !!(E && E.nutHang) };
   };
 
   /* ---------- điều khiển từ trò chơi ---------- */
@@ -912,7 +985,12 @@
       S.R0 = (o.che === "cau" && hc) ? t : XA;
     } else { S.L = null; S.R0 = XA; }
     S.E0 = o.che === "dich" ? (hc ? t : XA) : (o.che === "hang" || o.che === "bao") ? XA : CHUA;
-    S.B0 = o.che === "hang" ? (hc ? t : XA) : o.che === "bao" ? XA : CHUA;
+    // 8/11: bước "Tiếp theo" (o.tiep) vẫn là cảnh thứ hạng; bấm lúc các nhóm còn đang thắp đuốc thì giữ mốc B0 để các nhóm
+    //   thắp nốt, rồi tia lửa mới bay lên số 51
+    const tiepCu = S.tiep;
+    S.tiep = o.che === "hang" && !!o.tiep;
+    S.B0 = o.che === "hang" ? (S.tiep ? ((hc && cheCu === "hang" && !tiepCu) ? S.B0 : XA) : (hc ? t : XA)) : o.che === "bao" ? XA : CHUA;
+    S.T0 = o.che === "hang" ? (S.tiep ? (hc ? t : XA) : CHUA) : o.che === "bao" ? XA : CHUA;
     S.H0 = o.che === "bao" ? (hc ? t : XA) : CHUA;
     // bạn về nhất bước lên thảm VỀ ĐÍCH ngay sau khi các bạn qua khúc cầu cuối và bảng tổng điểm cập nhật (câu 5, có hoạt cảnh).
     //   Vào thẳng câu 5 hay các bước sau (tải lại trang, lùi lại) thì bạn đó đã đứng sẵn cạnh đuốc.
