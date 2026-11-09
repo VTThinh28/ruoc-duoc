@@ -146,10 +146,25 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .mc-so span[data-a="t"]{transform:translate(0,-50%)}
 .mc-so span[data-a="p"]{transform:translate(-100%,-50%)}
 .mc-so span.nen{background:rgba(255,255,255,.95);border:.05em solid #9db7e0;border-radius:.3em;padding:.02em .3em .08em;box-shadow:0 .06em .16em rgba(0,0,0,.2)}
-.mc-chu{display:flex;flex-direction:column;justify-content:center;gap:18px;min-width:0;min-height:0;overflow:hidden}
+.mc-chu{position:relative;display:flex;flex-direction:column;justify-content:center;gap:18px;min-width:0;min-height:0;overflow:hidden}
 .mc-chu p{margin:0;font:600 var(--fs)/1.27 var(--f-chu);color:var(--muc)}
 .mc-chu b{color:inherit;font-weight:inherit;white-space:nowrap}   /* 5/11 Thịnh: số liệu không tô màu, chỉ tô màu câu hỏi */
 .mc-chu p.mc-hoi{font-weight:700;color:var(--ac)}
+/* 9/11 09:04 UTC thầy Thịnh: "sau khi câu hỏi hiện ra thì tôi sẽ đọc đề, đọc xong có 5 giây đếm ngược hiện lên màn hình (tôi bấm
+   nút đếm ngược), sau khi xong 5 giây thì các em giơ bảng lên quét": lớp đếm ngược phủ cột chữ đề (hình và bốn ô đáp án vẫn hiện),
+   vòng tròn rút dần, số 5 về 1 rồi "Giơ thẻ lên!". Chỉ mờ dần, không phóng to thu nhỏ */
+#mcDem{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;overflow:hidden;border-radius:22px;border:4px solid var(--ac);background:#fff8ea;--demR:min(430px,calc((var(--dayThe,1066px) - 300px) * .62))}
+#mcDem .vong{position:relative;flex:none;width:var(--demR);height:var(--demR)}
+#mcDem svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#mcDem circle{fill:none;stroke-width:13}
+#mcDem circle.nen{stroke:#eadfca}
+#mcDem circle.chay{stroke:var(--ac);stroke-linecap:round;stroke-dasharray:553;stroke-dashoffset:0}
+#mcDem b{position:absolute;inset:0;display:grid;place-items:center;font:800 calc(var(--demR) * .58)/1 var(--f-tieu);color:var(--ac);white-space:nowrap}
+#mcDem strong{display:none;font:800 min(124px,calc(var(--demR) * .3))/1 var(--f-tieu);color:var(--dung);text-align:center;white-space:nowrap}
+#mcDem p{margin:0;font:800 56px/1.15 var(--f-tieu);color:var(--muc2);text-align:center}
+#mcDem.xong{border-color:var(--dung)}
+#mcDem.xong .vong{display:none}
+#mcDem.xong strong{display:block}
 .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 .12em;font-size:.82em;position:relative;top:-.05em}
 .frac>span{display:block;padding:0 .14em}
 .frac>span:first-child{border-bottom:.08em solid currentColor;padding-bottom:.06em}
@@ -186,8 +201,13 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .tv-nut [data-muc="0"] .song1,.tv-nut [data-muc="0"] .song2,.tv-nut [data-muc="1"] .song2{display:none}
 /* nút có chữ: Cài đặt, Chơi lại từ đầu (chế độ chơi thử) */
 .tv-nut .nut-chu{width:auto;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;font:700 20px/1 var(--f-chu);white-space:nowrap}
+/* 9/11: nút Đếm ngược (chỉ hiện ở bước đọc đề), màu xanh cho dễ thấy; cửa sổ hẹp (≤ 1000 px) mà nút này đang hiện thì cả cụm góc
+   phải chỉ còn hình (trỏ chuột vẫn hiện tên), kẻo chạm cụm góc trái */
+.tv-nut [data-tv="dem"]{background:rgba(31,86,170,.9);border-color:rgba(196,220,255,.75);color:#fff}
+.tv-nut [data-tv="dem"]:hover{background:rgba(42,104,200,.95)}
 /* cửa sổ hẹp: hai cụm nút sắp chạm nhau thì nút góc phải chỉ còn hình (trỏ chuột vẫn hiện tên) */
 @media (max-width:820px){#tvNutPhai .nut-chu{width:var(--n);padding:0;justify-content:center}#tvNutPhai .nut-chu span{display:none}}
+@media (max-width:1000px){#tvNutPhai:has([data-tv="dem"]:not([hidden])) .nut-chu{width:var(--n);padding:0;justify-content:center}#tvNutPhai:has([data-tv="dem"]:not([hidden])) .nut-chu span{display:none}}
 /* 8/11 chiều thầy Thịnh (mở trên điện thoại cầm dọc): "mấy cái phím điều khiển nó bị đè lên nhau kìa ... Chuyển vị trí các phím
    điều khiển lại": màn hình hẹp thì cụm góc phải (Cài đặt, Chơi lại từ đầu) lên hàng thứ hai, vẫn sát mép phải (xa nút lùi, tiếp);
    hẹp nữa (điện thoại) thì nút nhỏ lại còn 44 px. Chỗ chừa dưới đáy tăng theo (hai hàng nút) */
@@ -299,10 +319,18 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .dt-anh::after{content:"Chạm ảnh để phóng to";position:absolute;right:8px;bottom:8px;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:12px;pointer-events:none}
 .dt-anh.lon::after{content:"Chạm để thu nhỏ";bottom:12px}
 html.dt-khoa,html.dt-khoa body{overflow:hidden}
-.dt-cam-dem{position:absolute;left:8px;right:8px;top:46px;display:none;flex-wrap:wrap;gap:6px;pointer-events:none}
+.dt-cam-dem{position:absolute;left:8px;right:8px;top:46px;display:none;flex-direction:column;align-items:flex-start;gap:5px;pointer-events:none}
 .dt-cam.lon .dt-cam-dem{display:flex}
 .dt-cam-dem span{padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-weight:800;font-size:14px;box-shadow:inset 0 0 0 2px var(--m)}
 .dt-cam-dem span.du{background:var(--d);box-shadow:inset 0 0 0 2px #fff}
+/* 9/11: số đếm ngược giữa khung camera (đang đếm thì máy chưa ghi thẻ) */
+.dt-cam-so{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 22px 14px;border-radius:20px;background:rgba(0,0,0,.66);color:#fff;text-align:center;pointer-events:none;max-width:calc(100% - 24px)}
+.dt-cam-so b{font:800 92px/1 var(--f-tieu)}
+.dt-cam-so span{font-weight:800;font-size:16px;line-height:1.3}
+/* hết giờ: "Giơ thẻ lên!" thu thành dải nhỏ phía dưới khung, để giữa khung trống cho thầy thấy thẻ đang được ghi */
+.dt-cam-so.xong{top:auto;bottom:58px;transform:translateX(-50%);flex-direction:row;gap:10px;padding:8px 16px;background:rgba(18,110,58,.9);white-space:nowrap}
+.dt-cam-so.xong b{font-size:24px}
+.dt-cam-so.xong span{font-size:14px}
 .dt-zoom b{min-width:36px;text-align:right}
 .dt-cam.lon .dt-zoom{bottom:14px}
 .dt-cam-tren{position:absolute;left:8px;right:8px;top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none}
@@ -320,6 +348,23 @@ html.dt-khoa,html.dt-khoa body{overflow:hidden}
 .dt-anh canvas{display:block;width:100%;height:auto}
 .dt-quet-nut{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 .dt-quet-nut .nut{flex:1 1 160px;min-height:52px;font-size:17px}
+/* 9/11: nút Đếm ngược 5 giây ở bước đọc đề; đang đếm thì hiện số giây còn lại */
+.dt-dem-hang{display:flex;margin-bottom:10px}
+.nut.dem{flex:1;min-height:58px;background:#1f5fae;border-color:#174a8a;color:#fff;font:800 20px/1.1 var(--f-tieu)}
+.nut.dem:hover{border-color:#0f3a70}
+.nut.dem svg{width:26px;height:26px;flex:none}
+.nut.dem b{display:inline-grid;place-items:center;min-width:38px;height:38px;border-radius:50%;background:#fff;color:#1f5fae;font:800 24px/1 var(--f-tieu)}
+.nut.dem.dang{opacity:1;background:#2c6fc4}
+/* 9/11: màn giới thiệu trên điện thoại: nút hiện / ẩn luật chơi trên TV, và chữ luật chơi để thầy đọc */
+.dt-luat-dau{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.dt-luat-dau h3{margin:0}
+.dt-luat-nut{width:100%;min-height:58px;font:800 20px/1.1 var(--f-tieu)}
+.dt-luat-nut svg{width:26px;height:26px;flex:none}
+.dt-luat-noi{margin-top:12px;font-size:15px;line-height:1.5;color:var(--muc)}
+.dt-luat-noi h4{margin:12px 0 4px;font:800 17px/1.2 var(--f-tieu);color:var(--do)}
+.dt-luat-noi h4:first-child{margin-top:0}
+.dt-luat-noi p,.dt-luat-noi ul{margin:0}
+.dt-luat-noi ul{padding-left:20px;display:grid;gap:4px}
 .dt-tt{margin:10px 0 0;font-weight:600;color:var(--muc2);min-height:1.4em}
 .dt-tt.ok{color:var(--dung)}.dt-tt.loi{color:var(--sai)}
 .dt-to{display:grid;gap:8px;margin-top:10px}
@@ -404,7 +449,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
         <div class="mc-dau"><span class="mc-pill" id="mcPill">Câu 1/5</span><div class="mc-tien" id="mcTien"></div></div>
         <div class="mc-than">
           <div class="mc-hinh" id="mcHop"><div class="mc-khung" id="mcKhung" role="img" hidden><img id="mcNhan" alt=""><div class="mc-so" id="mcSo"></div></div><img id="mcAnh" alt="" hidden></div>
-          <div class="mc-chu" id="mcChu"><p id="mcBoiCanh"></p><p id="mcHoi" class="mc-hoi"></p></div>
+          <div class="mc-chu" id="mcChu"><p id="mcBoiCanh"></p><p id="mcHoi" class="mc-hoi"></p><div id="mcDem" role="status" aria-live="assertive" hidden><div class="vong"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="nen" cx="100" cy="100" r="88"/><circle class="chay" id="mcDemVong" cx="100" cy="100" r="88"/></svg><b id="mcDemSo">5</b></div><strong>Giơ thẻ lên!</strong><p id="mcDemChu">Chuẩn bị giơ thẻ</p></div></div>
         </div>
         <div class="mc-chon" id="mcChon"></div>
       </div>
@@ -425,6 +470,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <button type="button" data-tv="full" aria-label="Toàn màn hình (phím F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
   <div id="tvNutPhai" class="tv-nut">
+    <button type="button" data-tv="dem" class="nut-chu" aria-label="Đếm ngược 5 giây (phím D)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.6"/><path d="M9.5 2.5h5"/><path d="M12 2.5V6"/><path d="M18.4 6.6l1.5-1.5"/></svg><span>Đếm ngược</span></button>
     <button type="button" data-tv="cb" class="nut-chu" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Cài đặt</span></button>
     <button type="button" data-tv="lai" class="nut-chu" aria-label="Chơi lại từ đầu (xóa kết quả chơi thử)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><span>Chơi lại từ đầu</span></button>
   </div>
@@ -455,11 +501,13 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
   </section>
   <section id="dtQuet" class="dt-the" hidden>
     <div class="dt-man-den" id="dtManDen" hidden></div>
+    <div class="dt-dem-hang" id="dtDemHang" hidden><button type="button" class="nut dem" id="dtDem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.6"/><path d="M9.5 2.5h5"/><path d="M12 2.5V6"/><path d="M18.4 6.6l1.5-1.5"/></svg>Đếm ngược 5 giây</button></div>
     <div class="dt-cam" id="dtCam" hidden>
       <video id="dtVideo" playsinline muted></video>
       <canvas id="dtPhu"></canvas>
       <div class="dt-cam-tren"><span class="dt-rec" id="dtRec">Đang quét</span><div class="dt-cam-nut"><button type="button" id="dtDen" aria-pressed="false" hidden>Đèn</button><button type="button" id="dtLon">Thu nhỏ</button></div></div>
       <div class="dt-cam-dem" id="dtCamDem"></div>
+      <div class="dt-cam-so" id="dtCamSo" role="status" hidden><b id="dtCamSoSo">5</b><span id="dtCamSoChu">Chưa ghi thẻ, chờ TV đếm xong</span></div>
       <label class="dt-zoom" id="dtZoomKhung" hidden>Thu phóng <input type="range" id="dtZoom" min="1" max="3" step="0.1" value="1"><b id="dtZoomSo">1×</b></label>
       <div class="dt-xoay" id="dtXoayMay" hidden>Cầm điện thoại thẳng đứng để đọc đúng chữ trên thẻ</div>
     </div>
@@ -472,6 +520,11 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <div id="dtTo" class="dt-to"></div>
     <div id="dtPhanBo" class="dt-phanbo" hidden></div>
     <details class="dt-nc" id="dtNc" hidden><summary>Chữ đọc từ ảnh bị lệch?</summary><p class="dt-ghi">Nếu các em giơ đúng chữ mà máy đọc ra chữ khác (ví dụ giơ A mà máy ghi B), bấm nút dưới để xoay chữ cho các ảnh cùng chiều (dọc hoặc ngang) trên máy này.</p><button type="button" class="nut" id="dtXoayChu">Xoay chữ một vòng</button></details>
+  </section>
+  <section id="dtLuat" class="dt-the" hidden>
+    <div class="dt-luat-dau"><h3>Luật chơi</h3><span id="dtLuatTT" class="chip">TV đang ẩn luật chơi</span></div>
+    <button type="button" class="nut vang dt-luat-nut" id="dtLuatNut" aria-pressed="false">Hiện luật chơi trên TV</button>
+    <div class="dt-luat-noi" id="dtLuatNoi"></div>
   </section>
   <section id="dtChuanBi" class="dt-the" hidden>
     <h3>Chuẩn bị</h3>
@@ -487,14 +540,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=ea9369ca"></script>
-<script src="js/scanlib.js?v=ea9369ca"></script>
-<script src="js/du-lieu.js?v=ea9369ca"></script>
-<script src="js/dong-bo.js?v=ea9369ca"></script>
-<script src="js/am-thanh.js?v=ea9369ca"></script>
-<script src="js/quet.js?v=ea9369ca"></script>
-<script src="js/cay-cau.js?v=ea9369ca"></script>
-<script src="js/san-khau.js?v=ea9369ca"></script>
-<script src="js/tro-choi.js?v=ea9369ca"></script>
+<script src="js/cau-hinh.js?v=8f03414f"></script>
+<script src="js/scanlib.js?v=8f03414f"></script>
+<script src="js/du-lieu.js?v=8f03414f"></script>
+<script src="js/dong-bo.js?v=8f03414f"></script>
+<script src="js/am-thanh.js?v=8f03414f"></script>
+<script src="js/quet.js?v=8f03414f"></script>
+<script src="js/cay-cau.js?v=8f03414f"></script>
+<script src="js/san-khau.js?v=8f03414f"></script>
+<script src="js/tro-choi.js?v=8f03414f"></script>
 </body>
 </html>

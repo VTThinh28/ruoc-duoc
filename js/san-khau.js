@@ -1371,9 +1371,10 @@
       UI.bx.appendChild(d);
       return { el: d, h: d.querySelector(".h"), d: d.querySelector(".d") };
     });
-    // nút Ẩn / Hiện luật chơi: chỉ đổi trên máy TV này, không ghi vào cơ sở dữ liệu
-    if (UI.luatAn) UI.luatAn.addEventListener("click", function () { SK.anLuat(true); });
-    if (UI.luatHien) UI.luatHien.addEventListener("click", function () { SK.anLuat(false); });
+    // nút Ẩn / Hiện luật chơi: 9/11 tro-choi.js ghi vào dữ liệu chung (SK.khiBamLuat) để điện thoại cũng biết, nút trên điện
+    //   thoại đổi được luật chơi trên TV; chưa có SK.khiBamLuat thì chỉ đổi trên máy TV này
+    if (UI.luatAn) UI.luatAn.addEventListener("click", function () { if (SK.khiBamLuat) SK.khiBamLuat(true); else SK.anLuat(true); });
+    if (UI.luatHien) UI.luatHien.addEventListener("click", function () { if (SK.khiBamLuat) SK.khiBamLuat(false); else SK.anLuat(false); });
     // phông chữ tải xong thì đo lại khung luật chơi (chữ đổi cỡ, khung đổi cao)
     if (document.fonts) {
       if (document.fonts.ready) document.fonts.ready.then(function () { S.luatDo = true; });
