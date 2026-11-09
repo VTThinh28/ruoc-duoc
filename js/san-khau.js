@@ -60,18 +60,27 @@
   const C51 = [K.x + .5 * K.w, K.y + .033 * K.h];
   const choO = i => { const o = O[i]; return [o.x + o.w / 2, o.y + o.h * (i < 2 ? .80 : .78)]; };
   // không có ảnh báo tường (bản GitHub chưa chọn ảnh): vẽ một tấm giả cùng bố cục
+  // màu dải băng đỏ của báo tường vẽ tạm (toạ độ ảnh K.w × K.h): dùng cho cả baoGia và tấm xoá chữ của nó
+  const mauBangGia = g => { const gr = g.createLinearGradient(0, K.h * .07, 0, K.h * .159); gr.addColorStop(0, "#d23b2f"); gr.addColorStop(1, "#a3231b"); return gr; };
   async function baoGia() {
+    // 9/11: đợi phông chữ tải xong (tối đa 2,5 giây; đưa kèm chữ để tải cả phần chữ có dấu tiếng Việt) rồi mới vẽ chữ
+    const CHU1 = "CHÚC MỪNG 51 NĂM NGÀY TRUYỀN THỐNG", CHU2 = "TRƯỜNG TRUNG HỌC CƠ SỞ PHAN TÂY HỒ (14/12/1976 – 14/12/2026)";
+    try {
+      await Promise.race([Promise.all([document.fonts.load("800 34px 'Baloo 2'", CHU1), document.fonts.load("700 18px 'Be Vietnam Pro'", CHU2 + " Ô dán thiệp")]),
+        new Promise(ok => setTimeout(ok, 2500))]);
+    } catch (e) { /* phông dự phòng */ }
     const c = document.createElement("canvas"); c.width = K.w; c.height = K.h;
     const g = c.getContext("2d"), w = K.w, h = K.h;
     let gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#e5f3fa"); gr.addColorStop(.3, "#fdf4dc"); gr.addColorStop(1, "#fbecd0");
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
     g.textAlign = "center"; g.textBaseline = "middle";
     g.font = "800 64px 'Baloo 2'"; g.lineWidth = 4; g.strokeStyle = "#9c6a07"; g.strokeText("51", w * .5, h * .036); g.fillStyle = "#e9a920"; g.fillText("51", w * .5, h * .036);
-    gr = g.createLinearGradient(0, h * .07, 0, h * .159); gr.addColorStop(0, "#d23b2f"); gr.addColorStop(1, "#a3231b");
-    g.fillStyle = gr; g.fillRect(w * .236, h * .07, w * .528, h * .089);
+    g.fillStyle = mauBangGia(g); g.fillRect(w * .236, h * .07, w * .528, h * .089);
     g.fillStyle = "#f2c14e"; g.fillRect(w * .236, h * .07, w * .528, 4); g.fillRect(w * .236, h * .159 - 4, w * .528, 4);
-    g.font = "800 36px 'Baloo 2'"; g.fillStyle = "#ffe08a"; g.fillText("CHÚC MỪNG 51 NĂM NGÀY TRUYỀN THỐNG", w * .5, h * .1);
-    g.font = "700 18px 'Be Vietnam Pro'"; g.fillStyle = "#fff3d0"; g.fillText("TRƯỜNG TRUNG HỌC CƠ SỞ PHAN TÂY HỒ (14/12/1976 – 14/12/2026)", w * .5, h * .137);
+    // 9/11: hai dòng chữ nằm gọn trong vùng tấm xoá chữ XC (đã đo: dòng trên hàng 85–118, dòng dưới hàng 127–152, cột 413–1057;
+    //   rộng tối đa 690, phông dự phòng cũng vừa), để băng xanh rơi xuống thì dải băng đỏ còn trống rồi chữ mới hiện
+    g.font = "800 34px 'Baloo 2'"; g.fillStyle = "#ffe08a"; g.fillText(CHU1, w * .5, h * .108, 690);
+    g.font = "700 18px 'Be Vietnam Pro'"; g.fillStyle = "#fff3d0"; g.fillText(CHU2, w * .5, h * .137, 690);
     const anh = await tai("anh/nen.webp");
     const px = w * .22, py = h * .184, pw = w * .56, ph = h * .498;
     g.fillStyle = "#fff"; g.fillRect(px - 8, py - 8, pw + 16, ph + 16);
@@ -555,6 +564,12 @@
   function bangTrong() {
     if (!bao || soTrong === baoSo) return cvTrong;
     soTrong = baoSo; cvTrong = null;
+    if (!SK.coAnhBao) {        // báo tường vẽ tạm (chưa chọn ảnh): vẽ lại đúng dải băng đỏ của nó, không chữ
+      const ra = document.createElement("canvas"); ra.width = XC.w; ra.height = XC.h;
+      const g = ra.getContext("2d"); g.translate(-XC.x, -XC.y);
+      g.fillStyle = mauBangGia(g); g.fillRect(XC.x, XC.y, XC.w, XC.h);
+      return (cvTrong = ra);
+    }
     try {
       const w = XC.w, y0 = XC.tren, h = XC.duoi[1] - y0;
       const doc = document.createElement("canvas"); doc.width = w; doc.height = h;
