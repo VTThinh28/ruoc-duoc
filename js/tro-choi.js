@@ -95,7 +95,7 @@
   function chayDem(d) {
     clearTimeout(DEM.hen);
     DEM.id = d.id; DEM.q = d.q; DEM.bd = performance.now(); DEM.so = null;
-    CHO = {};   // hết giờ mới bắt đầu đếm 2 khung liên tiếp
+    CHO = {};   // hết giờ mới bắt đầu tính thời gian giữ chữ
     // điện thoại có camera: mở camera ngay lúc bắt đầu đếm cho kịp, hết giờ mới ghi thẻ
     if (VAI === "dt" && Q.coCamera() && !Q.Live.chay && !camDangMo) batCam();
     (function nhip() {
@@ -1323,7 +1323,8 @@
     };
     if (ngay) { clearTimeout(henGhi); lam(); return; }
     if (henGhi) return;
-    henGhi = setTimeout(lam, Math.max(0, 700 - (Date.now() - ghiCuoi)));
+    // 9/11: 0,25 giây ghi một lần (trước 0,7 giây) để TV báo "Đã quét / Còn thiếu" theo kịp camera đọc nhanh hơn
+    henGhi = setTimeout(lam, Math.max(0, 250 - (Date.now() - ghiCuoi)));
   }
   function veBangTo() {
     if (!PQ) return;
@@ -1534,16 +1535,24 @@
     if (o) return { mau: "#3ddc84", chu: c.id + " " + chuCua(o) };              // đã ghi: đáp án đã giữ, quét lại không đổi
     return { mau: "#ffd54a", chu: String(c.id) };
   }
-  // mỗi khung camera đọc xong: thẻ phải thấy cùng một chữ ở 2 khung liên tiếp mới ghi.
+  // mỗi khung camera đọc xong: thẻ phải giữ cùng một chữ một lúc mới ghi (xem GIU_CHU bên dưới).
   //   9/11: đang đếm ngược thì chưa ghi; thẻ đã ghi thì giữ nguyên đáp án đầu tiên (các em đổi thẻ, thầy quét lại cũng không đổi)
-  function nhanKhung(cards) {
+  // 9/11 (thầy Thịnh: "máy nhận diện hơi chậm"): camera nay đọc nhiều khung mỗi giây (hai làn song song), nên điều kiện ghi
+  //   đổi từ "thấy 2 khung liền nhau" sang "cùng một chữ đọc được liên tục ít nhất GIU_CHU ms (tính theo lúc chụp khung),
+  //   giữa chừng không lần nào ra chữ khác". Thẻ đang xoay lúc các em giơ lên không đứng yên đủ lâu ở một chữ nên không bị
+  //   ghi rồi khóa nhầm (thẻ đã ghi thì giữ đáp án đầu tiên). tc: lúc chụp khung; kết quả đến trễ của khung chụp trước
+  //   lần đọc mới nhất thì bỏ qua cho thẻ đó.
+  var GIU_CHU = 150;
+  function nhanKhung(cards, tc) {
     if (!PQ || NGHIENG || dangDem()) return;
-    var lop = RD.lop(cfg()), t = performance.now(), doi = false, moi = 0;
+    var lop = RD.lop(cfg()), t = tc || performance.now(), doi = false, moi = 0;
     cards.forEach(function (c) {
       if (!lop.toCua[c.id] || lop.vang[c.id]) return;
       var k = "t" + c.id, l = RD.CHU[c.k], ch = CHO[k];
-      if (ch && ch.l === l && t - ch.t < 1600) { ch.n++; ch.t = t; } else { CHO[k] = ch = { l: l, n: 1, t: t }; }
-      if (ch.n >= 2 && !PQ.obs[k]) {
+      if (ch && t < ch.moi) return;
+      if (ch && ch.l === l && t - ch.moi < 1600) ch.moi = t;
+      else CHO[k] = ch = { l: l, dau: t, moi: t };
+      if (ch.moi - ch.dau >= GIU_CHU && !PQ.obs[k]) {
         moi++;
         PQ.obs[k] = { k: c.k, dang: "live", t: Date.now() };
         doi = true;

@@ -1203,6 +1203,150 @@ var THE = (function () {
   AR.DICTIONARIES.THE_LOP = { nBits: 16, tau: 2, codeList: CODES };
   var detector = new AR.Detector({ dictionaryName: 'THE_LOP', maxHammingDistance: 2 });
 
+  /* ---------- 9/11: đọc nhanh hơn, kết quả y hệt bản js-aruco2 ----------
+     Bản gốc tạo một đối tượng {x, y} cho từng điểm của mọi đường viền (vài trăm nghìn điểm mỗi khung), nên chậm.
+     Ở đây: làm mờ hộp 5×5 theo hàng (cùng công thức làm tròn), ghi thẳng ảnh nhị phân có viền 1 điểm ảnh;
+     dò viền và rút gọn đa giác trên mảng số dùng lại giữa các khung. Thứ tự dò, cách đánh dấu và phép tính
+     giữ nguyên, nên danh sách ứng viên và thẻ đọc được trùng khớp với bản gốc (bài thử so từng khung). */
+  var NBX = [1, 1, 0, -1, -1, -1, 0, 1], NBY = [0, -1, -1, -1, 0, 1, 1, 1];
+  var BO = {};   // bộ đệm theo kích thước, dùng lại giữa các khung
+  function dem(ten, Kieu, n) {
+    var a = BO[ten];
+    if (!a || a.length !== n) a = BO[ten] = new Kieu(n);
+    return a;
+  }
+  var XS = new Int32Array(1 << 16), YS = new Int32Array(1 << 16), STK = new Int32Array(1024);
+  function noRong(n) {
+    var m = XS.length; while (m < n) m *= 2;
+    var a = new Int32Array(m), b = new Int32Array(m); a.set(XS); b.set(YS); XS = a; YS = b;
+  }
+  // ảnh nhị phân có viền: 1 nếu điểm tối hơn trung bình 5×5 quanh nó ít nhất 7 (như CV.adaptiveThreshold(…, 2, 7))
+  function nguong(g, w, h, bin, vai) {
+    var hang = dem("hang" + vai, Uint8Array, w * h), cot = dem("cot" + vai, Int32Array, w);
+    var W2 = w + 2, wm = w - 1, hm = h - 1, x, y, r, s, a, b, ra, rr, rb;
+    // viền 1 điểm ảnh quanh ảnh nhị phân luôn là 0 (bộ đệm có thể vừa dùng cho khung xoay ngang/dọc cùng số điểm ảnh)
+    bin.fill(0, 0, W2); bin.fill(0, (h + 1) * W2, (h + 2) * W2);
+    for (y = 1; y <= h; y++) { bin[y * W2] = 0; bin[y * W2 + w + 1] = 0; }
+    for (y = 0; y < h; y++) {
+      r = y * w;
+      s = 3 * g[r] + g[r + 1] + g[r + 2];
+      for (x = 0; x < w; x++) {
+        hang[r + x] = (s * 205) >>> 10;
+        a = x + 3; if (a > wm) a = wm;
+        b = x - 2; if (b < 0) b = 0;
+        s += g[r + a] - g[r + b];
+      }
+    }
+    for (x = 0; x < w; x++) cot[x] = 3 * hang[x] + hang[w + x] + hang[2 * w + x];
+    for (y = 0; y < h; y++) {
+      ra = (y + 3 > hm ? hm : y + 3) * w; rr = (y - 2 < 0 ? 0 : y - 2) * w; r = y * w; rb = (y + 1) * W2 + 1;
+      for (x = 0; x < w; x++) {
+        bin[rb + x] = (g[r + x] - ((cot[x] * 205) >>> 10) <= -7) ? 1 : 0;
+        cot[x] += hang[ra + x] - hang[rr + x];
+      }
+    }
+  }
+  // dò một đường viền (như CV.borderFollowing), điểm ghi vào XS, YS; trả về số điểm
+  var DT = 0;   // hai lần diện tích bao bởi đường viền vừa dò
+  function theoVien(src, pos, nbd, px, py, hole, D) {
+    var n = 0, pos1 = 0, pos3, pos4, s, se;
+    DT = 0;
+    s = se = hole ? 0 : 4;
+    do {
+      s = (s - 1) & 7;
+      pos1 = pos + D[s];
+      if (src[pos1] !== 0) break;
+    } while (s !== se);
+    if (s === se) { src[pos] = -nbd; XS[0] = px; YS[0] = py; return 1; }
+    pos3 = pos;
+    while (true) {
+      se = s;
+      do { pos4 = pos3 + D[++s]; } while (src[pos4] === 0);
+      s &= 7;
+      if (((s - 1) >>> 0) < (se >>> 0)) src[pos3] = -nbd;
+      else if (src[pos3] === 1) src[pos3] = nbd;
+      if (n === XS.length) noRong(n + 1);
+      XS[n] = px; YS[n] = py; n++;
+      DT += px * NBY[s] - py * NBX[s];
+      px += NBX[s]; py += NBY[s];
+      if (pos4 === pos && pos3 === pos1) break;
+      pos3 = pos4;
+      s = (s + 4) & 7;
+    }
+    return n;
+  }
+  // rút gọn đa giác (như CV.approxPolyDP) trên XS, YS; dừng sớm khi đã quá 4 đỉnh (không thể là thẻ)
+  function xapXi(len, eps) {
+    var poly = [], sp = 0, rs = 0, re = 0, ss, se, k = 0, i, j, md = 0, d, dx, dy, sx = 0, sy = 0, ex, ey, le;
+    eps *= eps;
+    for (i = 0; i < 3; ++i) {
+      md = 0;
+      k = (k + rs) % len;
+      sx = XS[k]; sy = YS[k];
+      if (++k === len) k = 0;
+      for (j = 1; j < len; ++j) {
+        dx = XS[k] - sx; dy = YS[k] - sy;
+        if (++k === len) k = 0;
+        d = dx * dx + dy * dy;
+        if (d > md) { md = d; rs = j; }
+      }
+    }
+    if (md <= eps) { poly.push({ x: sx, y: sy }); return poly; }
+    ss = k; se = (rs += ss);
+    rs -= rs >= len ? len : 0;
+    re = ss; if (re < rs) re += len;
+    STK[sp++] = rs; STK[sp++] = re; STK[sp++] = ss; STK[sp++] = se;
+    while (sp !== 0) {
+      se = STK[--sp]; ss = STK[--sp];
+      ex = XS[se % len]; ey = YS[se % len];
+      k = ss % len; sx = XS[k]; sy = YS[k];
+      if (++k === len) k = 0;
+      if (se <= ss + 1) le = true;
+      else {
+        md = 0; dx = ex - sx; dy = ey - sy;
+        for (i = ss + 1; i < se; ++i) {
+          d = Math.abs((YS[k] - sy) * dx - (XS[k] - sx) * dy);
+          if (++k === len) k = 0;
+          if (d > md) { md = d; rs = i; }
+        }
+        le = md * md <= eps * (dx * dx + dy * dy);
+      }
+      if (le) { poly.push({ x: sx, y: sy }); if (poly.length > 4) return null; }
+      else {
+        re = se; se = rs;
+        if (sp + 4 > STK.length) { var t = new Int32Array(STK.length * 2); t.set(STK); STK = t; }
+        STK[sp++] = rs; STK[sp++] = re; STK[sp++] = ss; STK[sp++] = se;
+      }
+    }
+    return poly;
+  }
+  // các đa giác 4 đỉnh lồi, cạnh ngắn nhất ≥ minLength (như findContours rồi findCandidates)
+  function ungVien(g, w, h, minSize, minLength, vai) {
+    var W2 = w + 2, bin = dem("bin" + vai, Int32Array, W2 * (h + 2)), D = new Int32Array(16), out = [], i, j, pos, pix, nbd = 1, n, p;
+    nguong(g, w, h, bin, vai);
+    for (i = 0; i < 8; i++) D[i] = D[i + 8] = NBX[i] + NBY[i] * W2;
+    pos = W2 + 1;
+    for (i = 0; i < h; ++i, pos += 2) {
+      for (j = 0; j < w; ++j, ++pos) {
+        pix = bin[pos];
+        if (pix === 0) continue;
+        var outer = pix === 1 && bin[pos - 1] === 0, hole = !outer && pix >= 1 && bin[pos + 1] === 0;
+        if (!outer && !hole) continue;
+        ++nbd;
+        n = theoVien(bin, pos, nbd, j, i, hole, D);
+        if (n < minSize) continue;
+        // viền của nét chữ, đường kẻ, vết nhiễu thì dài mà bao rất ít diện tích, không thể là khung vuông của thẻ:
+        // bỏ qua trước khi rút gọn đa giác. DT là hai lần diện tích; khung thẻ vuông cho DT ≈ 0,125 × số điểm²,
+        // nghiêng xa tới mức thành hình thang 3:1 vẫn ≈ 0,09 (đo trên 1293 lượt đọc được: nhỏ nhất 0,114), nên ngưỡng 0,04 còn dư nhiều.
+        if (Math.abs(DT) < 0.04 * n * n) continue;
+        p = xapXi(n, n * 0.05);
+        if (p && p.length === 4 && CV.isContourConvex(p) && CV.minEdgeLength(p) >= minLength) out.push(p);
+      }
+    }
+    return out;
+  }
+
+
   function toGrey(rgba, n) {
     var g = new Uint8ClampedArray(n);
     for (var i = 0, j = 0; j < n; i += 4, j++) g[j] = (rgba[i] * 77 + rgba[i + 1] * 150 + rgba[i + 2] * 29) >> 8;
@@ -1235,12 +1379,9 @@ var THE = (function () {
     return { ok: mn > 0 && mx / mn < 3, size: (s[0] + s[1] + s[2] + s[3]) / 4 };
   }
 
-  function pass(g, w, h, scale, out) {
+  function pass(g, w, h, scale, out, vai) {
     var grey = new CV.Image(w, h, g);
-    var thres = new CV.Image(w, h, new Uint8ClampedArray(w * h));
-    CV.adaptiveThreshold(grey, thres, 2, 7);
-    var contours = CV.findContours(thres, new Int32Array((w + 2) * (h + 2)));
-    var cands = detector.findCandidates(contours, Math.min(40, Math.max(16, w * 0.01)), 0.05, 8);
+    var cands = ungVien(g, w, h, Math.min(40, Math.max(16, w * 0.01)), 8, vai || "F");
     cands = detector.clockwiseCorners(cands);
     cands = detector.notTooNear(cands, 6);
     var found = detector.findMarkers(grey, cands, 49);
@@ -1256,16 +1397,19 @@ var THE = (function () {
         letter: letterOf(corners), k: LETTERS.indexOf(letterOf(corners))
       });
     }
-    return { contours: contours.length, candidates: cands.length };
+    return { candidates: cands.length };
   }
 
   // image: {data: RGBA, width, height}; maxId: số thẻ của lớp
-  function scan(image, maxId) {
+  // tuy.chiDu: chỉ đọc ở cỡ đủ, bỏ lượt nửa cỡ (camera có làn đọc khung nhỏ riêng cho thẻ ở gần)
+  function scan(image, maxId, tuy) {
     var w = image.width, h = image.height, raw = [];
     var g = toGrey(image.data, w * h);
-    var info = { full: pass(g, w, h, 1, raw) };
-    var hf = halve(g, w, h);
-    info.half = pass(hf.g, hf.w, hf.h, 2, raw);
+    var info = { full: pass(g, w, h, 1, raw, "F") };
+    if (!(tuy && tuy.chiDu)) {
+      var hf = halve(g, w, h);
+      info.half = pass(hf.g, hf.w, hf.h, 2, raw, "H");
+    }
     var best = {};
     raw.forEach(function (m) {
       if (m.id > maxId) return;

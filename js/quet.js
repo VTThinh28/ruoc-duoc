@@ -7,60 +7,80 @@
   var RD = window.RD = window.RD || {};
   var Q = RD.Quet = {};
 
-  /* ---------- worker đọc thẻ ---------- */
-  var worker = null, workerHong = false, workerSan = null, jobSeq = 0, jobs = {};
-  function taoWorker() {
-    if (worker || workerHong || typeof Worker === "undefined") return Promise.resolve(worker);
-    if (workerSan) return workerSan;
-    workerSan = fetch("js/scanlib.js").then(function (r) {
-      if (!r.ok) throw new Error("scanlib " + r.status);
-      return r.text();
-    }).then(function (txt) {
-      var code = txt + "\nself.onmessage = function (e) { var d = e.data; if (d.ping) { self.postMessage({ pong: 1 }); return; } try { var r = THE.scan({ data: new Uint8ClampedArray(d.buf), width: d.w, height: d.h }, d.maxId); self.postMessage({ id: d.id, cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist }; }) }); } catch (err) { self.postMessage({ id: d.id, error: String(err && err.message || err) }); } };";
-      var w = new Worker(URL.createObjectURL(new Blob([code], { type: "text/javascript" })));
+  /* ---------- worker đọc thẻ ----------
+     9/11: có thể chạy 2 worker cùng lúc (camera: một làn đọc khung nhỏ cho thẻ ở gần, một làn đọc khung lớn cho thẻ ở xa).
+     Worker 0 cũng dùng cho ảnh chụp. Worker nào hỏng thì làn đó tắt; worker 0 hỏng thì đọc trên trang chính như trước. */
+  var maSan = null, jobSeq = 0, jobs = {};
+  var THO = [{ w: null, hong: false, san: null }, { w: null, hong: false, san: null }];
+  function taiMa() {
+    if (!maSan) {
+      maSan = fetch("js/scanlib.js").then(function (r) {
+        if (!r.ok) throw new Error("scanlib " + r.status);
+        return r.text();
+      }).then(function (txt) {
+        var code = txt + "\nself.onmessage = function (e) { var d = e.data; if (d.ping) { self.postMessage({ pong: 1 }); return; } try { var r = THE.scan({ data: new Uint8ClampedArray(d.buf), width: d.w, height: d.h }, d.maxId, { chiDu: !!d.chiDu }); self.postMessage({ id: d.id, cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist }; }) }); } catch (err) { self.postMessage({ id: d.id, error: String(err && err.message || err) }); } };";
+        return URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+      });
+    }
+    return maSan;
+  }
+  function taoWorker(i) {
+    var t = THO[i || 0];
+    if (t.w || t.hong || typeof Worker === "undefined") return Promise.resolve(t.w);
+    if (t.san) return t.san;
+    t.san = taiMa().then(function (url) {
+      var w = new Worker(url);
       return new Promise(function (ok, bad) {
-        var t = setTimeout(function () { bad(new Error("worker im lặng")); }, 5000);
+        var hen = setTimeout(function () { bad(new Error("worker im lặng")); }, 5000);
         w.onmessage = function (e) {
-          if (e.data && e.data.pong) { clearTimeout(t); ok(w); return; }
+          if (e.data && e.data.pong) { clearTimeout(hen); ok(w); return; }
           var j = jobs[e.data.id];
           if (!j) return;
           delete jobs[e.data.id];
           if (e.data.error) j.bad(new Error(e.data.error)); else j.ok(e.data.cards);
         };
-        w.onerror = function () { clearTimeout(t); bad(new Error("worker lỗi")); };
+        w.onerror = function () { clearTimeout(hen); bad(new Error("worker lỗi")); };
         w.postMessage({ ping: 1 });
       });
-    }).then(function (w) { worker = w; return w; }, function (e) {
-      console.warn("Đọc thẻ trên trang chính:", e && e.message);
-      workerHong = true;
-      worker = null;
+    }).then(function (w) { t.w = w; return w; }, function (e) {
+      console.warn("Worker đọc thẻ " + (i || 0) + " không chạy:", e && e.message);
+      t.hong = true;
+      t.w = null;
       return null;
     });
-    return workerSan;
+    return t.san;
   }
-  function boWorker() {
-    workerHong = true;
-    if (worker) { try { worker.terminate(); } catch (e) { /* bỏ qua */ } }
-    worker = null;
-    Object.keys(jobs).forEach(function (k) { jobs[k].bad(new Error("worker")); delete jobs[k]; });
+  function boWorker(i) {
+    var t = THO[i];
+    t.hong = true;
+    if (t.w) { try { t.w.terminate(); } catch (e) { /* bỏ qua */ } }
+    t.w = null;
+    Object.keys(jobs).forEach(function (k) { if (jobs[k].i === i) { jobs[k].bad(new Error("worker")); delete jobs[k]; } });
   }
   // im: ImageData. Trả về [{id, k, corners, ...}] (k: 0..3 = cạnh A/B/C/D đang ở trên)
   // layLai(): tạo lại ImageData nếu phải đọc trên trang chính sau khi worker hỏng giữa chừng
-  Q.quetAnh = function (im, layLai) {
-    return taoWorker().then(function (w) {
-      if (!w) return window.THE.scan(im, RD.MAXID).cards;
+  // tuy: {lan: 0|1 (worker nào), chiDu: bỏ lượt nửa cỡ}. Worker 1 không có thì báo lỗi {khongLan: true}.
+  Q.quetAnh = function (im, layLai, tuy) {
+    tuy = tuy || {};
+    var i = tuy.lan || 0;
+    return taoWorker(i).then(function (w) {
+      if (!w) {
+        if (i) { var e = new Error("không có worker " + i); e.khongLan = true; throw e; }
+        return window.THE.scan(im, RD.MAXID, tuy).cards;
+      }
       return new Promise(function (ok, bad) {
         var id = ++jobSeq;
-        var t = setTimeout(function () { boWorker(); }, 60000);
-        jobs[id] = { ok: function (v) { clearTimeout(t); ok(v); }, bad: function (e) { clearTimeout(t); bad(e); } };
-        w.postMessage({ id: id, w: im.width, h: im.height, buf: im.data.buffer, maxId: RD.MAXID }, [im.data.buffer]);
+        var hen = setTimeout(function () { boWorker(i); }, 60000);
+        jobs[id] = { i: i, ok: function (v) { clearTimeout(hen); ok(v); }, bad: function (e) { clearTimeout(hen); bad(e); } };
+        w.postMessage({ id: id, w: im.width, h: im.height, buf: im.data.buffer, maxId: RD.MAXID, chiDu: !!tuy.chiDu }, [im.data.buffer]);
       }).catch(function (e) {
+        if (i) { e.khongLan = true; throw e; }
         if (!layLai) throw e;
         return window.THE.scan(layLai(), RD.MAXID).cards;
       });
     });
   };
-  Q.khoiDong = function () { return taoWorker(); };
+  Q.khoiDong = function () { return taoWorker(0); };
 
   /* ---------- đọc một tấm ảnh chụp ---------- */
   var MAXSIDE = 4032;
@@ -149,11 +169,39 @@
     });
   };
 
-  /* ---------- quét liên tục bằng camera ---------- */
+  /* ---------- quét liên tục bằng camera ----------
+     9/11 (thầy Thịnh: "máy nhận diện hơi chậm… plicker gốc nhận diện nhanh hơn"): đọc được nhiều khung hơn mỗi giây.
+     - Máy từ 4 nhân trở lên chạy hai làn song song, mỗi làn một worker:
+       làn gần: khung nhỏ (cạnh dài 800–1120) đọc cả cỡ đủ lẫn nửa cỡ, nhiều khung mỗi giây, bắt thẻ ở gần và vừa;
+       làn xa: khung lớn (1280–1920) chỉ đọc cỡ đủ, bắt thẻ nhỏ ở cuối lớp.
+       Cỡ khung mỗi làn tự chỉnh theo tốc độ máy.
+     - Máy yếu, hoặc worker thứ hai không chạy: một làn như trước (cỡ đủ và nửa cỡ).
+     - Mỗi lần mỗi khung hình chỉ chụp cho một làn, để trang không bị giật.
+     - Kết quả kèm thời điểm chụp khung (onKq(cards, tc)); khung vẽ quanh thẻ lấy lần đọc mới nhất của thẻ đó ở cả hai làn. */
   var L = Q.Live = {
-    chay: false, ban: false, maxW: 1600, stream: null, track: null, video: null, phu: null,
-    cv: null, ctx: null, the: [], fw: 0, fh: 0, sc: 1, raf: 0, nhan: null, onKq: null, tg: [], moTa: "", soZoom: 1
+    chay: false, maxW: 1600, stream: null, track: null, video: null, phu: null,
+    the: [], fw: 0, fh: 0, raf: 0, nhan: null, onKq: null, soZoom: 1, lan: [], phien: 0, keTiep: 0
   };
+  function motLan() { return { so: 0, ten: "một", maxW: 1440, min: 1120, max: 1920, cham: 360, nhanh: 140, chiDu: false }; }
+  function taoLan() {
+    var hai = typeof Worker !== "undefined" && (navigator.hardwareConcurrency || 4) >= 4;
+    L.lan = (hai ? [
+      { so: 0, ten: "gần", maxW: 960, min: 800, max: 1120, cham: 170, nhanh: 80, chiDu: false },
+      { so: 1, ten: "xa", maxW: 1600, min: 1280, max: 1920, cham: 450, nhanh: 180, chiDu: true }
+    ] : [motLan()]).map(function (n) {
+      n.ban = false; n.tat = false; n.tg = []; n.the = []; n.t = 0; n.cv = null; n.ctx = null;
+      return n;
+    });
+    L.maxW = L.lan[L.lan.length - 1].maxW;
+  }
+  // worker thứ hai không chạy: tắt làn xa, làn gần làm một mình như cách cũ
+  function tatLan(n) {
+    if (!n.so || n.tat) return;
+    n.tat = true; n.ban = false; n.the = [];
+    var g = L.lan[0], m = motLan();
+    ["ten", "maxW", "min", "max", "cham", "nhanh", "chiDu"].forEach(function (k) { g[k] = m[k]; });
+    L.maxW = g.maxW;
+  }
   // thu phóng bằng phần mềm (cho máy không chỉnh được zoom camera): video phóng to quanh tâm,
   // bộ đọc chỉ đọc đúng phần giữa đang thấy trên màn hình
   L.zoomSo = function (z) {
@@ -163,7 +211,7 @@
   Q.coCamera = function () {
     return !RD.trongClaude && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false;
   };
-  // video: <video>, phu: <canvas> phủ lên video; onKq(cards) mỗi khung đọc xong; nhan(card) -> {mau, chu}
+  // video: <video>, phu: <canvas> phủ lên video; onKq(cards, tc) mỗi khung đọc xong; nhan(card) -> {mau, chu}
   L.batDau = function (video, phu, onKq, nhan) {
     if (L.chay) return Promise.resolve();
     return navigator.mediaDevices.getUserMedia({
@@ -172,51 +220,96 @@
     }).then(function (s) {
       L.stream = s;
       L.track = s.getVideoTracks()[0] || null;
+      // lấy nét liên tục nếu máy cho chỉnh (đưa camera qua lại giữa các bàn mà ảnh vẫn nét)
+      try {
+        var kn = L.khaNang();
+        if (kn.focusMode && kn.focusMode.indexOf("continuous") >= 0) L.track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(function () { /* bỏ qua */ });
+      } catch (e) { /* bỏ qua */ }
       video.setAttribute("playsinline", "");
       video.muted = true;
       video.srcObject = s;
       L.video = video; L.phu = phu; L.onKq = onKq; L.nhan = nhan;
-      if (!L.cv) { L.cv = document.createElement("canvas"); L.ctx = L.cv.getContext("2d", { willReadFrequently: true }); }
       return video.play().catch(function () { /* một số máy tự chạy sau */ });
     }).then(function () {
+      if (!L.lan.length) taoLan();
+      L.phien++;
+      L.lan.forEach(function (n) { n.tg = []; n.the = []; n.t = 0; if (!n.tat) taoWorker(n.so); });
       L.chay = true;
-      L.tg = [];
-      taoWorker();
       L.raf = requestAnimationFrame(vong);
     });
   };
   function vong() {
     if (!L.chay) return;
-    var v = L.video;
-    if (!L.ban && v && v.readyState >= 2 && v.videoWidth) chup();
+    var v = L.video, k = L.lan.length;
+    if (v && v.readyState >= 2 && v.videoWidth) {
+      // mỗi khung hình chỉ chụp cho một làn đang rảnh, lần lượt từng làn
+      for (var i = 0; i < k; i++) {
+        var n = L.lan[(L.keTiep + i) % k];
+        if (!n.ban && !n.tat) { L.keTiep = (n.so + 1) % k; chup(n); break; }
+      }
+    }
     L.raf = requestAnimationFrame(vong);
   }
-  function chup() {
-    var v = L.video, vw = v.videoWidth, vh = v.videoHeight, z = L.soZoom || 1;
+  function chup(n) {
+    var v = L.video, vw = v.videoWidth, vh = v.videoHeight, z = L.soZoom || 1, phien = L.phien;
     var sw = vw / z, sh = vh / z;
     // có thu phóng thì phần cắt được kéo to tới gấp đôi, để thẻ ở xa đủ lớn cho bộ đọc
-    var sc = Math.min(z > 1 ? 2 : 1, L.maxW / Math.max(sw, sh));
+    var sc = Math.min(z > 1 ? 2 : 1, n.maxW / Math.max(sw, sh));
     var w = Math.round(sw * sc), h = Math.round(sh * sc);
-    if (L.cv.width !== w || L.cv.height !== h) { L.cv.width = w; L.cv.height = h; }
-    L.ctx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, w, h);
-    var im = L.ctx.getImageData(0, 0, w, h), t0 = performance.now();
-    L.ban = true;
-    Q.quetAnh(im).then(function (cards) {
+    if (!n.cv) { n.cv = document.createElement("canvas"); n.ctx = n.cv.getContext("2d", { willReadFrequently: true }); }
+    if (n.cv.width !== w || n.cv.height !== h) { n.cv.width = w; n.cv.height = h; }
+    var tc = performance.now();
+    n.ctx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, w, h);
+    var im = n.ctx.getImageData(0, 0, w, h), t0 = performance.now();
+    n.ban = true;
+    Q.quetAnh(im, null, { lan: n.so, chiDu: n.chiDu }).then(function (cards) {
       var dt = performance.now() - t0;
-      L.tg.push(dt); if (L.tg.length > 12) L.tg.shift();
-      if (dt > 480 && L.maxW > 1120) L.maxW -= 160;
-      else if (dt < 170 && L.maxW < 1920) L.maxW += 160;
-      L.ban = false;
-      if (!L.chay) return;
-      L.the = cards; L.fw = w; L.fh = h; L.sc = sc;
-      try { if (L.onKq) L.onKq(cards); } catch (e) { console.error(e); }
+      n.ban = false;
+      n.tg.push(dt); if (n.tg.length > 12) n.tg.shift();
+      if (dt > n.cham && n.maxW > n.min) n.maxW = Math.max(n.min, n.maxW - 160);
+      else if (dt < n.nhanh && n.maxW < n.max) n.maxW = Math.min(n.max, n.maxW + 160);
+      L.maxW = L.lan[L.lan.length - 1].tat ? L.lan[0].maxW : L.lan[L.lan.length - 1].maxW;
+      if (!L.chay || phien !== L.phien) return;
+      // toạ độ góc thẻ đổi về phần cắt trên video (chung cho các làn dù cỡ khung khác nhau)
+      var kx = sw / w, ky = sh / h;
+      cards.forEach(function (c) {
+        c.corners = c.corners.map(function (p) { return { x: p.x * kx, y: p.y * ky }; });
+        c.tc = tc; c.lan = n.so;
+      });
+      n.the = cards; n.t = tc;
+      L.fw = sw; L.fh = sh;
+      gop();
+      try { if (L.onKq) L.onKq(cards, tc); } catch (e) { console.error(e); }
       L.ve();
-    }, function () { L.ban = false; });
+    }, function (e) {
+      n.ban = false;
+      if (e && e.khongLan) tatLan(n);
+    });
   }
+  // thẻ đang thấy = lần đọc mới nhất của từng thẻ ở mọi làn (kết quả quá 0,9 giây thì coi như thẻ đã ra khỏi khung)
+  function gop() {
+    var bay = performance.now(), tot = {};
+    L.lan.forEach(function (n) {
+      if (n.tat || bay - n.t > 900) return;
+      n.the.forEach(function (c) { var o = tot[c.id]; if (!o || c.tc > o.tc) tot[c.id] = c; });
+    });
+    L.the = Object.keys(tot).map(function (k) { return tot[k]; }).sort(function (a, b) { return a.id - b.id; });
+  }
+  // số khung đọc được mỗi giây, cộng các làn
   L.khungMoiGiay = function () {
-    if (!L.tg.length) return 0;
-    var s = 0; L.tg.forEach(function (x) { s += x; });
-    return 1000 / (s / L.tg.length);
+    var f = 0;
+    L.lan.forEach(function (n) {
+      if (n.tat || !n.tg.length) return;
+      var s = 0; n.tg.forEach(function (x) { s += x; });
+      f += 1000 / (s / n.tg.length);
+    });
+    return f;
+  };
+  L.tungLan = function () {
+    return L.lan.map(function (n) {
+      var s = 0; n.tg.forEach(function (x) { s += x; });
+      return { ten: n.ten, tat: n.tat, maxW: n.maxW, ms: n.tg.length ? Math.round(s / n.tg.length) : 0 };
+    });
   };
   // vẽ khung quanh thẻ đọc được, theo kiểu hiển thị object-fit: cover
   L.ve = function () {
@@ -256,6 +349,7 @@
     cancelAnimationFrame(L.raf);
     if (L.stream) L.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) { /* bỏ qua */ } });
     L.stream = null; L.track = null; L.the = []; L.fw = 0;
+    L.lan.forEach(function (n) { n.the = []; n.t = 0; });
     L.zoomSo(1);
     if (L.video) { try { L.video.srcObject = null; } catch (e) { /* bỏ qua */ } }
     if (L.phu) { var x = L.phu.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, L.phu.width, L.phu.height); }
