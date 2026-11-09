@@ -466,6 +466,11 @@
      MÀN HÌNH TV
      ===================================================================== */
   var tvTruoc = null, tvDaDien = null, tvDaDienSes = null, moCB = false, henThu = 0, coNow = false;
+  // 9/11 06:20 UTC thầy Thịnh: "cho thêm nút thoát vô đây" (bảng Cài đặt). anCB: ở bước chuẩn bị (setup) thầy đã bấm Thoát nên
+  //   bảng không tự hiện nữa, sân khấu hiện ra; bấm Cài đặt thì bảng hiện lại. Rời bước setup thì anCB về false.
+  var anCB = false;
+  function bangCBMo() { return !$("#chuanBiTV").hidden; }
+  function thoatCB() { moCB = false; if (nowHopLe().step === "setup") anCB = true; ve(); }
   function khoiTV() {
     $("#tv").hidden = false;
     SK.khoiTao();
@@ -474,8 +479,10 @@
     dungChuanBi($("#cbTV"));
     napAnhBao().then(function () { if (RD.anhBao) SK.anhBao(RD.anhBao); ve(); });
     for (var q = 1; q <= 5; q++) taoVideo(q);      // tải sẵn hình chuyển động của 5 câu
-    $("#nutBatDau").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "setup") tiep(); else { moCB = false; ve(); } });
+    // bảng mở bằng nút Cài đặt (moCB) ở bước chuẩn bị rồi bấm Bắt đầu trò chơi: tắt moCB trước, kẻo bảng còn che màn giới thiệu
+    $("#nutBatDau").addEventListener("click", function () { A.mo(); moCB = false; if (nowHopLe().step === "setup") tiep(); else ve(); });
     $("#nutFullTV").addEventListener("click", toanManHinh);
+    $("#nutThoatCB").addEventListener("click", function () { A.mo(); thoatCB(); });
     // 8/11: hai cụm nút (góc trái #tvNut, góc phải #tvNutPhai: Cài đặt, Chơi lại từ đầu) dùng chung một cách bấm
     $$(".tv-nut").forEach(function (bar) { bar.addEventListener("click", function (e) {
       var b = e.target.closest("button");
@@ -488,7 +495,7 @@
       else if (k === "am") { A.datBat(!A.bat); veNutAm(true); }
       else if (k === "nho") doiAm(-0.1);
       else if (k === "to") doiAm(0.1);
-      else if (k === "cb") { moCB = !moCB; ve(); }
+      else if (k === "cb") { if (bangCBMo()) thoatCB(); else { moCB = true; ve(); } }
       else if (k === "thu") dienThu(RD.cauCuaBuoc(nowHopLe().step), true);
       else if (k === "lai") choiLaiTuDau();
     }); });
@@ -510,7 +517,7 @@
       } else if (k === "ArrowLeft" || k === "PageUp" || k === "ArrowUp" || k === "Backspace") {
         e.preventDefault();
         if (choXacNhan) choXacNhan(false); else lui();
-      } else if (k === "Escape") { if (choXacNhan) choXacNhan(false); else if (moCB) { moCB = false; ve(); } }
+      } else if (k === "Escape") { if (choXacNhan) choXacNhan(false); else if (bangCBMo()) thoatCB(); }
       else if (k === "f" || k === "F") toanManHinh();
       else if (k === "m" || k === "M") { A.datBat(!A.bat); veNutAm(true); }
       else if (k === "+" || k === "=") doiAm(0.1);
@@ -658,7 +665,8 @@
     var rev = now.pub["r" + q] | 0;
     var doi = step !== cu || (loai === "r" && tvDaDien !== null && rev !== (tvDaDien["r" + q] | 0));
     tvTruoc = step;
-    $("#chuanBiTV").hidden = !(step === "setup" || moCB);
+    if (step !== "setup") anCB = false;
+    $("#chuanBiTV").hidden = !((step === "setup" && !anCB) || moCB);
     capNhatChuanBi($("#cbTV"));
     A.batNhac(cfg().nhac !== false);
     A.nhacMuc(step === "setup" ? 0 : loai === "a" ? 0.08 : 0.22, loai === "a" ? 1.5 : 1);
