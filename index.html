@@ -151,34 +151,40 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .mc-chu b{color:inherit;font-weight:inherit;white-space:nowrap}   /* 5/11 Thịnh: số liệu không tô màu, chỉ tô màu câu hỏi */
 .mc-chu p.mc-hoi{font-weight:700;color:var(--ac)}
 /* 9/11 09:04 UTC thầy Thịnh: "sau khi câu hỏi hiện ra thì tôi sẽ đọc đề, đọc xong có 5 giây đếm ngược hiện lên màn hình (tôi bấm
-   nút đếm ngược), sau khi xong 5 giây thì các em giơ bảng lên quét": lớp đếm ngược phủ cột chữ đề (hình và bốn ô đáp án vẫn hiện),
-   vòng tròn rút dần, số 5 về 1 rồi "Giơ thẻ lên!". Chỉ mờ dần, không phóng to thu nhỏ */
-#mcDem{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;overflow:hidden;border-radius:22px;border:4px solid var(--ac);background:#fff8ea;--demR:min(430px,calc((var(--dayThe,1066px) - 300px) * .62))}
+   nút đếm ngược), sau khi xong 5 giây thì các em giơ bảng lên quét".
+   9/11 14:36 UTC thầy Thịnh: "cái ô đếm giờ hiện to quá che hết đề. đẩy đề cao lên trên rồi hiện đếm giờ bên dưới, đếm xong hiện
+   một ô là Giơ đáp án": ô đếm không phủ chữ đề nữa mà nằm dưới chữ đề trong cột chữ. Chữ đề dời lên đầu cột (thu nhỏ bớt nếu cần
+   để ô cao ít nhất 170 px); trong ô: vòng tròn rút dần với số 5 về 1, bên phải chữ "Chuẩn bị giơ thẻ". Đếm xong ô chỉ còn chữ
+   "Giơ đáp án" và ở lại tới khi đổi bước (Quét xong). Chỉ trượt và mờ dần, không phóng to thu nhỏ */
+.mc-chu.co-dem{justify-content:flex-start}
+#mcDem{position:relative;flex:1 1 auto;min-height:170px;max-height:300px;display:flex;align-items:center;justify-content:center;gap:36px;padding:12px 30px;overflow:hidden;border-radius:22px;border:4px solid var(--ac);background:#fff8ea;--demR:130px;--gioCo:100px}
 #mcDem .vong{position:relative;flex:none;width:var(--demR);height:var(--demR)}
 #mcDem svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 #mcDem circle{fill:none;stroke-width:13}
 #mcDem circle.nen{stroke:#eadfca}
 #mcDem circle.chay{stroke:var(--ac);stroke-linecap:round;stroke-dasharray:553;stroke-dashoffset:0}
 #mcDem b{position:absolute;inset:0;display:grid;place-items:center;font:800 calc(var(--demR) * .58)/1 var(--f-tieu);color:var(--ac);white-space:nowrap}
-#mcDem strong{display:none;font:800 min(124px,calc(var(--demR) * .3))/1 var(--f-tieu);color:var(--dung);text-align:center;white-space:nowrap}
-#mcDem p{margin:0;font:800 56px/1.15 var(--f-tieu);color:var(--muc2);text-align:center}
-#mcDem.xong{border-color:var(--dung)}
-#mcDem.xong .vong{display:none}
+#mcDem strong{display:none;min-width:0;font:800 var(--gioCo)/1.34 var(--f-tieu);color:var(--dung);text-align:center;white-space:nowrap}
+#mcDem p{margin:0;min-width:0;font:800 54px/1.15 var(--f-tieu);color:var(--muc2)}
+#mcDem.xong{border-color:var(--dung);background:var(--dungnhat)}
+#mcDem.xong .vong,#mcDem.xong p{display:none}
 #mcDem.xong strong{display:block}
 .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 .12em;font-size:.82em;position:relative;top:-.05em}
 .frac>span{display:block;padding:0 .14em}
 .frac>span:first-child{border-bottom:.08em solid currentColor;padding-bottom:.06em}
 .frac>span:last-child{padding-top:.06em}
 .mc-chon{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;min-width:0}
-.mc-o{border-radius:22px;display:flex;align-items:center;gap:16px;padding:0 20px;background:var(--trang);border:4px solid #c9d6ee;font:700 var(--fo)/1 var(--f-tieu);color:var(--muc);position:relative;white-space:nowrap;min-width:0;transition:opacity .4s,background .4s,border-color .4s,box-shadow .4s}
+.mc-o{border-radius:22px;display:flex;align-items:center;gap:16px;padding:0 20px;background:var(--trang);border:4px solid #c9d6ee;font:700 var(--fo)/1 var(--f-tieu);color:var(--muc);position:relative;white-space:nowrap;min-width:0;transition:opacity .4s,background .4s,border-color .4s,box-shadow .4s,color .4s}
 .mc-o>span{min-width:0;overflow:hidden}
-.mc-o b{flex:none;width:68px;height:68px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font:800 44px/1 var(--f-tieu)}
+.mc-o b{flex:none;width:68px;height:68px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font:800 44px/1 var(--f-tieu);transition:background .4s,color .4s}
 .mc-o em{position:absolute;right:14px;top:-22px;font:800 30px/1 var(--f-tieu);font-style:normal;background:#3a2a1e;color:#fff;padding:6px 14px;border-radius:999px}
 .mc-o.dung{background:var(--dungnhat);border-color:var(--dung);box-shadow:0 0 0 7px rgba(43,133,80,.25)}
 .mc-o.dung b,.mc-o.dung em{background:var(--dung)}
-.mc-o.mo{opacity:.4}
-/* 8/11 thầy Thịnh: "khi tôi bấm nút đáp án, đáp án đúng đã hiện ra rồi thì các đáp án kia biến mất" (hoạt cảnh trong tro-choi.js) */
-.mc-o.bien{opacity:0;transform:scale(.9);transition:none;pointer-events:none}
+/* 8/11 thầy Thịnh: "khi tôi bấm nút đáp án, đáp án đúng đã hiện ra rồi thì các đáp án kia biến mất".
+   9/11 14:36 UTC thầy Thịnh: "các đáp án sai giờ đây sẽ không biến mất mà chuyển sang màu xám nhé tối màu nhé": ô sai ở lại, nền xám tối */
+.mc-o.xam{background:#635d58;border-color:#4e4945;color:#ece7e1}
+.mc-o.xam b{background:#46413d;color:#e2ddd7}
+.mc-o.xam em{background:#46413d}
 
 /* ---------- nút điều khiển trên TV ---------- */
 /* 8/11 thầy Thịnh: "phím chơi lại từ đầu nguy hiểm quá chuyển phím đó sang góc phải, kế phím đó là phím mở phần chuẩn bị
@@ -327,7 +333,7 @@ html.dt-khoa,html.dt-khoa body{overflow:hidden}
 .dt-cam-so{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 22px 14px;border-radius:20px;background:rgba(0,0,0,.66);color:#fff;text-align:center;pointer-events:none;max-width:calc(100% - 24px)}
 .dt-cam-so b{font:800 92px/1 var(--f-tieu)}
 .dt-cam-so span{font-weight:800;font-size:16px;line-height:1.3}
-/* hết giờ: "Giơ thẻ lên!" thu thành dải nhỏ phía dưới khung, để giữa khung trống cho thầy thấy thẻ đang được ghi */
+/* hết giờ: "Giơ đáp án" thu thành dải nhỏ phía dưới khung, để giữa khung trống cho thầy thấy thẻ đang được ghi */
 .dt-cam-so.xong{top:auto;bottom:58px;transform:translateX(-50%);flex-direction:row;gap:10px;padding:8px 16px;background:rgba(18,110,58,.9);white-space:nowrap}
 .dt-cam-so.xong b{font-size:24px}
 .dt-cam-so.xong span{font-size:14px}
@@ -449,7 +455,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
         <div class="mc-dau"><span class="mc-pill" id="mcPill">Câu 1/5</span><div class="mc-tien" id="mcTien"></div></div>
         <div class="mc-than">
           <div class="mc-hinh" id="mcHop"><div class="mc-khung" id="mcKhung" role="img" hidden><img id="mcNhan" alt=""><div class="mc-so" id="mcSo"></div></div><img id="mcAnh" alt="" hidden></div>
-          <div class="mc-chu" id="mcChu"><p id="mcBoiCanh"></p><p id="mcHoi" class="mc-hoi"></p><div id="mcDem" role="status" aria-live="assertive" hidden><div class="vong"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="nen" cx="100" cy="100" r="88"/><circle class="chay" id="mcDemVong" cx="100" cy="100" r="88"/></svg><b id="mcDemSo">5</b></div><strong>Giơ thẻ lên!</strong><p id="mcDemChu">Chuẩn bị giơ thẻ</p></div></div>
+          <div class="mc-chu" id="mcChu"><p id="mcBoiCanh"></p><p id="mcHoi" class="mc-hoi"></p><div id="mcDem" role="status" aria-live="assertive" hidden><div class="vong"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="nen" cx="100" cy="100" r="88"/><circle class="chay" id="mcDemVong" cx="100" cy="100" r="88"/></svg><b id="mcDemSo">5</b></div><strong>Giơ đáp án</strong><p id="mcDemChu">Chuẩn bị giơ thẻ</p></div></div>
         </div>
         <div class="mc-chon" id="mcChon"></div>
       </div>
@@ -540,14 +546,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=511a8cc2"></script>
-<script src="js/scanlib.js?v=511a8cc2"></script>
-<script src="js/du-lieu.js?v=511a8cc2"></script>
-<script src="js/dong-bo.js?v=511a8cc2"></script>
-<script src="js/am-thanh.js?v=511a8cc2"></script>
-<script src="js/quet.js?v=511a8cc2"></script>
-<script src="js/cay-cau.js?v=511a8cc2"></script>
-<script src="js/san-khau.js?v=511a8cc2"></script>
-<script src="js/tro-choi.js?v=511a8cc2"></script>
+<script src="js/cau-hinh.js?v=53f36bc4"></script>
+<script src="js/scanlib.js?v=53f36bc4"></script>
+<script src="js/du-lieu.js?v=53f36bc4"></script>
+<script src="js/dong-bo.js?v=53f36bc4"></script>
+<script src="js/am-thanh.js?v=53f36bc4"></script>
+<script src="js/quet.js?v=53f36bc4"></script>
+<script src="js/cay-cau.js?v=53f36bc4"></script>
+<script src="js/san-khau.js?v=53f36bc4"></script>
+<script src="js/tro-choi.js?v=53f36bc4"></script>
 </body>
 </html>

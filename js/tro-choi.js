@@ -70,7 +70,9 @@
      thầy Thịnh: "sau khi câu hỏi hiện ra thì tôi sẽ đọc đề, đọc xong có 5 giây đếm ngược hiện lên màn hình (tôi bấm nút đếm
      ngược), sau khi xong 5 giây thì các em giơ bảng lên quét". Bấm nút (điện thoại, TV hay phím D) thì ghi now.dem = { id, q };
      máy nào nhận được cũng tự đếm 5 giây kể từ lúc nhận (không so đồng hồ giữa các máy). Đang đếm thì điện thoại chưa ghi thẻ
-     nào; hết giờ TV hiện "Giơ thẻ lên!" 2,6 giây. Lần đếm đã có sẵn lúc trang vừa mở thì không đếm lại. Đổi bước thì thôi đếm. */
+     nào; hết giờ TV hiện "Giơ đáp án". Lần đếm đã có sẵn lúc trang vừa mở thì không đếm lại. Đổi bước thì thôi đếm.
+     9/11 14:36 UTC thầy Thịnh: "cái ô đếm giờ hiện to quá che hết đề. đẩy đề cao lên trên rồi hiện đếm giờ bên dưới, đếm xong
+     hiện một ô là Giơ đáp án": trên TV ô đếm nằm dưới chữ đề (veODem), chữ "Giơ đáp án" ở lại tới khi đổi bước. */
   var DEM_GIAY = 5, DEM_XONG = 2600;
   var DEM = { id: "", q: 0, bd: 0, hen: 0, so: null }, demThay = {}, demNap = false;
   var ICON_DEM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.6"/><path d="M9.5 2.5h5"/><path d="M12 2.5V6"/><path d="M18.4 6.6l1.5-1.5"/></svg>';
@@ -113,28 +115,68 @@
     DEM.id = ""; DEM.q = 0; DEM.so = null;
     if (co) { veDem(-1, false); ve(); }
   }
-  // con: 5..1 đang đếm, 0 "Giơ thẻ lên!", -1 xong; dau: lần vẽ đầu tiên của lần đếm này
+  // con: 5..1 đang đếm, 0 vừa hết giờ ("Giơ đáp án"), -1 thôi đếm; dau: lần vẽ đầu tiên của lần đếm này
   function veDem(con, dau) { if (VAI === "tv") veDemTV(con, dau); else if (VAI === "dt") veDemDT(con); }
   function veDemTV(con, dau) {
-    var o = $("#mcDem"), so = $("#mcDemSo"), vong = $("#mcDemVong"), nut = $('[data-tv="dem"]');
+    var so = $("#mcDemSo"), vong = $("#mcDemVong"), nut = $('[data-tv="dem"]');
     if (nut) nut.disabled = con >= 0;
-    if (con < 0) {
-      if (!o.hidden) hoat(o, [{ opacity: 1 }, { opacity: 0 }], 450, DE, function () { o.hidden = true; huyHoat(o); });
-      return;
-    }
     if (dau) {
-      o.hidden = false;
-      hoat(o, [{ opacity: 0 }, { opacity: 1 }], 300, DE, function () { huyHoat(o); });
       huyHoat(vong);
       if (vong.animate) vong._hoat = vong.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: 553 }], { duration: DEM_GIAY * 1000, easing: "linear", fill: "both" });
     }
-    o.classList.toggle("xong", con === 0);
-    $("#mcDemChu").textContent = con === 0 ? "Giữ thẻ thẳng, đứng yên" : "Chuẩn bị giơ thẻ";
+    if (con > 0) so.textContent = String(con);
+    veODem(true);
+    if (con < 0) return;
     if (con > 0) {
       so.textContent = String(con);
       hoat(so, [{ opacity: 0.2 }, { opacity: 1 }], 260, DE, function () { huyHoat(so); });
       A.go(DEM_GIAY - con, 0.5);      // mỗi giây một tiếng gõ êm, cao dần
     } else A.ken();                    // hết giờ: khúc vui ngắn
+  }
+  // TV, ô dưới chữ đề ở bước đọc đề: "dem" đang đếm (vòng tròn và số), "gio" đã đếm xong ở câu này (chữ "Giơ đáp án", ở lại tới
+  //   khi đổi bước; mở lại trang lúc đang quét cũng thấy), "" chưa bấm đếm. now.dem bị xoá khi đổi bước (datBuoc)
+  function oDem() {
+    var n = nowHopLe(), d = n.dem;
+    if (!d || !d.id || n.step !== "q" + d.q) return "";
+    return DEM.id === d.id && DEM.so !== 0 ? "dem" : "gio";
+  }
+  var odTT = "";
+  // hoatCanh: đổi trạng thái thì chữ đề trượt tới chỗ mới (lên đầu cột khi ô hiện, về giữa khi ô ẩn), ô mờ dần hiện ra;
+  //   không có hoạt cảnh khi câu mới hiện hay mở lại trang
+  function veODem(hoatCanh) {
+    if (VAI !== "tv") return;
+    var tt = mcHien ? oDem() : "", o = $("#mcDem");
+    if (tt === odTT) return;
+    var cu = odTT, ps = [$("#mcBoiCanh"), $("#mcHoi")], truoc = ps.map(function (p) { return p.getBoundingClientRect().top; });
+    odTT = tt;
+    $("#mcChu").classList.toggle("co-dem", !!tt);
+    o.classList.toggle("xong", tt === "gio");
+    o.hidden = !tt;
+    if (!!tt !== !!cu) vuaChu(mcDang); else vuaDem();
+    if (!hoatCanh) return;
+    if (!!tt !== !!cu) {
+      var k = (RD.SanKhau && RD.SanKhau.k) || 1;
+      ps.forEach(function (p, i) {
+        var d = (truoc[i] - p.getBoundingClientRect().top) / k;
+        if (Math.abs(d) > 1) hoat(p, [{ transform: "translateY(" + d.toFixed(1) + "px)" }, { transform: "none" }], 500, DE, function () { huyHoat(p); });
+      });
+      if (tt) hoat(o, [{ opacity: 0, transform: "translateY(40px)" }, { offset: 0.35, opacity: 0, transform: "translateY(40px)" }, { opacity: 1, transform: "none" }], 700, DE, function () { huyHoat(o); });
+    } else if (tt === "gio") {
+      var st = o.querySelector("strong");
+      hoat(st, [{ opacity: 0 }, { opacity: 1 }], 400, DE, function () { huyHoat(st); });
+    }
+  }
+  // cỡ vòng tròn và chữ "Giơ đáp án" vừa chiều cao còn lại của ô (ô cao 170 đến 300 px tuỳ chữ đề dài ngắn)
+  function vuaDem() {
+    var o = $("#mcDem");
+    if (o.hidden) return;
+    // h: chiều cao phần trong ô (clientHeight đã trừ viền, chỉ trừ thêm lề trong)
+    var cs = getComputedStyle(o), h = o.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    o.style.setProperty("--demR", Math.max(100, Math.min(230, Math.floor(h))) + "px");
+    // chữ "Giơ đáp án" cao dòng 1,34 (đủ chứa dấu tiếng Việt của phông này): cỡ chữ tối đa h / 1,34
+    var st = o.querySelector("strong"), co = Math.max(64, Math.min(124, Math.floor(h / 1.34)));
+    o.style.setProperty("--gioCo", co + "px");
+    while (co > 64 && o.classList.contains("xong") && (st.scrollWidth > st.clientWidth + 1 || o.scrollHeight > o.clientHeight + 1)) { co -= 4; o.style.setProperty("--gioCo", co + "px"); }
   }
   function veDemDT(con) {
     var cs = $("#dtCamSo"), chup = $("#dtChupNhan");
@@ -142,7 +184,7 @@
     cs.hidden = con < 0;
     if (con >= 0) {
       cs.classList.toggle("xong", con === 0);
-      $("#dtCamSoSo").textContent = con > 0 ? String(con) : "Giơ thẻ lên!";
+      $("#dtCamSoSo").textContent = con > 0 ? String(con) : "Giơ đáp án";
       $("#dtCamSoChu").textContent = con > 0 ? "Chưa ghi thẻ, chờ TV đếm xong" : "Bắt đầu ghi thẻ";
     }
     if (con > 0) chup.setAttribute("aria-disabled", "true"); else chup.removeAttribute("aria-disabled");
@@ -158,7 +200,7 @@
     if (!b) return;
     if (con == null) con = DEM.id && DEM.so !== null ? DEM.so : -1;
     var n = nowHopLe(), q = RD.cauCuaBuoc(n.step), daDem = !!(n.dem && n.dem.q === q);
-    var html = ICON_DEM + (con > 0 ? "Đang đếm ngược <b>" + con + "</b>" : con === 0 ? "Giơ thẻ lên!" : daDem ? "Đếm ngược lại 5 giây" : "Đếm ngược 5 giây");
+    var html = ICON_DEM + (con > 0 ? "Đang đếm ngược <b>" + con + "</b>" : con === 0 ? "Giơ đáp án" : daDem ? "Đếm ngược lại 5 giây" : "Đếm ngược 5 giây");
     if (b.dataset.html !== html) { b.innerHTML = html; b.dataset.html = html; }
     b.disabled = con >= 0;
     b.classList.toggle("dang", con >= 0);
@@ -881,6 +923,7 @@
     while (fs > 40 && chu.scrollHeight > chu.clientHeight + 1) { fs -= 2; m.style.setProperty("--fs", fs + "px"); }
     var tran = function () { return $$(".mc-o>span", m).some(function (x) { return x.scrollWidth > x.clientWidth + 1; }); };
     while (fo > 32 && tran()) { fo -= 2; m.style.setProperty("--fo", fo + "px"); }
+    vuaDem();
   }
   // video hình động của câu q (webm, máy không chạy được thì mp4). Ảnh chờ (poster) là khung đầu của video:
   // hiện ngay khi video chưa tải xong, và ở lại nếu máy không chạy được video (số đo, nét vẽ vẫn nằm đúng chỗ)
@@ -985,6 +1028,7 @@
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (mcHien && mcDang === q) vuaChu(q); });
     }
     vuaChu(q);
+    veODem(!moi && !cauMoi);
     datHinh(q);
     if (moi) {
       // hiện dần như clip: mờ sang rõ, thẻ câu hỏi trượt lên; hiện xong thì sân khấu thôi vẽ cho nhẹ máy
@@ -1042,20 +1086,10 @@
     $$(".mc-o", m).forEach(function (o, i) {
       var dung = o.dataset.l === c.dung, em = o.querySelector("em");
       o.classList.toggle("dung", hien && dung);
-      o.classList.toggle("mo", hien && !dung);
-      // 8/11 thầy Thịnh: "khi tôi bấm nút đáp án, đáp án đúng đã hiện ra rồi thì các đáp án kia biến mất": vừa bấm Đáp án thì
-      //   ô đúng sáng lên, ba ô kia mờ đi (0,4 giây) rồi tan hẳn (từ giây 0,9 đến 1,5); vào lại bước đáp án (lùi về, mở lại
-      //   trang) thì ba ô kia đã ẩn sẵn. Lùi về bước quét xong thì cả bốn ô hiện lại.
-      var bien = hien && !dung;
-      if (bien && !o.classList.contains("bien")) {
-        if (moDapAn) hoat(o, [
-          { offset: 0, opacity: 1, transform: "none" },
-          { offset: 0.27, opacity: 0.4, transform: "none" },
-          { offset: 0.6, opacity: 0.4, transform: "none", easing: "ease-in" },
-          { offset: 1, opacity: 0, transform: "scale(.9)" }
-        ], 1500, "ease-out", function () { huyHoat(o); });
-        o.classList.add("bien");
-      } else if (!bien && o.classList.contains("bien")) { huyHoat(o); o.classList.remove("bien"); }
+      // 8/11 thầy Thịnh: "khi tôi bấm nút đáp án, đáp án đúng đã hiện ra rồi thì các đáp án kia biến mất".
+      // 9/11 14:36 UTC thầy Thịnh: "các đáp án sai giờ đây sẽ không biến mất mà chuyển sang màu xám nhé tối màu nhé": vừa bấm Đáp án
+      //   thì ô đúng sáng lên, ba ô kia chuyển dần sang nền xám tối (0,4 giây) và ở lại; lùi về bước quét xong thì cả bốn ô như cũ.
+      o.classList.toggle("xam", hien && !dung);
       em.hidden = !hienDem;
       var t = dem[i] + " em";
       if (em.textContent !== t) em.textContent = t;
@@ -1268,7 +1302,7 @@
     var ghi = $("#dtGhi"), html = "";
     if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề cơ bản</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, danh sách 4 nhóm, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
     else if (step === "intro") html = "Bấm <b>Hiện luật chơi trên TV</b> ở trên để cả lớp cùng xem, đọc luật cho các em nghe, rồi bấm <b>Ẩn luật chơi trên TV</b> để các em xem lại màn chơi (trên TV cũng có nút Ẩn, Hiện luật chơi ở góc phải). Xong thì bấm <b>Hiện câu 1</b>.";
-    else if (loai === "q") html = Q.coCamera() ? "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>: TV đếm từ 5 về 1, camera tự mở nhưng chỉ ghi thẻ khi TV báo <b>Giơ thẻ lên!</b> Lia chậm qua từng cụm nhóm, nhìn số thẻ còn thiếu của mỗi nhóm trên khung camera, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, quét lại không đổi." : "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>. Khi TV báo <b>Giơ thẻ lên!</b>, đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, chụp lại không đổi.";
+    else if (loai === "q") html = Q.coCamera() ? "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>: TV đếm từ 5 về 1, camera tự mở nhưng chỉ ghi thẻ khi TV báo <b>Giơ đáp án</b>. Lia chậm qua từng cụm nhóm, nhìn số thẻ còn thiếu của mỗi nhóm trên khung camera, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, quét lại không đổi." : "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>. Khi TV báo <b>Giơ đáp án</b>, đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, chụp lại không đổi.";
     else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>.";
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của từng nhóm. Mời một em nêu cách làm, rồi bấm <b>Di chuyển</b>.";
     else if (loai === "r" && q === 5) html = "Miếng ghép cuối cùng bay vào cầu, các bạn qua khúc cầu cuối. Nhóm về nhất tự bước lên thảm VỀ ĐÍCH, cả lớp vỗ tay. Chờ Claude bình luận xong rồi bấm <b>Đốt đuốc</b> để nhóm về nhất thắp ngọn đuốc đầu tiên.";
@@ -1375,7 +1409,7 @@
 
   function xuLyAnh(file) {
     if (!PQ) return;
-    if (dangDem()) { trangThai("loi", "Đang đếm ngược: chờ TV báo Giơ thẻ lên! rồi hãy chụp."); return; }
+    if (dangDem()) { trangThai("loi", "Đang đếm ngược: chờ TV báo Giơ đáp án rồi hãy chụp."); return; }
     var q = PQ.q, key = PQ.key;
     trangThai("", "Đang đọc thẻ trong ảnh, chờ vài giây…");
     $("#dtChupNhan").setAttribute("aria-disabled", "true");
