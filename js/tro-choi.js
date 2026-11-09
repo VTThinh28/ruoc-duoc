@@ -479,6 +479,7 @@
     dungChuanBi($("#cbTV"));
     napAnhBao().then(function () { if (RD.anhBao) SK.anhBao(RD.anhBao); ve(); });
     for (var q = 1; q <= 5; q++) taoVideo(q);      // tải sẵn hình chuyển động của 5 câu
+    napAnhTinh();                                   // và ảnh tĩnh của Đề demo
     // bảng mở bằng nút Cài đặt (moCB) ở bước chuẩn bị rồi bấm Bắt đầu trò chơi: tắt moCB trước, kẻo bảng còn che màn giới thiệu
     $("#nutBatDau").addEventListener("click", function () { A.mo(); moCB = false; if (nowHopLe().step === "setup") tiep(); else ve(); });
     $("#nutFullTV").addEventListener("click", toanManHinh);
@@ -784,7 +785,7 @@
   }
   // 7/11: cột hình rộng vừa đủ cho hình cao kín ô (không quá RD.COT_HINH), chữ đề dịch sang phải
   function datCot(q) {
-    var I = RD.KHUNG && RD.KHUNG[q], m = $("#manCau"), hop = $("#mcHop"), cot = RD.COT_HINH || 960;
+    var I = RD.khungCau(q), m = $("#manCau"), hop = $("#mcHop"), cot = RD.COT_HINH || 960;
     if (!I) { m.style.setProperty("--wh", (q === 5 ? 700 : 560) + "px"); return; }
     m.style.setProperty("--wh", cot + "px");
     var bw = hop.clientWidth - 20, bh = hop.clientHeight - 20;
@@ -792,10 +793,23 @@
     var s = Math.min(bw / I.W, bh / I.H);
     m.style.setProperty("--wh", Math.min(cot, Math.ceil(I.W * s) + cot - bw) + "px");
   }
+  // 9/11 Đề demo: câu có khung riêng với ảnh tĩnh (khung.anh) thì đặt ảnh đó vào khung thay cho video; số đo, nét vẽ như đề chính thức
+  var ANH_TINH = {};
+  function anhTinh(src) {
+    if (!ANH_TINH[src]) { var i = new Image(); i.alt = ""; i.className = "mc-tinh"; i.decoding = "async"; i.src = src; ANH_TINH[src] = i; }
+    return ANH_TINH[src];
+  }
+  function napAnhTinh() {   // tải sẵn ảnh tĩnh và lớp nét vẽ của mọi đề (đổi đề lúc chuẩn bị thì hình hiện ngay)
+    Object.keys(RD.DE).forEach(function (k) { RD.DE[k].forEach(function (c) {
+      if (c.khung && c.khung.anh) { anhTinh(c.khung.anh); if (typeof c.khung.nhan === "string") (new Image()).src = c.khung.nhan; }
+    }); });
+  }
   function datHinh(q) {
-    var I = RD.KHUNG && RD.KHUNG[q], v = taoVideo(q), k = $("#mcKhung"), anh = $("#mcAnh"), hop = $("#mcHop"), nhan = $("#mcNhan"), so = $("#mcSo");
-    Object.keys(VID).forEach(function (j) { var x = VID[j]; if (x && +j !== q && x.parentNode) { x.pause(); x.parentNode.removeChild(x); } });
-    var coVideo = !!(v && I);
+    var I = RD.khungCau(q), tinh = !!(I && I.anh), v = tinh ? null : taoVideo(q), m = tinh ? anhTinh(I.anh) : v,
+      k = $("#mcKhung"), anh = $("#mcAnh"), hop = $("#mcHop"), nhan = $("#mcNhan"), so = $("#mcSo");
+    Object.keys(VID).forEach(function (j) { var x = VID[j]; if (x && x !== v && x.parentNode) { x.pause(); x.parentNode.removeChild(x); } });
+    $$("img.mc-tinh", k).forEach(function (x) { if (x !== m) x.parentNode.removeChild(x); });
+    var coVideo = !!(m && I);
     k.hidden = !coVideo; anh.hidden = coVideo;
     if (!coVideo) {
       if (v && v.parentNode) { v.pause(); v.parentNode.removeChild(v); }
@@ -816,18 +830,19 @@
     if (bw > 0 && bh > 0) {
       var s = Math.min(bw / I.W, bh / I.H);
       k.style.width = I.W * s + "px"; k.style.height = I.H * s + "px";
-      v.style.left = I.x * s + "px"; v.style.top = I.y * s + "px"; v.style.width = I.w * s + "px"; v.style.height = I.h * s + "px";
+      m.style.left = I.x * s + "px"; m.style.top = I.y * s + "px"; m.style.width = I.w * s + "px"; m.style.height = I.h * s + "px";
       $$("span", so).forEach(function (el, i) {
         var n = dsSo[i];
         el.style.left = n.x * s + "px"; el.style.top = n.y * s + "px"; el.style.fontSize = n.f * s + "px";
       });
     }
-    // lớp nét vẽ (nét đứt, góc vuông, viền): chỉ câu 3, 4, 5 có
-    nhan.hidden = !I.nhan;
-    if (I.nhan) { var src = "anh/chuyen-dong/nhan-cau-" + q + ".webp"; if (nhan.getAttribute("src") !== src) nhan.src = src; }
+    // lớp nét vẽ (nét đứt, góc vuông, viền): chỉ câu 3, 4, 5 có (nhan: true là lớp của đề chính thức, chuỗi là đường dẫn riêng)
+    var srcNhan = typeof I.nhan === "string" ? I.nhan : I.nhan ? "anh/chuyen-dong/nhan-cau-" + q + ".webp" : "";
+    nhan.hidden = !srcNhan;
+    if (srcNhan && nhan.getAttribute("src") !== srcNhan) nhan.src = srcNhan;
     k.setAttribute("aria-label", "Hình minh họa câu " + q);
-    if (v.parentNode !== k) k.insertBefore(v, nhan);
-    if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () { /* hiện khung đầu */ }); }
+    if (m.parentNode !== k) k.insertBefore(m, nhan);
+    if (!tinh && v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () { /* hiện khung đầu */ }); }
   }
   function xepLaiManCau(q) { datCot(q); vuaChu(q); datHinh(q); }
   function dungVideo() { Object.keys(VID).forEach(function (j) { var x = VID[j]; if (x && !x.paused) x.pause(); }); }

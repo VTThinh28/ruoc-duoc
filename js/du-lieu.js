@@ -89,11 +89,57 @@
         hoi: "Hỏi diện tích phần trồng cỏ là bao nhiêu mét vuông?",
         chon: ["48 mét vuông", "24 mét vuông", "8 mét vuông", "30 mét vuông"]
       }
+    ],
+    // Đề demo (9/11 06:20 UTC thầy Thịnh: "tạo thêm 1 đề gọi là đề demo, đề này giống đề 1 nhưng câu hỏi, hình ảnh khác đề 1 là
+    //   đề thi chính thức"; 06:49 "ok"): để cả lớp chơi thử trước, không lộ đề chính thức. Cùng kiểu Đề cơ bản (1 bước tính, cùng
+    //   thứ tự hình), bối cảnh, số đo, đáp án khác; mỗi đáp án sai là một lỗi hay gặp. Hình tĩnh vẽ kiểu Ghibli (Canva AI),
+    //   khung riêng của từng câu (khung: W×H; anh: ảnh tĩnh đặt ở x, y cỡ w×h; nhan: lớp nét vẽ; so: số đo bằng chữ thật).
+    "demo": [
+      {
+        so: 1, mau: "#1f5fae", hinh: "anh/de-demo/cau-1.webp", dung: "D",
+        boiCanh: "Người ta kẻ vạch sơn vừa đủ một vòng quanh mép một ô sân chơi hình vuông có cạnh **5 mét**.",
+        hoi: "Hỏi vạch sơn dài bao nhiêu mét?",
+        chon: ["25 mét", "10 mét", "15 mét", "20 mét"],
+        khung: { W: 970, H: 970, anh: "anh/de-demo/cau-1.webp", x: -120, y: -80, w: 1200, h: 1200,
+          so: [{ t: "5 mét", x: 485, y: 905, f: 77, nen: 1 }] }
+      },
+      {
+        so: 2, mau: "#c4860a", hinh: "anh/de-demo/cau-2.webp", dung: "A",
+        boiCanh: "Vườn rau của lớp hình chữ nhật có chiều dài **9 mét**, chiều rộng **4 mét**. Các bạn làm hàng rào tre vừa đủ một vòng quanh vườn.",
+        hoi: "Hỏi hàng rào tre dài bao nhiêu mét?",
+        chon: ["26 mét", "13 mét", "36 mét", "22 mét"],
+        khung: { W: 1060, H: 610, anh: "anh/de-demo/cau-2.webp", x: -80, y: -30, w: 1200, h: 674,
+          so: [{ t: "9 mét", x: 530, y: 64, f: 56, nen: 1 }, { t: "4 mét", x: 940, y: 288, f: 56, nen: 1, a: "p" }] }
+      },
+      {
+        so: 3, mau: "#2b7a4b", hinh: "anh/de-demo/cau-3.webp", dung: "C",
+        boiCanh: "Một hồ cá cảnh hình bình hành có độ dài một cạnh là **8 mét**, chiều cao tương ứng là **3 mét**.",
+        hoi: "Hỏi diện tích mặt hồ là bao nhiêu mét vuông?",
+        chon: ["11 mét vuông", "22 mét vuông", "24 mét vuông", "12 mét vuông"],
+        khung: { W: 1200, H: 800, anh: "anh/de-demo/cau-3.webp", x: 0, y: -70, w: 1200, h: 897, nhan: "anh/de-demo/nhan-cau-3.webp",
+          so: [{ t: "3 mét", x: 282, y: 366, f: 64, nen: 1, a: "t" }, { t: "8 mét", x: 506, y: 732, f: 64, nen: 1 }] }
+      },
+      {
+        so: 4, mau: "#bd3a2c", hinh: "anh/de-demo/cau-4.webp", dung: "B",
+        boiCanh: "Một tấm bạt che nắng hình thoi có độ dài hai đường chéo là **10 mét** và **6 mét**.",
+        hoi: "Hỏi diện tích tấm bạt là bao nhiêu mét vuông?",
+        chon: ["60 mét vuông", "30 mét vuông", "16 mét vuông", "32 mét vuông"],
+        khung: { W: 1200, H: 820, anh: "anh/de-demo/cau-4.webp", x: 0, y: -40, w: 1200, h: 897, nhan: "anh/de-demo/nhan-cau-4.webp",
+          so: [{ t: "10 mét", x: 330, y: 390, f: 64, nen: 1 }, { t: "6 mét", x: 624, y: 210, f: 64, nen: 1, a: "t" }] }
+      },
+      {
+        so: 5, mau: "#7a3fb4", hinh: "anh/de-demo/cau-5.webp", dung: "A",
+        boiCanh: "Các bạn trồng hoa hướng dương kín một mảnh vườn hình thang có độ dài hai đáy là **9 mét** và **5 mét**, chiều cao **4 mét**.",
+        hoi: "Hỏi diện tích phần trồng hoa là bao nhiêu mét vuông?",
+        chon: ["28 mét vuông", "56 mét vuông", "7 mét vuông", "36 mét vuông"],
+        khung: { W: 1200, H: 854, anh: "anh/de-demo/cau-5.webp", x: 0, y: 90, w: 1200, h: 674, nhan: "anh/de-demo/nhan-cau-5.webp",
+          so: [{ t: "5 mét", x: 591, y: 45, f: 66 }, { t: "9 mét", x: 602, y: 809, f: 66 }, { t: "4 mét", x: 319, y: 412, f: 66, nen: 1, a: "t" }] }
+      }
     ]
   };
-  RD.THU_TU_DE = ["co-ban", "nang-cao"];
-  RD.TEN_DE = { "co-ban": "Đề cơ bản", "nang-cao": "Đề nâng cao" };
-  RD.MO_TA_DE = { "co-ban": "Mỗi câu 1 bước tính", "nang-cao": "Mỗi câu 2 bước tính" };
+  RD.THU_TU_DE = ["co-ban", "nang-cao", "demo"];
+  RD.TEN_DE = { "co-ban": "Đề cơ bản", "nang-cao": "Đề nâng cao", "demo": "Đề demo" };
+  RD.MO_TA_DE = { "co-ban": "Mỗi câu 1 bước tính", "nang-cao": "Mỗi câu 2 bước tính", "demo": "Chơi thử trước, mỗi câu 1 bước tính" };
   // 9/11 04:11 UTC (thầy Thịnh: "mặc định trong cài đặt luôn luôn là đề cơ bản nha"): mặc định Đề cơ bản (8/11 là Đề nâng cao)
   RD.DE_MAC_DINH = "co-ban";
   // bộ đề đang dùng: lưu ở cfg.de (TV và điện thoại dùng chung); RD.CAU là 5 câu của bộ đề đó
@@ -104,6 +150,8 @@
     return k;
   };
   RD.chonDe(RD.DE_MAC_DINH);
+  // khung hình của câu q trong đề đang chơi: câu có khung riêng (Đề demo, ảnh tĩnh) thì dùng khung đó, không thì khung chung RD.KHUNG
+  RD.khungCau = function (q) { var c = RD.CAU && RD.CAU[q - 1]; return (c && c.khung) || (RD.KHUNG && RD.KHUNG[q]) || null; };
   // hình chuyển động của 5 câu (video 8 giây lặp lại). Khung W×H tính theo điểm ảnh video; video đặt ở (x, y), cỡ w×h
   // (x, y âm là cắt bớt lề trắng của video). 7/11 thầy Thịnh: "những cái số trong các hình ảnh cho to lên"
   //   -> số đo viết bằng chữ thật trên trang (so: tâm x, y; a "t" thì x là mép trái; f cỡ chữ; nen: nền trắng khi nằm trên hình),
