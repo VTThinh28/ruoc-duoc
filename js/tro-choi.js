@@ -1048,7 +1048,7 @@
     if (l === "k") return "Câu " + q + " · quét xong, TV hiện số em chọn";
     if (l === "a") return "Câu " + q + " · đã hiện đáp án";
     if (l === "r") return q < 5 ? "Câu " + q + " · đang qua cầu" : "Câu 5 · qua cầu, nhóm về nhất bước lên thảm VỀ ĐÍCH";
-    return { finish: "Đốt đuốc · nhóm về nhất thắp ngọn đuốc đầu tiên", rank: "Tổng kết · các nhóm còn lại thắp đuốc, Claude bình luận thứ hạng", tuong: "Lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Băng xanh rơi xuống, dòng chữ chúc mừng hiện ra, báo tường đầy đủ" }[step] || step;
+    return { finish: "Đốt đuốc · nhóm về nhất thắp ngọn đuốc đầu tiên", rank: "Tổng kết · các nhóm còn lại thắp đuốc, Claude bình luận thứ hạng", tuong: "Lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Bồ câu kéo băng xanh bay lên, dòng chữ chúc mừng hiện ra, báo tường đầy đủ" }[step] || step;
   }
   function nhanTiep(step) {
     var l = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -1107,7 +1107,7 @@
     else if (loai === "r") html = "Miếng ghép đang bay vào cầu, 4 bạn cùng qua khúc cầu. Chờ Claude bình luận xong rồi bấm tiếp.";
     else if (step === "finish") html = "Nhóm về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Tổng kết</b> để các nhóm còn lại lần lượt thắp đuốc.";
     else if (step === "rank") html = "Các nhóm còn lại lần lượt thắp đuốc theo thứ hạng, rồi Claude bình luận thứ hạng. Khi nút trên TV đổi thành <b>Tiếp theo</b>, chúc mừng các nhóm rồi bấm <b>Tiếp theo</b>.";
-    else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (dải băng xanh còn che dòng chữ). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: dải băng xanh rơi xuống, dòng chữ chúc mừng hiện ra, hiện cả báo tường (có tiếng vỗ tay).";
+    else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (dải băng xanh còn che dòng chữ). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo dải băng xanh bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
     else if (step === "bao") {
       var hang = RD.xepHang(tinh());
       html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ".";
