@@ -29,7 +29,7 @@
   /* ---------- trạng thái sân khấu ---------- */
   // che: dau (chuẩn bị, giới thiệu) · hoi (màn câu hỏi che cảnh) · cau (di chuyển câu q) · dich (về đích) · hang (thứ hạng) · bao (hiện báo tường)
   const S = {
-    che: "dau", tieu: false, luat: false, anLuat: false, ALa: 1, AL0: -1e6, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
+    che: "dau", tieu: false, luat: false, anLuat: true, ALa: 0, AL0: -1e6, luatK: 0, luatDo: true, hienCho: null, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
     R0: XA, L: null, E0: CHUA, B0: CHUA, T0: CHUA, H0: CHUA, W0: CHUA, K: null, tiep: false,
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
     ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
@@ -1119,25 +1119,46 @@
     const dich = S.anLuat ? 0 : 1, u = eo(lin(t, S.AL0, S.AL0 + (S.anLuat ? .32 : .38)));
     return S.ALa + (dich - S.ALa) * u;
   }
+  // 9/11 05:27 UTC thầy Thịnh: "chữ rước đuốc với phần luật chơi cho to lên tí nha. che luôn cây cầu cũng được". Khung luật chơi
+  //   chữ to (CSS) nhưng không chạm hai cụm nút góc: co cả khung (neo giữa mép trên) cho đáy khung cách đỉnh hàng nút 10 px
+  //   (S.ext.day, như đáy thẻ câu hỏi). Cũng tính chỗ nút "Hiện luật chơi": góc phải trên trùng góc phải trên nút Ẩn, cùng cỡ.
+  //   Khung đang ẩn thì tạm bỏ ẩn để đo rồi ẩn lại ngay (không vẽ ra màn hình).
+  function doLuat() {
+    const L = UI.luat; if (!L) return;
+    const an = L.hidden; if (an) L.hidden = false;
+    const h = L.offsetHeight, w = L.offsetWidth, x0 = L.offsetLeft, y0 = L.offsetTop, A = UI.luatAn;
+    const ax = A ? x0 + L.clientLeft + A.offsetLeft + A.offsetWidth : x0 + w, ay = A ? y0 + L.clientTop + A.offsetTop : y0;
+    if (an) L.hidden = true;
+    if (!h) return;
+    const day = (S.ext && S.ext.day) || (H - 14), k = Math.max(.5, Math.min(1, (day - 10 - y0) / h)), cx = x0 + w / 2;
+    S.luatK = k;
+    S.hienCho = { phai: W - (cx + (ax - cx) * k), tren: y0 + (ay - y0) * k, k };
+    S.luatDo = false;
+  }
   function veChu(t) {
     const NT = (S.ext && S.ext.nutTo) || 1;
-    // tiêu đề và luật chơi (màn giới thiệu). Thầy bấm Ẩn: khung luật chơi mờ đi, trượt nhẹ lên (không phóng to thu nhỏ), tiêu đề
-    //   vẫn giữ; nút "Hiện luật chơi" hiện đúng chỗ nút Ẩn. Cửa sổ nhỏ (điện thoại) thì hai nút to lên như nút Tổng kết (NT).
+    // tiêu đề và luật chơi (màn giới thiệu). Vào màn giới thiệu thì khung luật chơi ẩn sẵn, chỉ có nút "Hiện luật chơi"; thầy bấm
+    //   thì khung hiện ra (mờ dần vào, trượt nhẹ xuống, không phóng to thu nhỏ). Bấm Ẩn thì khung mờ đi, trượt nhẹ lên, nút "Hiện
+    //   luật chơi" hiện lại đúng chỗ nút Ẩn. Tiêu đề luôn giữ. Cửa sổ nhỏ (điện thoại) thì hai nút to lên như nút Tổng kết (NT).
     datAn(UI.tieu, !S.tieu);
+    if (S.luat && (S.luatDo || !S.luatK)) doLuat();
+    const kL = S.luatK || 1, vaoL = lin(t, S.I0 + .8, S.I0 + 1.6);
     const mL = S.luat ? mucLuat(t) : 0, coLuat = S.luat && mL > .002;
     datAn(UI.luat, !coLuat);
     if (coLuat) {
-      datKieu(UI.luat, "opacity", String(lin(t, S.I0 + .8, S.I0 + 1.6) * mL));
-      datKieu(UI.luat, "transform", mL < 1 ? "translateY(" + (-26 * (1 - mL)).toFixed(1) + "px)" : "");
+      datKieu(UI.luat, "opacity", String(vaoL * mL));
+      datKieu(UI.luat, "transform", (mL < 1 ? "translateY(" + (-26 * (1 - mL)).toFixed(1) + "px) " : "") + (kL < .999 ? "scale(" + kL.toFixed(4) + ")" : ""));
       datKieu(UI.luat, "pointerEvents", S.anLuat ? "none" : "");
       if (UI.luatAn) datKieu(UI.luatAn, "transform", NT > 1 ? "scale(" + NT.toFixed(3) + ")" : "");
     }
-    const aH = S.luat && S.anLuat ? eo(lin(t, S.AL0 + .16, S.AL0 + .44)) : 0;
+    const aH = S.luat && S.anLuat ? eo(lin(t, S.AL0 + .16, S.AL0 + .44)) * vaoL : 0;
     if (UI.luatHien) {
       datAn(UI.luatHien, !(aH > 0));
       if (aH > 0) {
+        const c = S.hienCho, kH = NT * (c ? c.k : 1);
+        if (c) { datKieu(UI.luatHien, "right", c.phai.toFixed(1) + "px"); datKieu(UI.luatHien, "top", c.tren.toFixed(1) + "px"); }
         datKieu(UI.luatHien, "opacity", aH.toFixed(3));
-        datKieu(UI.luatHien, "transform", "translateY(" + (-10 * (1 - aH)).toFixed(1) + "px)" + (NT > 1 ? " scale(" + NT.toFixed(3) + ")" : ""));
+        datKieu(UI.luatHien, "transform", "translateY(" + (-10 * (1 - aH)).toFixed(1) + "px)" + (Math.abs(kH - 1) > .001 ? " scale(" + kH.toFixed(3) + ")" : ""));
       }
     }
     // nhãn câu, bảng điểm, lời bình: trong bước di chuyển; mờ dần khi bắt đầu về đích
@@ -1346,6 +1367,11 @@
     // nút Ẩn / Hiện luật chơi: chỉ đổi trên máy TV này, không ghi vào cơ sở dữ liệu
     if (UI.luatAn) UI.luatAn.addEventListener("click", function () { SK.anLuat(true); });
     if (UI.luatHien) UI.luatHien.addEventListener("click", function () { SK.anLuat(false); });
+    // phông chữ tải xong thì đo lại khung luật chơi (chữ đổi cỡ, khung đổi cao)
+    if (document.fonts) {
+      if (document.fonts.ready) document.fonts.ready.then(function () { S.luatDo = true; });
+      if (document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", function () { S.luatDo = true; });
+    }
     window.addEventListener("resize", SK.vuaManHinh);
     SK.vuaManHinh();
     taiHinh();
@@ -1385,10 +1411,13 @@
     const nutHang = hHang > hCot && vh / 2 + (K.y + K.h + 16 - H / 2) * k <= vh - ND - 8;
     const sb = Math.max(1, (nutHang ? hHang : hCot) / k / (K.h + 32)), hb = K.h * sb, wb = K.w * sb;
     S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, KF: { x: W / 2 - wb / 2, y: H / 2 - hb / 2, w: wb, h: hb }, nutHang,
+      // đáy cho khung luật chơi (toạ độ thế giới): trên hai cụm nút góc, như đáy thẻ câu hỏi
+      day: Math.min(H - 14, H + bd - ND / k),
       // nút Tổng kết / Tiếp theo / Tiếp theo cuối: chữ trên màn hình thật không nhỏ hơn 16 px (điện thoại)
       nutTo: Math.max(1, .5 / k) };
     // nút "Tiếp theo" cuối (#nutHienBao, góc phải dưới): nút dưới đáy thì đứng trên các hàng nút
     wd.style.setProperty("--hbDuoi", (nutHang ? ND / k : 8).toFixed(1) + "px");
+    S.luatDo = true;
     datKieu(cv, "left", (-bn).toFixed(1) + "px"); datKieu(cv, "top", (-bd).toFixed(1) + "px");
     datKieu(cv, "width", S.ext.EW.toFixed(1) + "px"); datKieu(cv, "height", S.ext.EH.toFixed(1) + "px");
     { const w = Math.round(S.ext.EW * rDo), h = Math.round(S.ext.EH * rDo); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; }
@@ -1421,8 +1450,9 @@
     S.tieu = o.che === "dau";
     const luatCu = S.luat;
     S.luat = o.che === "dau" && !!o.gioiThieu;
-    // vào lại màn giới thiệu (từ bước khác) thì luật chơi hiện lại; vẽ lại cùng màn giới thiệu thì giữ ẩn / hiện như thầy đã bấm
-    if (!S.luat || !luatCu) { S.anLuat = false; S.ALa = 1; S.AL0 = XA; }
+    // 9/11 05:29 UTC thầy Thịnh: "mới vô là ẩn luật đi nha, tôi bấm hiện mới hiện ra": vào màn giới thiệu (cả khi lùi về từ câu 1)
+    //   thì khung luật chơi ẩn sẵn, chỉ có nút Hiện luật chơi; vẽ lại cùng màn giới thiệu thì giữ ẩn / hiện như thầy đã bấm
+    if (!S.luat || !luatCu) { S.anLuat = true; S.ALa = 0; S.AL0 = XA; }
     S.I0 = hc ? t : XA;
     datSoLieu(o.ls);
     if (o.che === "dau") { S.q = 0; S.nCau = 0; }

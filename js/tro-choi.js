@@ -1101,7 +1101,7 @@
     // hướng dẫn ngắn theo bước
     var ghi = $("#dtGhi"), html = "";
     if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề cơ bản</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, danh sách 4 nhóm, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
-    else if (step === "intro") html = "TV đang hiện luật chơi. Đọc cho cả lớp nghe. Muốn các em xem màn chơi thì bấm <b>Ẩn</b> ở góc khung luật chơi trên TV (bấm <b>Hiện luật chơi</b> để xem lại). Xong thì bấm <b>Hiện câu 1</b>.";
+    else if (step === "intro") html = "TV đang hiện màn chơi, luật chơi còn ẩn. Bấm <b>Hiện luật chơi</b> ở góc phải trên TV để đọc luật cho cả lớp nghe (bấm <b>Ẩn</b> để các em xem lại màn chơi). Xong thì bấm <b>Hiện câu 1</b>.";
     else if (loai === "q") html = Q.coCamera() ? "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Bấm <b>Bật camera quét liên tục</b>, đưa điện thoại lia chậm qua từng cụm nhóm cho đến khi nhóm báo đủ, rồi bấm <b>Quét xong</b>." : "Cả lớp đếm 3, 2, 1 rồi giơ thẻ. Đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>.";
     else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>.";
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của từng nhóm. Mời một em nêu cách làm, rồi bấm <b>Di chuyển</b>.";
