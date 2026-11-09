@@ -94,7 +94,8 @@
   RD.THU_TU_DE = ["co-ban", "nang-cao"];
   RD.TEN_DE = { "co-ban": "Đề cơ bản", "nang-cao": "Đề nâng cao" };
   RD.MO_TA_DE = { "co-ban": "Mỗi câu 1 bước tính", "nang-cao": "Mỗi câu 2 bước tính" };
-  RD.DE_MAC_DINH = "nang-cao";
+  // 9/11 04:11 UTC (thầy Thịnh: "mặc định trong cài đặt luôn luôn là đề cơ bản nha"): mặc định Đề cơ bản (8/11 là Đề nâng cao)
+  RD.DE_MAC_DINH = "co-ban";
   // bộ đề đang dùng: lưu ở cfg.de (TV và điện thoại dùng chung); RD.CAU là 5 câu của bộ đề đó
   RD.chonDe = function (k) {
     if (!RD.DE[k]) k = RD.DE_MAC_DINH;

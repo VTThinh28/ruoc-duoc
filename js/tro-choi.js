@@ -53,10 +53,12 @@
     c.at = Date.now();
     DB.set("cfg", c);
   }
-  // buoc: bước bắt đầu của ván mới (mặc định "setup"; nút "Chơi lại từ đầu" của chế độ chơi thử vào thẳng "intro")
+  // buoc: bước bắt đầu của ván mới (mặc định "setup"; nút "Chơi lại từ đầu" của chế độ chơi thử vào thẳng "intro").
+  //   9/11 04:11 UTC (thầy Thịnh: "mặc định trong cài đặt luôn luôn là đề cơ bản nha"): ván mới nào cũng bắt đầu bằng Đề cơ bản
+  //   (giữ danh sách lớp, bỏ đề đã chọn của ván trước)
   function vanMoi(giuLop, buoc) {
     var s = ngauNhien(8), c = giuLop && S.cfg ? clone(S.cfg) : RD.cfgMacDinh(s);
-    c.ses = s; c.at = Date.now();
+    c.ses = s; c.at = Date.now(); delete c.de;
     DB.set("cfg", c);
     DB.set("now", { ses: s, step: buoc || "setup", pub: {}, at: Date.now(), by: TAB });
     for (var q = 1; q <= 5; q++) DB.set("s" + q, { ses: s, q: q, cards: {}, man: {}, at: Date.now(), by: TAB });
@@ -554,7 +556,7 @@
     lai: "Chơi lại từ đầu, xóa kết quả chơi thử",
     nho: "Giảm âm lượng (phím −)",
     to: "Tăng âm lượng (phím +)",
-    cb: "Mở cài đặt: chọn đề, sĩ số, nhóm, nối điện thoại"
+    cb: "Cài đặt"           // 9/11 04:11 UTC (thầy Thịnh: "cái này ghi cài đặt là được rồi")
   };
   function chuGoi(b) {
     var k = b.dataset.tv;
@@ -1048,7 +1050,7 @@
     if (l === "k") return "Câu " + q + " · quét xong, TV hiện số em chọn";
     if (l === "a") return "Câu " + q + " · đã hiện đáp án";
     if (l === "r") return q < 5 ? "Câu " + q + " · đang qua cầu" : "Câu 5 · qua cầu, nhóm về nhất bước lên thảm VỀ ĐÍCH";
-    return { finish: "Đốt đuốc · nhóm về nhất thắp ngọn đuốc đầu tiên", rank: "Tổng kết · các nhóm còn lại thắp đuốc, Claude bình luận thứ hạng", tuong: "Lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Bồ câu kéo băng xanh bay lên, dòng chữ chúc mừng hiện ra, báo tường đầy đủ" }[step] || step;
+    return { finish: "Đốt đuốc · nhóm về nhất thắp ngọn đuốc đầu tiên", rank: "Tổng kết · các nhóm còn lại thắp đuốc, Claude bình luận thứ hạng", tuong: "Lửa đốt tan màn đêm, báo tường hiện hình và số 51", bao: "Bồ câu kéo vải xanh lá bay lên, dòng chữ chúc mừng hiện ra, báo tường đầy đủ" }[step] || step;
   }
   function nhanTiep(step) {
     var l = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -1107,7 +1109,7 @@
     else if (loai === "r") html = "Miếng ghép đang bay vào cầu, 4 bạn cùng qua khúc cầu. Chờ Claude bình luận xong rồi bấm tiếp.";
     else if (step === "finish") html = "Nhóm về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Tổng kết</b> để các nhóm còn lại lần lượt thắp đuốc.";
     else if (step === "rank") html = "Các nhóm còn lại lần lượt thắp đuốc theo thứ hạng, rồi Claude bình luận thứ hạng. Khi nút trên TV đổi thành <b>Tiếp theo</b>, chúc mừng các nhóm rồi bấm <b>Tiếp theo</b>.";
-    else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (dải băng xanh còn che dòng chữ). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo dải băng xanh bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
+    else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (tấm vải xanh lá còn che dải băng chúc mừng). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo tấm vải xanh lá bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
     else if (step === "bao") {
       var hang = RD.xepHang(tinh());
       html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ".";
@@ -1380,6 +1382,19 @@
      KHỞI ĐỘNG
      ===================================================================== */
   function baoNoi(kieu, chu) { NOI = { kieu: kieu, chu: chu }; ve(); }
+  // 9/11 04:11 UTC (thầy Thịnh: "mặc định trong cài đặt luôn luôn là đề cơ bản nha"): mở trang trên TV mà ván chưa bắt đầu (bước
+  //   chuẩn bị hoặc giới thiệu, chưa có thẻ nào được quét) thì đề về Đề cơ bản, một lần lúc vừa nối xong dữ liệu (đợi đủ cấu hình,
+  //   bước đang chơi và 5 câu quét, đều là dữ liệu chắc chắn chứ không phải bản lưu tạm của trình duyệt). Sau đó thầy vẫn bấm chọn
+  //   Đề nâng cao được như cũ.
+  var daVeDeMacDinh = false, chacNow = false, daNhanQuet = {};
+  function veDeMacDinh() {
+    if (daVeDeMacDinh || VAI !== "tv" || !chacCfg || !chacNow || Object.keys(daNhanQuet).length < 5) return;
+    daVeDeMacDinh = true;
+    if (S.cfg && S.cfg.ses && S.cfg.de && S.cfg.de !== RD.DE_MAC_DINH && duocDoiDe()) {
+      RD.chonDe(RD.DE_MAC_DINH);
+      ghiCfg(function (c) { delete c.de; });
+    }
+  }
   function ganDongBo() {
     DB.on("cfg", function (v, chac) {
       S.cfg = v;
@@ -1389,11 +1404,12 @@
         daKhoiTao = true;
         if (!v || !v.ses) vanMoi(false);
       }
+      veDeMacDinh();
       ve();
     });
-    DB.on("now", function (v) { S.now = v; coNow = true; ve(); });
+    DB.on("now", function (v, chac) { S.now = v; coNow = true; if (chac) chacNow = true; veDeMacDinh(); ve(); });
     DB.on("ph", function (v) { S.ph = v; ve(); });
-    [1, 2, 3, 4, 5].forEach(function (q) { DB.on("s" + q, function (v) { S.scans[q] = v; ve(); }); });
+    [1, 2, 3, 4, 5].forEach(function (q) { DB.on("s" + q, function (v, chac) { S.scans[q] = v; if (chac) daNhanQuet[q] = true; veDeMacDinh(); ve(); }); });
     if (VAI === "dt") DB.set("ph", { dev: DEV, at: Date.now() });
     ve();
   }
