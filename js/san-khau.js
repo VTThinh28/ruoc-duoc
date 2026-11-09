@@ -1126,7 +1126,14 @@
   function doLuat() {
     const L = UI.luat; if (!L) return;
     const an = L.hidden; if (an) L.hidden = false;
-    const h = L.offsetHeight, w = L.offsetWidth, x0 = L.offsetLeft, y0 = L.offsetTop, A = UI.luatAn;
+    // Điện thoại: nút Ẩn phóng to NT lần (neo góc phải trên) sẽ đè dòng đầu của "Nhiệm vụ". Chừa một ô trống thả nổi bên phải đầu
+    //   khung (UI.luatCho) đúng cỡ nút đã phóng, cộng khe 12 px, để chữ chạy vòng quanh. Màn hình lớn (NT = 1) thì không cần.
+    const A = UI.luatAn, C = UI.luatCho, NT = (S.ext && S.ext.nutTo) || 1;
+    if (C) { const can = !!A && NT > 1.001; datAn(C, !can);
+      if (can) { const cs = getComputedStyle(L), pR = parseFloat(cs.paddingRight) || 0, pT = parseFloat(cs.paddingTop) || 0;
+        datKieu(C, "width", Math.max(0, A.offsetWidth * NT + 28 - pR + 12).toFixed(1) + "px");
+        datKieu(C, "height", Math.max(0, A.offsetHeight * NT + 28 - pT + 12).toFixed(1) + "px"); } }
+    const h = L.offsetHeight, w = L.offsetWidth, x0 = L.offsetLeft, y0 = L.offsetTop;
     const ax = A ? x0 + L.clientLeft + A.offsetLeft + A.offsetWidth : x0 + w, ay = A ? y0 + L.clientTop + A.offsetTop : y0;
     if (an) L.hidden = true;
     if (!h) return;
@@ -1356,7 +1363,7 @@
   SK.doNet = 1;
   SK.khoiTao = function () {
     cv = $("#cv"); ctx = cv.getContext("2d");
-    UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.luatAn = $("#luatAn"); UI.luatHien = $("#luatHien"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
+    UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.luatAn = $("#luatAn"); UI.luatCho = $("#luatCho"); UI.luatHien = $("#luatHien"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
     UI.nutTH = $("#nutThuHang"); UI.nutTT = $("#nutTiepTheo"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut"); UI.tvNutPhai = $("#tvNutPhai");
     UI.dong = RD.TO.map(T => {
       const d = document.createElement("div"); d.className = "dong"; d.style.setProperty("--m", T.mau); d.style.setProperty("--n", T.nhat);
