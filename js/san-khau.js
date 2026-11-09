@@ -29,7 +29,7 @@
   /* ---------- trạng thái sân khấu ---------- */
   // che: dau (chuẩn bị, giới thiệu) · hoi (màn câu hỏi che cảnh) · cau (di chuyển câu q) · dich (về đích) · hang (thứ hạng) · bao (hiện báo tường)
   const S = {
-    che: "dau", tieu: false, luat: false, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
+    che: "dau", tieu: false, luat: false, anLuat: false, ALa: 1, AL0: -1e6, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
     R0: XA, L: null, E0: CHUA, B0: CHUA, T0: CHUA, H0: CHUA, W0: CHUA, K: null, tiep: false,
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
     ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
@@ -1113,10 +1113,33 @@
   /* ---------- lớp chữ và nút trên sân khấu ---------- */
   function datAn(el, an) { if (el.hidden !== an) el.hidden = an; }
   function datKieu(el, k, v) { const m = el._kieu || (el._kieu = {}); if (m[k] !== v) { m[k] = v; el.style[k] = v; } }   // chỉ ghi khi đổi
+  // 9/11 05:03 UTC thầy Thịnh: "cái chỗ luật chơi có thêm mục ẩn tôi bấm vào thì ẩn đi để cho học sinh quan sát màn chơi, bấm ẩn
+  //   xong thì sẽ có nút hiện nữa nhé". Mức hiện của khung luật chơi: 1 = hiện hẳn, 0 = đã ẩn; đổi êm từ mức lúc bấm (ALa)
+  function mucLuat(t) {
+    const dich = S.anLuat ? 0 : 1, u = eo(lin(t, S.AL0, S.AL0 + (S.anLuat ? .32 : .38)));
+    return S.ALa + (dich - S.ALa) * u;
+  }
   function veChu(t) {
-    // tiêu đề và luật chơi (màn giới thiệu)
-    datAn(UI.tieu, !S.tieu); datAn(UI.luat, !S.luat);
-    if (S.luat) datKieu(UI.luat, "opacity", String(lin(t, S.I0 + .8, S.I0 + 1.6)));
+    const NT = (S.ext && S.ext.nutTo) || 1;
+    // tiêu đề và luật chơi (màn giới thiệu). Thầy bấm Ẩn: khung luật chơi mờ đi, trượt nhẹ lên (không phóng to thu nhỏ), tiêu đề
+    //   vẫn giữ; nút "Hiện luật chơi" hiện đúng chỗ nút Ẩn. Cửa sổ nhỏ (điện thoại) thì hai nút to lên như nút Tổng kết (NT).
+    datAn(UI.tieu, !S.tieu);
+    const mL = S.luat ? mucLuat(t) : 0, coLuat = S.luat && mL > .002;
+    datAn(UI.luat, !coLuat);
+    if (coLuat) {
+      datKieu(UI.luat, "opacity", String(lin(t, S.I0 + .8, S.I0 + 1.6) * mL));
+      datKieu(UI.luat, "transform", mL < 1 ? "translateY(" + (-26 * (1 - mL)).toFixed(1) + "px)" : "");
+      datKieu(UI.luat, "pointerEvents", S.anLuat ? "none" : "");
+      if (UI.luatAn) datKieu(UI.luatAn, "transform", NT > 1 ? "scale(" + NT.toFixed(3) + ")" : "");
+    }
+    const aH = S.luat && S.anLuat ? eo(lin(t, S.AL0 + .16, S.AL0 + .44)) : 0;
+    if (UI.luatHien) {
+      datAn(UI.luatHien, !(aH > 0));
+      if (aH > 0) {
+        datKieu(UI.luatHien, "opacity", aH.toFixed(3));
+        datKieu(UI.luatHien, "transform", "translateY(" + (-10 * (1 - aH)).toFixed(1) + "px)" + (NT > 1 ? " scale(" + NT.toFixed(3) + ")" : ""));
+      }
+    }
     // nhãn câu, bảng điểm, lời bình: trong bước di chuyển; mờ dần khi bắt đầu về đích
     const cau = S.che === "cau", dich = S.che === "dich", L = S.L;
     const q = cau ? S.q : 5;
@@ -1164,7 +1187,6 @@
     //   nhất đã thắp đuốc; bấm rồi thì nút mờ đi đứng chờ các nhóm còn lại thắp đuốc và Claude nói xong, rồi chữ trên nút đổi
     //   thành "Tiếp theo" (nút Tiếp theo hiện đúng chỗ đó, nảy nhẹ)
     const TTL = hangCanh && !S.tiep ? lucTiep(KK) : CHUA;
-    const NT = (S.ext && S.ext.nutTo) || 1;
     let thHien = false, thBam = false, thCho = false, thS = 1, thA = 1;
     if (KK && dich && t >= KK.HTH) { thHien = true; thA = lin(t, KK.HTH, KK.HTH + .3); thS = (.8 + .2 * eb(lin(t, KK.HTH, KK.HTH + .5))) * (1 + .03 * Math.sin(t * 4)); }
     if (hangCanh && !S.tiep && t < TTL + .2) {
@@ -1313,7 +1335,7 @@
   SK.doNet = 1;
   SK.khoiTao = function () {
     cv = $("#cv"); ctx = cv.getContext("2d");
-    UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
+    UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.luatAn = $("#luatAn"); UI.luatHien = $("#luatHien"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
     UI.nutTH = $("#nutThuHang"); UI.nutTT = $("#nutTiepTheo"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut"); UI.tvNutPhai = $("#tvNutPhai");
     UI.dong = RD.TO.map(T => {
       const d = document.createElement("div"); d.className = "dong"; d.style.setProperty("--m", T.mau); d.style.setProperty("--n", T.nhat);
@@ -1321,6 +1343,9 @@
       UI.bx.appendChild(d);
       return { el: d, h: d.querySelector(".h"), d: d.querySelector(".d") };
     });
+    // nút Ẩn / Hiện luật chơi: chỉ đổi trên máy TV này, không ghi vào cơ sở dữ liệu
+    if (UI.luatAn) UI.luatAn.addEventListener("click", function () { SK.anLuat(true); });
+    if (UI.luatHien) UI.luatHien.addEventListener("click", function () { SK.anLuat(false); });
     window.addEventListener("resize", SK.vuaManHinh);
     SK.vuaManHinh();
     taiHinh();
@@ -1377,6 +1402,15 @@
       b: vh / 2 + (F.y + F.h + v - H / 2) * k, nutHang: !!(E && E.nutHang) };
   };
 
+  // ẩn (an = true) hoặc hiện lại khung luật chơi ở màn giới thiệu
+  SK.anLuat = function (an) {
+    an = !!an;
+    if (!S.luat || S.anLuat === an) return;
+    const t = dongHo();
+    S.ALa = mucLuat(t); S.anLuat = an; S.AL0 = t;
+  };
+  SK.luatDaAn = function () { return !!(S.luat && S.anLuat); };
+
   /* ---------- điều khiển từ trò chơi ---------- */
   // o = { che, q, ls (kết quả sau từng câu: ls[0..n]), hoatCanh, gioiThieu }
   SK.dat = function (o) {
@@ -1385,7 +1419,10 @@
     S.cues = [];
     S.che = o.che;
     S.tieu = o.che === "dau";
+    const luatCu = S.luat;
     S.luat = o.che === "dau" && !!o.gioiThieu;
+    // vào lại màn giới thiệu (từ bước khác) thì luật chơi hiện lại; vẽ lại cùng màn giới thiệu thì giữ ẩn / hiện như thầy đã bấm
+    if (!S.luat || !luatCu) { S.anLuat = false; S.ALa = 1; S.AL0 = XA; }
     S.I0 = hc ? t : XA;
     datSoLieu(o.ls);
     if (o.che === "dau") { S.q = 0; S.nCau = 0; }
