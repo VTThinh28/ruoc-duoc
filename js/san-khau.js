@@ -6,7 +6,8 @@
    Kết thúc: bạn về nhất bước lên thảm VỀ ĐÍCH, cả làn chuyển đỏ "Nhóm n về nhất", thắp đuốc; bấm "Tổng kết" (8/11, trước là "Thứ hạng các nhóm"):
    các bạn còn lại thắp đuốc theo hạng rồi dừng, hiện nút "Tiếp theo" (8/11); bấm "Tiếp theo": 4 tia lửa bay lên số 51,
    lửa đốt tan màn đêm hiện báo tường, 4 bạn về ô dán thiệp; bấm "Tiếp theo" lần cuối (8/11 tối, trước là "Hiện báo tường"):
-   lễ cắt băng khánh thành (vệt sáng quét, kéo vàng cắt dải băng, pháo giấy), cả lớp vỗ tay; không phóng to thu nhỏ.
+   vệt sáng quét qua, dải băng xanh che dòng chữ rơi xuống, dòng chữ chúc mừng hiện dần (9/11; 8/11 tối là kéo vàng cắt băng),
+   pháo giấy, cả lớp vỗ tay; không phóng to thu nhỏ.
    Hình vẽ bằng các hàm trong cay-cau.js. Thời điểm hoạt cảnh tính từ lúc giáo viên bấm. */
 (function () {
   "use strict";
@@ -358,13 +359,18 @@
   //   tính trong vuaManHinh().
   // 8/11 tối (thầy Thịnh: "ở đoạn clip cuối đừng có ra nút bấm hiện báo tường, nút đó đổi thành nút tiếp theo. khi bấm vào thì báo
   //   tường hiện đầy đủ nhưng đừng có hiệu ứng phóng to thu nhỏ, đổi hiệu ứng nào hay hay đi"): nút cuối nay ghi "Tiếp theo". Bỏ cả
-  //   hai lần phóng to (báo tường to dần 1 giây; dòng chữ phóng to rồi thu về). Nay là lễ cắt băng khánh thành, tính từ lúc bấm (S.H0):
-  //   1. 0–0,8 giây: vệt sáng vàng quét chéo qua màn hình. Phía sau vệt sáng báo tường đã ở cỡ đầy màn hình (KF) trên nền nhoè,
-  //      phía trước vẫn như lúc chưa bấm, nên không lúc nào báo tường to dần;
-  //   2. KEO: cây kéo vàng đưa vào, mở ra; CAT: kéo khép lại cắt đôi dải băng đỏ ở giữa (chớp sao, tiếng trống, khúc mộc cầm, vỗ tay);
-  //   3. hai nửa dải băng rủ xuống hai bên rồi tan, lộ dòng chữ; pháo giấy bắn lên từ hai góc dưới và rơi khắp khung xem; vệt sáng
-  //      lướt qua dòng chữ; sao vàng lấp lánh quanh dòng chữ và số 51 chừng 9 giây rồi đứng yên.
-  const QUET = .8, KEO = .5, CAT = 1.15;
+  //   hai lần phóng to (báo tường to dần 1 giây; dòng chữ phóng to rồi thu về).
+  // 9/11 (thầy Thịnh: "Có một dải màu xanh che cái phần chữ chúc mừng 51 năm ngày truyền thống. Sau khi tôi bấm nút tiếp theo, thì
+  //   để băng đó rớt xuống. Có hiệu ứng rớt xuống. Rồi sau đó xuất hiện cái chữ chúc mừng 51 năm ngày truyền thống."): bỏ cây kéo cắt
+  //   băng của 8/11 tối. Dải băng che dòng chữ nay màu xanh dương viền vàng. Tính từ lúc bấm nút cuối (S.H0):
+  //   1. 0–QUET: vệt sáng vàng quét chéo qua màn hình. Phía sau vệt sáng báo tường đã ở cỡ đầy màn hình (KF) trên nền nhoè, phía
+  //      trước vẫn như lúc chưa bấm, nên không lúc nào báo tường to dần; băng xanh còn nằm yên (trống dồn);
+  //   2. ROI: băng xanh nảy nhẹ rồi rơi xuống như tấm vải (gợn sóng, lắc lư, nghiêng dần) ra khỏi màn hình (một tiếng trống, tiếng
+  //      gió). Dưới băng là dải băng đỏ của báo tường còn trống (tấm xoá chữ bangTrong);
+  //   3. HIEN đến XONG: dòng chữ hiện dần từ trái sang phải sau một vệt sáng vàng nghiêng, bụi sao rơi lại (tiếng lấp lánh);
+  //   4. XONG: tiếng trống, khúc mộc cầm, vỗ tay; pháo giấy bắn lên từ hai góc dưới và rơi khắp khung xem; vệt sáng lướt qua dòng
+  //      chữ lần nữa; sao vàng lấp lánh quanh dòng chữ và số 51 chừng 9 giây rồi đứng yên.
+  const QUET = .8, ROI = .9, HIEN = 1.6, VIET = 1.1, XONG = HIEN + VIET;
   // biến đổi đưa khung báo tường K về khung đầy màn hình KF
   function bienKF() {
     const F = S.ext && S.ext.KF; if (!F) return null;
@@ -443,7 +449,7 @@
     henRanh(() => { nenBao(); khungBao(); });
     henRanh(canhBao);
     henRanh(nenMo);
-    henRanh(() => { bangChe(); luoiKeo(); vetLuot(); domCat(); domLap(); });     // hình vẽ sẵn của lễ cắt băng
+    henRanh(() => { bangChe(); bangTrong(); vetLuot(); domCat(); domLap(); });     // hình vẽ sẵn: băng xanh, tấm xoá chữ, vệt sáng
   }
   // vệt sáng quét chéo (góc QG so với trục ngang) từ góc trên trái xuống góc dưới phải khung xem; s: vị trí giữa vệt sáng, đo dọc
   //   hướng quét (toạ độ thế giới)
@@ -500,8 +506,9 @@
       if (f < 1) veVetQuet(c, s, t);
     }
   }
-  // trên báo tường (toạ độ khung K): che chữ "Ô dán thiệp n", dải băng (hoặc hai nửa đã cắt), vòng sáng số 51, 4 bạn với thẻ
-  //   tên nhóm; phần đã quét (sau) còn có kéo vàng, chớp sao lúc cắt, vệt sáng lướt qua dòng chữ, sao lấp lánh
+  // trên báo tường (toạ độ khung K): che chữ "Ô dán thiệp n", tấm xoá chữ (từ lúc băng rơi tới lúc chữ hiện xong), băng xanh
+  //   nằm yên, vòng sáng số 51, 4 bạn với thẻ tên nhóm; phần đã quét (sau) còn có băng xanh đang rơi, vệt sáng làm hiện chữ với
+  //   bụi sao, vệt sáng lướt qua dòng chữ, sao lấp lánh
   function veTrenBao(c, t, nguoi, sau) {
     const KK = S.K;
     // 4 bạn vào ô thiệp: che chữ "Ô dán thiệp n" để ghi tên nhóm
@@ -515,41 +522,99 @@
       c.globalAlpha = p; c.drawImage(trang, cx - 125 - 22, cy - 30 - 22); c.globalAlpha = 1;
     }
     const r = S.che === "bao" ? t - S.H0 : -1;          // giây kể từ lúc bấm nút cuối (chưa bấm: -1)
-    veBangChe(c, t, r);
+    veChuTrong(c, r);
+    if (r < ROI) c.drawImage(bangChe(), BX - 30, BY - 30);
+    ve51(c, t, r);
     if (nguoi) veNguoiBao(c, t);
-    if (sau && r >= 0) veCatBang(c, t, r);
+    if (sau && r >= ROI) veBangRoi(c, r - ROI);
+    if (sau && r >= HIEN) veHienChu(c, r);
   }
-  // dải băng đỏ che dòng chữ trên báo tường (toạ độ khung K), vẽ sẵn một lần
+  // dải băng che dòng chữ trên báo tường (toạ độ khung K), vẽ sẵn một lần. 9/11: màu xanh dương viền vàng, sao trắng (8/11 tối
+  //   là màu đỏ như dải băng của báo tường, nhìn như dải băng còn trống)
   const BX = K.x + .235 * K.w, BY = K.y + .069 * K.h, BW = .53 * K.w, BH = .092 * K.h;
-  const bangChe = () => CC.veSan("bangChe", BW, BH, 30, (g, pad) => {
+  const bangChe = () => CC.veSan("bangCheXanh", BW, BH, 30, (g, pad) => {
     g.translate(pad, pad);
-    g.save(); g.shadowColor = "rgba(0,0,0,.25)"; g.shadowBlur = 14; g.shadowOffsetY = 6;
-    const gr = g.createLinearGradient(0, 0, 0, BH); gr.addColorStop(0, "#d3392d"); gr.addColorStop(1, "#a3221b");
+    g.save(); g.shadowColor = "rgba(0,0,0,.3)"; g.shadowBlur = 14; g.shadowOffsetY = 6;
+    const gr = g.createLinearGradient(0, 0, 0, BH);
+    gr.addColorStop(0, "#3d80e6"); gr.addColorStop(.5, "#2a62c8"); gr.addColorStop(1, "#1c4498");
     g.fillStyle = gr; g.fillRect(0, 0, BW, BH); g.restore();
+    const bong = g.createLinearGradient(0, 0, 0, BH);              // ánh sáng mềm như vải sa tanh
+    bong.addColorStop(0, "rgba(255,255,255,0)"); bong.addColorStop(.2, "rgba(255,255,255,.22)"); bong.addColorStop(.4, "rgba(255,255,255,0)");
+    g.fillStyle = bong; g.fillRect(0, 0, BW, BH);
     g.fillStyle = "#f3c552"; g.fillRect(0, 0, BW, 5); g.fillRect(0, BH - 5, BW, 5);
+    g.fillStyle = "rgba(255,222,130,.6)"; g.fillRect(0, 9, BW, 1.5); g.fillRect(0, BH - 10.5, BW, 1.5);
     for (let k = 0; k < 9; k++) CC.sao(g, BW * (k + .5) / 9, BH / 2 + (k % 2 ? 8 : -8), k % 2 ? 9 : 12, .9);
   });
-  // nửa dải băng sau khi cắt rủ xuống quanh đầu buộc: dao động tắt dần quanh 75°, vận tốc đầu bằng 0
-  const ru = u => 1 - Math.exp(-4 * u) * (Math.cos(7 * u) + 4 / 7 * Math.sin(7 * u));
-  function veBangChe(c, t, r) {
-    const tc = r < 0 ? -1 : r - CAT;
-    if (tc < 0) c.drawImage(bangChe(), BX - 30, BY - 30);
-    else {
-      const a = 1 - lin(tc, .6, 1.35);
-      if (a > 0) {
-        const bang = bangChe(), g = 75 * Math.PI / 180 * ru(tc), nua = 30 + BW / 2, hb = bang.height, yg = BY + BH / 2;
-        c.save(); c.globalAlpha = a;
-        c.translate(BX, yg); c.rotate(g); c.translate(-BX, -yg);
-        c.drawImage(bang, 0, 0, nua, hb, BX - 30, BY - 30, nua, hb);
-        c.restore();
-        c.save(); c.globalAlpha = a;
-        c.translate(BX + BW, yg); c.rotate(-g); c.translate(-BX - BW, -yg);
-        c.drawImage(bang, nua, 0, bang.width - nua, hb, BX - 30 + nua, BY - 30, bang.width - nua, hb);
-        c.restore();
+  // tấm xoá chữ (9/11): chỗ hai dòng chữ "CHÚC MỪNG 51 NĂM NGÀY TRUYỀN THỐNG" và "TRƯỜNG TRUNG HỌC CƠ SỞ PHAN TÂY HỒ (…)" trên dải
+  //   băng đỏ của báo tường, tô kín màu đỏ: mỗi cột nối liền màu của ba chỗ đỏ không có chữ (ngay dưới chỉ vàng trên, khe giữa hai
+  //   dòng chữ, ngay trên chỉ vàng dưới), làm mượt 5 cột. Băng xanh rơi thì thấy dải băng đỏ còn trống, rồi chữ mới hiện ra.
+  //   Toạ độ trong ảnh báo tường đã thu về đúng K.w × K.h (đo 9/11 trên báo tường bản 15b; hai đầu chừa nơ vàng). Ảnh không cho
+  //   đọc điểm ảnh thì tô dải màu đỏ thay (veChuTrong).
+  const XC = { x: 371, y: 84, w: 733, h: 70, tren: 83, giua: [118, 127], duoi: [154, 156] };
+  let cvTrong = null, soTrong = -1;
+  function bangTrong() {
+    if (!bao || soTrong === baoSo) return cvTrong;
+    soTrong = baoSo; cvTrong = null;
+    try {
+      const w = XC.w, y0 = XC.tren, h = XC.duoi[1] - y0;
+      const doc = document.createElement("canvas"); doc.width = w; doc.height = h;
+      const g = doc.getContext("2d", { willReadFrequently: true });
+      g.drawImage(bao, -XC.x, -y0);
+      const p = g.getImageData(0, 0, w, h).data;
+      // màu trung bình theo từng cột của các hàng a … b - 1 (toạ độ K), làm mượt 5 cột
+      const tb = (a, b) => {
+        const m = new Float32Array(w * 3), o = new Float32Array(w * 3);
+        for (let y = a; y < b; y++) for (let x = 0; x < w; x++) {
+          const i = ((y - y0) * w + x) * 4; m[3 * x] += p[i]; m[3 * x + 1] += p[i + 1]; m[3 * x + 2] += p[i + 2];
+        }
+        for (let x = 0; x < w; x++) {
+          const x0 = Math.max(0, x - 2), x1 = Math.min(w - 1, x + 2), n = (x1 - x0 + 1) * (b - a);
+          for (let j = 0; j < 3; j++) { let s = 0; for (let k = x0; k <= x1; k++) s += m[3 * k + j]; o[3 * x + j] = s / n; }
+        }
+        return o;
+      };
+      const T = tb(XC.tren, XC.tren + 1), G = tb(XC.giua[0], XC.giua[1]), D = tb(XC.duoi[0], XC.duoi[1]);
+      const yT = XC.tren + .5, yG = (XC.giua[0] + XC.giua[1]) / 2, yD = (XC.duoi[0] + XC.duoi[1]) / 2;
+      const ra = document.createElement("canvas"); ra.width = w; ra.height = XC.h;
+      const gr = ra.getContext("2d"), anh = gr.createImageData(w, XC.h), q = anh.data;
+      for (let yy = 0; yy < XC.h; yy++) {
+        const y = XC.y + yy + .5, tren = y < yG, A = tren ? T : G, B = tren ? G : D, f = tren ? (y - yT) / (yG - yT) : (y - yG) / (yD - yG);
+        for (let x = 0; x < w; x++) {
+          const i = (yy * w + x) * 4;
+          for (let j = 0; j < 3; j++) q[i + j] = A[3 * x + j] + (B[3 * x + j] - A[3 * x + j]) * f;
+          q[i + 3] = 255;
+        }
       }
+      gr.putImageData(anh, 0, 0);
+      cvTrong = ra;
+    } catch (e) { cvTrong = null; }
+    return cvTrong;
+  }
+  // dòng chữ hiện dần từ trái sang phải: mép một vệt sáng nghiêng (như vetLuot, nghiêng .3) đi từ XL - 60 tới XR + 60 (toạ độ x
+  //   của mép ở ngang tâm tấm xoá chữ YG)
+  const XL = K.x + XC.x, XR = XL + XC.w, YT = K.y + XC.y, YB = YT + XC.h, YG = (YT + YB) / 2, TG = Math.tan(.3);
+  const mepChu = r => XL - 60 + (XR - XL + 120) * (.5 - .5 * Math.cos(Math.PI * lin(r, HIEN, XONG)));
+  // tấm xoá chữ, từ lúc băng xanh rơi; lúc chữ hiện dần chỉ còn phần bên phải mép vệt sáng
+  function veChuTrong(c, r) {
+    if (r < ROI || r >= XONG) return;
+    c.save();
+    if (r > HIEN) {
+      const xe = mepChu(r), d = (YB - YT) / 2 + 4;
+      c.beginPath(); c.moveTo(xe + d * TG, YT - 4); c.lineTo(XR + 4, YT - 4); c.lineTo(XR + 4, YB + 4); c.lineTo(xe - d * TG, YB + 4);
+      c.closePath(); c.clip();
     }
-    // vòng sáng quanh số 51 lúc chờ bấm; tắt dần khi cắt băng
-    const a51 = tc < 0 ? 1 : 1 - lin(tc, 0, .5);
+    const tr = bangTrong();
+    if (tr) c.drawImage(tr, XL, YT);
+    else {
+      const gr = c.createLinearGradient(0, YT, 0, YB);
+      gr.addColorStop(0, "#e65e4a"); gr.addColorStop(.55, "#d4473a"); gr.addColorStop(1, "#bd3d31");
+      c.fillStyle = gr; c.fillRect(XL, YT, XR - XL, YB - YT);
+    }
+    c.restore();
+  }
+  // vòng sáng quanh số 51 lúc chờ bấm; tắt dần khi băng xanh rơi
+  function ve51(c, t, r) {
+    const a51 = r < ROI ? 1 : 1 - lin(r, ROI, ROI + .5);
     if (a51 <= 0) return;
     const pu = .5 + .5 * Math.sin(t * 3.9);
     c.save(); c.globalAlpha = a51; c.globalCompositeOperation = "lighter";
@@ -564,53 +629,39 @@
     c.strokeStyle = "rgba(255,230,130,.9)"; c.lineWidth = 5 + 3 * pu; c.stroke();
     c.restore();
   }
-  // cây kéo vàng: lưỡi thép, quai đỏ viền vàng. Vẽ sẵn một lưỡi (chốt kéo ở gốc toạ độ, mũi kéo hướng lên, quai ở dưới bên
-  //   phải), lưỡi kia là hình lật gương. Kéo nghiêng KEO_G, chốt đặt sao cho hai lưỡi cắt đúng giữa dải băng; mũi kéo dừng dưới số 51.
-  const KEO_L = 135, KEO_G = -12 * Math.PI / 180;
-  const KEO_X = BX + BW / 2 + 90 * Math.sin(-KEO_G), KEO_Y = BY + BH / 2 + 90 * Math.cos(KEO_G);
-  const luoiKeo = () => CC.veSan("luoiKeo", 70, KEO_L + 96, 16, (g, pad) => {
-    g.translate(pad + 22, pad + KEO_L + 6);
-    g.shadowColor = "rgba(40,20,0,.38)"; g.shadowBlur = 8; g.shadowOffsetY = 4;
-    g.strokeStyle = "#e0a92a"; g.lineWidth = 8; g.lineCap = "round";                     // cán vàng nối chốt với quai
-    g.beginPath(); g.moveTo(-1, 4); g.lineTo(13, 36); g.stroke();
-    g.save(); g.translate(22, 60); g.rotate(.32);                                          // quai đỏ viền vàng
-    g.beginPath(); g.ellipse(0, 0, 15, 21, 0, 0, 7);
-    g.strokeStyle = "#c8261e"; g.lineWidth = 10; g.stroke();
-    g.shadowColor = "transparent"; g.strokeStyle = "#ffd76a"; g.lineWidth = 2.5; g.stroke();
-    g.restore();
-    g.beginPath(); g.moveTo(3, 6); g.lineTo(.5, -KEO_L); g.quadraticCurveTo(-14, -KEO_L * .38, -9, 7); g.closePath();   // lưỡi thép
-    const gr = g.createLinearGradient(-12, 0, 4, 0);
-    gr.addColorStop(0, "#8f99a6"); gr.addColorStop(.55, "#f6f9fd"); gr.addColorStop(1, "#bcc4ce");
-    g.fillStyle = gr; g.fill();
-    g.shadowColor = "transparent"; g.strokeStyle = "rgba(60,68,80,.55)"; g.lineWidth = 1.2; g.stroke();
-  });
-  function veKeo(c, x, y, mo, a) {
-    const L = luoiKeo(), ox = 38, oy = KEO_L + 22;
-    c.save(); c.globalAlpha = a; c.translate(x, y); c.rotate(KEO_G);
-    c.save(); c.rotate(mo / 2); c.scale(-1, 1); c.drawImage(L, -ox, -oy); c.restore();      // lưỡi sau (lật gương): mũi sang phải khi mở
-    c.save(); c.rotate(-mo / 2); c.drawImage(L, -ox, -oy); c.restore();                    // lưỡi trước: mũi sang trái khi mở
-    c.fillStyle = "#f6d36a"; c.beginPath(); c.arc(0, 0, 6.5, 0, 7); c.fill();               // đinh chốt
-    c.fillStyle = "#9c6a07"; c.beginPath(); c.arc(0, 0, 2.2, 0, 7); c.fill();
+  // băng xanh rơi (u: giây kể từ lúc buông): nảy nhẹ lên rồi rơi như tấm vải (có sức cản của gió: nhanh dần tới khoảng 2000 đơn
+  //   vị một giây), lắc lư sang hai bên, nghiêng dần, mờ đi khi đã ra khỏi báo tường. Vẽ thành LAT lát dọc; mỗi lát xô nghiêng cho
+  //   khớp hai lát bên cạnh theo sóng gợn chạy dọc băng và độ võng (giữa rơi trước, hai đầu bị gió giữ lại); lát dốc xuống tối hơn,
+  //   dốc lên sáng hơn như nếp vải.
+  const LAT = 30;
+  function lechVai(s, u) {           // độ lệch dọc của vải ở chỗ s (-1: đầu trái … 1: đầu phải)
+    const B = 30 * (1 - Math.exp(-4 * u)), A = 15 * (1 - Math.exp(-5 * u));
+    return -B * s * s + A * Math.sin(3.6 * s - 8.5 * u);
+  }
+  function veBangRoi(c, u) {
+    const a = 1 - lin(u, .95, 1.3); if (a <= 0) return;
+    const sp = bangChe(), k = 2.6, vT = 2000, uf = Math.max(0, u - .08);
+    const y = vT * uf - vT / k * (1 - Math.exp(-k * uf)) - 9 * Math.sin(Math.PI * Math.min(1, u / .16));
+    const x = 24 * Math.sin(2.4 * u) * (1 - Math.exp(-3 * u));
+    const g = .085 * Math.sin(2.9 * u + .5) * Math.min(1, u / .25) + .05 * u;
+    const nx = BW / 2 + 30, ny = BH / 2 + 30, sw = sp.width / LAT;
+    c.save(); c.globalAlpha = a;
+    c.translate(BX + BW / 2 + x, BY + BH / 2 + y); c.rotate(g);
+    for (let i = 0; i < LAT; i++) {
+      const xa = -nx + i * sw, ww = Math.min(sw + .7, sp.width - i * sw);
+      const oa = lechVai(xa / (BW / 2), u), d = (lechVai((xa + sw) / (BW / 2), u) - oa) / sw;
+      c.save(); c.transform(1, d, 0, 1, 0, oa - d * xa);
+      c.drawImage(sp, i * sw, 0, ww, sp.height, xa, -ny, ww, sp.height);
+      const bong = d * 1.6, f0 = Math.max(xa, -BW / 2), f1 = Math.min(xa + sw, BW / 2);     // nếp vải: chỉ tô trên thân băng, các lát không chồng nhau
+      if (f1 > f0 && bong > .01) { c.fillStyle = "rgba(6,16,48," + Math.min(.32, bong).toFixed(3) + ")"; c.fillRect(f0, -BH / 2, f1 - f0, BH); }
+      else if (f1 > f0 && bong < -.01) { c.fillStyle = "rgba(255,255,255," + Math.min(.2, -bong * .7).toFixed(3) + ")"; c.fillRect(f0, -BH / 2, f1 - f0, BH); }
+      c.restore();
+    }
     c.restore();
   }
   const domCat = () => domSang("cat", "rgba(255,247,215,1)", "rgba(255,190,80,0)");
   const domLap = () => domSang("lap", "rgba(255,238,170,1)", "rgba(255,200,90,0)");
-  // chớp sao lúc kéo cắt đôi dải băng (p: 0..1)
-  function veChopCat(c, x, y, p) {
-    const q = 1 - p, e = eo(p), R = 60 + 170 * e;
-    c.save(); c.globalCompositeOperation = "lighter";
-    c.globalAlpha = q * q; c.drawImage(domCat(), x - R, y - R, 2 * R, 2 * R);
-    c.globalAlpha = q; c.strokeStyle = "#ffe08c"; c.lineCap = "round";
-    c.lineWidth = 2 + 8 * q; c.beginPath(); c.arc(x, y, 24 + 190 * e, 0, 7); c.stroke();
-    c.lineWidth = 3 + 4 * q;
-    for (let j = 0; j < 10; j++) {
-      const g = (j + .5) * Math.PI / 5, r1 = 30 + 150 * e, r2 = r1 + 64 * q;
-      c.beginPath(); c.moveTo(x + r1 * Math.cos(g), y + r1 * Math.sin(g)); c.lineTo(x + r2 * Math.cos(g), y + r2 * Math.sin(g)); c.stroke();
-    }
-    CC.sao(c, x, y, 20 + 64 * q, q);
-    c.restore();
-  }
-  // vệt sáng lướt qua dòng chữ vừa lộ ra (gl: 0..1)
+  // vệt sáng vàng nghiêng: làm hiện dòng chữ, rồi lướt qua dòng chữ lần nữa
   const vetLuot = () => CC.veSan("vetLuot", 220, 170, 0, g => {
     const gx = g.createLinearGradient(0, 0, 220, 0);
     gx.addColorStop(0, "rgba(255,248,225,0)"); gx.addColorStop(.3, "rgba(255,246,220,.28)"); gx.addColorStop(.44, "rgba(255,250,232,.8)");
@@ -622,12 +673,19 @@
     gy.addColorStop(0, "rgba(0,0,0,0)"); gy.addColorStop(.22, "rgba(0,0,0,1)"); gy.addColorStop(.78, "rgba(0,0,0,1)"); gy.addColorStop(1, "rgba(0,0,0,0)");
     g.fillStyle = gy; g.fillRect(0, 0, 220, 170);
   });
-  function veLuot(c, gl) {
-    c.save(); c.globalCompositeOperation = "lighter"; c.globalAlpha = .9 * Math.sin(Math.PI * gl);
-    c.translate(BX - 60 + (BW + 120) * em(gl), BY + BH / 2); c.rotate(.3); c.drawImage(vetLuot(), -110, -85);
+  function veLuot(c, x, a) {
+    c.save(); c.globalCompositeOperation = "lighter"; c.globalAlpha = a;
+    c.translate(x, YG); c.rotate(.3); c.drawImage(vetLuot(), -110, -85);
     c.restore();
   }
-  // sao vàng lấp lánh quanh dòng chữ và số 51 sau khi cắt băng: mỗi sao loé hai lần (cách 3 giây)
+  // bụi sao vàng rơi lại sau mép vệt sáng lúc chữ hiện dần
+  const BUI = (() => {
+    let s = 3; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+    const d = [];
+    for (let j = 0; j < 34; j++) d.push({ p: .14 + .72 * (j + rnd()) / 34, y: YT + 4 + rnd() * (XC.h - 8), vx: -(14 + rnd() * 34), vy: -(6 + rnd() * 26), r: 6 + rnd() * 7 });
+    return d;
+  })();
+  // sao vàng lấp lánh quanh dòng chữ và số 51 sau khi chữ hiện xong: mỗi sao loé hai lần (cách 3 giây)
   const SAO_CB = (() => {
     let s = 7; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
     const d = [];
@@ -650,19 +708,29 @@
     }));
     c.restore();
   }
-  // lễ cắt băng (r: giây kể từ lúc bấm nút cuối)
-  function veCatBang(c, t, r) {
-    const tc = r - CAT;
-    // kéo vàng đưa vào và mở ra, khép lại cắt đôi dải băng ở giữa, rồi lùi ra và tan
-    if (r >= KEO && tc < .45) {
-      const vao = eo(lin(r, KEO, KEO + .3)), lui = em(lin(tc, 0, .45));
-      const mo = tc >= 0 ? 0 : r < CAT - .18 ? 8 + 22 * vao : 30 * (1 - em(lin(r, CAT - .18, CAT)));
-      veKeo(c, KEO_X + 70 * (1 - vao) + 46 * lui, KEO_Y + 56 * (1 - vao) + 40 * lui, mo * Math.PI / 180, vao * (1 - lui));
+  // dòng chữ hiện (r: giây kể từ lúc bấm nút cuối): vệt sáng nghiêng làm hiện chữ, hai sao lớn chạy theo mép, bụi sao; hiện xong
+  //   thì vệt sáng lướt qua lần nữa, sao vàng lấp lánh
+  function veHienChu(c, r) {
+    if (r < XONG + .1) {
+      const xe = mepChu(r), k = Math.max(0, Math.min(1, (r - HIEN) / .15, (XONG + .1 - r) / .2)), dom = domLap();
+      veLuot(c, xe, .95 * k);
+      c.save(); c.globalCompositeOperation = "lighter";
+      BUI.forEach(d => {
+        const tb = HIEN + d.p * VIET, a = r - tb; if (a <= 0 || a >= .75) return;
+        const q = Math.sin(Math.PI * a / .75), x = mepChu(tb) - (d.y - YG) * TG + d.vx * a, y = d.y + d.vy * a;
+        c.globalAlpha = .55 * q; c.drawImage(dom, x - 2.2 * d.r, y - 2.2 * d.r, 4.4 * d.r, 4.4 * d.r);
+        CC.sao(c, x, y, d.r * (.45 + .55 * q), q);
+      });
+      if (xe > XL - 30 && xe < XR + 30) [.26, .74].forEach((v, j) => {
+        const y = YT + XC.h * v, x = xe - (y - YG) * TG, q = .7 + .3 * Math.sin(r * 17 + j * 2);
+        c.globalAlpha = .6 * k; c.drawImage(dom, x - 34, y - 34, 68, 68);
+        CC.sao(c, x, y, (15 + 9 * q) * k, k);
+      });
+      c.restore();
     }
-    if (tc >= 0 && tc < .7) veChopCat(c, BX + BW / 2, BY + BH / 2, tc / .7);
-    const gl = lin(tc, .8, 1.8);
-    if (gl > 0 && gl < 1) veLuot(c, gl);
-    if (tc > .2 && tc < 9.6) veLapLanh(c, tc);
+    const gl = lin(r, XONG + .5, XONG + 1.5);
+    if (gl > 0 && gl < 1) veLuot(c, XL - 60 + (XR - XL + 120) * em(gl), .9 * Math.sin(Math.PI * gl));
+    if (r - XONG > .2 && r - XONG < 9.6) veLapLanh(c, r - XONG);
   }
   const choDuoc = i => [CC.xCanhDuoc(i), CC.yChan(i)];
   function nguoiBao(t) {
@@ -695,10 +763,10 @@
       c.save(); c.globalAlpha = p; c.translate(x, y + 34); c.scale(s, s); c.drawImage(the, -96, -38); c.restore();
     });
   }
-  // pháo giấy bắn lên từ hai góc dưới lúc cắt băng (như pháo kim tuyến ở lễ khánh thành): kim tuyến vàng, bạc và giấy màu bay
+  // pháo giấy bắn lên từ hai góc dưới lúc dòng chữ hiện xong (như pháo kim tuyến ở lễ khánh thành): kim tuyến vàng, bạc và giấy màu bay
   //   vút lên, chậm dần rồi rơi lả tả; khung xem cao (điện thoại cầm dọc) thì bắn cao theo
   function vePhaoBan(c, t) {
-    const u = t - S.H0 - CAT; if (u < 0 || u > 6) return;
+    const u = t - S.H0 - XONG; if (u < 0 || u > 6) return;
     const E = S.ext, sy = Math.max(1, E.EH / H), sx = Math.max(1, E.EW / W), k = 1.5, g = 380 * sy;
     if (u < .35) {                                       // chớp sáng ở hai miệng pháo
       const R = 90 + 160 * eo(u / .35);
@@ -721,9 +789,9 @@
       c.fillStyle = m; c.fillRect(-w / 2, -h / 2, w, h); c.restore();
     }
   }
-  // pháo giấy rơi khắp khung xem sau khi cắt băng
+  // pháo giấy rơi khắp khung xem sau khi dòng chữ hiện xong
   function vePhaoGiay(c, t) {
-    const t0 = S.H0 + CAT + .1; if (t < t0 || t > t0 + 6) return;
+    const t0 = S.H0 + XONG + .1; if (t < t0 || t > t0 + 6) return;
     let s = 5; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
     const MAU = ["#ffd76a", "#e9532f", "#2f9a58", "#2f6fd6", "#8b52cc", "#ff8fb1", "#ffffff"];
     const E = S.ext;                    // 6/11 chiều: rơi khắp khung xem (cả phần dư ngoài khung 16:9)
@@ -1028,10 +1096,14 @@
     if (KK.F0 < CHUA) hen(KK.F0 + .9, () => am().trong && am().trong(1));               // bốn tia lửa chạm số 51 (sau "Tiếp theo")
   }
   function tiengBao() {
-    // 8/11 tối: trống dồn lúc vệt sáng quét và kéo vàng đưa vào; lúc kéo cắt đôi dải băng: tiếng trống, khúc mộc cầm, vỗ tay
-    hen(S.H0, () => am().trongDon && am().trongDon(CAT - .1));
-    hen(S.H0 + CAT, () => { am().trong && am().trong(1); am().ken && am().ken(); });
-    hen(S.H0 + CAT + .1, () => am().voTay && am().voTay());     // 8/11 thầy Thịnh: "bấm nút hiện báo tường thì sẽ có tiếng vỗ tay"
+    // 9/11: trống dồn lúc vệt sáng quét; băng xanh rơi: một tiếng trống và tiếng gió; dòng chữ hiện dần: tiếng lấp lánh; chữ hiện
+    //   xong: tiếng trống, khúc mộc cầm, vỗ tay (8/11 thầy Thịnh: "bấm nút hiện báo tường thì sẽ có tiếng vỗ tay")
+    hen(S.H0, () => am().trongDon && am().trongDon(ROI - .1));
+    hen(S.H0 + ROI, () => { am().trong && am().trong(.8); am().roi && am().roi(); });
+    hen(S.H0 + HIEN + .2, () => am().lapLanh && am().lapLanh());
+    hen(S.H0 + HIEN + .7, () => am().lapLanh && am().lapLanh());
+    hen(S.H0 + XONG, () => { am().trong && am().trong(1); am().ken && am().ken(); });
+    hen(S.H0 + XONG + .1, () => am().voTay && am().voTay());
   }
 
   /* ---------- vòng vẽ ---------- */

@@ -176,6 +176,11 @@
     if (!san()) return;
     tiengNhieu(ac.currentTime, 0.9, "bandpass", 300, 2400, 1.4, 0.3);
   };
+  // 9/11: tiếng gió khi dải băng xanh rơi xuống (tiếng nhiễu lọc dải, cao rồi trầm dần)
+  A.roi = function () {
+    if (!san()) return;
+    tiengNhieu(ac.currentTime, 0.75, "bandpass", 1500, 260, 1.1, 0.2);
+  };
   // đuốc bén lửa: tiếng "phừng" nhẹ và một tiếng chuông (trước đây là tiếng nổ trầm kèm trống; 6/11 bỏ tiếng lách tách)
   A.bungLua = function () {
     if (!san()) return;
