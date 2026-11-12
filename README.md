@@ -5,5 +5,6 @@ Trò chơi khởi động tiết Toán 6 (lớp 6/3, THCS Phan Tây Hồ): 4 nh�
 - Màn hình TV: mở trang, chọn **Màn hình TV**, bấm F11.
 - Điện thoại: mở trang bằng Chrome (hoặc quét mã QR hiện trên TV), chọn **Điện thoại**.
 - Để điện thoại gửi kết quả sang TV: điền cấu hình Firebase vào `js/cau-hinh.js`.
+- Bản thử thẻ mới (mỗi em 4 thẻ rời A, B, C, D, không xoay thẻ): `the-moi.html` cùng thư mục `js-the-moi/`. Trang chính `index.html` và `js/` giữ nguyên, vẫn dùng thẻ cũ.
 - Ảnh báo tường có hình thầy cô nên không nằm trong kho này: chọn ảnh từ máy ở phần Chuẩn bị trên TV.
 - Nhạc nền: bản Suno của thầy Thịnh (nhac/nhac-nen.ogg).
