@@ -6,5 +6,6 @@ Trò chơi khởi động tiết Toán 6 (lớp 6/3, THCS Phan Tây Hồ): 4 nh�
 - Điện thoại: mở trang bằng Chrome (hoặc quét mã QR hiện trên TV), chọn **Điện thoại**.
 - Để điện thoại gửi kết quả sang TV: điền cấu hình Firebase vào `js/cau-hinh.js`.
 - Bản thử thẻ mới (mỗi chữ A, B, C, D một mã riêng, không xoay thẻ; in 4 thẻ rời hoặc 2 thẻ hai mặt đều đọc được): `the-moi.html` cùng thư mục `js-the-moi/`. Trang chính `index.html` và `js/` giữ nguyên, vẫn dùng thẻ cũ.
+- Bản thử Xếp thiệp (hoạt động 2): thư mục `xep-thiep/`. Tivi mở trang, mỗi nhóm quét mã QR bằng điện thoại hoặc máy tính bảng rồi xếp 10 mảnh, tivi hiện 4 tấm thiệp cùng lúc. Dữ liệu nằm ở nhánh riêng `ruoc-duoc/xep-thiep`, không đụng tới trò Rước đuốc.
 - Ảnh báo tường có hình thầy cô nên không nằm trong kho này: chọn ảnh từ máy ở phần Chuẩn bị trên TV.
 - Nhạc nền: bản Suno của thầy Thịnh (nhac/nhac-nen.ogg).
