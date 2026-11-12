@@ -1581,6 +1581,14 @@
   //   ghi rồi khóa nhầm (thẻ đã ghi thì giữ đáp án đầu tiên). tc: lúc chụp khung; kết quả đến trễ của khung chụp trước
   //   lần đọc mới nhất thì bỏ qua cho thẻ đó.
   var GIU_CHU = 150;
+  // bản thử 12/11 (thầy Thịnh: "tối ưu lại web"): "Ghi ngay" = ghi ở lần đọc rõ đầu tiên, không chờ giữ chữ 0,15 giây.
+  //   Mặc định BẬT: mã phải khớp đủ 16 ô, đo trên 5.460 khung ảnh thật không ra thẻ ma nào (the-4-mat/nguon/thu-ma-12-11/e7).
+  //   Tắt bằng ô trên màn quét, máy nhớ (rd-ghi-ngay = "0"). Luật "một em hiện 2 thẻ" vẫn giữ.
+  var GHI_NGAY = lsGet("rd-ghi-ngay", "1") !== "0";
+  RD.ghiNgay = function (b) { if (b != null) { GHI_NGAY = !!b; lsSet("rd-ghi-ngay", GHI_NGAY ? "1" : "0"); } return GHI_NGAY; };
+  // bản thử: phần ghi số đo (js-the-moi/do.js) hỏi trạng thái quét và danh sách lớp
+  RD.trangThaiQuet = function () { return { key: PQ ? PQ.key : "", q: PQ ? PQ.q : 0, dem: dangDem(), n: PQ ? Object.keys(PQ.obs).length : 0, ghiNgay: GHI_NGAY }; };
+  RD.lopHienTai = function () { return RD.lop(cfg()); };
   function nhanKhung(cards, tc) {
     if (!PQ || NGHIENG || dangDem()) return;
     var lop = RD.lop(cfg()), t = tc || performance.now(), doi = false, moi = 0;
@@ -1591,13 +1599,14 @@
       //   tính lại thời gian giữ chữ; em cất bớt một thẻ, giữ yên thẻ còn lại thì ghi như thường. Thẻ đã ghi vẫn giữ nguyên.
       var th = THAY[k] || (THAY[k] = {}), hai = !!c.hai;
       if (!hai) { th[l] = t; for (var x in th) if (x !== l && Math.abs(t - th[x]) < HAI_THE) hai = true; }
-      if (hai) { HAI[k] = performance.now(); delete CHO[k]; return; }
+      if (hai) { HAI[k] = performance.now(); delete CHO[k]; if (RD.Do) RD.Do.hai(c, t, PQ); return; }
       if (ch && t < ch.moi) return;
       if (ch && ch.l === l && t - ch.moi < 1600) ch.moi = t;
       else CHO[k] = ch = { l: l, dau: t, moi: t };
-      if (ch.moi - ch.dau >= GIU_CHU && !PQ.obs[k]) {
+      if (ch.moi - ch.dau >= (GHI_NGAY ? 0 : GIU_CHU) && !PQ.obs[k]) {
         moi++;
         PQ.obs[k] = { k: c.k, dang: "live", t: Date.now() };
+        if (RD.Do) RD.Do.ghi(c, t, PQ);   // bản thử: số đo
         doi = true;
       }
     });

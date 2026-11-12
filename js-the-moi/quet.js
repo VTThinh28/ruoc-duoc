@@ -18,7 +18,7 @@
         if (!r.ok) throw new Error("scanlib " + r.status);
         return r.text();
       }).then(function (txt) {
-        var code = txt + "\nself.onmessage = function (e) { var d = e.data; if (d.ping) { self.postMessage({ pong: 1 }); return; } try { var r = THE.scan({ data: new Uint8ClampedArray(d.buf), width: d.w, height: d.h }, d.maxId, { chiDu: !!d.chiDu }); self.postMessage({ id: d.id, cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist, hai: !!c.hai }; }) }); } catch (err) { self.postMessage({ id: d.id, error: String(err && err.message || err) }); } };";
+        var code = txt + "\nself.onmessage = function (e) { var d = e.data; if (d.ping) { self.postMessage({ pong: 1 }); return; } try { var r = THE.scan({ data: new Uint8ClampedArray(d.buf), width: d.w, height: d.h }, d.maxId, { chiDu: !!d.chiDu }); self.postMessage({ id: d.id, cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist, hai: !!c.hai, det: c.det }; }), nam: (r.nam || []).map(function (c) { return { id: c.id, k: c.k, size: c.size, det: c.det }; }) }); } catch (err) { self.postMessage({ id: d.id, error: String(err && err.message || err) }); } };";
         return URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
       });
     }
@@ -37,7 +37,7 @@
           var j = jobs[e.data.id];
           if (!j) return;
           delete jobs[e.data.id];
-          if (e.data.error) j.bad(new Error(e.data.error)); else j.ok(e.data.cards);
+          if (e.data.error) j.bad(new Error(e.data.error)); else { if (e.data.nam) e.data.cards.nam = e.data.nam; j.ok(e.data.cards); }
         };
         w.onerror = function () { clearTimeout(hen); bad(new Error("worker lỗi")); };
         w.postMessage({ ping: 1 });
@@ -261,7 +261,7 @@
     var tc = performance.now();
     n.ctx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, w, h);
     var im = n.ctx.getImageData(0, 0, w, h), t0 = performance.now();
-    n.ban = true;
+    n.ban = true; n.chupMs = t0 - tc; n.kw = w; n.kh = h;   // bản thử: số đo
     Q.quetAnh(im, null, { lan: n.so, chiDu: n.chiDu }).then(function (cards) {
       var dt = performance.now() - t0;
       n.ban = false;

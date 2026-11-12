@@ -1401,10 +1401,9 @@ var THE = (function () {
       var corners = m.corners.map(function (p) { return { x: (p.x + 0.5) * scale, y: (p.y + 0.5) * scale }; });
       var sh = shapeOk(corners);
       if (!sh.ok) continue;
-      if (doDet(corners) < DET_MIN) continue;
-      var kk = m.id % 4;   // mã = (số thẻ − 1) × 4 + chữ (0..3 = A..D)
+      var det = doDet(corners), kk = m.id % 4;   // mã = (số thẻ − 1) × 4 + chữ (0..3 = A..D); det dưới DET_MIN thì scan() bỏ
       out.push({
-        id: (m.id - kk) / 4 + 1, ma: m.id + 1, dist: m.hammingDistance, corners: corners, size: sh.size,
+        id: (m.id - kk) / 4 + 1, ma: m.id + 1, det: det, dist: m.hammingDistance, corners: corners, size: sh.size,
         cx: (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4,
         cy: (corners[0].y + corners[1].y + corners[2].y + corners[3].y) / 4,
         letter: LETTERS[kk], k: kk
@@ -1423,9 +1422,11 @@ var THE = (function () {
       var hf = halve(g, w, h);
       info.half = pass(hf.g, hf.w, hf.h, 2, raw, "H");
     }
-    var best = {};
+    var best = {}, nam = {};
     raw.forEach(function (m) {
       if (m.id > maxId) return;
+      // thẻ nghiêng quá 60° (det dưới DET_MIN): coi là thẻ nằm trên bàn, không tính; để riêng ra cho phần ghi số đo của bản thử
+      if (m.det < DET_MIN) { var cn = nam[m.ma]; if (!cn || m.size > cn.size) nam[m.ma] = m; return; }
       var cur = best[m.ma];
       if (!cur) { best[m.ma] = m; return; }
       var far = Math.hypot(cur.cx - m.cx, cur.cy - m.cy) > Math.max(cur.size, m.size);
@@ -1450,7 +1451,7 @@ var THE = (function () {
       theoSo[m.id] = giu;
     });
     list = Object.keys(theoSo).map(function (k) { return theoSo[k]; }).sort(function (a, b) { return a.id - b.id; });
-    return { cards: list, info: info };
+    return { cards: list, nam: Object.keys(nam).map(function (k) { return nam[k]; }), info: info };
   }
 
   return { scan: scan, CODES: CODES, LETTERS: LETTERS, letterOf: letterOf };

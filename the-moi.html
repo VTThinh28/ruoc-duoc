@@ -524,6 +524,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
       <button type="button" class="nut vang" id="dtBatCam" hidden>Bật camera quét liên tục</button>
       <label class="nut vang" id="dtChupNhan"><input type="file" accept="image/*" capture="environment" id="dtChup" hidden><span id="dtChupChu">Chụp ảnh một nhóm</span></label>
     </div>
+    <label id="dtGhiNgayKhung" style="display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:700;font-size:15px;line-height:1.3"><input type="checkbox" id="dtGhiNgay" checked style="width:24px;height:24px;flex:none"><span>Ghi ngay lần đọc rõ đầu tiên <small style="font-weight:600;opacity:.75">(bản thử: đang bật là nhanh nhất; tắt thì thẻ phải giữ yên 0,15 giây mới ghi)</small></span></label>
     <p id="dtTrangThai" class="dt-tt"></p>
     <div id="dtTo" class="dt-to"></div>
     <div id="dtPhanBo" class="dt-phanbo" hidden></div>
@@ -539,6 +540,19 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <div id="cbDT"></div>
   </section>
   <section id="dtGhi" class="dt-the dt-ghi" hidden></section>
+  <section id="dtSoDo" class="dt-the">
+    <h3>Số đo bản thử</h3>
+    <p id="sdTT" class="dt-tt" style="margin-top:0">Chưa có số đo.</p>
+    <div style="display:grid;gap:8px;margin-top:10px">
+      <button type="button" class="nut vang" id="sdGui" style="min-height:52px;font-size:17px" disabled>Gửi số đo cho Claude</button>
+      <button type="button" class="nut" id="sdTai" style="min-height:48px" disabled>Tải file số đo</button>
+      <button type="button" class="nut" id="sdChep" style="min-height:48px" disabled>Chép tóm tắt</button>
+    </div>
+    <p id="sdBao" class="dt-tt" hidden></p>
+    <details id="sdXemKhung" style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">Xem tóm tắt</summary><pre id="sdXem" style="white-space:pre-wrap;word-break:break-word;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;margin:8px 0 0;user-select:text;-webkit-user-select:text"></pre></details>
+    <p class="dt-ghi" style="margin:10px 0 0">Máy tự ghi tốc độ đọc và từng thẻ lúc thầy quét (không có ảnh, không có tên học sinh). Quét thử xong, thầy bấm một trong ba nút trên.</p>
+    <button type="button" id="sdXoa" style="margin-top:8px;padding:6px 0;border:0;background:none;color:inherit;font:inherit;font-size:14px;text-decoration:underline;opacity:.75;cursor:pointer">Xóa số đo, đo lại từ đầu</button>
+  </section>
   <div id="dtMenu" hidden><div><h3 id="dtMenuTen"></h3><div class="luoi"><button type="button" class="nut D" data-m="D">Đúng</button><button type="button" class="nut S" data-m="S">Sai</button><button type="button" class="nut" data-m="V">Vắng ở câu này</button><button type="button" class="nut" data-m="">Bỏ đánh dấu</button></div><button type="button" class="nut" id="dtMenuDong" style="width:100%;margin-top:10px">Đóng</button></div></div>
   <footer class="dt-chan">
     <button type="button" class="nut phu" id="dtLui" aria-label="Lùi lại một bước"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -549,55 +563,16 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <div id="banThu" style="position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:2147483000;background:rgba(27,94,32,.92);color:#fff;font:700 12px/1.2 system-ui,sans-serif;padding:4px 10px;border-radius:12px;pointer-events:none;white-space:nowrap;transition:opacity 1s">Bản thử · thẻ mới</div>
-<script>window.RD_V="d4616206";setTimeout(function(){var e=document.getElementById("banThu");if(e)e.style.opacity=".45";},8000);</script>
-<script src="js-the-moi/cau-hinh.js?v=d4616206"></script>
-<script src="js-the-moi/scanlib.js?v=d4616206"></script>
-<script src="js-the-moi/du-lieu.js?v=d4616206"></script>
-<script src="js-the-moi/dong-bo.js?v=d4616206"></script>
-<script src="js-the-moi/am-thanh.js?v=d4616206"></script>
-<script src="js-the-moi/quet.js?v=d4616206"></script>
-<script src="js-the-moi/cay-cau.js?v=d4616206"></script>
-<script src="js-the-moi/san-khau.js?v=d4616206"></script>
-<script src="js-the-moi/tro-choi.js?v=d4616206"></script>
-<script>
-/* Đo tốc độ đọc thẻ, chỉ có ở trang thử (12/11: thầy Thịnh hỏi vì sao trang quét chậm hơn Plickers).
-   Không đổi cách quét: chỉ đếm số lần đọc xong của từng làn rồi ghi vào nhãn "Bản thử" ở mép trên, mỗi giây một lần, lúc camera đang bật.
-   Dòng 2: tổng số lần đọc mỗi giây và cỡ hình camera đưa cho trang. Dòng 3: từng làn đọc: cỡ khung đang dùng, thời gian đọc một khung. */
-(function () {
-  "use strict";
-  var e = document.getElementById("banThu");
-  if (!e) return;
-  var goc = e.textContent, dem = 0, cu = [], t0 = 0, daGan = false;
-  function gan(L) {
-    if (daGan) return;
-    var ve = L.ve;
-    L.ve = function () {
-      (L.lan || []).forEach(function (n, i) { if (n.t && n.t !== cu[i]) { cu[i] = n.t; dem++; } });
-      return ve.apply(this, arguments);
-    };
-    daGan = true;
-  }
-  setInterval(function () {
-    var L = window.RD && RD.Quet && RD.Quet.Live;
-    if (!L || typeof L.ve !== "function") return;
-    gan(L);
-    var bay = performance.now();
-    if (!L.chay) {
-      if (e.dataset.dangDo) { e.textContent = goc; e.style.whiteSpace = "nowrap"; e.style.opacity = ".45"; delete e.dataset.dangDo; }
-      dem = 0; t0 = 0;
-      return;
-    }
-    if (!t0) { t0 = bay; dem = 0; return; }
-    if (bay - t0 < 1000) return;
-    var moiGiay = dem * 1000 / (bay - t0);
-    dem = 0; t0 = bay;
-    var v = L.video, cam = v && v.videoWidth ? v.videoWidth + "×" + v.videoHeight : "chưa rõ";
-    var lan = L.tungLan().filter(function (x) { return !x.tat; }).map(function (x) { return x.ten + " " + x.maxW + " px " + x.ms + " ms"; }).join(" · ");
-    e.dataset.dangDo = "1";
-    e.style.whiteSpace = "normal"; e.style.textAlign = "center"; e.style.opacity = ".9"; e.style.maxWidth = "94vw"; e.style.width = "max-content";
-    e.innerHTML = goc + "<br>" + (moiGiay < 9.95 ? moiGiay.toFixed(1).replace(".", ",") : Math.round(moiGiay)) + " lần đọc/giây · camera " + cam + "<br>" + lan;
-  }, 250);
-})();
-</script>
+<script>window.RD_V="06e9ce31";setTimeout(function(){var e=document.getElementById("banThu");if(e)e.style.opacity=".45";},8000);</script>
+<script src="js-the-moi/cau-hinh.js?v=06e9ce31"></script>
+<script src="js-the-moi/scanlib.js?v=06e9ce31"></script>
+<script src="js-the-moi/du-lieu.js?v=06e9ce31"></script>
+<script src="js-the-moi/dong-bo.js?v=06e9ce31"></script>
+<script src="js-the-moi/am-thanh.js?v=06e9ce31"></script>
+<script src="js-the-moi/quet.js?v=06e9ce31"></script>
+<script src="js-the-moi/cay-cau.js?v=06e9ce31"></script>
+<script src="js-the-moi/san-khau.js?v=06e9ce31"></script>
+<script src="js-the-moi/tro-choi.js?v=06e9ce31"></script>
+<script src="js-the-moi/do.js?v=06e9ce31"></script>
 </body>
 </html>
