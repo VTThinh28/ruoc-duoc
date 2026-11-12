@@ -559,5 +559,45 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 <script src="js-the-moi/cay-cau.js?v=d4616206"></script>
 <script src="js-the-moi/san-khau.js?v=d4616206"></script>
 <script src="js-the-moi/tro-choi.js?v=d4616206"></script>
+<script>
+/* Đo tốc độ đọc thẻ, chỉ có ở trang thử (12/11: thầy Thịnh hỏi vì sao trang quét chậm hơn Plickers).
+   Không đổi cách quét: chỉ đếm số lần đọc xong của từng làn rồi ghi vào nhãn "Bản thử" ở mép trên, mỗi giây một lần, lúc camera đang bật.
+   Dòng 2: tổng số lần đọc mỗi giây và cỡ hình camera đưa cho trang. Dòng 3: từng làn đọc: cỡ khung đang dùng, thời gian đọc một khung. */
+(function () {
+  "use strict";
+  var e = document.getElementById("banThu");
+  if (!e) return;
+  var goc = e.textContent, dem = 0, cu = [], t0 = 0, daGan = false;
+  function gan(L) {
+    if (daGan) return;
+    var ve = L.ve;
+    L.ve = function () {
+      (L.lan || []).forEach(function (n, i) { if (n.t && n.t !== cu[i]) { cu[i] = n.t; dem++; } });
+      return ve.apply(this, arguments);
+    };
+    daGan = true;
+  }
+  setInterval(function () {
+    var L = window.RD && RD.Quet && RD.Quet.Live;
+    if (!L || typeof L.ve !== "function") return;
+    gan(L);
+    var bay = performance.now();
+    if (!L.chay) {
+      if (e.dataset.dangDo) { e.textContent = goc; e.style.whiteSpace = "nowrap"; e.style.opacity = ".45"; delete e.dataset.dangDo; }
+      dem = 0; t0 = 0;
+      return;
+    }
+    if (!t0) { t0 = bay; dem = 0; return; }
+    if (bay - t0 < 1000) return;
+    var moiGiay = dem * 1000 / (bay - t0);
+    dem = 0; t0 = bay;
+    var v = L.video, cam = v && v.videoWidth ? v.videoWidth + "×" + v.videoHeight : "chưa rõ";
+    var lan = L.tungLan().filter(function (x) { return !x.tat; }).map(function (x) { return x.ten + " " + x.maxW + " px " + x.ms + " ms"; }).join(" · ");
+    e.dataset.dangDo = "1";
+    e.style.whiteSpace = "normal"; e.style.textAlign = "center"; e.style.opacity = ".9"; e.style.maxWidth = "94vw"; e.style.width = "max-content";
+    e.innerHTML = goc + "<br>" + (moiGiay < 9.95 ? moiGiay.toFixed(1).replace(".", ",") : Math.round(moiGiay)) + " lần đọc/giây · camera " + cam + "<br>" + lan;
+  }, 250);
+})();
+</script>
 </body>
 </html>
