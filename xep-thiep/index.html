@@ -36,10 +36,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .noi.loi { background: #f8dcd8; color: #9c2a22; }
 
 /* ---------- mảnh ghép (dùng chung) ---------- */
-.manh .than { stroke: #4a3524; stroke-width: 0.9; stroke-linejoin: round; }
+.manh .than { stroke: #4d4541; stroke-width: 0.9; stroke-linejoin: round; }
 .manh .cham { fill: transparent; stroke: transparent; stroke-width: 12; stroke-linejoin: round; }
 .manh .so { font-family: var(--chu-thuong); font-weight: 700; font-size: 9px; fill: #3a2a1c; paint-order: stroke; stroke: rgba(255, 253, 248, .8); stroke-width: 2.4px; pointer-events: none; }
-.giay { fill: var(--giay); }
+.giay { fill: #fff; }
+/* tấm thiệp (bản in 13/11) và lưới bàn xếp, dùng chung cho tivi và điện thoại */
+.tieu-de { font-family: var(--chu-thuong); font-weight: 700; font-size: 8.6px; fill: #893431; }
+.loi-chuc { font-family: var(--chu-thuong); font-style: italic; font-size: 7px; fill: #9a7b4f; }
+.cham-dong { stroke: #8f8579; stroke-width: 0.5; stroke-dasharray: 0.01 3; stroke-linecap: round; }
+.luoi-nen { fill: #fffdf8; }
+.luoi-net { stroke: #e6dcc8; stroke-width: 0.5; }
+.luoi-net.dam { stroke: #cfbfa2; stroke-width: 0.8; }
+.luoi-vien { fill: none; stroke: #b89a74; stroke-width: 1; }
+@keyframes rung { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@keyframes nhay { 0% { opacity: 1; } 100% { opacity: 0; } }
 
 /* =====================================================================
    ĐIỆN THOẠI
@@ -53,16 +63,80 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .dt-thong-bao h1 { font-family: var(--chu-dam); font-size: 30px; margin: 0 0 8px; color: #5a3a22; }
 #dtChonNut { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
 .chon-nhom { min-height: 64px; font-size: 20px; }
-#dtChinh { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+#dtChinh { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; padding-top: env(safe-area-inset-top); }
+.man { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .dt-dau { display: flex; align-items: center; gap: 10px; padding: 7px 10px 6px; }
-#dtNhom { font-family: var(--chu-dam); font-weight: 700; font-size: 19px; line-height: 1.5; color: #fff; background: var(--mau-nhom, #b3322b); padding: 0 14px; border-radius: 999px; }
-.dt-ten { font-family: var(--chu-dam); font-weight: 700; font-size: 18px; color: #5a3a22; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dtNhom { font-family: var(--chu-dam); font-weight: 700; font-size: 19px; line-height: 1.5; color: #fff; background: var(--mau-nhom, #b3322b); padding: 0 14px; border-radius: 999px; white-space: nowrap; }
+.dt-ten { font-family: var(--chu-dam); font-weight: 700; font-size: 17px; color: #5a3a22; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- bước 1: nhập số đo --- */
+.nhap-loi { margin: 0 12px 6px; min-height: 2.7em; font-size: 14.5px; line-height: 1.35; color: #6a5440; display: flex; align-items: center; }
+.nhap-loi.tot { color: #2f6b3c; font-weight: 600; }
+.nhap-cuon { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 4px; touch-action: pan-y; }
+.nhap-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 7px; }
+.o-manh { position: relative; border: 2px solid var(--nut-vien); background: var(--giay); border-radius: 14px; min-height: 84px; padding: 8px 2px 20px; display: flex; align-items: center; justify-content: center; }
+.o-manh:active { background: #f3e6cb; }
+.o-manh svg { display: block; overflow: visible; }
+.o-manh .than { stroke: #4d4541; stroke-width: 1.4; stroke-linejoin: round; }
+.o-manh .o-dau { position: absolute; right: 6px; top: 3px; font-size: 17px; font-weight: 700; color: #2f8a45; line-height: 1; }
+.o-manh.sao .o-dau { color: #e6a400; font-size: 20px; }
+.o-manh .o-hai { position: absolute; left: 7px; bottom: 3px; font-size: 11.5px; color: var(--chu-nhat); font-weight: 600; }
+.o-manh .o-kq { position: absolute; right: 7px; bottom: 3px; font-size: 12px; font-weight: 700; color: #2f6b3c; }
+.o-manh.xong { border-color: #9fcfa8; background: #f4fbf3; }
+.nhap-dong { display: grid; gap: 7px; margin-top: 9px; }
+.dong { border: 2px solid var(--nut-vien); background: var(--giay); border-radius: 14px; min-height: 50px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+.dong:active { background: #f3e6cb; }
+.dong-ten { font-weight: 600; font-size: 15.5px; }
+.dong-kq { font-size: 13px; color: var(--chu-nhat); text-align: right; }
+.dong.xong { border-color: #9fcfa8; background: #f4fbf3; }
+.dong.xong .dong-kq { color: #2f6b3c; font-weight: 700; font-size: 15px; }
+.dong.khoa { opacity: .55; }
+.dong.rung { animation: rung 240ms linear 2; }
+.nhap-duoi { padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); }
+.nhap-duoi .nut { width: 100%; min-height: 52px; font-size: 16px; }
+
+/* --- bảng nhập một mục --- */
+.o { position: absolute; inset: 0; z-index: 5; background: var(--nen); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+.o-tren { display: flex; align-items: center; gap: 10px; padding: 7px 10px; }
+.o-tren .nut { min-height: 40px; padding: 0 14px; }
+#oTen { font-family: var(--chu-dam); font-weight: 700; font-size: 18px; color: #5a3a22; }
+.o-hinh { flex: 1; min-height: 64px; display: flex; align-items: center; justify-content: center; padding: 4px 16px; }
+.o-svg { display: block; width: 100%; max-height: 100%; overflow: visible; }
+.o-svg .than { stroke: #4d4541; stroke-width: 1.3; stroke-linejoin: round; }
+.o-svg .net-do { stroke: #c0392b; stroke-width: 1.1; stroke-dasharray: 3.5 2.5; }
+.o-svg .goc-vuong { fill: none; stroke: #c0392b; stroke-width: 0.9; }
+.o-tong { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 12px; }
+.o-tong-o { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; }
+.o-tong-o svg { display: block; overflow: visible; }
+.o-tong-o .than { stroke: #4d4541; stroke-width: 1.6; stroke-linejoin: round; }
+.o-chu { margin: 0; text-align: center; font-size: 15.5px; line-height: 1.45; color: #5a4634; max-width: 420px; }
+.o-o { display: grid; gap: 6px; padding: 0 12px; }
+.o-dong { display: grid; grid-template-columns: 1fr 96px 40px; align-items: center; gap: 8px; border: 0; background: none; padding: 0; text-align: left; }
+.o-nhan { font-size: 15.5px; font-weight: 500; }
+.o-so { height: 42px; border: 2px solid var(--nut-vien); border-radius: 10px; background: #fff; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+.o-dong.dang .o-so { border-color: #1f6fd0; box-shadow: 0 0 0 3px rgba(31, 111, 208, .18); }
+.o-dong.dung .o-so { border-color: #3f8f52; background: #e9f6ea; color: #23643a; }
+.o-dong.sai .o-so { border-color: #d1281e; background: #fdecea; color: #b3261d; }
+.o-so.nhay::after { content: ""; width: 2px; height: 22px; background: #1f6fd0; animation: nhay 1s steps(2) infinite; }
+.o-dv { font-size: 15px; color: var(--chu-nhat); }
+.o-bao { margin: 5px 12px 4px; min-height: 2.7em; font-size: 14.5px; line-height: 1.35; text-align: center; display: flex; align-items: center; justify-content: center; color: #6a5440; }
+.o-bao.xau { color: #b3261d; font-weight: 600; }
+.o-bao.tot { color: #2f6b3c; font-weight: 600; }
+.o-phim { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 12px; }
+.phim { min-height: 46px; border: 2px solid var(--nut-vien); background: var(--nut); border-radius: 12px; font-size: 22px; font-weight: 600; }
+.phim.phu { font-size: 15px; }
+.phim:active { background: #f3e6cb; }
+.o-phim.tat { opacity: .35; pointer-events: none; }
+.o-duoi { padding: 7px 12px calc(8px + env(safe-area-inset-bottom)); }
+.o-duoi .nut { width: 100%; min-height: 52px; font-size: 17px; }
+
+/* --- bước 2: bàn xếp có lưới --- */
 #dtKhungBan { flex: 1; min-height: 0; margin: 0 8px; display: flex; align-items: center; justify-content: center; }
-#dtBan { display: block; touch-action: none; border-radius: 6px; box-shadow: 0 2px 10px rgba(90, 60, 30, .2), 0 0 0 1px #e2d3b6; background: var(--giay); }
-#dtBan .nhan-dan { font-family: var(--chu-thuong); font-size: 11px; fill: #d5c5a8; pointer-events: none; }
+#dtBan { display: block; touch-action: none; border-radius: 4px; box-shadow: 0 2px 10px rgba(90, 60, 30, .2); background: #fffdf8; }
+#dtBan .nhan-dan { font-family: var(--chu-thuong); font-size: 11px; fill: #cdbd9f; pointer-events: none; }
 #dtBan .manh.chon .than { stroke: #1f6fd0; stroke-width: 2.4; }
 #dtBan .manh.chong .than { stroke: #d1281e; stroke-width: 2.2; stroke-dasharray: 5 3.5; }
-#dtChinh.khoa #dtBan { box-shadow: 0 0 0 4px #6fb37c, 0 2px 10px rgba(90, 60, 30, .2); }
+#dtBan .manh.le .than { stroke: #e07b00; stroke-width: 2.6; stroke-dasharray: 5 3.5; }
 .nhac { margin: 6px 10px 5px; min-height: 2.7em; font-size: 14px; line-height: 1.35; text-align: center; display: flex; align-items: center; justify-content: center; color: #6a5440; }
 .nhac.tot { color: #2f6b3c; font-weight: 600; }
 .nhac.xau { color: #b3261d; font-weight: 600; }
@@ -72,27 +146,62 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .khay-nut:active { background: #f3e6cb; }
 .khay-nut.da-lay { visibility: hidden; }
 .khay-nut svg { display: block; overflow: visible; }
-.khay-nut .than { stroke: #4a3524; stroke-width: 1.2; stroke-linejoin: round; }
+.khay-nut .than { stroke: #4d4541; stroke-width: 1.2; stroke-linejoin: round; }
 .khay-so { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-size: 11px; font-weight: 600; color: var(--chu-nhat); }
 #dtKhayTrong { position: absolute; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; color: var(--chu-nhat); padding: 0 12px; }
 .dt-nut { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 7px 8px 0; }
-.dt-nut2 { display: grid; grid-template-columns: 1fr 1.6fr; gap: 6px; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
+.dt-nut2 { display: grid; grid-template-columns: 1fr 0.9fr 1.5fr; gap: 6px; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
+.dt-nut2.mot { grid-template-columns: 1fr; }
 .dt-nut .nut, .dt-nut2 .nut { padding: 0 4px; font-size: 14px; min-height: 48px; }
-.dt-nut2 .nut { font-size: 16px; }
+.dt-nut2 .nut.chinh { font-size: 16px; }
 .dt-nut .bieu { font-size: 19px; line-height: 1; }
+
+/* --- bước 3: tấm thiệp đã có hình --- */
+#thiepKhung { flex: 1; min-height: 0; margin: 4px 12px 0; display: flex; align-items: center; justify-content: center; }
+#dtThiep { display: block; background: #fff; border-radius: 3px; box-shadow: 0 0 0 4px #6fb37c, 0 3px 12px rgba(90, 60, 30, .25); }
+#dtThiep .manh .than { stroke-width: 0.6; }
+
+@media (max-height: 690px) {
+  .phim { min-height: 40px; } .o-so { height: 38px; } .o-dong { gap: 6px; } .o-o { gap: 4px; }
+  .o-duoi .nut, .nhap-duoi .nut { min-height: 46px; }
+}
 @media (orientation: landscape) and (min-width: 560px) {
-  #dtChinh { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 34vw); grid-template-rows: auto auto auto 1fr auto auto; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
-  .dt-dau { grid-column: 1 / -1; }
-  #dtKhungBan { grid-column: 1; grid-row: 2 / -1; margin: 0 4px 8px 8px; min-height: 0; }
-  .nhac { grid-column: 2; grid-row: 2; }
-  .khay-o { grid-column: 2; grid-row: 3; }
-  .dt-nut { grid-column: 2; grid-row: 5; }
-  .dt-nut2 { grid-column: 2; grid-row: 6; }
+  #dtChinh { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  #manXep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 34vw); grid-template-rows: auto auto 1fr auto auto; }
+  #dtKhungBan { grid-column: 1; grid-row: 1 / -1; margin: 0 4px 8px 8px; min-height: 0; }
+  #manXep .nhac { grid-column: 2; grid-row: 1; }
+  .khay-o { grid-column: 2; grid-row: 2; }
+  .dt-nut { grid-column: 2; grid-row: 4; }
+  .dt-nut2 { grid-column: 2; grid-row: 5; }
+  #manThiep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 30vw); grid-template-rows: 1fr auto; }
+  #thiepKhung { grid-column: 1; grid-row: 1 / -1; margin: 0 4px 8px 8px; }
+  #manThiep .nhac { grid-column: 2; grid-row: 1; }
+  #manThiep .dt-nut2 { grid-column: 2; grid-row: 2; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .o { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 38vw); grid-template-rows: auto minmax(0, 1fr) auto auto; column-gap: 6px; }
+  .o-tren { grid-column: 1 / -1; grid-row: 1; padding-top: 4px; padding-bottom: 2px; }
+  .o-hinh { grid-column: 1; grid-row: 2; min-height: 40px; }
+  .o-o { grid-column: 1; grid-row: 3; }
+  .o-bao { grid-column: 1; grid-row: 4; }
+  .o-phim { grid-column: 2; grid-row: 2 / 4; align-content: center; }
+  .o-duoi { grid-column: 2; grid-row: 4; }
+  .phim { min-height: 38px; } .o-so { height: 34px; }
 }
 @media (min-width: 700px) and (min-height: 700px) {
   .dt-nut .nut, .dt-nut2 .nut { font-size: 18px; min-height: 60px; }
-  .nhac { font-size: 18px; }
+  .dt-nut2 .nut.chinh { font-size: 20px; }
+  .nhac, .nhap-loi, .o-bao { font-size: 18px; }
   #dtNhom { font-size: 24px; } .dt-ten { font-size: 22px; }
+  .nhap-luoi { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .o-manh { min-height: 112px; } .o-manh .o-hai, .o-manh .o-kq { font-size: 15px; } .o-manh .o-dau { font-size: 22px; }
+  .dong { min-height: 62px; } .dong-ten { font-size: 19px; } .dong-kq { font-size: 16px; } .dong.xong .dong-kq { font-size: 19px; }
+  .nhap-duoi .nut, .o-duoi .nut { min-height: 62px; font-size: 20px; }
+  .o > * { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+  #oTen { font-size: 24px; } .o-nhan { font-size: 20px; } .o-dv { font-size: 18px; }
+  .o-dong { grid-template-columns: 1fr 130px 50px; } .o-so { height: 54px; font-size: 28px; }
+  .phim { min-height: 62px; font-size: 28px; } .phim.phu { font-size: 18px; }
+  .o-tong-o { font-size: 19px; } .o-chu { font-size: 19px; }
 }
 
 /* =====================================================================
@@ -110,7 +219,7 @@ body.tv { background: #eadfc9; }
 .tv-dau h1 { margin: 0; font-family: var(--chu-dam); font-weight: 800; font-size: 68px; line-height: 1.05; color: #6b3d1e; letter-spacing: .5px; }
 .tv-dau p { margin: 4px 0 0; font-size: 25px; color: #9a6a3c; font-weight: 500; }
 #tvNoi { position: absolute; left: 720px; top: 52px; font-size: 20px; padding: 5px 16px; }
-#tv .nut { font-size: 24px; min-height: 60px; padding: 0 22px; border-radius: 18px; }
+#tv .nut { font-size: 24px; min-height: 60px; padding: 0 22px; border-radius: 18px; white-space: nowrap; }
 
 /* --- màn vào phòng: 4 mã QR --- */
 .vao { position: absolute; inset: 0; }
@@ -130,6 +239,8 @@ body.tv { background: #eadfc9; }
 /* --- màn xếp: 4 tấm thiệp --- */
 .xep { position: absolute; inset: 0; }
 .khung { position: absolute; }
+.khung .ten { white-space: nowrap; flex: none; }
+.khung .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 #khung1 { left: 116px; top: 170px; width: 473px; }
 #khung2 { left: 617px; top: 170px; width: 473px; }
 #khung3 { left: 1118px; top: 14px; width: 685px; }
@@ -137,26 +248,41 @@ body.tv { background: #eadfc9; }
 .khung .the { height: 40px; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .khung .ten { font-family: var(--chu-dam); font-weight: 700; font-size: 27px; line-height: 38px; color: #fff; background: var(--mau); padding: 0 18px; border-radius: 999px; }
 #khung1 { --mau: #d9463c; } #khung2 { --mau: #e07b2a; } #khung3 { --mau: #3d8fc4; } #khung4 { --mau: #4f9140; }
-.khung .tt { font-size: 21px; color: var(--chu-nhat); }
+.khung .tt { font-size: 21px; color: var(--chu-nhat); white-space: nowrap; }
 .khung.co-may .tt { color: #5a4634; }
-.khung.xong .tt { color: #fff; background: #3f8f52; font-weight: 700; padding: 3px 16px; border-radius: 999px; }
-.khung svg.thiep { display: block; width: 100%; height: auto; border-radius: 4px; box-shadow: 0 5px 20px rgba(110, 75, 35, .2); cursor: pointer; background: var(--giay); }
-.khung.xong svg.thiep { box-shadow: 0 0 0 5px #6fb37c, 0 5px 20px rgba(110, 75, 35, .2); }
+.khung.pha-xong .tt { color: #fff; background: #3f8f52; font-weight: 700; padding: 3px 16px; border-radius: 999px; }
+.khung .so-sao { font-size: 23px; font-weight: 700; color: #c98a00; white-space: nowrap; }
+#tv .khung .mo-ban { display: none; position: absolute; right: 12px; bottom: 12px; font-size: 17px; min-height: 36px; padding: 0 12px; border-radius: 12px; white-space: nowrap; opacity: .85; }
+#tv .khung.pha-nhap .mo-ban { display: inline-flex; }
+.khung svg.thiep { display: block; width: 100%; height: auto; border-radius: 4px; box-shadow: 0 5px 20px rgba(110, 75, 35, .2); cursor: pointer; background: #fff; }
+.khung.pha-xong svg.thiep { box-shadow: 0 0 0 5px #6fb37c, 0 5px 20px rgba(110, 75, 35, .2); }
+.thiep .lop-tt, .thiep .lop-luoi, .thiep .lop-nhap, .thiep .lop-manh { transition: opacity 500ms ease; }
+.khung.pha-nhap .lop-tt, .khung.pha-xep .lop-tt { opacity: .16; }
+.khung.pha-nhap .lop-luoi, .khung.pha-xong .lop-luoi { opacity: 0; }
+.khung.pha-xep .lop-nhap, .khung.pha-xong .lop-nhap { opacity: 0; }
+.khung.pha-nhap .lop-manh { opacity: 0; }
+.lop-nhap .muc .than { stroke: #4d4541; stroke-width: 0.9; stroke-linejoin: round; transition: fill 400ms ease; }
+.lop-nhap .muc-hai { font-family: var(--chu-thuong); font-size: 9.5px; font-weight: 600; fill: #8a7458; }
+.lop-nhap .dau { opacity: 0; transition: opacity 300ms ease; }
+.lop-nhap .muc.dung .dau { opacity: 1; }
+.dau-nen { fill: #fff; stroke: #3f8f52; stroke-width: 1.2; }
+.dau-v { fill: none; stroke: #2f8a45; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.dau-sao { fill: #ffc21a; stroke: #a87700; stroke-width: 0.6; display: none; }
+.muc.sao .dau-sao { display: block; }
+.muc.sao .dau-v { display: none; }
+.muc.sao .dau-nen { stroke: #d59a00; }
+.o-chu .o-nen { fill: #efe9de; stroke: #cfc5b3; stroke-width: 0.8; transition: fill 400ms ease; }
+.o-chu .o-ten { font-family: var(--chu-thuong); font-weight: 600; font-size: 10.5px; fill: #8a7458; }
+.o-chu.dung .o-nen { fill: #dff0dd; stroke: #3f8f52; }
+.o-chu.dung .o-ten { fill: #23643a; }
 .khung.an { display: none; }
 .khung.dung.lon { left: 628px !important; top: 26px !important; width: 664px !important; }
 .khung.ngang.lon { left: 290px !important; top: 34px !important; width: 1340px !important; }
-.khung.lon .the::after { content: "Chạm vào thiệp để về 4 khung"; margin-left: auto; font-size: 20px; color: var(--chu-nhat); }
+.khung.lon .the::after { content: "Chạm vào khung để về 4 nhóm"; margin-left: auto; font-size: 20px; color: var(--chu-nhat); }
+.khung.lon.pha-nhap .the::after { margin-left: 16px; }
 #tv.dang-lon .tv-dau, #tv.dang-lon .tv-nut, #tv.dang-lon .xep-goi, #tv.dang-lon #tvNoi { visibility: hidden; }
-.thiep .vien { fill: none; stroke: #c9b08a; stroke-width: 0.9; }
-.thiep .vien.manh-vien { stroke-width: 0.45; }
-.thiep .dai { fill: #fbf3e2; stroke: #a98a62; stroke-width: 0.8; }
-.thiep .dai-trong { fill: none; stroke: #c9b08a; stroke-width: 0.4; }
-.thiep .dong1 { font-family: var(--chu-thuong); font-weight: 700; font-size: 7.4px; fill: #8f2a22; }
-.thiep .dong2 { font-family: var(--chu-thuong); font-weight: 500; font-size: 4.7px; fill: #4a3524; }
-.thiep .ngan { stroke: #b89a74; stroke-width: 0.7; }
-.thiep .loi-chuc { font-family: var(--chu-thuong); font-style: italic; font-size: 5.6px; fill: #9a8160; }
-.thiep .cham-dong { stroke: #c4b08f; stroke-width: 0.55; stroke-dasharray: 0.1 2.3; stroke-linecap: round; }
 .thiep .lop-manh .manh { transition: transform 120ms linear, opacity 220ms ease; }
+.khung.chot .lop-manh .manh { transition: transform 800ms cubic-bezier(.3, .1, .2, 1), opacity 220ms ease; }
 .xep-goi { position: absolute; left: 116px; top: 912px; margin: 0; font-size: 21px; color: var(--chu-nhat); }
 .tv-nut { position: absolute; left: 116px; bottom: 40px; display: flex; gap: 14px; align-items: center; }
 
@@ -170,6 +296,19 @@ body.tv { background: #eadfc9; }
 #tv .nut.bat { background: #fde9c4; border-color: #e0a63a; box-shadow: inset 0 0 0 2px #e0a63a; }
 #maPhong { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--chu); letter-spacing: 2px; }
 .cd-duoi { margin-top: 30px; display: flex; justify-content: flex-end; }
+
+/* --- đáp số (chỉ hiện khi thầy bấm) --- */
+#dapSo { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .4); display: flex; align-items: center; justify-content: center; }
+.dap-hop { width: 1240px; background: var(--giay); border-radius: 30px; padding: 26px 50px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
+.dap-hop h2 { margin: 0 0 8px; font-family: var(--chu-dam); font-size: 46px; color: #6b3d1e; }
+.dap-hang { display: grid; grid-template-columns: 150px 380px 1fr; align-items: center; column-gap: 18px; min-height: 66px; border-bottom: 1px solid #eadfc9; font-size: 31px; }
+.dap-hinh svg { display: block; margin: auto; overflow: visible; }
+.dap-hinh .than { stroke: #4d4541; stroke-width: 1.3; stroke-linejoin: round; }
+.dap-ten { font-weight: 600; }
+.dap-tinh { font-variant-numeric: tabular-nums; }
+#dapCuoi { margin-top: 10px; }
+.dap-hang.rong { grid-template-columns: 548px 1fr; min-height: 58px; border-bottom: 0; }
+.dap-hang.rong .dap-tinh { font-weight: 700; color: #8f2a22; }
 </style>
 </head>
 <body>
@@ -179,19 +318,47 @@ body.tv { background: #eadfc9; }
   <div id="dtCho" class="dt-thong-bao" hidden><h1>Tấm thiệp của em</h1><p id="dtChoChu"></p></div>
   <div id="dtChon" class="dt-thong-bao" hidden><h1>Tấm thiệp của em</h1><p>Em ở nhóm nào?</p><div id="dtChonNut"></div></div>
   <div id="dtChinh" hidden>
-    <div class="dt-dau"><span id="dtNhom"></span><span class="dt-ten">Xếp thiệp</span><span id="dtNoi" class="noi">Đang nối…</span></div>
-    <div id="dtKhungBan"><svg id="dtBan" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <p id="dtNhac" class="nhac"></p>
-    <div class="khay-o"><div id="dtKhay"></div><p id="dtKhayTrong" hidden>Khay hết mảnh rồi. Chọn một mảnh rồi bấm Cất nếu muốn bỏ lại vào khay.</p></div>
-    <div class="dt-nut">
-      <button id="dtTrai" class="nut"><span class="bieu">↺</span> Xoay trái</button>
-      <button id="dtPhai" class="nut"><span class="bieu">↻</span> Xoay phải</button>
-      <button id="dtLat" class="nut"><span class="bieu">⇋</span> Lật</button>
-      <button id="dtCat" class="nut">Cất</button>
-    </div>
-    <div class="dt-nut2">
-      <button id="dtLai" class="nut">Xếp lại</button>
-      <button id="dtXong" class="nut chinh">Xong</button>
+    <div class="dt-dau"><span id="dtNhom"></span><span class="dt-ten" id="dtTen">Bước 1: Đo và tính</span><span id="dtNoi" class="noi">Đang nối…</span></div>
+
+    <section id="manNhap" class="man">
+      <p id="nhapLoi" class="nhap-loi"></p>
+      <div class="nhap-cuon">
+        <div id="nhapManh" class="nhap-luoi"></div>
+        <div id="nhapDong" class="nhap-dong"></div>
+      </div>
+      <div class="nhap-duoi"><button id="nhapSang" class="nut chinh" disabled>Sang bàn xếp</button></div>
+    </section>
+
+    <section id="manXep" class="man" hidden>
+      <div id="dtKhungBan"><svg id="dtBan" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <p id="dtNhac" class="nhac"></p>
+      <div class="khay-o"><div id="dtKhay"></div><p id="dtKhayTrong" hidden>Khay hết mảnh rồi. Chọn một mảnh rồi bấm Cất nếu muốn bỏ lại vào khay.</p></div>
+      <div class="dt-nut">
+        <button id="dtTrai" class="nut"><span class="bieu">↺</span> Xoay trái</button>
+        <button id="dtPhai" class="nut"><span class="bieu">↻</span> Xoay phải</button>
+        <button id="dtLat" class="nut"><span class="bieu">⇋</span> Lật</button>
+        <button id="dtCat" class="nut">Cất</button>
+      </div>
+      <div class="dt-nut2">
+        <button id="dtSoDo" class="nut">Số đo</button>
+        <button id="dtLai" class="nut">Làm lại</button>
+        <button id="dtXong" class="nut chinh">Hoàn thành</button>
+      </div>
+    </section>
+
+    <section id="manThiep" class="man" hidden>
+      <div id="thiepKhung"><svg id="dtThiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <p class="nhac tot">Hình đã lên thiệp. Cả nhóm dán giấy theo hình này nhé.</p>
+      <div class="dt-nut2 mot"><button id="thiepSua" class="nut">Sửa lại hình</button></div>
+    </section>
+
+    <div id="o" class="o" hidden>
+      <div class="o-tren"><button id="oVe" class="nut">‹ Về</button><span id="oTen"></span></div>
+      <div id="oHinh" class="o-hinh"></div>
+      <div id="oO" class="o-o"></div>
+      <p id="oBao" class="o-bao"></p>
+      <div id="oPhim" class="o-phim"></div>
+      <div class="o-duoi"><button id="oKiem" class="nut chinh">Kiểm tra</button></div>
     </div>
   </div>
 </div>
@@ -202,41 +369,54 @@ body.tv { background: #eadfc9; }
   <span id="tvNoi" class="noi">Đang nối…</span>
 
   <section class="vao">
-    <p class="vao-huong">Mỗi nhóm dùng một điện thoại hoặc máy tính bảng, mở camera rồi quét mã của nhóm mình.</p>
+    <p class="vao-huong">Mỗi nhóm dùng điện thoại hoặc máy tính bảng, mở camera rồi quét mã của nhóm mình.</p>
     <div class="vao-hang">
       <div class="vao-o" id="vao1" data-nhom="1"><div class="vao-ten">Nhóm 1</div><div class="ma" id="ma1"></div><div class="vao-tt">Chưa có máy nào</div></div>
       <div class="vao-o" id="vao2" data-nhom="2"><div class="vao-ten">Nhóm 2</div><div class="ma" id="ma2"></div><div class="vao-tt">Chưa có máy nào</div></div>
       <div class="vao-o" id="vao3" data-nhom="3"><div class="vao-ten">Nhóm 3</div><div class="ma" id="ma3"></div><div class="vao-tt">Chưa có máy nào</div></div>
       <div class="vao-o" id="vao4" data-nhom="4"><div class="vao-ten">Nhóm 4</div><div class="ma" id="ma4"></div><div class="vao-tt">Chưa có máy nào</div></div>
     </div>
-    <button id="nutBatDau" class="nut chinh">Xem 4 tấm thiệp</button>
+    <button id="nutBatDau" class="nut chinh">Xem 4 nhóm làm bài</button>
   </section>
 
   <section class="xep">
-    <div class="khung dung" id="khung1"><div class="the"><span class="ten">Nhóm 1</span><span class="tt"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <div class="khung dung" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <div class="khung ngang" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <div class="khung ngang" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <p class="xep-goi">Chạm vào một tấm thiệp để xem lớn.</p>
+    <div class="khung dung pha-nhap" id="khung1"><div class="the"><span class="ten">Nhóm 1</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div class="khung dung pha-nhap" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div class="khung ngang pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <p class="xep-goi">Chạm vào một khung để xem lớn. Ngôi sao: nhập đúng ngay lần đầu.</p>
   </section>
 
   <div class="tv-nut">
     <button id="nutMa" class="nut chi-xep">Mã QR</button>
-    <button id="nutLai" class="nut chi-xep">Xếp lại cả 4 nhóm</button>
+    <button id="nutMoHet" class="nut chi-xep">Mở bàn xếp cả 4 nhóm</button>
+    <button id="nutDapSo" class="nut chi-xep">Đáp số</button>
     <button id="nutCaiDat" class="nut chi-xep">Cài đặt</button>
     <button id="nutCaiDat2" class="nut chi-vao">Cài đặt</button>
     <button id="nutToan" class="nut">Toàn màn hình</button>
   </div>
 
+  <div id="dapSo" hidden>
+    <div class="dap-hop">
+      <h2>Đáp số</h2>
+      <div id="dapBang"></div>
+      <div id="dapCuoi"></div>
+      <div class="cd-duoi"><button id="dongDapSo" class="nut chinh">Đóng</button></div>
+    </div>
+  </div>
+
   <div id="caiDat" hidden>
     <div class="cd-hop">
       <h2>Cài đặt</h2>
-      <h3>Bộ mảnh</h3>
-      <div class="cd-hang"><button id="boNho" class="nut">Bộ mảnh nhỏ (bộ đang dùng)</button><button id="boTo" class="nut">Bộ mảnh to hơn (bộ đề xuất 12/11)</button></div>
-      <p>Đổi bộ mảnh thì hình đang xếp của cả 4 nhóm bị xóa.</p>
+      <h3>Hình đang xếp</h3>
+      <div class="cd-hang"><button id="nutXoaHinh" class="nut">Xóa hình cả 4 nhóm</button></div>
+      <p>Các nhóm giữ số đo đã nhập, chỉ xếp lại hình.</p>
+      <h3>Làm lại từ đầu</h3>
+      <div class="cd-hang"><button id="nutLamLai" class="nut">Xóa hết, về bước 1</button></div>
+      <p>Xóa cả số đo đã nhập và hình của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       <h3>Phòng</h3>
       <div class="cd-hang"><span style="font-size:24px">Mã phòng: <span id="maPhong"></span></span><button id="nutPhongMoi" class="nut">Tạo phòng mới</button></div>
-      <p>Mở lại trang trên tivi vẫn giữ phòng cũ và hình đang xếp. Tạo phòng mới thì các nhóm phải quét mã lại.</p>
+      <p>Mở lại trang trên tivi vẫn giữ phòng cũ và bài đang làm. Tạo phòng mới thì các nhóm phải quét mã lại.</p>
       <div class="cd-duoi"><button id="dongCaiDat" class="nut chinh">Đóng</button></div>
     </div>
   </div>
@@ -244,6 +424,6 @@ body.tv { background: #eadfc9; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/xep-thiep.js?v=9669e819"></script>
+<script src="js/xep-thiep.js?v=35a097b3"></script>
 </body>
 </html>
