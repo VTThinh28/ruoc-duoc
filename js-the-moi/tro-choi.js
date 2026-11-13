@@ -97,7 +97,7 @@
   function chayDem(d) {
     clearTimeout(DEM.hen);
     DEM.id = d.id; DEM.q = d.q; DEM.bd = performance.now(); DEM.so = null;
-    CHO = {}; THAY = {}; HAI = {};   // hết giờ mới bắt đầu tính thời gian giữ chữ
+    CHO = {}; THAY = {}; HAI = {}; NGO = {};   // hết giờ mới bắt đầu tính thời gian giữ chữ
     // điện thoại có camera: mở camera ngay lúc bắt đầu đếm cho kịp, hết giờ mới ghi thẻ
     if (VAI === "dt" && Q.coCamera() && !Q.Live.chay && !camDangMo) batCam();
     (function nhip() {
@@ -1150,6 +1150,9 @@
   // thẻ mới 12/11: chữ nằm trong mã, không tính theo cạnh nào ở trên, nên không có chuyện "xoay chữ" (ROT luôn bằng 0)
   // THAY[thẻ][chữ] = lúc vừa thấy chữ đó; HAI[thẻ] = lúc vừa thấy em đó giơ 2 thẻ khác chữ
   var THAY = {}, HAI = {}, HAI_THE = 700;
+  // bản thử 13/11 (thẻ nằm trên bàn): NAM[thẻ.chữ] = lúc bộ đọc vừa coi mã đó là thẻ nằm; NGO[thẻ.chữ] = {n, moi}: số lần đọc "chưa rõ" liền nhau
+  //   NAM không xóa theo câu: nó chỉ nói "mã này vừa nằm trên bàn", tự hết hạn (3 giây với lần đọc chưa rõ, 1 giây với lần đọc rõ).
+  var NAM = {}, NGO = {}, NAM_NHO = 3000, NAM_GAN = 1000, NGO_CAN = 3, NGO_CACH = 1200;
   var NGHIENG = false;
   var ZOOM_MAY = false, dtBuocCu = null;   // ZOOM_MAY: camera tự chỉnh zoom được; không thì thu phóng bằng phần mềm
 
@@ -1326,7 +1329,7 @@
     var key = ses() + ":" + q;
     if (!PQ || PQ.key !== key) {
       PQ = { key: key, q: q, obs: {}, man: {} };
-      CHO = {}; THAY = {}; HAI = {};
+      CHO = {}; THAY = {}; HAI = {}; NGO = {};
       anhCuoi = null;
       soAnh = 0;
       $("#dtAnhKhung").hidden = true;
@@ -1590,11 +1593,22 @@
   RD.trangThaiQuet = function () { return { key: PQ ? PQ.key : "", q: PQ ? PQ.q : 0, dem: dangDem(), n: PQ ? Object.keys(PQ.obs).length : 0, ghiNgay: GHI_NGAY }; };
   RD.lopHienTai = function () { return RD.lop(cfg()); };
   function nhanKhung(cards, tc) {
+    // bản thử 13/11: mã vừa bị coi là thẻ nằm trên bàn: nhớ cả lúc đang đếm ngược hay chưa vào câu (để hết đếm là biết ngay thẻ nào nằm)
+    (cards.nam || []).forEach(function (m) { if (m.vi) NAM["t" + m.id + "." + m.k] = tc || performance.now(); });
     if (!PQ || NGHIENG || dangDem()) return;
     var lop = RD.lop(cfg()), t = tc || performance.now(), doi = false, moi = 0;
     cards.forEach(function (c) {
       if (!lop.toCua[c.id] || lop.vang[c.id]) return;
       var k = "t" + c.id, l = RD.CHU[c.k], ch = CHO[k];
+      // bản thử 13/11: thẻ "chưa rõ nằm hay dựng" (c.ngo). Mã đó vừa bị coi là thẻ nằm trong 3 giây qua thì bỏ; không thì phải
+      //   chưa rõ 3 lần đọc liền (cách nhau dưới 1,2 giây) mới coi như thẻ đang giơ. Thẻ nằm lọt một khung không bị ghi nhầm.
+      //   Lần đọc rõ là đang giơ mà chính mã đó vừa bị coi là nằm chưa tới 1 giây trước thì cũng bỏ qua lần này (em vừa nhặt thẻ lên thì 1 giây sau ghi).
+      var kn = k + "." + c.k, ng = NGO[kn], namCach = NAM[kn] != null ? Math.abs(t - NAM[kn]) : 1e9;
+      if (c.ngo) {
+        if (namCach < NAM_NHO) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 1); return; }
+        if (ng && t > ng.moi && t - ng.moi < NGO_CACH) { ng.n++; ng.moi = t; } else if (!ng || t > ng.moi) NGO[kn] = ng = { n: 1, moi: t };
+        if (ng.n < NGO_CAN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 0); return; }
+      } else if (namCach < NAM_GAN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 2); return; }
       // thẻ mới 12/11: một em hiện 2 thẻ khác chữ (cùng khung, hoặc hai lần đọc cách nhau dưới 0,7 giây) thì chưa ghi và
       //   tính lại thời gian giữ chữ; em cất bớt một thẻ, giữ yên thẻ còn lại thì ghi như thường. Thẻ đã ghi vẫn giữ nguyên.
       var th = THAY[k] || (THAY[k] = {}), hai = !!c.hai;

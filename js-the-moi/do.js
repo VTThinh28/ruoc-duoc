@@ -15,6 +15,18 @@
              mỗi thẻ viết: <số><chữ><cạnh mã tính bằng điểm ảnh của khung làn đó>, thêm ".<độ dẹt × 100>" nếu độ dẹt dưới 0,85 (thẻ nghiêng quá 30°),
              thêm "!" nếu cùng khung có 2 thẻ của em đó
      sk    : sự kiện (bật, tắt camera, đổi câu, đếm ngược, bật tắt Ghi ngay, ẩn trang, tải lại trang, lỗi)
+
+   BẢN 3 (13/11/2026, sau số đo mã JEDC): ghi thêm cho 3 chỗ mới của nhanh.js (bỏ thẻ nằm trên bàn, lấy hình nhanh, phơi sáng ngắn):
+     cam[].nh : trạng thái 3 chỗ đó ở lần bật camera này (cập nhật mỗi giây): đường lấy hình đã so ra sao, phơi sáng ép được không, cảm biến nghiêng nguồn nào
+     giay     : thêm 10 số cuối: phơi sáng (0 không chỉnh được, 1 đang chờ, 2 đang ép, 3 ép hỏng, 4 đang tắt), thời gian phơi (0,1 ms), ISO, độ sáng khung,
+                cảm biến nghiêng (0 không có, 1 hướng máy, 2 gia tốc, 3 hai nguồn lệch nhau), lấy hình (0 canvas, 1 khung hình, 2 đang so),
+                số lượt thẻ bị bỏ vì nằm, số lượt thẻ "chưa rõ", ms chờ khung hình của làn gần, làn xa
+     vet      : mỗi dòng thêm 6 mục cuối: hướng "trên" × 100 (x,y,z theo ảnh) | k (khung hình) hoặc c (canvas) | độ sáng khung | ms chờ khung hình |
+                ms đổi khung ra ảnh xám | các thẻ bị giữ lại chưa ghi ở lần đọc này (<số><chữ>, thêm ":1" mã đó vừa nằm trên bàn, ":2" lần đọc rõ nhưng mã vừa nằm)
+                thẻ đọc được thêm "?" nếu chưa rõ nằm hay giơ; thẻ nằm thêm "t" nếu bị bỏ theo hướng mặt thẻ (không có "t": nghiêng quá 60°)
+     goc      : mẫu để chỉnh phép tính hướng mặt thẻ (tối đa 600): [mốc, làn, rộng, cao khung, tiêu cự (điểm ảnh), số, chữ, kết quả (2 nằm, 1 chưa rõ, 0 đang giơ),
+                cạnh mã, độ dẹt × 100, sai số nghiệm nằm, sai số nghiệm đang giơ, cos góc nhìn, 8 toạ độ 4 góc, hướng "trên" x, y, z]
+     phoiSk   : mỗi lần trang đổi phơi sáng: [mốc, 1 lần đầu / 0 chỉnh tiếp, thời gian phơi (0,1 ms), ISO, độ sáng khung lúc đó]
    Mọi mốc thời gian là mili giây tính từ lúc tạo bản ghi (D.mo, giờ máy).
    Lưu tạm trên máy (localStorage) để tải lại trang không mất. Lấy ra bằng 3 nút ở mục "Số đo bản thử" trên điện thoại:
      Gửi số đo cho Claude: ghi vào cơ sở dữ liệu của trò chơi, nhánh ruoc-duoc/do-thu (không đụng nhánh lop-6-3 của trò chơi)
@@ -24,12 +36,21 @@
   "use strict";
   var RD = window.RD = window.RD || {};
   var P0 = performance.now(), E0 = Date.now();
-  var KHOA = "rd-so-do-2", KHOA_VET = "rd-so-do-2-vet", GIOI_VET = 2500000, GIOI_LUU = 1200000, BAN = 2;
+  var KHOA = "rd-so-do-3", KHOA_VET = "rd-so-do-3-vet", GIOI_VET = 2500000, GIOI_LUU = 1200000, BAN = 3;
   var CHU = ["A", "B", "C", "D"];
   var $ = function (s) { return document.querySelector(s); };
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* bỏ qua */ } }
+  // số đo kiểu cũ (bản 12/11): đã gửi rồi hoặc còn trống thì xóa cho nhẹ máy; có mà chưa gửi thì để nguyên
+  (function donCu() {
+    try {
+      var c = lsGet("rd-so-do-2");
+      if (c == null) { lsDel("rd-so-do-2-vet"); return; }
+      var x = JSON.parse(c);
+      if (!x || x.gui > 0 || !(x.soVet > 0)) { lsDel("rd-so-do-2"); lsDel("rd-so-do-2-vet"); }
+    } catch (e) { /* bỏ qua */ }
+  })();
   function maMoi() { var a = "23456789ABCDEFGHJKMNPQRSTUVWXYZ", s = ""; for (var i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
   function thongTinMay() {
     var n = navigator, s = window.screen || {};
@@ -40,7 +61,8 @@
     };
   }
   function banGhiMoi() {
-    return { ban: BAN, v: window.RD_V || "", ma: maMoi(), mo: E0, may: thongTinMay(), cam: [], sk: [], giay: [], phoi: [], cau: {}, thuTu: [], loi: [], soVet: 0, vetDay: false, gui: 0 };
+    return { ban: BAN, v: window.RD_V || "", ma: maMoi(), mo: E0, may: thongTinMay(), cam: [], sk: [], giay: [], phoi: [], cau: {}, thuTu: [], loi: [], soVet: 0, vetDay: false, gui: 0,
+      goc: [], phoiSk: [], nh: null, dem: { namT: 0, nam60: 0, ngo: 0, giu: [0, 0, 0] } };
   }
   var D = null, VET = [], vetDai = 0, coMoi = false;   // coMoi: trang này đã tự ghi thêm số đo (chỉ khi đó mới lưu, để tab khác không đè lên)
   (function nap() {
@@ -48,6 +70,7 @@
       var x = JSON.parse(lsGet(KHOA) || "null");
       if (x && x.ban === BAN && x.mo && x.cau) {
         D = x; if (!D.phoi) D.phoi = [];
+        if (!D.goc) D.goc = []; if (!D.phoiSk) D.phoiSk = []; if (!D.dem) D.dem = { namT: 0, nam60: 0, ngo: 0, giu: [0, 0, 0] };
         var v = lsGet(KHOA_VET);
         VET = v ? v.split("\n") : [];
         vetDai = v ? v.length : 0;
@@ -91,7 +114,7 @@
     var C = D.cau[key];
     if (!C) {
       if (D.thuTu.length >= 40) return null;
-      C = D.cau[key] = { q: q, t0: null, tl: null, doc: [0, 0], the: {}, nam: {}, ngoai: {}, ghiNgay: null };
+      C = D.cau[key] = { q: q, t0: null, tl: null, doc: [0, 0], the: {}, nam: {}, namT: {}, ngoai: {}, ghiNgay: null };
       D.thuTu.push(key);
       suKien("cau", key, q);
     }
@@ -99,9 +122,9 @@
   }
   function theCua(C, id) {
     return C.the[id] || (C.the[id] = { l1: null, t1: null, s1: 0, w1: 0, lan1: 0, d1: 0, n: [0, 0], ra: [0, 0], rb: [0, 0], sm: [0, 0], sx: [0, 0], dm: 100,
-      tg: null, lg: null, ng: 0, sg: 0, wg: 0, lang: 0, tre: 0, gn: null, khac: {}, doi: 0, hai: 0, sau: 0, tl: null });
+      tg: null, lg: null, ng: 0, sg: 0, wg: 0, lang: 0, tre: 0, gn: null, khac: {}, doi: 0, hai: 0, sau: 0, tl: null, ngo: 0, giu: [0, 0, 0] });
   }
-  var moiGhi = [], moiHai = [];
+  var moiGhi = [], moiHai = [], moiGiu = [];
   var Do = RD.Do = {};
   // tro-choi.js gọi lúc vừa ghi một thẻ (trước khi lần đọc này được gộp ở dưới)
   Do.ghi = function (c, tc, PQ) {
@@ -122,6 +145,27 @@
       moiHai.push(c.id); coMoi = true;
     } catch (e) { loi(e, "hai"); }
   };
+  // tro-choi.js gọi lúc một lần đọc bị giữ lại, chưa ghi (bản 13/11, thẻ nằm trên bàn).
+  //   ly 0: thẻ "chưa rõ nằm hay giơ", còn chờ đủ 3 lần đọc liền; 1: chưa rõ và chính mã đó vừa nằm trên bàn; 2: đọc rõ nhưng mã đó vừa nằm chưa tới 1 giây
+  Do.ngo = function (c, tc, PQ, ly) {
+    try {
+      ly = ly === 1 || ly === 2 ? ly : 0;
+      D.dem.giu[ly]++;
+      moiGiu.push(c.id + CHU[c.k] + (ly ? ":" + ly : "")); coMoi = true;
+      var C = cauCua(PQ.key, PQ.q); if (!C) return;
+      theCua(C, c.id).giu[ly]++;
+    } catch (e) { loi(e, "ngo"); }
+  };
+  // mẫu cho việc chỉnh phép tính hướng mặt thẻ: thẻ nằm / chưa rõ lấy dày (0,4 giây một mẫu mỗi thẻ, tối đa 400), thẻ đang giơ lấy thưa (2 giây, tối đa 200)
+  var gocLuc = {}, gocSo = [0, 0];
+  function mauGoc(t, i, n, c) {
+    if (!c.e || !c.gt) return;
+    var loai = c.tt ? 0 : 1, kk = i + "." + c.id + "." + c.k, cu = gocLuc[kk];
+    if (gocSo[loai] >= (loai ? 200 : 400) || (cu != null && t - cu < (loai ? 2000 : 400))) return;
+    gocLuc[kk] = t; gocSo[loai]++;
+    var len = n.len || [0, 0, 0];
+    D.goc.push([t, i, n.kw || 0, n.kh || 0, Math.round(n.f || 0), c.id, c.k, c.tt || 0, Math.round(c.size || 0), Math.round((c.det || 0) * 100), c.e[0], c.e[1], c.e[2]].concat(c.gt, [len[0], len[1], len[2]]));
+  }
   function gopThe(C, c, t, i, w, truoc) {
     var o = theCua(C, c.id), l = CHU[c.k], s = Math.round(c.size || 0), d = c.det != null ? Math.round(c.det * 100) : 100;
     if (o.t1 == null) { o.t1 = t; o.l1 = l; o.s1 = s; o.w1 = w; o.lan1 = i; o.d1 = d; }
@@ -135,7 +179,7 @@
     if (o.tg != null) { if (t > o.tg) o.sau++; if (l !== o.lg) o.khac[l] = (o.khac[l] || 0) + 1; }
     o.tl = t;
   }
-  var soDoc = [0, 0], cuT = [0, 0], demGiay = [0, 0];
+  var soDoc = [0, 0], cuT = [0, 0], demGiay = [0, 0], demNamT = 0, demNgo = 0;
   function motLanDoc(L, n, i) {
     var t = moc(n.t), ms = n.tg && n.tg.length ? Math.round(n.tg[n.tg.length - 1]) : 0, w = n.kw || 0;
     var chup = n.chupMs != null ? Math.round(n.chupMs) : -1, tre = Math.round(performance.now() - n.t);
@@ -151,23 +195,28 @@
     }
     for (var a = 0; a < cards.length; a++) {
       var c = cards[a];
-      chuoi.push(c.id + CHU[c.k] + Math.round(c.size || 0) + (c.det != null && c.det < 0.85 ? "." + Math.round(c.det * 100) : "") + (c.hai ? "!" : ""));
+      chuoi.push(c.id + CHU[c.k] + Math.round(c.size || 0) + (c.det != null && c.det < 0.85 ? "." + Math.round(c.det * 100) : "") + (c.hai ? "!" : "") + (c.ngo ? "?" : ""));
+      if (c.ngo) { demNgo++; D.dem.ngo++; }
+      mauGoc(t, i, n, c);
       if (C && co === 0) {
         if (!theTrongLop(c.id)) C.ngoai[c.id] = (C.ngoai[c.id] || 0) + 1;   // số không có trong lớp hoặc đang vắng: trang không ghi
-        else gopThe(C, c, t, i, w, truoc);
+        else { gopThe(C, c, t, i, w, truoc); if (c.ngo) theCua(C, c.id).ngo++; }
       }
     }
     for (var b = 0; b < nam.length; b++) {
       var m = nam[b];
-      chuoiNam.push(m.id + CHU[m.k] + Math.round(m.size || 0) + "." + Math.round((m.det || 0) * 100));
-      if (C && co === 0) C.nam[m.id] = (C.nam[m.id] || 0) + 1;
+      chuoiNam.push(m.id + CHU[m.k] + Math.round(m.size || 0) + "." + Math.round((m.det || 0) * 100) + (m.vi ? "t" : ""));
+      if (m.vi) { demNamT++; D.dem.namT++; mauGoc(t, i, n, m); } else D.dem.nam60++;
+      if (C && co === 0) { var bang = m.vi ? (C.namT || (C.namT = {})) : C.nam; bang[m.id] = (bang[m.id] || 0) + 1; }
     }
     if (!D.vetDay) {
-      var dong = t + "|" + i + "|" + w + "|" + ms + "|" + chup + "|" + tre + "|" + co + "|" + chuoi.join(" ") + "|" + chuoiNam.join(" ") + "|" + moiGhi.join(" ") + "|" + moiHai.join(" ") + "|" + Math.round(xoayNay);
+      var len = n.len, lenChu = len ? Math.round(len[0] * 100) + "," + Math.round(len[1] * 100) + "," + Math.round(len[2] * 100) : "";
+      var dong = t + "|" + i + "|" + w + "|" + ms + "|" + chup + "|" + tre + "|" + co + "|" + chuoi.join(" ") + "|" + chuoiNam.join(" ") + "|" + moiGhi.join(" ") + "|" + moiHai.join(" ") + "|" + Math.round(xoayNay) +
+        "|" + lenChu + "|" + (n.kieu || "c") + "|" + (n.sang != null ? Math.round(n.sang) : -1) + "|" + Math.round(n.choMs || 0) + "|" + Math.round(n.doiMs || 0) + "|" + moiGiu.join(" ");
       if (vetDai + dong.length + 1 > GIOI_VET) { D.vetDay = true; suKien("vet-day", VET.length); }
       else { VET.push(dong); vetDai += dong.length + 1; D.soVet = VET.length; }
     }
-    moiGhi = []; moiHai = [];
+    moiGhi = []; moiHai = []; moiGiu = [];
   }
   var lopNho = null, lopLuc = 0;
   function theTrongLop(id) {
@@ -192,14 +241,37 @@
   function sach(x) {
     try { var o = JSON.parse(JSON.stringify(x || {})); delete o.deviceId; delete o.groupId; return o; } catch (e) { return {}; }
   }
-  var dangChay = false, camCho = null, tGiay = 0, luuLuc = 0, keyCu = "", demCu = false, gnCu = null;
+  var dangChay = false, camCho = null, camNay = null, tGiay = 0, luuLuc = 0, keyCu = "", demCu = false, gnCu = null;
+  var MA_PHOI = { khong: 0, cho: 1, tay: 2, loi: 3, tat: 4 }, MA_CB = { huong: 1, "gia-toc": 2, lech: 3 };
+  // trạng thái 3 chỗ mới của nhanh.js lúc này
+  function chupNh() {
+    var N = RD.Nhanh; if (!N) return null;
+    try {
+      var kh = N.kh, ph = N.ph, cb = N.cb, so = window.screen && window.screen.orientation;
+      return {
+        bat: [N.bat.nam ? 1 : 0, N.bat.khung ? 1 : 0, N.bat.phoi ? 1 : 0], f: N.F_REL,
+        kh: { tt: kh.tt, ly: kh.ly, dd: kh.dd, opt: kh.opt ? 1 : 0, lut: kh.lut ? 1 : 0, tq: kh.tq, a: kh.a, b: kh.b, tC: kh.tC, tK: kh.tK, thu: kh.soThu, hong: kh.hong, mau: kh.mau || null },
+        ph: { che: ph.che, ly: ph.ly, T: ph.T, iso: ph.iso, Ta: ph.Ta, dich: Math.round(ph.dich), lan: ph.soLan, sang: Math.round(ph.sang) },
+        cb: { nguon: cb.nguon, nH: cb.nH, nG: cb.nG, khop: Math.round(cb.khop * 1000) / 1000, nKhop: cb.nKhop, quyen: cb.quyen,
+          goc: so && typeof so.angle === "number" ? so.angle : typeof window.orientation === "number" ? window.orientation : -1, kieu: (so && so.type) || "" },
+        chu: N.chu()
+      };
+    } catch (e) { return null; }
+  }
+  if (RD.Nhanh && RD.Nhanh.nghe) RD.Nhanh.nghe(function (loai, a, b, c, d) {
+    if (loai === "phoi" && (a === "bat" || a === "chinh")) {
+      if (D.phoiSk.length < 400) D.phoiSk.push([moc(), a === "bat" ? 1 : 0, b, c, d]);
+      if (a === "chinh") return;
+    }
+    suKien("nh-" + loai, a, b, c);
+  });
   function batDauCam(L) {
-    var o = { t: moc(), w: 0, h: 0, st: {}, kn: {}, lan: (L.lan || []).length };
+    var o = { t: moc(), w: 0, h: 0, st: {}, kn: {}, lan: (L.lan || []).length, nh: chupNh() };
     try { o.st = sach(L.track && L.track.getSettings && L.track.getSettings()); } catch (e) { /* bỏ qua */ }
     try { o.kn = sach(L.khaNang && L.khaNang()); } catch (e) { /* bỏ qua */ }
     try { var lop = RD.lopHienTai && RD.lopHienTai(); if (lop) D.lop = { tong: lop.tong, coMat: lop.coMat }; } catch (e) { /* bỏ qua */ }
     if (D.cam.length < 40) D.cam.push(o);
-    camCho = o;
+    camCho = o; camNay = o;
     suKien("cam-bat");
   }
   function tungGiay(L, bay) {
@@ -215,6 +287,15 @@
     o.push((L.the || []).length, s2 ? s2.n : 0, s2 ? s2.q : 0, zo && zk && !zk.hidden ? +zo.value || 1 : 1);
     o.push(xoaySo ? Math.round(xoayTong / xoaySo) : -1, xoaySo ? Math.round(xoayMax) : -1);
     xoayTong = 0; xoaySo = 0; xoayMax = -1;
+    // bản 3: phơi sáng, độ sáng, cảm biến nghiêng, đường lấy hình, số thẻ nằm bị bỏ và số thẻ "chưa rõ" trong giây này, ms chờ khung hình của 2 làn
+    var N = RD.Nhanh;
+    if (N) {
+      o.push(MA_PHOI[N.ph.che] || 0, Math.round(N.ph.T || 0), Math.round(N.ph.iso || 0), Math.round(N.ph.sang), MA_CB[N.cb.nguon] || 0, N.kh.tt === "duoc" ? 1 : N.kh.tt === "chua" ? 2 : 0, demNamT, demNgo);
+      try { D.nh = N.chu(); } catch (e) { /* bỏ qua */ }
+      if (camNay) camNay.nh = chupNh();
+    } else o.push(-1, 0, 0, -1, 0, 0, demNamT, demNgo);
+    for (var j = 0; j < 2; j++) { var nj = ds[j]; o.push(nj && !nj.tat && nj.kieu === "k" ? Math.round(nj.choMs || 0) : -1); }
+    demNamT = 0; demNgo = 0;
     if (D.giay.length < 3000) D.giay.push(o);
     demGiay = [0, 0];
     // tên làn đổi (làn xa không chạy được thì làn gần làm một mình)
@@ -256,7 +337,7 @@
       gnCu = !!s.ghiNgay;
     }
     if (L.chay && !dangChay) { dangChay = true; batDauCam(L); tGiay = bay; demGiay = [0, 0]; t0Nhan = 0; }
-    else if (!L.chay && dangChay) { dangChay = false; camCho = null; suKien("cam-tat"); luu(true); veSoDo(); }
+    else if (!L.chay && dangChay) { dangChay = false; camCho = null; camNay = null; suKien("cam-tat"); luu(true); veSoDo(); }
     if (dangChay && camCho && L.video && L.video.videoWidth) {
       camCho.w = L.video.videoWidth; camCho.h = L.video.videoHeight;
       try { camCho.st = sach(L.track && L.track.getSettings && L.track.getSettings()); } catch (e) { /* bỏ qua */ }
@@ -280,7 +361,14 @@
     var lan = L.tungLan().filter(function (x) { return !x.tat; }).map(function (x) { return x.ten + " " + x.maxW + " px " + x.ms + " ms"; }).join(" · ");
     nhan.dataset.dangDo = "1";
     nhan.style.whiteSpace = "normal"; nhan.style.textAlign = "center"; nhan.style.opacity = ".9"; nhan.style.maxWidth = "94vw"; nhan.style.width = "max-content";
-    nhan.innerHTML = nhanGoc + (RD.ghiNgay && RD.ghiNgay() ? " · ghi ngay" : "") + "<br>" + so1(demNhan) + " lần đọc/giây · camera " + cam + "<br>" + lan;
+    var N = RD.Nhanh, dong4 = "";
+    if (N) {
+      try {
+        dong4 = "<br>bỏ thẻ nằm " + (N.len() ? "✓" : "✗") + " · hình nhanh " + (N.kh.tt === "duoc" ? "✓" : N.kh.tt === "chua" ? "…" : "✗") +
+          " · phơi " + (N.ph.che === "tay" ? so1(N.ph.T / 10) + " ms" : "tự động");
+      } catch (e) { dong4 = ""; }
+    }
+    nhan.innerHTML = nhanGoc + (RD.ghiNgay && RD.ghiNgay() ? " · ghi ngay" : "") + "<br>" + so1(demNhan) + " lần đọc/giây · camera " + cam + "<br>" + lan + dong4;
   }, 250);
   document.addEventListener("visibilitychange", function () { suKien(document.hidden ? "an-trang" : "hien-trang"); if (document.hidden) luu(true); });
   window.addEventListener("pagehide", function () { luu(true); });
@@ -304,6 +392,13 @@
         (kn.zoom ? ", zoom " + (st.zoom || 1) + " (máy cho " + kn.zoom.min + " đến " + kn.zoom.max + ")" : ", không chỉnh được zoom") +
         (st.focusMode ? ", lấy nét " + st.focusMode : "") + (kn.exposureTime ? ", chỉnh được phơi sáng" : "") + (kn.torch ? ", có đèn" : "") + " · bật camera " + D.cam.length + " lần");
     } else r.push("Camera: chưa bật lần nào");
+    if (D.nh) {
+      var dm = D.dem || { namT: 0, nam60: 0, ngo: 0, giu: [0, 0, 0] };
+      r.push("Bỏ thẻ nằm trên bàn: " + D.nh.nam + " · bỏ " + dm.namT + " lượt theo hướng mặt thẻ, " + dm.nam60 + " lượt vì nghiêng quá 60 độ · " + dm.ngo + " lượt chưa rõ nằm hay giơ" +
+        " · giữ lại chưa ghi " + (dm.giu[0] + dm.giu[1] + dm.giu[2]) + " lượt (chờ đọc thêm " + dm.giu[0] + ", mã vừa nằm trên bàn " + (dm.giu[1] + dm.giu[2]) + ")");
+      r.push("Lấy hình nhanh: " + D.nh.khung);
+      r.push("Chống nhòe khi lia máy: " + D.nh.phoi);
+    }
     if (D.giay.length) {
       var tong = [], g = [[], [], [], []], x = [[], [], [], []];
       D.giay.forEach(function (o) {
@@ -354,12 +449,16 @@
         if (phan.length) dong.push((i ? "làn xa " : "làn gần ") + phan.join(", "));
       }
       if (dong.length) r.push("  Đọc trúng lúc thẻ đang trong khung, theo cỡ thẻ (điểm ảnh mỗi ô): " + dong.join(" · "));
-      if (chua.length) r.push("  Thấy mà chưa ghi: số " + chua.map(function (id) { var o = C.the[id]; return id + (o.hai ? " (2 thẻ " + o.hai + " lần)" : " (" + (o.n[0] + o.n[1]) + " lần đọc)"); }).join(", "));
+      if (chua.length) r.push("  Thấy mà chưa ghi: số " + chua.map(function (id) { var o = C.the[id]; return id + (o.hai ? " (2 thẻ " + o.hai + " lần)" : " (" + (o.n[0] + o.n[1]) + " lần đọc" + (o.ngo ? ", " + o.ngo + " lần chưa rõ nằm hay giơ" : "") + ")"); }).join(", "));
       var haiDs = ghi.filter(function (id) { return C.the[id].hai; }), khac = ghi.filter(function (id) { return Object.keys(C.the[id].khac).length; });
       if (haiDs.length) r.push("  Từng bị coi là giơ 2 thẻ rồi vẫn ghi được: số " + haiDs.map(function (id) { return id + " (" + C.the[id].hai + " lần)"; }).join(", "));
       if (khac.length) r.push("  Sau khi ghi còn thấy chữ khác: số " + khac.map(function (id) { var o = C.the[id]; return id + " (ghi " + o.lg + ", sau thấy " + Object.keys(o.khac).map(function (l) { return l + " " + o.khac[l] + " lần"; }).join(", ") + ")"; }).join("; "));
       var nam = Object.keys(C.nam), ngoai = Object.keys(C.ngoai);
-      if (nam.length) r.push("  Thẻ nằm nghiêng quá 60 độ bị loại: " + nam.reduce(function (a, id) { return a + C.nam[id]; }, 0) + " lượt (số " + nam.join(", ") + ")");
+      var namT = Object.keys(C.namT || {});
+      if (namT.length) r.push("  Thẻ nằm trên bàn bị bỏ (theo hướng mặt thẻ): " + namT.reduce(function (a, id) { return a + C.namT[id]; }, 0) + " lượt (số " + namT.join(", ") + ")");
+      if (nam.length) r.push("  Thẻ nghiêng quá 60 độ bị bỏ: " + nam.reduce(function (a, id) { return a + C.nam[id]; }, 0) + " lượt (số " + nam.join(", ") + ")");
+      var giu = ids.filter(function (id) { var g = C.the[id].giu; return g && g[0] + g[1] + g[2] > 0; });
+      if (giu.length) r.push("  Lần đọc bị giữ lại chưa ghi (chưa rõ nằm hay giơ, hoặc mã đó vừa nằm trên bàn): số " + giu.map(function (id) { var g = C.the[id].giu; return id + " (" + (g[0] + g[1] + g[2]) + " lần" + (C.the[id].tg != null ? ", sau đó ghi được" : "") + ")"; }).join(", "));
       if (ngoai.length) r.push("  Đọc ra số không có trong lớp hoặc đang vắng: " + ngoai.map(function (id) { return id + " (" + C.ngoai[id] + " lần)"; }).join(", "));
     });
     if (D.loi.length) r.push("Lỗi trang: " + D.loi.length + " (" + D.loi.slice(0, 3).map(function (l) { return l[1]; }).join(" | ") + ")");
@@ -445,6 +544,7 @@
     lsDel(KHOA); lsDel(KHOA_VET);
     E0 = Date.now(); P0 = performance.now();
     D = banGhiMoi(); VET = []; vetDai = 0; coMoi = false; keyCu = ""; soDoc = [0, 0]; demGiay = [0, 0]; soDocCu = 0; t0Nhan = 0;
+    gocLuc = {}; gocSo = [0, 0]; demNamT = 0; demNgo = 0; camNay = null;
     suKien("xoa-do-lai");
     if (dangChay) { var L = RD.Quet && RD.Quet.Live; if (L) batDauCam(L); }
     bao("Đã xóa. Số đo mới có mã " + D.ma + ".", "ok"); veSoDo();

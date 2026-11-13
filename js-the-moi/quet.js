@@ -12,13 +12,41 @@
      Worker 0 cũng dùng cho ảnh chụp. Worker nào hỏng thì làn đó tắt; worker 0 hỏng thì đọc trên trang chính như trước. */
   var maSan = null, jobSeq = 0, jobs = {};
   var THO = [{ w: null, hong: false, san: null }, { w: null, hong: false, san: null }];
+  // Chạy TRONG worker (ghép vào sau scanlib.js), không gọi ở trang chính. Không dùng biến nào của tệp này.
+  function trongWorker(e) {
+    var d = e.data;
+    if (d.ping) { self.postMessage({ pong: 1 }); return; }
+    var kh = d.kh || null, tra = kh ? [kh.buf] : [];
+    try {
+      if (d.thu) {   // thử đường "khung hình" lúc vừa bật camera: chỉ rút ảnh nhỏ 32 × 32 ô để trang so với đường canvas
+        var t0 = performance.now(), x = THE.xamTuKhung({ buf: kh.buf, dd: kh.dd, lay: kh.lay, w0: kh.w0, h0: kh.h0, sc: 1, lut: null });
+        if (!x) throw new Error("không đọc được khung " + kh.dd);
+        self.postMessage({ id: d.id, thu: { nho: THE.anhNho(x.g, 0, x.w, x.w, x.h, 1, 32), tg: performance.now() - t0, w: x.w, h: x.h }, buf: kh.buf }, tra);
+        return;
+      }
+      var tuy = { chiDu: !!d.chiDu, len: d.len || null, f: d.f || 0 };
+      var r = kh ? THE.scanKhung(kh, d.maxId, tuy) : THE.scan({ data: new Uint8ClampedArray(d.buf), width: d.w, height: d.h }, d.maxId, tuy);
+      self.postMessage({
+        id: d.id,
+        cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist, hai: !!c.hai, det: c.det, ngo: !!c.ngo, tt: c.tt || 0, e: c.e || null, gt: c.gt || null }; }),
+        nam: (r.nam || []).map(function (c) { return c.vi ? { id: c.id, k: c.k, size: c.size, det: c.det, vi: 1, corners: c.corners, tt: 2, e: c.e || null, gt: c.gt || null } : { id: c.id, k: c.k, size: c.size, det: c.det }; }),
+        sang: r.info.sang, w: r.w || 0, h: r.h || 0, tgDoi: r.tgDoi || 0, buf: kh ? kh.buf : null
+      }, tra);
+    } catch (err) { self.postMessage({ id: d.id, error: String(err && err.message || err), buf: kh ? kh.buf : null }, tra); }
+  }
+  // kết quả đọc ngay trên trang chính (không có worker): gói giống kết quả worker trả về
+  function taiCho(r) {
+    var cs = r.cards;
+    cs.nam = r.nam || []; cs.sang = r.info ? r.info.sang : null; cs.w = r.w || 0; cs.h = r.h || 0; cs.tgDoi = r.tgDoi || 0;
+    return cs;
+  }
   function taiMa() {
     if (!maSan) {
       maSan = fetch("js-the-moi/scanlib.js?v=" + (window.RD_V || "")).then(function (r) {
         if (!r.ok) throw new Error("scanlib " + r.status);
         return r.text();
       }).then(function (txt) {
-        var code = txt + "\nself.onmessage = function (e) { var d = e.data; if (d.ping) { self.postMessage({ pong: 1 }); return; } try { var r = THE.scan({ data: new Uint8ClampedArray(d.buf), width: d.w, height: d.h }, d.maxId, { chiDu: !!d.chiDu }); self.postMessage({ id: d.id, cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist, hai: !!c.hai, det: c.det }; }), nam: (r.nam || []).map(function (c) { return { id: c.id, k: c.k, size: c.size, det: c.det }; }) }); } catch (err) { self.postMessage({ id: d.id, error: String(err && err.message || err) }); } };";
+        var code = txt + "\nself.onmessage = " + trongWorker.toString() + ";";
         return URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
       });
     }
@@ -34,10 +62,15 @@
         var hen = setTimeout(function () { bad(new Error("worker im lặng")); }, 5000);
         w.onmessage = function (e) {
           if (e.data && e.data.pong) { clearTimeout(hen); ok(w); return; }
+          if (e.data.buf && RD.Nhanh) RD.Nhanh.traBo(e.data.buf);   // vùng nhớ khung hình: dùng lại cho lần chụp sau
           var j = jobs[e.data.id];
           if (!j) return;
           delete jobs[e.data.id];
-          if (e.data.error) j.bad(new Error(e.data.error)); else { if (e.data.nam) e.data.cards.nam = e.data.nam; j.ok(e.data.cards); }
+          if (e.data.error) { j.bad(new Error(e.data.error)); return; }
+          if (e.data.thu) { j.ok(e.data.thu); return; }
+          var cs = e.data.cards;
+          cs.nam = e.data.nam || []; cs.sang = e.data.sang; cs.w = e.data.w; cs.h = e.data.h; cs.tgDoi = e.data.tgDoi;
+          j.ok(cs);
         };
         w.onerror = function () { clearTimeout(hen); bad(new Error("worker lỗi")); };
         w.postMessage({ ping: 1 });
@@ -66,17 +99,45 @@
     return taoWorker(i).then(function (w) {
       if (!w) {
         if (i) { var e = new Error("không có worker " + i); e.khongLan = true; throw e; }
-        return window.THE.scan(im, RD.MAXID, tuy).cards;
+        return taiCho(window.THE.scan(im, RD.MAXID, tuy));
       }
       return new Promise(function (ok, bad) {
         var id = ++jobSeq;
         var hen = setTimeout(function () { boWorker(i); }, 60000);
         jobs[id] = { i: i, ok: function (v) { clearTimeout(hen); ok(v); }, bad: function (e) { clearTimeout(hen); bad(e); } };
-        w.postMessage({ id: id, w: im.width, h: im.height, buf: im.data.buffer, maxId: RD.MAXID, chiDu: !!tuy.chiDu }, [im.data.buffer]);
+        w.postMessage({ id: id, w: im.width, h: im.height, buf: im.data.buffer, maxId: RD.MAXID, chiDu: !!tuy.chiDu, len: tuy.len || null, f: tuy.f || 0 }, [im.data.buffer]);
       }).catch(function (e) {
         if (i) { e.khongLan = true; throw e; }
         if (!layLai) throw e;
-        return window.THE.scan(layLai(), RD.MAXID).cards;
+        return taiCho(window.THE.scan(layLai(), RD.MAXID, tuy));
+      });
+    });
+  };
+  // 13/11: gửi thẳng vùng nhớ của một khung hình camera (nhanh.js gọi). kh: {buf, dd, lay, w0, h0, sc, lut}; tuy như quetAnh,
+  //   thêm tuy.thu: chỉ rút ảnh nhỏ để so. Lỗi của worker (không có, treo) mới tính là hỏng làn; lỗi đọc khung thì nhanh.js lo.
+  Q.quetKhung = function (kh, tuy) {
+    tuy = tuy || {};
+    var i = tuy.lan || 0;
+    return taoWorker(i).then(function (w) {
+      if (!w) {
+        if (i) { var e = new Error("không có worker " + i); e.khongLan = true; throw e; }
+        if (tuy.thu) {
+          var x = window.THE.xamTuKhung({ buf: kh.buf, dd: kh.dd, lay: kh.lay, w0: kh.w0, h0: kh.h0, sc: 1, lut: null });
+          if (!x) throw new Error("không đọc được khung " + kh.dd);
+          return { nho: window.THE.anhNho(x.g, 0, x.w, x.w, x.h, 1, 32), tg: 0, w: x.w, h: x.h };
+        }
+        var r = taiCho(window.THE.scanKhung(kh, RD.MAXID, tuy));
+        if (RD.Nhanh) RD.Nhanh.traBo(kh.buf);
+        return r;
+      }
+      return new Promise(function (ok, bad) {
+        var id = ++jobSeq;
+        var hen = setTimeout(function () { boWorker(i); }, 60000);
+        jobs[id] = { i: i, ok: function (v) { clearTimeout(hen); ok(v); }, bad: function (e) { clearTimeout(hen); bad(e); } };
+        w.postMessage({ id: id, kh: kh, thu: !!tuy.thu, maxId: RD.MAXID, chiDu: !!tuy.chiDu, len: tuy.len || null, f: tuy.f || 0 }, [kh.buf]);
+      }).catch(function (e) {
+        if (i && e && e.message === "worker") e.khongLan = true;
+        throw e;
       });
     });
   };
@@ -220,6 +281,7 @@
     }).then(function (s) {
       L.stream = s;
       L.track = s.getVideoTracks()[0] || null;
+      L.zoomMay = 0;   // bản thử 13/11: camera vừa bật, chưa zoom
       // lấy nét liên tục nếu máy cho chỉnh (đưa camera qua lại giữa các bàn mà ảnh vẫn nét)
       try {
         var kn = L.khaNang();
@@ -235,6 +297,7 @@
       L.phien++;
       L.lan.forEach(function (n) { n.tg = []; n.the = []; n.t = 0; if (!n.tat) taoWorker(n.so); });
       L.chay = true;
+      if (RD.Nhanh) { try { RD.Nhanh.camBat(L); } catch (e) { console.error(e); } }   // bản thử 13/11: cảm biến nghiêng, đường khung hình, phơi sáng ngắn
       L.raf = requestAnimationFrame(vong);
     });
   };
@@ -256,13 +319,11 @@
     // có thu phóng thì phần cắt được kéo to tới gấp đôi, để thẻ ở xa đủ lớn cho bộ đọc
     var sc = Math.min(z > 1 ? 2 : 1, n.maxW / Math.max(sw, sh));
     var w = Math.round(sw * sc), h = Math.round(sh * sc);
-    if (!n.cv) { n.cv = document.createElement("canvas"); n.ctx = n.cv.getContext("2d", { willReadFrequently: true }); }
-    if (n.cv.width !== w || n.cv.height !== h) { n.cv.width = w; n.cv.height = h; }
-    var tc = performance.now();
-    n.ctx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, w, h);
-    var im = n.ctx.getImageData(0, 0, w, h), t0 = performance.now();
-    n.ban = true; n.chupMs = t0 - tc; n.kw = w; n.kh = h;   // bản thử: số đo
-    Q.quetAnh(im, null, { lan: n.so, chiDu: n.chiDu }).then(function (cards) {
+    var tc = performance.now(), ng = RD.Nhanh || null;
+    var tuy = { lan: n.so, chiDu: n.chiDu, len: null, f: 0 };
+    // bản thử 13/11: hướng "trên" của cảm biến nghiêng và tiêu cự (tính bằng điểm ảnh của khung gửi đi) để bộ đọc bỏ thẻ nằm ngửa trên bàn
+    if (ng) { try { tuy.len = ng.len(); } catch (e) { tuy.len = null; } if (tuy.len) tuy.f = ng.F_REL * Math.max(vw, vh) * sc * (L.zoomMay > 0 ? L.zoomMay : 1); }
+    var xong = function (cards, t0) {
       var dt = performance.now() - t0;
       n.ban = false;
       n.tg.push(dt); if (n.tg.length > 12) n.tg.shift();
@@ -271,29 +332,53 @@
       L.maxW = L.lan[L.lan.length - 1].tat ? L.lan[0].maxW : L.lan[L.lan.length - 1].maxW;
       if (!L.chay || phien !== L.phien) return;
       // toạ độ góc thẻ đổi về phần cắt trên video (chung cho các làn dù cỡ khung khác nhau)
-      var kx = sw / w, ky = sh / h;
-      cards.forEach(function (c) {
-        c.corners = c.corners.map(function (p) { return { x: p.x * kx, y: p.y * ky }; });
-        c.tc = tc; c.lan = n.so;
-      });
-      n.the = cards; n.t = tc;
+      var fw = cards.w || w, fh = cards.h || h, kx = sw / fw, ky = sh / fh;
+      var doi = function (c) { c.corners = c.corners.map(function (p) { return { x: p.x * kx, y: p.y * ky }; }); c.tc = tc; c.lan = n.so; };
+      cards.forEach(doi);
+      n.nam = (cards.nam || []).filter(function (c) { return c.vi && c.corners; });   // thẻ nằm trên bàn bị bỏ: để vẽ viền xám
+      n.nam.forEach(doi);
+      n.the = cards; n.t = tc; n.kw = fw; n.kh = fh;
+      n.len = tuy.len; n.f = tuy.f; n.sang = cards.sang; n.doiMs = cards.tgDoi || 0;   // bản thử: số đo
       L.fw = sw; L.fh = sh;
+      if (ng && cards.sang != null) { try { ng.sang(cards.sang, tc); } catch (e) { console.error(e); } }
       gop();
       try { if (L.onKq) L.onKq(cards, tc); } catch (e) { console.error(e); }
       L.ve();
-    }, function (e) {
+    };
+    var hong = function (e) {
       n.ban = false;
       if (e && e.khongLan) tatLan(n);
-    });
+    };
+    var canvas = function () {
+      if (!n.cv) { n.cv = document.createElement("canvas"); n.ctx = n.cv.getContext("2d", { willReadFrequently: true }); }
+      if (n.cv.width !== w || n.cv.height !== h) { n.cv.width = w; n.cv.height = h; }
+      tc = performance.now();
+      n.ctx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, w, h);
+      var im = n.ctx.getImageData(0, 0, w, h), t0 = performance.now();
+      n.chupMs = t0 - tc; n.choMs = 0; n.kieu = "c"; n.kw = w; n.kh = h;   // bản thử: số đo
+      if (ng) { try { ng.sauCanvas(im, v, n, z, n.chupMs); } catch (e) { console.error(e); } }   // lần đầu sau khi bật camera: thử đường khung hình
+      Q.quetAnh(im, null, tuy).then(function (cards) { xong(cards, t0); }, hong);
+    };
+    n.ban = true;
+    // bản thử 13/11: lấy thẳng khung hình camera khi đã so khớp với đường canvas (không thu phóng); không thì canvas như cũ
+    if (ng && z === 1) {
+      var nhan = false;
+      try { nhan = ng.khung(v, n, sc, tuy, xong, canvas, hong); } catch (e) { console.error(e); nhan = false; }
+      if (nhan) return;
+    }
+    canvas();
   }
   // thẻ đang thấy = lần đọc mới nhất của từng thẻ ở mọi làn (kết quả quá 0,9 giây thì coi như thẻ đã ra khỏi khung)
   function gop() {
-    var bay = performance.now(), tot = {};
+    var bay = performance.now(), tot = {}, nam = {};
     L.lan.forEach(function (n) {
       if (n.tat || bay - n.t > 900) return;
       n.the.forEach(function (c) { var o = tot[c.id]; if (!o || c.tc > o.tc) tot[c.id] = c; });
+      (n.nam || []).forEach(function (c) { var kk = c.id + "." + c.k, o = nam[kk]; if (!o || c.tc > o.tc) nam[kk] = c; });
     });
     L.the = Object.keys(tot).map(function (k) { return tot[k]; }).sort(function (a, b) { return a.id - b.id; });
+    // bản thử 13/11: thẻ nằm trên bàn đang bị bỏ qua (trừ khi chính mã đó vừa được đọc là thẻ đang giơ ở lần đọc mới hơn)
+    L.nam = Object.keys(nam).map(function (k) { return nam[k]; }).filter(function (c) { var o = tot[c.id]; return !(o && o.k === c.k && o.tc >= c.tc); });
   }
   // số khung đọc được mỗi giây, cộng các làn
   L.khungMoiGiay = function () {
@@ -343,13 +428,30 @@
       x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle";
       x.fillText(nh.chu, cxp, cyp + 1);
     });
+    // bản thử 13/11: thẻ nằm trên bàn, máy thấy nhưng bỏ qua: viền đứt màu xám nhạt, chữ "nằm"
+    (L.nam || []).forEach(function (card) {
+      var p = card.corners.map(function (q) { return [ox + q.x * s, oy + q.y * s]; });
+      x.beginPath();
+      x.moveTo(p[0][0], p[0][1]);
+      for (var i = 1; i < 4; i++) x.lineTo(p[i][0], p[i][1]);
+      x.closePath();
+      x.setLineDash([6, 5]); x.lineWidth = 2; x.strokeStyle = "rgba(240,240,240,.9)"; x.stroke(); x.setLineDash([]);
+      var cxp = (p[0][0] + p[1][0] + p[2][0] + p[3][0]) / 4, cyp = (p[0][1] + p[1][1] + p[2][1] + p[3][1]) / 4;
+      x.font = "600 13px system-ui, sans-serif";
+      var tw = x.measureText("nằm").width + 10;
+      x.fillStyle = "rgba(20,14,8,.6)";
+      x.fillRect(cxp - tw / 2, cyp - 10, tw, 20);
+      x.fillStyle = "#eee"; x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText("nằm", cxp, cyp + 1);
+    });
   };
   L.dung = function () {
-    L.chay = false;
+    if (RD.Nhanh && L.chay) { try { RD.Nhanh.camTat(L); } catch (e) { console.error(e); } }
+    L.chay = false; L.nam = [];
     cancelAnimationFrame(L.raf);
     if (L.stream) L.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) { /* bỏ qua */ } });
     L.stream = null; L.track = null; L.the = []; L.fw = 0;
-    L.lan.forEach(function (n) { n.the = []; n.t = 0; });
+    L.lan.forEach(function (n) { n.the = []; n.nam = []; n.t = 0; });
     L.zoomSo(1);
     if (L.video) { try { L.video.srcObject = null; } catch (e) { /* bỏ qua */ } }
     if (L.phu) { var x = L.phu.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, L.phu.width, L.phu.height); }
@@ -363,6 +465,6 @@
   };
   L.phongTo = function (z) {
     if (!L.track) return Promise.reject(new Error("chưa bật camera"));
-    return L.track.applyConstraints({ advanced: [{ zoom: z }] });
+    return L.track.applyConstraints({ advanced: [{ zoom: z }] }).then(function () { L.zoomMay = +z || 0; });
   };
 })();
