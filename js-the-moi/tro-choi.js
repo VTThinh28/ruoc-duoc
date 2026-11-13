@@ -826,7 +826,6 @@
     $("#chuanBiTV").hidden = !((step === "setup" && !anCB) || moCB);
     capNhatChuanBi($("#cbTV"));
     A.batNhac(cfg().nhac !== false);
-    A.nhacMuc(step === "setup" ? 0 : loai === "a" ? 0.08 : 0.22, loai === "a" ? 1.5 : 1);
     var laCau = loai === "q" || loai === "k" || loai === "a";
     $('[data-tv="thu"]').hidden = !(laCau && cfg().thu);
     $('[data-tv="lai"]').hidden = !(cfg().thu && step !== "setup");
@@ -834,6 +833,7 @@
     // để bước quét xong, đáp án và di chuyển luôn có kết quả (dienThu chỉ thêm thẻ còn thiếu)
     if (doi && q && loai !== "q" && cfg().thu) dienThu(q, true);
     if (doi) vaoBuocTV(step, cu, loai, q, rev);
+    datNhac(step, loai);          // sau vaoBuocTV: bước tuong cần mốc báo tường hiện (SK.mocKet) của bước mới
     // 9/11: màn giới thiệu hiện hay ẩn luật chơi theo now.luat (nút trên điện thoại hay trên TV)
     if (step === "intro" && SK.luatDaAn() !== !now.luat) SK.anLuat(!now.luat);
     var nd = $('[data-tv="dem"]');
@@ -841,6 +841,23 @@
     nd.disabled = !!DEM.id;
     if (laCau) capNhatManCau(q, loai);
     if (loai === "q" && cfg().thu && doi) { clearTimeout(henThu); henThu = setTimeout(function () { dienThu(q, false); }, 1600); }
+  }
+  // độ to nhạc nền theo bước: 0 tắt (chuẩn bị), NHAC_VUA bình thường, NHAC_NHO lúc học sinh phát biểu.
+  // 13/11 thầy Thịnh (đổi nhạc nền sang bài Suno "Học Vui Mỗi Ngày"): "chỗ nào mà tôi sẽ kêu học sinh phát biểu thì cho nhạc nhỏ lại".
+  //   Hai chỗ: bước đáp án (mời một em nêu cách làm) và bước tuong từ lúc báo tường hiện xong (hỏi "Sắp tới trường chúng ta có ngày gì?");
+  //   lúc tia lửa bay lên số 51 và lửa đốt tan màn đêm nhạc vẫn to như thường. Trước đây chỉ bước đáp án nhỏ lại, mức 0,08.
+  var NHAC_VUA = 0.22, NHAC_NHO = 0.06, henNhac = null;
+  function datNhac(step, loai) {
+    clearTimeout(henNhac); henNhac = null;
+    var muc = NHAC_VUA, giay = 1;
+    if (step === "setup") muc = 0;
+    else if (loai === "a") { muc = NHAC_NHO; giay = 1.5; }
+    else if (step === "tuong") {
+      var k = SK.mocKet && SK.mocKet(), con = k ? k.S0 - performance.now() / 1000 : 0;
+      if (con > 0) henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === "tuong") A.nhacMuc(NHAC_NHO, 1.5); }, Math.min(con, 15) * 1000);
+      else { muc = NHAC_NHO; giay = 1.5; }
+    }
+    A.nhacMuc(muc, giay);
   }
   // kết quả sau từng câu theo thứ tự: ls[0] chưa có câu nào, ls[k] đã tính câu 1 đến câu k
   function lichSu() {

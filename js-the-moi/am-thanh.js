@@ -1,4 +1,5 @@
-/* Rước đuốc: tiếng động tự tạo bằng Web Audio (trống, tiếng lửa, kèn) và nhạc nền "Fireflies over the Festival" (bản Suno của thầy Thịnh), lặp liền mạch */
+/* Rước đuốc: tiếng động tự tạo bằng Web Audio (trống, tiếng lửa, kèn) và nhạc nền "Học Vui Mỗi Ngày" (bản Suno không lời của thầy Thịnh, 13/11/2026;
+   trước đó là "Fireflies over the Festival"), lặp liền mạch */
 (function () {
   "use strict";
   var RD = window.RD = window.RD || {};
@@ -63,7 +64,8 @@
     }
     if (NH.g) NH.g.gain.setTargetAtTime(Math.max(0.0001, dich), ac.currentTime, (giay || 0.8) / 3);
   }
-  // độ to nhạc: 0 tắt, 0.22 bình thường, 0.08 khi học sinh nêu cách làm (5/11: nhỏ lại theo ý thầy Thịnh, trước là 0.32 và 0.12)
+  // độ to nhạc: 0 tắt, 0.22 bình thường, 0.06 khi học sinh phát biểu (tro-choi.js, datNhac). 5/11: nhỏ lại theo ý thầy Thịnh, trước là 0.32 và 0.12;
+  //   13/11: lúc học sinh phát biểu 0.08 → 0.06 và thêm lúc hỏi cả lớp ở màn báo tường
   A.nhacMuc = function (muc, giay) { NH.muc = muc; capNhatNhac(giay); };
   A.batNhac = function (on) { NH.batNhac = !!on; capNhatNhac(0.6); };
   A.nhacDangBat = function () { return NH.batNhac; };
