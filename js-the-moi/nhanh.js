@@ -18,11 +18,19 @@
       Máy nào cho chỉnh (exposureMode "manual", exposureTime, iso) thì ép phơi 4 ms, bù bằng ISO; ISO tự chỉnh theo độ sáng trung
       bình của khung (bộ đọc trả về). Hết cỡ ISO mới kéo dài phơi (tới 10 ms). Lệnh bị từ chối, hoặc hình tối đen/cháy trắng
       kéo dài, thì trả camera về tự động.
-   Ba ô bật tắt trên màn quét của điện thoại (mặc định bật, máy nhớ): rd-loc-nam, rd-khung, rd-phoi-ngan = "0" là tắt. */
+   Ba ô bật tắt trên màn quét của điện thoại (mặc định bật, máy nhớ): rd-loc-nam, rd-khung, rd-phoi-ngan = "0" là tắt.
+
+   13/11 tối, sau số đo FMWQ (thầy thử ở nhà bằng Chrome): lấy hình nhanh chạy tốt (2,8 ms thay cho 108 ms, 32 lần đọc/giây). Sửa 2 chỗ:
+   4. TIÊU CỰ TỰ ĐO. Camera trong Chrome nhìn rộng hơn ảnh chụp của máy: tiêu cự 0,48 cạnh dài, không phải 0,667, nên thẻ nằm trên bàn
+      bị xếp "chưa rõ". Bộ đọc gửi về ước lượng tiêu cự từ từng thẻ (scanlib.js, uocF); ở đây lấy trung vị, đủ 8 thì dùng, nhớ trên máy
+      (rd-f-rel) cho lần sau.
+   5. PHƠI SÁNG: Chrome báo exposureMode "continuous" dù máy đã làm theo lệnh (hình tối đi ngay khi ép), nên trang tưởng hỏng và trả về tự
+      động. Nay chế độ máy báo không phải "manual" thì xét bằng độ sáng thật: ép xong hình đổi sáng hẳn, hoặc đổi ISO thì độ sáng đổi theo,
+      là máy có làm theo; 1,2 giây chưa rõ thì thử tăng hoặc giảm ISO một nấc; 5 giây vẫn không thấy đổi thì mới trả về tự động. */
 (function () {
   "use strict";
   var RD = window.RD = window.RD || {};
-  var N = RD.Nhanh = { F_REL: 0.667 };   // tiêu cự / cạnh dài khung hình: camera chính của điện thoại (23 đến 26 mm quy đổi); 2 ảnh lớp 13/11 khớp 0,665
+  var N = RD.Nhanh = { F_REL: 0.667 };   // tiêu cự / cạnh dài khung hình, MẶC ĐỊNH: camera chính (23 đến 26 mm quy đổi); 2 ảnh lớp 13/11 (ứng dụng camera) khớp 0,665
   var D2R = Math.PI / 180;
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* bỏ qua */ } }
@@ -31,6 +39,25 @@
   var nghe = [];
   N.nghe = function (f) { nghe.push(f); };   // do.js nghe các quyết định ở đây để ghi vào số đo
   function bao(loai, a, b, c, d) { for (var i = 0; i < nghe.length; i++) { try { nghe[i](loai, a, b, c, d); } catch (e) { /* bỏ qua */ } } }
+
+  /* ---- 4. tiêu cự tự đo (13/11 tối). Số đo FMWQ: trong Chrome máy thầy là 0,48 cạnh dài. Bộ đọc gửi ước lượng (đã theo tỉ lệ cạnh dài)
+     qua quet.js → N.themF; lấy trung vị 60 ước lượng gần nhất, đủ 8 thì dùng; nhớ trên máy (localStorage rd-f-rel) cho lần sau. */
+  var FD = N.fd = { ds: [], f: 0, n: 0, nguon: "mặc định", luu: 0, tong: 0 };
+  (function () {
+    try { var x = JSON.parse(lsGet("rd-f-rel", "null")); if (x && x.f >= 0.35 && x.f <= 1 && x.n >= 8) { FD.f = x.f; FD.n = x.n; FD.nguon = "máy nhớ"; } } catch (e) { /* bỏ qua */ }
+  })();
+  N.fRel = function () { return FD.f > 0 ? FD.f : N.F_REL; };
+  N.themF = function (ds, lan) {
+    var i, v, a, med, cu = FD.f, t = bay();
+    for (i = 0; i < ds.length; i++) { v = +ds[i]; if (v >= 0.3 && v <= 1.2) { FD.ds.push(v); FD.tong++; } }
+    while (FD.ds.length > 60) FD.ds.shift();
+    if (FD.ds.length < 8) return;
+    a = FD.ds.slice().sort(function (x, y) { return x - y; });
+    med = a.length % 2 ? a[a.length >> 1] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+    FD.f = Math.round(Math.max(0.35, Math.min(1, med)) * 1000) / 1000; FD.n = FD.ds.length; FD.nguon = "tự đo";
+    if (t - FD.luu > 3000) { FD.luu = t; lsSet("rd-f-rel", JSON.stringify({ f: FD.f, n: FD.n })); }
+    if (Math.abs(FD.f - cu) >= 0.005) bao("f", FD.f, FD.n, lan);
+  };
   var KHOA = { nam: "rd-loc-nam", khung: "rd-khung", phoi: "rd-phoi-ngan" };
   N.bat = { nam: lsGet(KHOA.nam, "1") !== "0", khung: lsGet(KHOA.khung, "1") !== "0", phoi: lsGet(KHOA.phoi, "1") !== "0" };
   var LIVE = null;   // RD.Quet.Live lúc camera đang bật
@@ -229,14 +256,15 @@
      3. PHƠI SÁNG NGẮN (chống nhòe lúc lia máy)
      ===================================================================== */
   var T_DICH = 40, T_MAX = 100, T_MIN = 5;   // đơn vị của trình duyệt: 0,1 mili giây. 4 ms; dài nhất 10 ms; ngắn nhất 0,5 ms
-  var PH = N.ph = { che: "khong", ly: "chưa bật camera", T: 0, iso: 0, dich: 115, luc: 0, doc: [], tBat: 0, kn: null, track: null, dang: false, tXau: 0, soLan: 0, Ta: 0, sang: -1, lucXem: 0, so: 0 };
+  var PH = N.ph = { che: "khong", ly: "chưa bật camera", T: 0, iso: 0, dich: 115, luc: 0, doc: [], tBat: 0, kn: null, track: null, dang: false, tXau: 0, soLan: 0, Ta: 0, sang: -1, lucXem: 0, so: 0,
+    xn: -1, xnLy: "", mode: "", tXn: 0, coDoi: 0, khongDoi: 0, thuDa: false, cs: null };   // xn: 1 máy làm theo lệnh, 0 đang xét bằng độ sáng, −1 chưa ép
   function giua(a) { var b = a.slice().sort(function (x, y) { return x - y; }); return b.length ? b[b.length >> 1] : 0; }
   function kepT(T) { var k = PH.kn.exposureTime, b = k.step > 0 ? k.step : 0.1; T = Math.max(k.min || 0, Math.min(k.max, T)); return Math.round(Math.round(T / b) * b * 10) / 10; }
   function kepIso(i) { var k = PH.kn.iso; return Math.round(Math.max(k.min || 50, Math.min(k.max, i))); }
   function caiDat() { try { return (PH.track && PH.track.getSettings && PH.track.getSettings()) || {}; } catch (e) { return {}; } }
   function veTuDong(che, ly) {
     var tr = PH.track;
-    PH.che = che; PH.ly = ly || ""; PH.dang = false;
+    PH.che = che; PH.ly = ly || ""; PH.dang = false; PH.xn = -1;
     if (tr) { try { tr.applyConstraints({ advanced: [{ exposureMode: "continuous" }] }).catch(function () { /* bỏ qua */ }); } catch (e) { /* bỏ qua */ } }
     bao("phoi", che, ly || "");
   }
@@ -245,17 +273,22 @@
     if (!tr) return;
     T = kepT(T); iso = kepIso(iso);
     PH.dang = true;
-    var hua;
+    var hua, Btr = PH.sang, q = PH.T > 0 && PH.iso > 0 ? (T * iso) / (PH.T * PH.iso) : 0;   // để xét độ sáng có đổi theo lệnh không
     try { hua = tr.applyConstraints({ advanced: [{ exposureMode: "manual", exposureTime: T, iso: iso }] }); } catch (e) { hua = Promise.reject(e); }
     hua.then(function () {
       if (so !== PH.so) return;
       PH.dang = false; PH.T = T; PH.iso = iso; PH.luc = bay(); PH.soLan++;
+      PH.cs = { luc: PH.luc, B: Btr, q: q, xet: false };
       if (PH.che !== "tay") {
-        PH.che = "tay"; PH.ly = "";
+        PH.che = "tay"; PH.ly = ""; PH.xn = -1; PH.coDoi = 0; PH.khongDoi = 0; PH.thuDa = false; PH.xnLy = "";
         setTimeout(function () {   // máy có thật sự chuyển sang chỉnh tay không
           if (so !== PH.so || PH.che !== "tay") return;
-          var st = caiDat();
-          if (st.exposureMode && st.exposureMode !== "manual") veTuDong("loi", "máy vẫn để phơi sáng tự động");
+          var st = caiDat(), md = st.exposureMode ? String(st.exposureMode) : "";
+          PH.mode = md;
+          if (!md || md === "manual" || md === "none") { PH.xn = 1; PH.xnLy = md ? "máy báo " + md : "máy không báo chế độ"; bao("phoi", "xn", PH.xnLy); return; }
+          // Chrome trên máy thầy (FMWQ) báo "continuous" dù máy đã làm theo (hình tối đi ngay khi ép): xét bằng độ sáng thật
+          if (PH.coDoi > 0) { PH.xn = 1; bao("phoi", "xn", PH.xnLy + " (máy báo " + md + ")"); return; }
+          PH.xn = 0; PH.tXn = bay();
         }, 700);
       }
       bao("phoi", ly, T, iso, Math.round(PH.sang));
@@ -283,6 +316,17 @@
       return;
     }
     if (PH.che !== "tay") return;
+    xetSang(v, tc, t);
+    if (PH.xn === 0) {
+      if (PH.coDoi > 0) { PH.xn = 1; bao("phoi", "xn", PH.xnLy + " (máy báo " + PH.mode + ")"); }
+      else if (PH.khongDoi >= 2 || t - PH.tXn > 5000) { veTuDong("loi", "máy báo " + PH.mode + " và độ sáng không đổi theo lệnh"); return; }
+      else if (!PH.thuDa && PH.cs && PH.cs.xet && t - PH.tXn > 1200) {   // chưa có bước nào đủ lớn để xét: thử đổi ISO một nấc
+        PH.thuDa = true;
+        var hs = v < PH.dich ? 1.6 : 0.6, iso2 = kepIso(PH.iso * hs);
+        dat(iso2 !== PH.iso ? PH.T : PH.T * hs, iso2 !== PH.iso ? iso2 : PH.iso, "thu");
+        return;
+      }
+    }
     if (tc < PH.luc + 250 || t - PH.luc < 400) return;   // khung chụp trước khi lệnh mới có tác dụng
     var r = PH.dich / Math.max(4, v);
     if (r < 1.19 && r > 0.84) { PH.tXau = 0; return; }
@@ -304,9 +348,26 @@
     PH.tXau = 0;
     dat(T2, iso, "chinh");
   };
+  // xét lần đổi gần nhất (một lần cho mỗi lệnh): độ sáng có đổi theo lệnh không. Độ sáng ảnh ≈ (thời gian phơi × ISO) mũ 1/1,3.
+  function xetSang(v, tc, t) {
+    var cs = PH.cs;
+    if (!cs || cs.xet || tc < cs.luc + 250 || t - cs.luc < 300) return;
+    cs.xet = true;
+    if (!(cs.B >= 0)) return;   // lúc ra lệnh chưa có độ sáng: không xét được lần này
+    var lr = Math.log(Math.max(4, v) / Math.max(4, cs.B)), lk;
+    if (!(cs.q > 0)) {   // lần ép đầu: ISO tính để độ sáng gần như giữ nguyên; máy vẫn tự động thì độ sáng cũng gần như không đổi
+      if (Math.abs(lr) > 0.26) { if (!PH.coDoi) PH.xnLy = "hình đổi sáng ngay khi ép (" + Math.round(cs.B) + " → " + Math.round(v) + ")"; PH.coDoi++; }
+      return;
+    }
+    lk = Math.log(cs.q) / 1.3;
+    if (Math.abs(lk) < 0.2) return;   // bước nhỏ quá, không đủ để xét
+    if (lr * lk > 0 && Math.abs(lr) >= 0.35 * Math.abs(lk)) { if (!PH.coDoi) PH.xnLy = "độ sáng đổi theo lệnh (" + Math.round(cs.B) + " → " + Math.round(v) + ")"; PH.coDoi++; }
+    else if (Math.abs(lr) < 0.12 * Math.abs(lk)) PH.khongDoi++;
+  }
   function khoiPhoi() {
     var kn = PH.kn || {};
     PH.doc = []; PH.tBat = bay(); PH.dang = false; PH.tXau = 0; PH.lucXem = 0; PH.T = 0; PH.iso = 0; PH.Ta = 0;
+    PH.xn = -1; PH.xnLy = ""; PH.mode = ""; PH.coDoi = 0; PH.khongDoi = 0; PH.thuDa = false; PH.cs = null;
     if (!(kn.exposureMode && kn.exposureMode.indexOf("manual") >= 0 && kn.exposureTime && kn.exposureTime.max > 0 && kn.iso && kn.iso.max > 0)) { PH.che = "khong"; PH.ly = "máy này không cho chỉnh phơi sáng"; }
     else if (!N.bat.phoi) { PH.che = "tat"; PH.ly = ""; }
     else { PH.che = "cho"; PH.ly = ""; }
@@ -338,11 +399,12 @@
   function ms1(T) { return (Math.round(T) / 10 + "").replace(".", ","); }
   N.chu = function () {
     var coLen = !!lenMay();
-    var cb = !N.bat.nam ? "đang tắt" : coLen ? "đang dùng cảm biến nghiêng" : CB.nguon === "lech" ? "cảm biến nghiêng báo không khớp nhau, tạm chỉ loại thẻ nghiêng quá 60°"
+    var tc = (Math.round(N.fRel() * 1000) / 1000 + "").replace(".", ",") + " (" + FD.nguon + (FD.nguon === "tự đo" ? " từ " + FD.n + " thẻ" : "") + ")";
+    var cb = !N.bat.nam ? "đang tắt" : coLen ? "đang dùng cảm biến nghiêng · tiêu cự " + tc : CB.nguon === "lech" ? "cảm biến nghiêng báo không khớp nhau, tạm chỉ loại thẻ nghiêng quá 60°"
       : "máy chưa báo độ nghiêng, tạm chỉ loại thẻ nghiêng quá 60°";
     var kh = !N.bat.khung ? "đang tắt" : KH.tt === "duoc" ? "đang dùng (" + KH.dd + ", " + ms1(KH.tK * 10) + " ms so với " + ms1(KH.tC * 10) + " ms cách cũ)"
       : KH.tt === "chua" ? "đang so với cách cũ…" : !LIVE ? "chờ bật camera" : "không dùng được: " + KH.ly;
-    var ph = !N.bat.phoi ? "đang tắt" : PH.che === "tay" ? "đang giữ " + ms1(PH.T) + " ms, ISO " + PH.iso
+    var ph = !N.bat.phoi ? "đang tắt" : PH.che === "tay" ? (PH.xn === 0 ? "đang ép " + ms1(PH.T) + " ms, ISO " + PH.iso + ", đang xem máy có làm theo không" : "đang giữ " + ms1(PH.T) + " ms, ISO " + PH.iso)
       : PH.che === "cho" ? (PH.ly || "chờ camera ổn định…") : !LIVE ? "chờ bật camera" : PH.che === "khong" ? PH.ly : PH.che === "loi" ? "không ép được: " + PH.ly + "; camera tự chỉnh như cũ" : "đang tắt";
     return { nam: cb, khung: kh, phoi: ph };
   };

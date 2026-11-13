@@ -1544,6 +1544,37 @@ var THE = (function () {
     if (eL - eR >= TT.NGUONG && eL >= TT.TILE * eR) return 0;
     return 1;
   }
+  /* ---------- 13/11 tối: tiêu cự tự đo (số đo FMWQ) ----------
+     Thầy thử ở nhà bằng Chrome: camera trong Chrome nhìn rộng hơn ảnh chụp của máy, tiêu cự chỉ bằng 0,72 lần số giả định (0,48 thay
+     cho 0,667 cạnh dài). Sai tiêu cự thì thẻ nằm khớp kém, bị xếp "chưa rõ". Một hình vuông nhìn nghiêng tự cho biết tiêu cự: tìm phép
+     chiếu H từ hình vuông đơn vị sang 4 góc (tâm ảnh ở giữa khung), rồi hai cạnh của hình vuông vuông góc nhau và dài bằng nhau cho
+     2 phương trình bậc nhất của f². Không cần cảm biến. Trả về { m: tiêu cự thật / f0, luc: độ rõ của phối cảnh, du: phần dư của
+     2 phương trình } hoặc null. Một thẻ thì nhiễu; trang lấy trung vị của nhiều thẻ (nhanh.js). Mô phỏng: phối cảnh rõ (luc 0,25 đến
+     1,6) và du dưới 0,15 thì trung vị 8 mẫu lệch dưới 5 đến 10%; trên 181 mẫu của số đo FMWQ ra 0,72 đến 0,75. */
+  var ufA = new Float64Array(72), ufX = new Float64Array(8);
+  function uocF(c, w, h, f0) {
+    var i, j, k, p, q, x, y, s, t, r, A = ufA;
+    for (i = 0; i < 4; i++) {
+      x = (c[i].x - w / 2) / f0; y = (c[i].y - h / 2) / f0; s = TT_S[i]; t = TT_T[i]; r = i * 18;
+      A[r] = s; A[r + 1] = t; A[r + 2] = 1; A[r + 3] = 0; A[r + 4] = 0; A[r + 5] = 0; A[r + 6] = -s * x; A[r + 7] = -t * x; A[r + 8] = x;
+      A[r + 9] = 0; A[r + 10] = 0; A[r + 11] = 0; A[r + 12] = s; A[r + 13] = t; A[r + 14] = 1; A[r + 15] = -s * y; A[r + 16] = -t * y; A[r + 17] = y;
+    }
+    for (i = 0; i < 8; i++) {   // khử Gauss, chọn phần tử trụ lớn nhất
+      p = i; for (j = i + 1; j < 8; j++) if (Math.abs(A[j * 9 + i]) > Math.abs(A[p * 9 + i])) p = j;
+      if (!(Math.abs(A[p * 9 + i]) > 1e-12)) return null;
+      if (p !== i) for (k = 0; k < 9; k++) { q = A[i * 9 + k]; A[i * 9 + k] = A[p * 9 + k]; A[p * 9 + k] = q; }
+      for (j = i + 1; j < 8; j++) { q = A[j * 9 + i] / A[i * 9 + i]; if (q) for (k = i; k < 9; k++) A[j * 9 + k] -= q * A[i * 9 + k]; }
+    }
+    for (i = 7; i >= 0; i--) { s = A[i * 9 + 8]; for (j = i + 1; j < 8; j++) s -= A[i * 9 + j] * ufX[j]; ufX[i] = s / A[i * 9 + i]; }
+    // cột 1 và cột 2 của H (theo toạ độ đã chia f0): h1 = (X0, X3, X6), h2 = (X1, X4, X7); ω = diag(1, 1, m²)
+    var h1x = ufX[0], h1y = ufX[3], h1w = ufX[6], h2x = ufX[1], h2y = ufX[4], h2w = ufX[7];
+    var a1 = h1x * h2x + h1y * h2y, b1 = h1w * h2w, a2 = h1x * h1x + h1y * h1y - h2x * h2x - h2y * h2y, b2 = h1w * h1w - h2w * h2w;
+    var nb = b1 * b1 + b2 * b2, cO = h1x * h1x + h1y * h1y + h2x * h2x + h2y * h2y, m2;
+    if (!(nb > 0) || !(cO > 0)) return null;
+    m2 = -(a1 * b1 + a2 * b2) / nb;
+    if (!(m2 > 0) || !isFinite(m2)) return null;
+    return { m: Math.sqrt(m2), luc: Math.sqrt(nb) / cO, du: Math.sqrt((a1 + m2 * b1) * (a1 + m2 * b1) + (a2 + m2 * b2) * (a2 + m2 * b2)) / cO };
+  }
   // nội suy song tuyến trên ảnh xám; (X, Y) theo toạ độ góc thẻ (tâm điểm ảnh ở +0,5)
   function layDiem(g, w, h, X, Y) {
     var x = X - 0.5, y = Y - 0.5, x0, y0, fx, fy, i;
@@ -1729,39 +1760,48 @@ var THE = (function () {
     // 13/11: thẻ nằm ngửa trên bàn (xem tuThe). Cần hướng "trên" của cảm biến nghiêng (tuy.len) và tiêu cự (tuy.f, điểm ảnh của khung này).
     //   Chắc nằm: bỏ khỏi danh sách, để vào nam kèm vi = 1 (trang vẽ viền xám, không ghi). Chưa rõ: giữ, kèm ngo = true để trang chờ
     //   thêm vài lần đọc rồi mới ghi. Làm TRƯỚC luật "một em 2 thẻ": thẻ em đang giơ không bị thẻ nằm trên bàn của chính em làm kẹt.
-    var len = tuy && tuy.len, tieuCu = tuy && tuy.f;
+    //   13/11 tối (số đo FMWQ): mỗi thẻ đã tinh chỉnh được góc cho thêm một ước lượng tiêu cự (fr, theo tỉ lệ cạnh dài, trang lấy trung vị);
+    //   thẻ "chưa rõ" mà hình dạng nghiêng về thẻ nằm (eR > eL) thì gắn ngoN: trang không ghi thẻ đó.
+    var len = tuy && tuy.len, tieuCu = tuy && tuy.f, fRel = (tuy && tuy.fRel) || 0, fr = [];
     if (len && tieuCu > 0) {
       list = list.filter(function (m) {
         if (!ttSom(m.corners, w, h, tieuCu, len, m.det)) { m.tt = 0; return true; }   // chắc chắn không nằm ngang: khỏi tính tiếp
-        var gt = tinhGoc(g, w, h, m.corners) || m.corners;
+        var gt0 = tinhGoc(g, w, h, m.corners), gt = gt0 || m.corners;
         var tt = tuThe(gt, w, h, tieuCu, len, m.det, m.size);
         m.tt = tt;
+        if (gt0 && fRel > 0 && fr.length < 4 && m.size >= 40) {
+          var uf = uocF(gt0, w, h, tieuCu);
+          if (uf && uf.luc >= 0.25 && uf.luc <= 1.6 && uf.du < 0.15) fr.push(Math.round(uf.m * fRel * 1000) / 1000);
+        }
         if (ttKq.eL >= 0) {   // đã tính đủ hai nghiệm: kèm sai số (điểm ảnh bình phương) và 4 góc đã tinh chỉnh, để trang ghi vào số đo
           m.e = [Math.round(Math.min(1e5, ttKq.eL) * 100) / 100, Math.round(Math.min(1e5, ttKq.eR) * 100) / 100, Math.round(ttKq.uv * 1000) / 1000];
           m.gt = [];
           for (var gi = 0; gi < 4; gi++) m.gt.push(Math.round(gt[gi].x * 100) / 100, Math.round(gt[gi].y * 100) / 100);
         }
         if (tt === 2) { m.vi = 1; nam[m.ma] = m; return false; }
-        if (tt === 1) m.ngo = true;
+        if (tt === 1) { m.ngo = true; if (ttKq.eR > ttKq.eL) m.ngoN = true; }
         return true;
       });
     }
     info.sang = doSang(g, w, h);
     // Thẻ mới: một em hiện 2 thẻ khác chữ trong cùng một khung thì không biết em chọn thẻ nào:
     // trả về một thẻ (thẻ to hơn) kèm hai = true để trang báo lên, không ghi.
-    var theoSo = {};
+    // 13/11 tối: một thẻ đọc rõ là đang giơ, thẻ kia "chưa rõ" (thường là thẻ nằm trên bàn mà phép tính chưa chắc): giữ thẻ đọc rõ,
+    //   không coi là 2 thẻ, thẻ chưa rõ để riêng trong phu cho số đo (FMWQ: thẻ C trên tay số 41 bị kẹt "2 thẻ" 682 lần vì A, D trên bàn).
+    var theoSo = {}, phu = [];
     list.forEach(function (m) {
       var cu = theoSo[m.id];
       if (!cu) { theoSo[m.id] = m; return; }
+      if (!cu.ngo !== !m.ngo) { var bo = m.ngo ? m : cu; phu.push(bo); theoSo[m.id] = m.ngo ? cu : m; return; }
       var giu = m.size > cu.size ? m : cu;
       giu.hai = true;
       theoSo[m.id] = giu;
     });
     list = Object.keys(theoSo).map(function (k) { return theoSo[k]; }).sort(function (a, b) { return a.id - b.id; });
-    return { cards: list, nam: Object.keys(nam).map(function (k) { return nam[k]; }), info: info };
+    return { cards: list, nam: Object.keys(nam).map(function (k) { return nam[k]; }), phu: phu, fr: fr, info: info };
   }
 
-  return { scan: scan, scanXam: scanXam, scanKhung: scanKhung, xamTuKhung: xamTuKhung, anhNho: anhNho, tuThe: tuThe, tinhGoc: tinhGoc, ttKq: ttKq, TT: TT, doDet: doDet,
+  return { scan: scan, scanXam: scanXam, scanKhung: scanKhung, xamTuKhung: xamTuKhung, anhNho: anhNho, tuThe: tuThe, tinhGoc: tinhGoc, uocF: uocF, ttKq: ttKq, TT: TT, doDet: doDet,
     CODES: CODES, LETTERS: LETTERS, letterOf: letterOf };
 })();
 

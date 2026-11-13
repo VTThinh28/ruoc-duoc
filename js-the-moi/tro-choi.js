@@ -1604,8 +1604,9 @@
       //   chưa rõ 3 lần đọc liền (cách nhau dưới 1,2 giây) mới coi như thẻ đang giơ. Thẻ nằm lọt một khung không bị ghi nhầm.
       //   Lần đọc rõ là đang giơ mà chính mã đó vừa bị coi là nằm chưa tới 1 giây trước thì cũng bỏ qua lần này (em vừa nhặt thẻ lên thì 1 giây sau ghi).
       var kn = k + "." + c.k, ng = NGO[kn], namCach = NAM[kn] != null ? Math.abs(t - NAM[kn]) : 1e9;
+      //   13/11 tối (số đo FMWQ): thẻ chưa rõ mà hình dạng nghiêng về thẻ nằm (c.ngoN) thì không bao giờ ghi; thẻ thật trên tay sẽ có lần đọc rõ.
       if (c.ngo) {
-        if (namCach < NAM_NHO) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 1); return; }
+        if (namCach < NAM_NHO || c.ngoN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, namCach < NAM_NHO ? 1 : 3); return; }
         if (ng && t > ng.moi && t - ng.moi < NGO_CACH) { ng.n++; ng.moi = t; } else if (!ng || t > ng.moi) NGO[kn] = ng = { n: 1, moi: t };
         if (ng.n < NGO_CAN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 0); return; }
       } else if (namCach < NAM_GAN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 2); return; }

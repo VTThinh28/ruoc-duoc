@@ -24,12 +24,13 @@
         self.postMessage({ id: d.id, thu: { nho: THE.anhNho(x.g, 0, x.w, x.w, x.h, 1, 32), tg: performance.now() - t0, w: x.w, h: x.h }, buf: kh.buf }, tra);
         return;
       }
-      var tuy = { chiDu: !!d.chiDu, len: d.len || null, f: d.f || 0 };
+      var tuy = { chiDu: !!d.chiDu, len: d.len || null, f: d.f || 0, fRel: d.fRel || 0 };
       var r = kh ? THE.scanKhung(kh, d.maxId, tuy) : THE.scan({ data: new Uint8ClampedArray(d.buf), width: d.w, height: d.h }, d.maxId, tuy);
       self.postMessage({
         id: d.id,
-        cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist, hai: !!c.hai, det: c.det, ngo: !!c.ngo, tt: c.tt || 0, e: c.e || null, gt: c.gt || null }; }),
+        cards: r.cards.map(function (c) { return { id: c.id, k: c.k, corners: c.corners, size: c.size, cx: c.cx, cy: c.cy, dist: c.dist, hai: !!c.hai, det: c.det, ngo: !!c.ngo, ngoN: !!c.ngoN, tt: c.tt || 0, e: c.e || null, gt: c.gt || null }; }),
         nam: (r.nam || []).map(function (c) { return c.vi ? { id: c.id, k: c.k, size: c.size, det: c.det, vi: 1, corners: c.corners, tt: 2, e: c.e || null, gt: c.gt || null } : { id: c.id, k: c.k, size: c.size, det: c.det }; }),
+        phu: (r.phu || []).map(function (c) { return { id: c.id, k: c.k, size: c.size, det: c.det, ngoN: !!c.ngoN }; }), fr: r.fr || [],
         sang: r.info.sang, w: r.w || 0, h: r.h || 0, tgDoi: r.tgDoi || 0, buf: kh ? kh.buf : null
       }, tra);
     } catch (err) { self.postMessage({ id: d.id, error: String(err && err.message || err), buf: kh ? kh.buf : null }, tra); }
@@ -37,7 +38,7 @@
   // kết quả đọc ngay trên trang chính (không có worker): gói giống kết quả worker trả về
   function taiCho(r) {
     var cs = r.cards;
-    cs.nam = r.nam || []; cs.sang = r.info ? r.info.sang : null; cs.w = r.w || 0; cs.h = r.h || 0; cs.tgDoi = r.tgDoi || 0;
+    cs.nam = r.nam || []; cs.phu = r.phu || []; cs.fr = r.fr || []; cs.sang = r.info ? r.info.sang : null; cs.w = r.w || 0; cs.h = r.h || 0; cs.tgDoi = r.tgDoi || 0;
     return cs;
   }
   function taiMa() {
@@ -69,7 +70,7 @@
           if (e.data.error) { j.bad(new Error(e.data.error)); return; }
           if (e.data.thu) { j.ok(e.data.thu); return; }
           var cs = e.data.cards;
-          cs.nam = e.data.nam || []; cs.sang = e.data.sang; cs.w = e.data.w; cs.h = e.data.h; cs.tgDoi = e.data.tgDoi;
+          cs.nam = e.data.nam || []; cs.phu = e.data.phu || []; cs.fr = e.data.fr || []; cs.sang = e.data.sang; cs.w = e.data.w; cs.h = e.data.h; cs.tgDoi = e.data.tgDoi;
           j.ok(cs);
         };
         w.onerror = function () { clearTimeout(hen); bad(new Error("worker lỗi")); };
@@ -105,7 +106,7 @@
         var id = ++jobSeq;
         var hen = setTimeout(function () { boWorker(i); }, 60000);
         jobs[id] = { i: i, ok: function (v) { clearTimeout(hen); ok(v); }, bad: function (e) { clearTimeout(hen); bad(e); } };
-        w.postMessage({ id: id, w: im.width, h: im.height, buf: im.data.buffer, maxId: RD.MAXID, chiDu: !!tuy.chiDu, len: tuy.len || null, f: tuy.f || 0 }, [im.data.buffer]);
+        w.postMessage({ id: id, w: im.width, h: im.height, buf: im.data.buffer, maxId: RD.MAXID, chiDu: !!tuy.chiDu, len: tuy.len || null, f: tuy.f || 0, fRel: tuy.fRel || 0 }, [im.data.buffer]);
       }).catch(function (e) {
         if (i) { e.khongLan = true; throw e; }
         if (!layLai) throw e;
@@ -134,7 +135,7 @@
         var id = ++jobSeq;
         var hen = setTimeout(function () { boWorker(i); }, 60000);
         jobs[id] = { i: i, ok: function (v) { clearTimeout(hen); ok(v); }, bad: function (e) { clearTimeout(hen); bad(e); } };
-        w.postMessage({ id: id, kh: kh, thu: !!tuy.thu, maxId: RD.MAXID, chiDu: !!tuy.chiDu, len: tuy.len || null, f: tuy.f || 0 }, [kh.buf]);
+        w.postMessage({ id: id, kh: kh, thu: !!tuy.thu, maxId: RD.MAXID, chiDu: !!tuy.chiDu, len: tuy.len || null, f: tuy.f || 0, fRel: tuy.fRel || 0 }, [kh.buf]);
       }).catch(function (e) {
         if (i && e && e.message === "worker") e.khongLan = true;
         throw e;
@@ -322,7 +323,7 @@
     var tc = performance.now(), ng = RD.Nhanh || null;
     var tuy = { lan: n.so, chiDu: n.chiDu, len: null, f: 0 };
     // bản thử 13/11: hướng "trên" của cảm biến nghiêng và tiêu cự (tính bằng điểm ảnh của khung gửi đi) để bộ đọc bỏ thẻ nằm ngửa trên bàn
-    if (ng) { try { tuy.len = ng.len(); } catch (e) { tuy.len = null; } if (tuy.len) tuy.f = ng.F_REL * Math.max(vw, vh) * sc * (L.zoomMay > 0 ? L.zoomMay : 1); }
+    if (ng) { try { tuy.len = ng.len(); } catch (e) { tuy.len = null; } if (tuy.len) { tuy.fRel = ng.fRel ? ng.fRel() : ng.F_REL; tuy.f = tuy.fRel * Math.max(vw, vh) * sc * (L.zoomMay > 0 ? L.zoomMay : 1); } }
     var xong = function (cards, t0) {
       var dt = performance.now() - t0;
       n.ban = false;
@@ -341,6 +342,7 @@
       n.len = tuy.len; n.f = tuy.f; n.sang = cards.sang; n.doiMs = cards.tgDoi || 0;   // bản thử: số đo
       L.fw = sw; L.fh = sh;
       if (ng && cards.sang != null) { try { ng.sang(cards.sang, tc); } catch (e) { console.error(e); } }
+      if (ng && ng.themF && cards.fr && cards.fr.length) { try { ng.themF(cards.fr, n.so); } catch (e) { console.error(e); } }
       gop();
       try { if (L.onKq) L.onKq(cards, tc); } catch (e) { console.error(e); }
       L.ve();
