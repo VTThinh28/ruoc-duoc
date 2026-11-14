@@ -427,7 +427,7 @@
       '<p class="cb-ghi">Bấm một lần trên laptop nối TV trước giờ học: nếu Claude cần xin phép thì hộp xin phép hiện lúc này, không hiện giữa tiết.</p></div>' +
       '<div class="cb-khoi" data-cb="khoiAnh" hidden><h3>5. Ảnh báo tường</h3>' +
       '<div class="cb-hang"><label class="nut"><input type="file" accept="image/*" data-cb="anh" hidden>Chọn ảnh báo tường từ máy</label><span class="chip" data-cb="anhTT"></span></div>' +
-      '<p class="cb-ghi">Ảnh có hình thầy cô nên không đưa lên mạng: ảnh chỉ nằm trong trình duyệt của máy này. Chưa chọn thì trang dùng tấm báo tường vẽ tạm.</p></div>' +
+      '<p class="cb-ghi">Ảnh có hình thầy cô nên không đưa lên mạng: ảnh chỉ nằm trong trình duyệt của máy này. Chưa chọn thì trang dùng tấm báo tường vẽ tạm. Báo tường đổi mẫu ngày 14/11 (số 51 màu đỏ): thầy chọn lại ảnh mới một lần.</p></div>' +
       '<div class="cb-khoi"><h3>Chơi thử và ván mới</h3>' +
       '<div class="cb-hang"><label><input type="checkbox" data-cb="thu"> Chơi thử không cần điện thoại: TV tự điền kết quả ngẫu nhiên cho mỗi câu</label></div>' +
       '<div class="cb-hang" style="margin-top:10px"><button type="button" class="nut" data-cb="vanMoi">Ván mới (xóa kết quả, giữ danh sách lớp)</button>' +
@@ -582,6 +582,10 @@
 
   /* ---------- ảnh báo tường ---------- */
   RD.anhBao = RD.trongClaude ? "anh/bao-tuong.webp" : null;
+  // 14/11: báo tường đổi mẫu (bản 7, băng rôn ba dòng chữ, số 51 đỏ), chỗ vải xanh và chỗ 4 nhóm đứng đổi theo. Ảnh mẫu cũ còn lưu trong
+  //   trình duyệt (khoá "baoTuong") không khớp chỗ nữa nên trang không dùng: trang chỉ đọc khoá mới, thầy chọn lại một lần. Lúc
+  //   chọn, ảnh mới ghi vào cả hai khoá, để trang Xếp thiệp (đọc khoá "baoTuong") cũng có ảnh mới.
+  var KHOA_ANH = "baoTuong2";
   function moIdb() {
     return new Promise(function (ok, bad) {
       if (!window.indexedDB) { bad(new Error("no idb")); return; }
@@ -597,7 +601,9 @@
     return moIdb().then(function (db) {
       return new Promise(function (ok) {
         var tx = db.transaction("f", "readwrite");
-        tx.objectStore("f").put(file, "baoTuong");
+        var st = tx.objectStore("f");
+        st.put(file, KHOA_ANH);
+        st.put(file, "baoTuong");            // trang Xếp thiệp (xep-thiep/) lấy ảnh ở khoá này khi chưa chọn ảnh riêng
         tx.oncomplete = function () { ok(); };
         tx.onerror = function () { ok(); };
       });
@@ -607,7 +613,7 @@
     if (RD.trongClaude) return Promise.resolve();
     return moIdb().then(function (db) {
       return new Promise(function (ok) {
-        var r = db.transaction("f").objectStore("f").get("baoTuong");
+        var r = db.transaction("f").objectStore("f").get(KHOA_ANH);
         r.onsuccess = function () { if (r.result) RD.anhBao = URL.createObjectURL(r.result); ok(); };
         r.onerror = function () { ok(); };
       });
