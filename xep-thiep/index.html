@@ -133,28 +133,32 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 /* --- bước 2: bàn xếp có lưới --- */
 #dtKhungBan { flex: 1; min-height: 0; margin: 0 8px; display: flex; align-items: center; justify-content: center; }
 #dtBan { display: block; touch-action: none; border-radius: 4px; box-shadow: 0 2px 10px rgba(90, 60, 30, .2); background: #fffdf8; }
-#dtBan .nhan-dan { font-family: var(--chu-thuong); font-size: 11px; fill: #cdbd9f; pointer-events: none; }
 #dtBan .manh.chon .than { stroke: #1f6fd0; stroke-width: 2.4; }
 #dtBan .manh.chong .than { stroke: #d1281e; stroke-width: 2.2; stroke-dasharray: 5 3.5; }
 #dtBan .manh.le .than { stroke: #e07b00; stroke-width: 2.6; stroke-dasharray: 5 3.5; }
 .nhac { margin: 6px 10px 5px; min-height: 2.7em; font-size: 14px; line-height: 1.35; text-align: center; display: flex; align-items: center; justify-content: center; color: #6a5440; }
 .nhac.tot { color: #2f6b3c; font-weight: 600; }
 .nhac.xau { color: #b3261d; font-weight: 600; }
-.khay-o { position: relative; margin: 0 8px; background: #efe4cf; border-radius: 14px; padding: 6px; }
-#dtKhay { display: flex; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 5px; }
-.khay-nut { position: relative; border: 0; background: var(--giay); border-radius: 10px; padding: 4px 5px 15px; min-width: 42px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(90, 60, 30, .18); }
-.khay-nut:active { background: #f3e6cb; }
-.khay-nut.da-lay { visibility: hidden; }
-.khay-nut svg { display: block; overflow: visible; }
-.khay-nut .than { stroke: #4d4541; stroke-width: 1.2; stroke-linejoin: round; }
-.khay-so { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-size: 11px; font-weight: 600; color: var(--chu-nhat); }
-#dtKhayTrong { position: absolute; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; color: var(--chu-nhat); padding: 0 12px; }
-.dt-nut { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 7px 8px 0; }
+.dt-nut { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 7px 8px 0; }
 .dt-nut2 { display: grid; grid-template-columns: 1fr 0.9fr 1.5fr; gap: 6px; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
 .dt-nut2.mot { grid-template-columns: 1fr; }
 .dt-nut .nut, .dt-nut2 .nut { padding: 0 4px; font-size: 14px; min-height: 48px; }
 .dt-nut2 .nut.chinh { font-size: 16px; }
 .dt-nut .bieu { font-size: 19px; line-height: 1; }
+
+/* --- bảng thông báo trên bàn xếp: xác nhận, báo mảnh đè lên nhau, báo chưa nhận ra hình --- */
+.hop { position: absolute; inset: 0; z-index: 8; background: rgba(74, 53, 36, .36); display: flex; align-items: flex-end; justify-content: center; padding: 14px 12px calc(14px + env(safe-area-inset-bottom)); }   /* bảng nằm phía dưới để các em vẫn thấy mảnh được tô viền trên bàn xếp */
+.hop-the { width: 100%; max-width: 430px; background: var(--giay); border-radius: 22px; padding: 18px 20px 18px; box-shadow: 0 16px 44px rgba(60, 40, 20, .35); border-top: 10px solid #b89a74; }
+.hop.de .hop-the { border-top-color: #d1281e; }
+.hop.le .hop-the { border-top-color: #e07b00; }
+.hop.hoi .hop-the { border-top-color: #3f8f52; }
+.hop-the h2 { margin: 0 0 8px; font-family: var(--chu-dam); font-weight: 700; font-size: 24px; line-height: 1.2; color: #5a3a22; }
+.hop.de h2 { color: #b3261d; }
+.hop.le h2 { color: #a95600; }
+.hop-chu p { margin: 0 0 5px; font-size: 16.5px; line-height: 1.4; }
+.hop-chu p.dam { font-weight: 600; margin-top: 10px; }
+.hop-nut { display: flex; gap: 8px; margin-top: 14px; }
+.hop-nut .nut { flex: 1; min-height: 54px; font-size: 17px; }
 
 /* --- bước 3: tấm thiệp đã có hình --- */
 #thiepKhung { flex: 1; min-height: 0; margin: 4px 12px 0; display: flex; align-items: center; justify-content: center; }
@@ -167,12 +171,13 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 }
 @media (orientation: landscape) and (min-width: 560px) {
   #dtChinh { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
-  #manXep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 34vw); grid-template-rows: auto auto 1fr auto auto; }
+  #manXep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 34vw); grid-template-rows: auto 1fr auto auto; }
   #dtKhungBan { grid-column: 1; grid-row: 1 / -1; margin: 0 4px 8px 8px; min-height: 0; }
   #manXep .nhac { grid-column: 2; grid-row: 1; }
-  .khay-o { grid-column: 2; grid-row: 2; }
-  .dt-nut { grid-column: 2; grid-row: 4; }
-  .dt-nut2 { grid-column: 2; grid-row: 5; }
+  .dt-nut { grid-column: 2; grid-row: 3; }
+  #manXep .dt-nut2 { grid-column: 2; grid-row: 4; }
+  .hop { align-items: center; justify-content: flex-end; }
+  .hop-the { max-width: min(430px, 44vw); }
   #manThiep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 30vw); grid-template-rows: 1fr auto; }
   #thiepKhung { grid-column: 1; grid-row: 1 / -1; margin: 0 4px 8px 8px; }
   #manThiep .nhac { grid-column: 2; grid-row: 1; }
@@ -202,6 +207,7 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
   .o-dong { grid-template-columns: 1fr 130px 50px; } .o-so { height: 54px; font-size: 28px; }
   .phim { min-height: 62px; font-size: 28px; } .phim.phu { font-size: 18px; }
   .o-tong-o { font-size: 19px; } .o-chu { font-size: 19px; }
+  .hop-the { max-width: 560px; padding: 26px 30px 26px; } .hop-the h2 { font-size: 32px; } .hop-chu p { font-size: 21px; } .hop-nut .nut { min-height: 66px; font-size: 21px; }
 }
 
 /* =====================================================================
@@ -236,66 +242,86 @@ body.tv { background: #eadfc9; }
 #tv #nutBatDau { position: absolute; left: 50%; top: 806px; transform: translateX(-50%); min-height: 92px; padding: 0 70px; font-family: var(--chu-dam); font-size: 44px; font-weight: 700; border-radius: 26px; }
 .tv-phong { position: absolute; right: 116px; bottom: 54px; font-size: 20px; color: var(--chu-nhat); }
 
-/* --- màn xếp: 4 tấm thiệp --- */
+/* --- màn làm bài: tấm báo tường A0 (1189 × 841) cao hết sân, 4 tấm thiệp nằm đúng 4 ô dán ---
+   Báo tường: trái 196.5, rộng 1527, cao 1080 (1 mm = 1,2842 px). Chỗ của 4 thiệp lấy từ bo-cuc-canva-a3.json (thiệp đã cắt 29 × 42). */
 .xep { position: absolute; inset: 0; }
+#baoTuong { position: absolute; left: 196.5px; top: 0; width: 1527px; height: 1080px; overflow: hidden; background: #fbf1da no-repeat 0 0 / 100% 100%; box-shadow: 0 0 0 1px rgba(110, 75, 35, .28), 0 0 36px rgba(110, 75, 35, .28); }
+#baoTuong svg { display: block; width: 100%; height: 100%; }
+#baoTuong.co-anh svg { display: none; }
+.bt-o { fill: rgba(255, 255, 255, .45); stroke: #c9a66b; stroke-width: 2.2; stroke-dasharray: 9 7; }
+.bt-chu1 { font-family: var(--chu-dam); font-weight: 800; font-size: 25px; fill: #fff3c4; text-anchor: middle; }
+.bt-chu2 { font-family: var(--chu-thuong); font-weight: 600; font-size: 15.5px; fill: #ffe9a8; text-anchor: middle; }
+.bt-chu3 { font-family: var(--chu-dam); font-weight: 700; font-size: 26px; fill: #a5814b; text-anchor: middle; }
+.bt-chu4 { font-family: var(--chu-thuong); font-size: 15.5px; fill: #a5814b; text-anchor: middle; }
 .khung { position: absolute; }
-.khung .ten { white-space: nowrap; flex: none; }
-.khung .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-#khung1 { left: 116px; top: 170px; width: 473px; }
-#khung2 { left: 617px; top: 170px; width: 473px; }
-#khung3 { left: 1118px; top: 14px; width: 685px; }
-#khung4 { left: 1118px; top: 543px; width: 685px; }
-.khung .the { height: 40px; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-.khung .ten { font-family: var(--chu-dam); font-weight: 700; font-size: 27px; line-height: 38px; color: #fff; background: var(--mau); padding: 0 18px; border-radius: 999px; }
-#khung1 { --mau: #d9463c; } #khung2 { --mau: #e07b2a; } #khung3 { --mau: #3d8fc4; } #khung4 { --mau: #4f9140; }
-.khung .tt { font-size: 21px; color: var(--chu-nhat); white-space: nowrap; }
+#khung1 { left: 228px; top: 78.3px; width: 372.4px; --ho: 41.5px; --mau: #d9463c; }
+#khung2 { left: 1319.6px; top: 78.3px; width: 372.4px; --ho: 41.5px; --mau: #e07b2a; }
+#khung3 { left: 223.5px; top: 676.1px; width: 539.4px; --ho: 37px; --mau: #3d8fc4; }
+#khung4 { left: 1157.1px; top: 676.1px; width: 539.4px; --ho: 37px; --mau: #4f9140; }
+/* thẻ của nhóm (tên, đang làm gì, số sao, nút Mở bàn xếp) nằm ở lề ngoài báo tường, ngang mép trên tấm thiệp */
+.khung .the { position: absolute; top: 0; width: 176px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; cursor: pointer; }
+#khung1 .the, #khung3 .the { right: calc(100% + var(--ho)); }
+#khung2 .the, #khung4 .the { left: calc(100% + var(--ho)); }
+.khung .ten { font-family: var(--chu-dam); font-weight: 700; font-size: 27px; line-height: 38px; color: #fff; background: var(--mau); padding: 0 18px; border-radius: 999px; white-space: nowrap; flex: none; }
+.khung .tt { font-size: 19px; line-height: 1.3; color: var(--chu-nhat); }
 .khung.co-may .tt { color: #5a4634; }
-.khung.pha-xong .tt { color: #fff; background: #3f8f52; font-weight: 700; padding: 3px 16px; border-radius: 999px; }
+.khung.pha-xong .tt { color: #fff; background: #3f8f52; font-weight: 700; padding: 3px 12px; border-radius: 999px; white-space: nowrap; }
 .khung .so-sao { font-size: 23px; font-weight: 700; color: #c98a00; white-space: nowrap; }
-#tv .khung .mo-ban { display: none; position: absolute; right: 12px; bottom: 12px; font-size: 17px; min-height: 36px; padding: 0 12px; border-radius: 12px; white-space: nowrap; opacity: .85; }
+.khung .so-sao:empty { display: none; }
+#tv .khung .mo-ban { display: none; font-size: 17px; min-height: 40px; padding: 0 12px; border-radius: 12px; white-space: nowrap; }
 #tv .khung.pha-nhap .mo-ban { display: inline-flex; }
-.khung svg.thiep { display: block; width: 100%; height: auto; border-radius: 4px; box-shadow: 0 5px 20px rgba(110, 75, 35, .2); cursor: pointer; background: #fff; }
-.khung.pha-xong svg.thiep { box-shadow: 0 0 0 5px #6fb37c, 0 5px 20px rgba(110, 75, 35, .2); }
-.thiep .lop-tt, .thiep .lop-luoi, .thiep .lop-nhap, .thiep .lop-manh { transition: opacity 500ms ease; }
-.khung.pha-nhap .lop-tt, .khung.pha-xep .lop-tt { opacity: .16; }
-.khung.pha-nhap .lop-luoi, .khung.pha-xong .lop-luoi { opacity: 0; }
+.khung svg.thiep { display: block; width: 100%; height: auto; border-radius: 2px; box-shadow: 0 2px 9px rgba(60, 40, 20, .38); cursor: pointer; background: #fff; }
+.khung.pha-xong svg.thiep { box-shadow: 0 0 0 5px #6fb37c, 0 2px 9px rgba(60, 40, 20, .38); }
+/* thiệp luôn rõ nét. Lưới bàn xếp hiện lúc đo, tính và lúc xếp; xong thì ẩn. 3 ô Tổng, Thiệp, Phần còn lại chỉ hiện lúc đo và tính */
+.thiep .lop-luoi, .thiep .lop-nhap { transition: opacity 500ms ease; }
+.khung.pha-xong .lop-luoi { opacity: 0; }
 .khung.pha-xep .lop-nhap, .khung.pha-xong .lop-nhap { opacity: 0; }
-.khung.pha-nhap .lop-manh { opacity: 0; }
-.lop-nhap .muc .than { stroke: #4d4541; stroke-width: 0.9; stroke-linejoin: round; transition: fill 400ms ease; }
-.lop-nhap .muc-hai { font-family: var(--chu-thuong); font-size: 9.5px; font-weight: 600; fill: #8a7458; }
-.lop-nhap .dau { opacity: 0; transition: opacity 300ms ease; }
-.lop-nhap .muc.dung .dau { opacity: 1; }
+.thiep .lop-manh .manh .than { transition: fill 400ms ease; }
+.thiep .lop-manh .manh .cham { display: none; }
+.lop-manh .dau { opacity: 0; transition: opacity 300ms ease; }
+.khung.pha-nhap .lop-manh .manh.dung .dau { opacity: 1; }
 .dau-nen { fill: #fff; stroke: #3f8f52; stroke-width: 1.2; }
 .dau-v { fill: none; stroke: #2f8a45; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .dau-sao { fill: #ffc21a; stroke: #a87700; stroke-width: 0.6; display: none; }
-.muc.sao .dau-sao { display: block; }
-.muc.sao .dau-v { display: none; }
-.muc.sao .dau-nen { stroke: #d59a00; }
+.muc.sao .dau-sao, .manh.sao .dau-sao { display: block; }
+.manh.sao .dau-v { display: none; }
+.manh.sao .dau-nen { stroke: #d59a00; }
 .o-chu .o-nen { fill: #efe9de; stroke: #cfc5b3; stroke-width: 0.8; transition: fill 400ms ease; }
 .o-chu .o-ten { font-family: var(--chu-thuong); font-weight: 600; font-size: 10.5px; fill: #8a7458; }
 .o-chu.dung .o-nen { fill: #dff0dd; stroke: #3f8f52; }
 .o-chu.dung .o-ten { fill: #23643a; }
 .khung.an { display: none; }
-.khung.dung.lon { left: 628px !important; top: 26px !important; width: 664px !important; }
-.khung.ngang.lon { left: 290px !important; top: 34px !important; width: 1340px !important; }
-.khung.lon .the::after { content: "Chạm vào khung để về 4 nhóm"; margin-left: auto; font-size: 20px; color: var(--chu-nhat); }
-.khung.lon.pha-nhap .the::after { margin-left: 16px; }
-#tv.dang-lon .tv-dau, #tv.dang-lon .tv-nut, #tv.dang-lon .xep-goi, #tv.dang-lon #tvNoi { visibility: hidden; }
+/* chạm một thiệp: thiệp đó hiện thật lớn (đổi ngay, không phóng dần), báo tường mờ đi; chạm lần nữa để về */
+.khung.dung.lon { left: 628px !important; top: 62px !important; width: 664px !important; }
+.khung.ngang.lon { left: 290px !important; top: 96px !important; width: 1340px !important; }
+.khung.lon .the { left: 0 !important; right: auto !important; top: auto; bottom: calc(100% + 8px); width: 100%; flex-direction: row; align-items: center; gap: 12px; }
+.khung.lon .the::after { content: "Chạm vào thiệp để về báo tường"; margin-left: auto; font-size: 20px; color: var(--chu-nhat); white-space: nowrap; }
+.khung.lon .tt { white-space: nowrap; }
+#tv.dang-lon #baoTuong { opacity: .1; }
+#tv.dang-lon .tv-nut, #tv.dang-lon .xep-goi, #tv.dang-lon #tvNoi { visibility: hidden; }
 .thiep .lop-manh .manh { transition: transform 120ms linear, opacity 220ms ease; }
 .khung.chot .lop-manh .manh { transition: transform 800ms cubic-bezier(.3, .1, .2, 1), opacity 220ms ease; }
-.xep-goi { position: absolute; left: 116px; top: 912px; margin: 0; font-size: 21px; color: var(--chu-nhat); }
+.xep-goi { position: absolute; left: 1733.5px; top: 330px; width: 176px; margin: 0; font-size: 17px; line-height: 1.4; color: var(--chu-nhat); }
 .tv-nut { position: absolute; left: 116px; bottom: 40px; display: flex; gap: 14px; align-items: center; }
+/* màn làm bài: tiêu đề ẩn (báo tường đã có băng rôn), các nút xếp dọc ở lề trái, dòng nối ở lề phải */
+#tv.xem-xep .tv-dau { display: none; }
+#tv.xem-xep .tv-nut { left: 10px; top: 322px; bottom: auto; width: 176px; flex-direction: column; align-items: stretch; gap: 10px; }
+#tv.xem-xep .tv-nut .nut { font-size: 19px; min-height: 54px; padding: 4px 8px; border-radius: 14px; white-space: normal; }
+#tv.xem-xep #tvNoi { left: 1733.5px; top: auto; bottom: 14px; max-width: 176px; font-size: 16px; line-height: 1.25; padding: 4px 12px; white-space: normal; text-align: center; border-radius: 14px; }
 
 /* --- cài đặt --- */
 #caiDat { position: absolute; inset: 0; background: rgba(74, 53, 36, .35); display: flex; align-items: center; justify-content: center; }
-.cd-hop { width: 860px; background: var(--giay); border-radius: 30px; padding: 34px 44px 38px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
-.cd-hop h2 { margin: 0 0 6px; font-family: var(--chu-dam); font-size: 44px; color: #6b3d1e; }
-.cd-hop h3 { margin: 26px 0 10px; font-size: 26px; }
-.cd-hop p { margin: 8px 0 0; font-size: 21px; color: var(--chu-nhat); line-height: 1.4; }
+#caiDat { z-index: 9; }
+.cd-hop { width: 900px; background: var(--giay); border-radius: 30px; padding: 28px 44px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
+.cd-hop h2 { margin: 0 0 2px; font-family: var(--chu-dam); font-size: 44px; color: #6b3d1e; }
+.cd-hop h3 { margin: 20px 0 9px; font-size: 26px; }
+.cd-hop p { margin: 7px 0 0; font-size: 20px; color: var(--chu-nhat); line-height: 1.38; }
+.cd-hop p.xau { color: #b3261d; font-weight: 600; }
+#btTinh { color: var(--chu); }
 .cd-hang { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 #tv .nut.bat { background: #fde9c4; border-color: #e0a63a; box-shadow: inset 0 0 0 2px #e0a63a; }
 #maPhong { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--chu); letter-spacing: 2px; }
-.cd-duoi { margin-top: 30px; display: flex; justify-content: flex-end; }
+.cd-duoi { margin-top: 22px; display: flex; justify-content: flex-end; }
 
 /* --- đáp số (chỉ hiện khi thầy bấm) --- */
 #dapSo { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .4); display: flex; align-items: center; justify-content: center; }
@@ -332,12 +358,10 @@ body.tv { background: #eadfc9; }
     <section id="manXep" class="man" hidden>
       <div id="dtKhungBan"><svg id="dtBan" xmlns="http://www.w3.org/2000/svg"></svg></div>
       <p id="dtNhac" class="nhac"></p>
-      <div class="khay-o"><div id="dtKhay"></div><p id="dtKhayTrong" hidden>Khay hết mảnh rồi. Chọn một mảnh rồi bấm Cất nếu muốn bỏ lại vào khay.</p></div>
       <div class="dt-nut">
         <button id="dtTrai" class="nut"><span class="bieu">↺</span> Xoay trái</button>
         <button id="dtPhai" class="nut"><span class="bieu">↻</span> Xoay phải</button>
         <button id="dtLat" class="nut"><span class="bieu">⇋</span> Lật</button>
-        <button id="dtCat" class="nut">Cất</button>
       </div>
       <div class="dt-nut2">
         <button id="dtSoDo" class="nut">Số đo</button>
@@ -351,6 +375,14 @@ body.tv { background: #eadfc9; }
       <p class="nhac tot">Hình đã lên thiệp. Cả nhóm dán giấy theo hình này nhé.</p>
       <div class="dt-nut2 mot"><button id="thiepSua" class="nut">Sửa lại hình</button></div>
     </section>
+
+    <div id="hop" class="hop" hidden>
+      <div class="hop-the" role="alertdialog" aria-modal="true" aria-labelledby="hopTen">
+        <h2 id="hopTen"></h2>
+        <div id="hopChu" class="hop-chu"></div>
+        <div class="hop-nut"><button id="hopPhu" class="nut"></button><button id="hopChinh" class="nut chinh"></button></div>
+      </div>
+    </div>
 
     <div id="o" class="o" hidden>
       <div class="o-tren"><button id="oVe" class="nut">‹ Về</button><span id="oTen"></span></div>
@@ -380,11 +412,29 @@ body.tv { background: #eadfc9; }
   </section>
 
   <section class="xep">
+    <div id="baoTuong">
+      <!-- hình vẽ thay cho báo tường khi máy chưa có ảnh (ảnh thật có hình thầy cô, không để trên mạng) -->
+      <svg viewBox="0 0 1189 841" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><linearGradient id="btNen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdf4de"/><stop offset="1" stop-color="#f3e1bb"/></linearGradient></defs>
+        <rect width="1189" height="841" fill="url(#btNen)"/>
+        <rect x="350" y="30" width="489" height="98" rx="14" fill="#c8392f"/>
+        <text x="594.5" y="73" class="bt-chu1">CHÀO MỪNG 51 NĂM NGÀY TRUYỀN THỐNG</text>
+        <text x="594.5" y="106" class="bt-chu2">TRƯỜNG THCS PHAN TÂY HỒ · 14/12/1976 – 14/12/2026</text>
+        <rect x="350" y="160" width="489" height="322" rx="10" class="bt-o"/>
+        <text x="594.5" y="306" class="bt-chu3">Chỗ của ảnh báo tường</text>
+        <text x="594.5" y="340" class="bt-chu4">Thầy vào Cài đặt, bấm “Chọn ảnh báo tường từ máy”</text>
+        <text x="594.5" y="363" class="bt-chu4">để tấm báo tường thật hiện ở đây.</text>
+        <rect x="8" y="48" width="323" height="446" class="bt-o"/>
+        <rect x="858" y="48" width="323" height="446" class="bt-o"/>
+        <rect x="8" y="510" width="446" height="323" class="bt-o"/>
+        <rect x="735" y="510" width="446" height="323" class="bt-o"/>
+      </svg>
+    </div>
     <div class="khung dung pha-nhap" id="khung1"><div class="the"><span class="ten">Nhóm 1</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div class="khung dung pha-nhap" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div class="khung ngang pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <p class="xep-goi">Chạm vào một khung để xem lớn. Ngôi sao: nhập đúng ngay lần đầu.</p>
+    <p class="xep-goi">Chạm vào một tấm thiệp để xem lớn.<br>★: nhập đúng ngay lần đầu.</p>
   </section>
 
   <div class="tv-nut">
@@ -408,9 +458,13 @@ body.tv { background: #eadfc9; }
   <div id="caiDat" hidden>
     <div class="cd-hop">
       <h2>Cài đặt</h2>
+      <h3>Ảnh báo tường</h3>
+      <div class="cd-hang"><button id="nutChonAnh" class="nut">Chọn ảnh báo tường từ máy</button><button id="nutBoAnh" class="nut" hidden>Bỏ ảnh</button><input id="btTep" type="file" accept="image/*" hidden></div>
+      <p id="btTinh"></p>
+      <p>Ảnh chỉ nằm trong trình duyệt của máy này, không đưa lên mạng. Chọn một lần, lần sau mở trang vẫn còn.</p>
       <h3>Hình đang xếp</h3>
       <div class="cd-hang"><button id="nutXoaHinh" class="nut">Xóa hình cả 4 nhóm</button></div>
-      <p>Các nhóm giữ số đo đã nhập, chỉ xếp lại hình.</p>
+      <p>Các nhóm giữ số đo đã nhập. 10 mảnh về lại chỗ nằm sẵn.</p>
       <h3>Làm lại từ đầu</h3>
       <div class="cd-hang"><button id="nutLamLai" class="nut">Xóa hết, về bước 1</button></div>
       <p>Xóa cả số đo đã nhập và hình của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
@@ -424,6 +478,6 @@ body.tv { background: #eadfc9; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/xep-thiep.js?v=35a097b3"></script>
+<script src="js/xep-thiep.js?v=b8e771f2"></script>
 </body>
 </html>
