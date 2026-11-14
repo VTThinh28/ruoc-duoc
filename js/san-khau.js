@@ -1501,6 +1501,8 @@
   SK.phu = function (on) { S.phu = !!on; };
   SK.huy = function () { S.cues = []; };
   SK.mocKet = () => S.K;
+  // 14/11: lúc tấm vải xanh lá đã bay khỏi màn hình (dòng chữ chúc mừng bắt đầu hiện); mở thẳng bước bao thì là mốc đã qua từ lâu
+  SK.lucVaiDi = () => S.che === "bao" ? S.H0 + HIEN : null;
   SK._S = S;
   SK._ve = t => { veKhung(t); veChu(t); };
 })();

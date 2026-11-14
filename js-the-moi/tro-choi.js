@@ -842,7 +842,7 @@
     if (laCau) capNhatManCau(q, loai);
     if (loai === "q" && cfg().thu && doi) { clearTimeout(henThu); henThu = setTimeout(function () { dienThu(q, false); }, 1600); }
   }
-  // độ to nhạc nền theo bước: 0 tắt (chuẩn bị), NHAC_VUA bình thường, NHAC_NHO lúc học sinh phát biểu.
+  // độ to nhạc nền theo bước: 0 tắt (chuẩn bị, và bước bao sau khi vải bay đi), NHAC_VUA bình thường, NHAC_NHO lúc học sinh phát biểu.
   // 13/11 thầy Thịnh (đổi nhạc nền sang bài Suno "Học Vui Mỗi Ngày"): "chỗ nào mà tôi sẽ kêu học sinh phát biểu thì cho nhạc nhỏ lại".
   //   Hai chỗ: bước đáp án (mời một em nêu cách làm) và bước tuong từ lúc báo tường hiện xong (hỏi "Sắp tới trường chúng ta có ngày gì?");
   //   lúc tia lửa bay lên số 51 và lửa đốt tan màn đêm nhạc vẫn to như thường. Trước đây chỉ bước đáp án nhỏ lại, mức 0,08.
@@ -856,6 +856,13 @@
       var k = SK.mocKet && SK.mocKet(), con = k ? k.S0 - performance.now() / 1000 : 0;
       if (con > 0) henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === "tuong") A.nhacMuc(NHAC_NHO, 1.5); }, Math.min(con, 15) * 1000);
       else { muc = NHAC_NHO; giay = 1.5; }
+    } else if (step === "bao") {
+      // 14/11 thầy Thịnh: "sau khi chim bồ câu kéo rèm đi thì tắt nhạc". Bấm nút cuối: nhạc to lại cùng tiếng vỗ tay lúc bồ câu kéo vải;
+      //   vải bay khỏi màn hình (SK.lucVaiDi, 2,5 giây sau khi bấm) thì nhạc tắt dần trong khoảng 2 giây, tiếng vỗ tay vẫn kêu hết.
+      //   Mở lại trang đang ở bước bao: nhạc tắt sẵn.
+      var lv = SK.lucVaiDi && SK.lucVaiDi(), con2 = lv != null ? lv - performance.now() / 1000 : 0;
+      if (con2 > 0) henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === "bao") A.nhacMuc(0, 2); }, Math.min(con2, 15) * 1000);
+      else { muc = 0; giay = 2; }
     }
     A.nhacMuc(muc, giay);
   }
