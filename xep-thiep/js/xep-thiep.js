@@ -450,7 +450,7 @@
       var db = app.database(), base = db.ref(NHANH + "/" + phong), coMat = [];
       db.ref(".info/connected").on("value", function (s) {
         bao(s.val() ? "ok" : "cho");
-        if (s.val()) coMat.forEach(function (r) { r.onDisconnect().remove(); r.set(true); });
+        if (s.val()) coMat.forEach(function (c) { c.r.onDisconnect().remove(); c.r.set(c.v); });
       });
       function loi(e) { if (e) { console.error(e); bao("loi", (e.code || e.message || e) + ""); } }
       return {
@@ -459,12 +459,17 @@
         update: function (o) { base.update(o, loi); },            // nhiều đường dẫn một lần; giá trị null là xóa
         remove: function (p) { base.child(p).remove(loi); },
         on: function (p, cb) { (p ? base.child(p) : base).on("value", function (s) { cb(s.val()); }, loi); },
-        coMat: function (p) { var r = base.child(p); coMat.push(r); r.onDisconnect().remove(); r.set(true); }
+        coMat: function (p, v) {                  // báo máy này đang có mặt (mất nối thì máy chủ tự xóa). v = giá trị ghi, bỏ trống là true; gọi lại cùng đường dẫn để đổi giá trị
+          var c = null;
+          coMat.forEach(function (x) { if (x.p === p) c = x; });
+          if (!c) { c = { p: p, r: base.child(p), v: true }; coMat.push(c); c.r.onDisconnect().remove(); }
+          c.v = v === undefined ? true : v; c.r.set(c.v);
+        }
       };
     });
   }
   function noiCungMay(phong, bao) {                // các thẻ trên cùng một máy: BroadcastChannel + localStorage
-    var KHOA = "xt-" + phong, nghe = [], kenh = null, cay = doc();
+    var KHOA = "xt-" + phong, nghe = [], kenh = null, cay = doc(), daCoMat = {};
     function doc() { try { return JSON.parse(localStorage.getItem(KHOA) || "{}") || {}; } catch (e) { return {}; } }
     function luu() { try { localStorage.setItem(KHOA, JSON.stringify(cay)); } catch (e) { /* bỏ qua */ } }
     function lay(p) {
@@ -492,7 +497,7 @@
       update: function (o) { cay = doc(); Object.keys(o).forEach(function (p) { dat(p, o[p]); }); luu(); phat(""); if (kenh) { try { kenh.postMessage({ p: "" }); } catch (e) { /* bỏ qua */ } } },
       remove: function (p) { ghi(p, null); },
       on: function (p, cb) { nghe.push({ p: p, cb: cb }); cb(lay(p)); },
-      coMat: function (p) { ghi(p, true); window.addEventListener("pagehide", function () { ghi(p, null); }); }
+      coMat: function (p, v) { ghi(p, v === undefined ? true : v); if (!daCoMat[p]) { daCoMat[p] = 1; window.addEventListener("pagehide", function () { ghi(p, null); }); } }
     });
   }
   function noi(phong, thu, bao) {
@@ -579,6 +584,26 @@
     for (i = 0; i <= Math.floor(h + 1e-6); i++) { y = (dan[1] + i) * U; S("line", { "class": i % 5 ? "luoi-net" : "luoi-net dam", x1: dan[0] * U, y1: y, x2: dan[2] * U, y2: y }, g); }
     S("rect", { "class": "luoi-vien", x: dan[0] * U, y: dan[1] * U, width: w * U, height: h * U }, g);
   }
+  /* Thầy dặn 14/11 14:03: "phần khung lưới kéo dài lên cả những chỗ trống nữa".
+     cuaSo: phần lưới hiện trên một máy (cm trên thiệp) khi bàn xếp chiếm khung w × h px của màn hình. Tỉ lệ vẽ: chỗ dán hình vừa khít một chiều;
+     chiều còn dư thì lưới nới ra hai phía. Phần nới ra còn lọt trong tấm thiệp thì giữ trong thiệp (tivi vẽ được đúng cỡ thật);
+     dài hơn tấm thiệp (thiệp ngang, điện thoại cầm dọc) thì chia đều hai phía của thiệp. Chỗ dán hình luôn nằm trong cửa sổ. */
+  function cuaSo(bc, w, h) {
+    var dan = bc.dan, s = Math.min(w / (dan[2] - dan[0]), h / (dan[3] - dan[1])), ra = [0, 0, 0, 0];
+    [[0, w / s, bc.W], [1, h / s, bc.H]].forEach(function (c) {
+      var i = c[0], dai = c[1], the = c[2], dau = dai <= the ? Math.max(0, Math.min(the - dai, (dan[i] + dan[i + 2]) / 2 - dai / 2)) : (the - dai) / 2;
+      ra[i] = dau; ra[i + 2] = dau + dai;
+    });
+    return ra;
+  }
+  function veLuoiRong(g, cua, dan, vien) {        // lưới ô 1 cm phủ kín cửa sổ cua; vạch trùng với lưới của chỗ dán hình dan (cứ 5 ô một vạch đậm, tính từ góc chỗ dán)
+    var i, v;
+    g.textContent = "";
+    S("rect", { "class": "luoi-nen", x: cua[0] * U, y: cua[1] * U, width: (cua[2] - cua[0]) * U, height: (cua[3] - cua[1]) * U }, g);
+    for (i = Math.ceil(cua[0] - dan[0] - 1e-6); i <= Math.floor(cua[2] - dan[0] + 1e-6); i++) { v = (dan[0] + i) * U; S("line", { "class": ((i % 5) + 5) % 5 ? "luoi-net" : "luoi-net dam", x1: v, y1: cua[1] * U, x2: v, y2: cua[3] * U }, g); }
+    for (i = Math.ceil(cua[1] - dan[1] - 1e-6); i <= Math.floor(cua[3] - dan[1] + 1e-6); i++) { v = (dan[1] + i) * U; S("line", { "class": ((i % 5) + 5) % 5 ? "luoi-net" : "luoi-net dam", x1: cua[0] * U, y1: v, x2: cua[2] * U, y2: v }, g); }
+    if (vien) S("rect", { "class": "luoi-vien", x: cua[0] * U, y: cua[1] * U, width: (cua[2] - cua[0]) * U, height: (cua[3] - cua[1]) * U }, g);
+  }
 
   /* =====================================================================
      ĐIỆN THOẠI
@@ -599,7 +624,7 @@
     document.body.setAttribute("data-nhom", k);
     var bc = BOCUC[NHOM[k]], dan = bc.dan, mau = MAU[k], goc = BO.map(daGiac);
     var T = null, nhap = {}, sai = {}, daMo = false, xong = false, man = "nhap", lanDau = true;
-    var manh = [], chon = null, keo = null, xoay2 = null, tro = {}, guiCho = {}, guiLuc = {}, chuaNhan = null, baoDe = null, dangChot = false;
+    var manh = [], chon = null, keo = null, xoay2 = null, tro = {}, guiCho = {}, guiLuc = {}, chuaNhan = null, baoDe = null, quaTo = null, dangChot = false;
     var to = window.innerWidth >= 700 && window.innerHeight >= 700;
     var mayId = (function () {
       var v = null; try { v = sessionStorage.getItem("xt-may"); } catch (e) { v = null; }
@@ -655,7 +680,6 @@
       else loi.textContent = n ? "Đã đúng " + n + "/10. Chạm mảnh chưa có màu để nhập tiếp." : "Đo từng mảnh, tính diện tích rồi chạm vào mảnh để nhập. Hai mảnh giống nhau chỉ nhập một lần.";
       $("nhapSang").disabled = !duocXep();
       $("nhapSang").textContent = duocXep() ? "Sang bàn xếp" : "Đúng phần còn lại thì mở bàn xếp";
-      $("dtSoDo").textContent = "Số đo " + n + "/10";
       if (O.kh) veO();
     }
 
@@ -758,18 +782,39 @@
       }
     };
     $("nhapSang").onclick = function () { if (duocXep()) { man = "xep"; doiMan(); } };
-    $("dtSoDo").onclick = function () { man = "nhap"; doiMan(); };
+    /* (14/11 14:03, thầy dặn "số đo 10/10 xóa ô đó đi": bàn xếp không còn nút quay về bước nhập số đo) */
 
-    /* ---------------- bước 2: bàn xếp có lưới, 10 mảnh nằm sẵn ---------------- */
-    var svg = $("dtBan"), lopManh = null, dauSan = viTriDau(dan);
-    svg.setAttribute("viewBox", [dan[0] * U, dan[1] * U, (dan[2] - dan[0]) * U, (dan[3] - dan[1]) * U].join(" "));
-    veLuoi(S("g", { "class": "lop-luoi" }, svg), dan);
-    lopManh = S("g", {}, svg);
+    /* ---------------- bước 2: bàn xếp có lưới, 10 mảnh nằm sẵn ----------------
+       Thầy dặn 14/11 14:03: "phần khung lưới kéo dài lên cả những chỗ trống nữa". Lưới phủ kín phần màn hình giữa tên bước và dòng nhắc,
+       mảnh kéo được tới mọi chỗ có lưới. ban = phần lưới máy này đang thấy (cm trên thiệp, xem cuaSo);
+       vungKeo = ban thu vào cho mép nằm trên vạch nửa ô (mảnh đặt sát mép vẫn đúng vạch lưới). Chỗ dán hình trên thiệp (dan) nằm trong ban:
+       lúc Hoàn thành hình phải vừa cỡ chỗ dán, chưa vừa thì hiện khung nét đứt (khungThiep) cho các em thấy. */
+    var svg = $("dtBan"), lopLuoi = S("g", { "class": "lop-luoi" }, svg), lopManh = S("g", {}, svg), khungThiep = S("rect", { "class": "khung-thiep" }, svg), dauSan = viTriDau(dan);
+    var ban = dan.slice(), vungKeo = [-1e6, -1e6, 1e6, 1e6], banDaVe = "";   // chưa đo được màn hình (đang ở bước nhập số): chưa giữ mảnh vào đâu cả
+    khungThiep.style.display = "none";
     function macDinh(i) { return { x: dauSan[i].x, y: dauSan[i].y, r: 0, f: 0, t: 0 }; }   // chỗ nằm sẵn của mảnh thứ i
+    function baoCua() {                           // báo cho tivi phần lưới máy này đang thấy (ghi vào chỗ báo có mặt của máy)
+      if (T) T.coMat("n" + k + "/co/" + mayId, [Math.floor(ban[0] * 100) / 100, Math.floor(ban[1] * 100) / 100, Math.ceil(ban[2] * 100) / 100, Math.ceil(ban[3] * 100) / 100].join("|"));
+    }
 
-    function coBan() {                            // chỉnh cỡ bàn xếp và tấm thiệp cho vừa màn hình
-      var o = $("dtKhungBan"), w = o.clientWidth, h = o.clientHeight, tl = (dan[2] - dan[0]) / (dan[3] - dan[1]);
-      if (w && h) { var bw = Math.min(w, h * tl); svg.style.width = Math.floor(bw) + "px"; svg.style.height = Math.floor(bw / tl) + "px"; }
+    function coBan() {                            // chỉnh lưới bàn xếp và tấm thiệp cho vừa màn hình
+      var o = $("dtKhungBan"), w = o.clientWidth, h = o.clientHeight;
+      if (w && h) {
+        var moi = cuaSo(bc, w, h), khoa = moi.map(f2).join("|");
+        if (khoa !== banDaVe) {
+          banDaVe = khoa; ban = moi;
+          vungKeo = [dan[0] - Math.floor((dan[0] - ban[0]) / O_LUOI + 1e-6) * O_LUOI, dan[1] - Math.floor((dan[1] - ban[1]) / O_LUOI + 1e-6) * O_LUOI,
+            dan[2] + Math.floor((ban[2] - dan[2]) / O_LUOI + 1e-6) * O_LUOI, dan[3] + Math.floor((ban[3] - dan[3]) / O_LUOI + 1e-6) * O_LUOI];
+          svg.setAttribute("viewBox", [ban[0] * U, ban[1] * U, (ban[2] - ban[0]) * U, (ban[3] - ban[1]) * U].join(" "));
+          veLuoiRong(lopLuoi, ban, dan);
+          manh.forEach(function (m) {              // mảnh máy khác để ở chỗ máy này không thấy: hiện sát mép (chỉ trên máy này, chưa ghi lên). m.db = chỗ thật của mảnh theo máy chủ
+            if (m.db) m.st = { x: m.db.x, y: m.db.y, r: m.db.r, f: m.db.f, t: m.db.t };
+            giuTrong(goc[m.so - 1], m.st, vungKeo); ve(m);
+          });
+          if (quaTo) { quaTo = null; capNhat(); }
+          baoCua();
+        }
+      }
       var o2 = $("thiepKhung"), w2 = o2.clientWidth, h2 = o2.clientHeight, tl2 = bc.W / bc.H;
       if (w2 && h2) { var tw = Math.min(w2, h2 * tl2); $("dtThiep").style.width = Math.floor(tw) + "px"; $("dtThiep").style.height = Math.floor(tw / tl2) + "px"; }
     }
@@ -799,6 +844,7 @@
       manh.slice().sort(function (a, b) { return a.st.t - b.st.t || a.so - b.so; }).forEach(function (m) { lopManh.appendChild(m.g); });
     }
     function gui(m, ngay) {                       // gửi vị trí mảnh lên, tối đa khoảng 12 lần một giây
+      m.db = null;                                 // máy này vừa đặt mảnh: chỗ trên máy này là chỗ thật
       if (!T) return;
       var p = "n" + k + "/m/p" + m.so;
       function that() { guiLuc[m.so] = Date.now(); guiCho[m.so] = null; T.set(p, goi(m.st)); }
@@ -810,7 +856,9 @@
     function capNhat() {                          // viền chọn, viền báo sau khi bấm Hoàn thành, dòng nhắc, các nút
       var de = {}, le = {};
       (baoDe || []).forEach(function (i) { de[i] = 1; });
-      (chuaNhan || []).forEach(function (i) { le[i] = 1; });
+      (quaTo ? quaTo.manh : chuaNhan || []).forEach(function (i) { le[i] = 1; });
+      if (quaTo) { khungThiep.setAttribute("x", quaTo.khung[0] * U); khungThiep.setAttribute("y", quaTo.khung[1] * U); khungThiep.setAttribute("width", (quaTo.khung[2] - quaTo.khung[0]) * U); khungThiep.setAttribute("height", (quaTo.khung[3] - quaTo.khung[1]) * U); }
+      khungThiep.style.display = quaTo ? "" : "none";
       manh.forEach(function (m, i) {
         m.g.classList.toggle("chon", chon === i && !dangChot);
         m.g.classList.toggle("chong", !!de[i]);
@@ -820,12 +868,13 @@
       nhac.className = "nhac";
       if (dangChot) { nhac.textContent = "Máy đang chỉnh lại hình cho ngay ngắn…"; nhac.classList.add("tot"); }
       else if (baoDe) { nhac.textContent = "Mảnh viền đỏ đang đè lên mảnh khác. Em chỉnh lại rồi bấm Hoàn thành nhé."; nhac.classList.add("xau"); }
+      else if (quaTo) { nhac.textContent = "Hình chưa vừa khung nét đứt (chỗ dán hình trên thiệp). Em xếp gọn lại rồi bấm Hoàn thành nhé."; nhac.classList.add("xau"); }
       else if (chuaNhan) { nhac.textContent = "Mảnh viền cam còn nằm rời. Em xếp các mảnh sát nhau thành hình rồi bấm Hoàn thành nhé."; nhac.classList.add("xau"); }
       else if (chon === null) nhac.textContent = "Kéo từng mảnh để xếp thành hình. Xếp xong thì bấm Hoàn thành.";
       else nhac.textContent = "Chạm mảnh đang chọn để xoay, hoặc xoay bằng hai ngón. Xếp xong thì bấm Hoàn thành.";
       var cm = chon !== null && !dangChot;
       $("dtTrai").disabled = $("dtPhai").disabled = !cm;
-      $("dtLat").disabled = !(cm && BO[chon].loai === "bh");
+      $("dtLat").disabled = !cm;
       $("dtXong").disabled = dangChot || !T;
       $("dtLai").disabled = dangChot || !T;
     }
@@ -833,8 +882,8 @@
       var m = manh[i];
       tu = tu || { x: m.st.x, y: m.st.y, r: m.st.r, f: m.st.f };
       vaoLuoi(goc[i], m.st, dan);
-      giuTrong(goc[i], m.st, dan);
-      chuaNhan = null; baoDe = null;
+      giuTrong(goc[i], m.st, vungKeo);
+      chuaNhan = null; baoDe = null; quaTo = null;
       truot(m, tu, 140); ve(m); gui(m, true); capNhat();
     }
     function xoay(d) {
@@ -845,25 +894,28 @@
     }
     $("dtTrai").onclick = function () { xoay(-BUOC_XOAY); };
     $("dtPhai").onclick = function () { xoay(BUOC_XOAY); };
-    $("dtLat").onclick = function () {
+    $("dtLat").onclick = function () {             // Lật đối xứng (thầy dặn 14/11 14:03: "lật trái phải giống trong word"): soi gương mảnh qua trục đứng đi qua tâm mảnh, như nút Flip Horizontal
       if (chon === null || dangChot) return;
-      var m = manh[chon]; m.st.f = m.st.f ? 0 : 1; leTren(m); tha(chon);
+      var m = manh[chon];
+      if (BO[chon].loai === "bh") m.st.f = m.st.f ? 0 : 1;      // các hình khác đối xứng qua trục của chính nó: soi gương chỉ là đổi dấu góc quay
+      m.st.r = chuanGoc(-m.st.r);
+      leTren(m); tha(chon, { x: m.st.x, y: m.st.y, r: m.st.r, f: m.st.f });
     };
-    var hoiLai = 0;
-    $("dtLai").onclick = function () {             // Làm lại (bấm 2 lần): 10 mảnh trượt về chỗ nằm sẵn
-      var b = $("dtLai");
+    function lamLai() {                            // 10 mảnh trượt về chỗ nằm sẵn, xóa hình đang xếp của cả nhóm
       if (!T || dangChot) return;
-      if (Date.now() - hoiLai > 3000) { hoiLai = Date.now(); b.textContent = "Bấm lần nữa để xếp lại từ đầu"; b.classList.add("hoi"); setTimeout(function () { b.textContent = "Làm lại"; b.classList.remove("hoi"); }, 3000); return; }
-      hoiLai = 0; b.textContent = "Làm lại"; b.classList.remove("hoi");
       manh.forEach(function (m, i) {
         var tu = { x: m.st.x, y: m.st.y, r: m.st.r, f: m.st.f };
         clearTimeout(guiCho[m.so]); guiCho[m.so] = null;
-        m.st = macDinh(i); truot(m, tu, 320);
+        m.st = macDinh(i); m.db = null; truot(m, tu, 320);
       });
-      chon = null; chuaNhan = null; baoDe = null;
+      chon = null; chuaNhan = null; baoDe = null; quaTo = null;
       xepLop();
       T.remove("n" + k + "/m");
       capNhat();
+    }
+    $("dtLai").onclick = function () {             // Làm lại từ đầu (thầy dặn 14/11 14:03: "nếu bấm ô này thì có ô xác nhận")
+      if (!T || dangChot) return;
+      moHop({ kieu: "lai", ten: "Làm lại từ đầu?", dong: ["10 mảnh sẽ về chỗ ban đầu. Hình nhóm đang xếp sẽ mất."], phu: "Không", chinh: "Làm lại từ đầu", lam: lamLai });
     };
 
     /* --- bảng thông báo trên bàn xếp: xác nhận, báo mảnh đè lên nhau, báo chưa nhận ra hình --- */
@@ -886,7 +938,17 @@
     }
     function xetHinh() {                           // tính trên bản sao (chưa đụng tới hình của các em): tách mảnh đè nhẹ, chỉnh nhẹ, xét có ra hình không
       var ds = manh.map(function (m, i) { return { goc: goc[i], st: { x: m.st.x, y: m.st.y, r: m.st.r, f: m.st.f, t: m.st.t } }; });
-      return { ds: ds, kq: canChinh(ds, dan) };
+      var kq = canChinh(ds, vungKeo);
+      if (kq.ok) {                                 // lưới rộng hơn chỗ dán hình trên thiệp: hình phải vừa cỡ chỗ dán (máy sẽ đưa hình vào giữa chỗ dán)
+        var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, rw = dan[2] - dan[0], rh = dan[3] - dan[1];
+        ds.forEach(function (A) { var kh = khung(toaDo(A.goc, A.st)); x0 = Math.min(x0, kh[0]); y0 = Math.min(y0, kh[1]); x1 = Math.max(x1, kh[2]); y1 = Math.max(y1, kh[3]); });
+        if (x1 - x0 > rw + 1e-6 || y1 - y0 > rh + 1e-6) {
+          var kx = Math.max(ban[0], Math.min(ban[2] - rw, (x0 + x1) / 2 - rw / 2)), ky = Math.max(ban[1], Math.min(ban[3] - rh, (y0 + y1) / 2 - rh / 2));
+          kq.to = { rong: x1 - x0 > rw + 1e-6, cao: y1 - y0 > rh + 1e-6, khung: [kx, ky, kx + rw, ky + rh], manh: [] };   // khung = khung cỡ chỗ dán đặt quanh hình; manh = các mảnh thò ra ngoài khung
+          ds.forEach(function (A, i) { var kh = khung(toaDo(A.goc, A.st)); if (kh[0] < kx - 0.05 || kh[1] < ky - 0.05 || kh[2] > kx + rw + 0.05 || kh[3] > ky + rh + 0.05) kq.to.manh.push(i); });
+        }
+      }
+      return { ds: ds, kq: kq };
     }
     function baoKetQua(kq) {                       // hình ổn thì trả về true; chưa ổn thì hiện bảng báo, tô viền các mảnh cần chỉnh
       var dong = [];
@@ -900,17 +962,25 @@
         });
         if (cap.length > 3) dong.push("Còn " + (cap.length - 3) + " chỗ nữa cũng đang đè lên nhau.");
         dong.push({ chu: "Em chỉnh lại mảnh " + noiSo(tren) + " rồi bấm Hoàn thành nhé.", lop: "dam" });
-        baoDe = tren; chuaNhan = null; chon = null; capNhat();
+        baoDe = tren; chuaNhan = null; quaTo = null; chon = null; capNhat();
         moHop({ kieu: "de", ten: "Còn mảnh đè lên nhau", dong: dong, chinh: "Chỉnh lại" });
         return false;
       }
       if (!kq.ok) {
         dong.push(kq.le.length <= 4 ? "Mảnh " + noiSo(kq.le) + " còn nằm rời." : "Còn " + kq.le.length + " mảnh nằm rời (viền cam).");
         dong.push({ chu: "Em xếp các mảnh sát nhau thành hình rồi bấm Hoàn thành nhé.", lop: "dam" });
-        chuaNhan = kq.le; baoDe = null; chon = null; capNhat();
+        chuaNhan = kq.le; baoDe = null; quaTo = null; chon = null; capNhat();
         moHop({ kieu: "le", ten: "Máy chưa nhận ra hình", dong: dong, chinh: "Xếp tiếp" });
         return false;
       }
+      if (kq.to) {
+        dong.push("Hình đang " + (kq.to.rong && kq.to.cao ? "rộng và cao" : kq.to.rong ? "rộng" : "cao") + " hơn chỗ dán hình trên thiệp.");
+        dong.push({ chu: "Em xếp gọn lại cho vừa khung nét đứt rồi bấm Hoàn thành nhé.", lop: "dam" });
+        quaTo = kq.to; chuaNhan = null; baoDe = null; chon = null; capNhat();
+        moHop({ kieu: "le", ten: "Hình chưa vừa tấm thiệp", dong: dong, chinh: "Xếp tiếp" });
+        return false;
+      }
+      if (quaTo || chuaNhan || baoDe) { quaTo = null; chuaNhan = null; baoDe = null; capNhat(); }   // hình đã ổn (có khi do máy khác của nhóm vừa sửa): bỏ viền báo cũ
       return true;
     }
     /* --- Hoàn thành: xét hình trước; hình ổn thì hỏi xác nhận; nhóm đồng ý thì chỉnh nhẹ, đưa hình vào giữa thiệp, báo cho tivi --- */
@@ -920,11 +990,11 @@
       if (!baoKetQua(x.kq)) return;                 // máy khác của nhóm vừa kéo lệch hình đi
       var ds = x.ds, gom = {};
       vaoGiua(ds, dan);
-      dangChot = true; chon = null; chuaNhan = null; baoDe = null;
+      dangChot = true; chon = null; chuaNhan = null; baoDe = null; quaTo = null;
       manh.forEach(function (m, i) {
         var tu = { x: m.st.x, y: m.st.y, r: m.st.r, f: m.st.f };
         clearTimeout(guiCho[m.so]); guiCho[m.so] = null;
-        m.st = ds[i].st; truot(m, tu, 600);
+        m.st = ds[i].st; m.db = null; truot(m, tu, 600);
         gom["n" + k + "/m/p" + m.so] = goi(m.st);
       });
       gom["n" + k + "/xong"] = 1;
@@ -941,7 +1011,7 @@
     /* --- chạm, kéo, xoay hai ngón --- */
     function cm(e) {
       var r = svg.getBoundingClientRect();
-      return [dan[0] + (e.clientX - r.left) / r.width * (dan[2] - dan[0]), dan[1] + (e.clientY - r.top) / r.height * (dan[3] - dan[1])];
+      return [ban[0] + (e.clientX - r.left) / r.width * (ban[2] - ban[0]), ban[1] + (e.clientY - r.top) / r.height * (ban[3] - ban[1])];
     }
     function gocHaiNgon() {
       var ids = Object.keys(tro); if (ids.length < 2) return null;
@@ -975,14 +1045,14 @@
       if (xoay2 && chon !== null) {
         var g2 = gocHaiNgon(); if (!g2) return;
         var m2 = manh[chon]; m2.st.r = chuanGoc(xoay2.r0 + (g2.g - xoay2.g0));
-        giuTrong(goc[chon], m2.st, dan); ve(m2); gui(m2); return;
+        giuTrong(goc[chon], m2.st, vungKeo); ve(m2); gui(m2); return;
       }
       if (!keo || keo.id !== e.pointerId) return;
       if (!keo.dong && Math.hypot(e.clientX - keo.px, e.clientY - keo.py) > 6) { keo.dong = true; manh[keo.i].chay = 0; }
       if (!keo.dong) return;
       var p = cm(e), m = manh[keo.i];
       m.st.x = keo.x0 + p[0] - keo.p0[0]; m.st.y = keo.y0 + p[1] - keo.p0[1];
-      giuTrong(goc[keo.i], m.st, dan); ve(m); gui(m);
+      giuTrong(goc[keo.i], m.st, vungKeo); ve(m); gui(m);
     });
     function nha(e) {
       if (!tro[e.pointerId]) return;
@@ -1041,7 +1111,7 @@
     veNhap(); doiMan(); capNhat();
     noi(phong, ts.thu, trangThai).then(function (t) {
       T = t;
-      T.coMat("n" + k + "/co/" + mayId);
+      baoCua();
       T.on("n" + k, function (d) {                 // mọi thay đổi của nhóm: số đo đã đúng, vị trí mảnh, đã hoàn thành
         d = d || {};
         nhap = d.d || {}; sai = d.s || {}; daMo = !!d.mo;
@@ -1050,7 +1120,8 @@
           if ((keo && keo.i === i && keo.dong) || (xoay2 && chon === i) || guiCho[m.so] || dangChot) return;
           var st = mo(o["p" + m.so]) || macDinh(i);      // chưa ai kéo mảnh này: nó nằm ở chỗ sẵn
           if (m.chay && Math.abs(st.x - m.st.x) < 0.002 && Math.abs(st.y - m.st.y) < 0.002 && Math.abs(lechGoc(st.r - m.st.r)) < 0.02) return;   // tiếng vọng của chính mình, đang trượt dở
-          m.chay = 0; m.st = st;
+          m.chay = 0; m.st = st; m.db = { x: st.x, y: st.y, r: st.r, f: st.f, t: st.t };
+          giuTrong(goc[i], m.st, vungKeo);           // máy khác để mảnh ở chỗ máy này không thấy: hiện sát mép (chỉ trên máy này)
           ve(m);
         });
         xepLop();
@@ -1075,7 +1146,8 @@
     svg.setAttribute("viewBox", "0 0 " + W + " " + Hh);
     S("rect", { "class": "giay", x: 0, y: 0, width: W, height: Hh }, svg);
     veTrangTri(S("g", { "class": "lop-tt" }, svg), k);
-    veLuoi(S("g", { "class": "lop-luoi" }, svg), dan);
+    var lopLuoi = S("g", { "class": "lop-luoi" }, svg);
+    veLuoi(lopLuoi, dan);
     var ln = S("g", { "class": "lop-nhap" }, svg), cx = (dan[0] + dan[2]) / 2, cy = (dan[1] + dan[3]) / 2, muc = {};
     ["tong", "thiep", "con"].forEach(function (kh) {
       var c = CHO_O[kh], x = (cx + c[0]) * U, y = (cy + c[1]) * U, w = c[2] * U;
@@ -1097,7 +1169,7 @@
       }
       g[so] = e;
     });
-    return { muc: muc, lop: lop, g: g, khoaCua: khoaCua, dau: viTriDau(dan) };
+    return { muc: muc, lop: lop, lopLuoi: lopLuoi, g: g, khoaCua: khoaCua, dau: viTriDau(dan), dan: dan, W: bc.W, H: bc.H, cua: "" };
   }
 
   function chayTivi(ts) {
@@ -1166,6 +1238,31 @@
         g.classList.toggle("dung", !!v); g.classList.toggle("sao", v === "s");
         if (g.children[2]) g.children[2].style.transform = "rotate(" + (-r) + "deg)";      // dấu ✓ / ★ luôn đứng thẳng
       });
+      /* Lưới trên điện thoại rộng hơn chỗ dán hình (14/11 14:03), có khi rộng hơn cả tấm thiệp (thiệp ngang mà điện thoại cầm dọc).
+         Lúc nhóm đang xếp: mọi mảnh còn nằm trong tấm thiệp thì tivi vẽ đúng cỡ thật như trước.
+         Có mảnh nằm ngoài tấm thiệp thì tivi thu nhỏ cả bàn xếp cho vừa thiệp, lấy theo phần lưới các máy của nhóm đang thấy
+         (mỗi máy báo trong co/<máy>) gộp với chỗ các mảnh đang nằm, để tivi hiện đúng như điện thoại. Đổi ngay, không phóng dần. */
+      var cua = K.dan.slice(), tl = 1, dx = 0, dy = 0, LE = 0.3;
+      function gop(a) { cua = [Math.min(cua[0], a[0]), Math.min(cua[1], a[1]), Math.max(cua[2], a[2]), Math.max(cua[3], a[3])]; }
+      if (pha === "xep") {
+        ds.forEach(function (x) { gop(khung(toaDo(goc[x.so - 1], x.st))); });
+        if (cua[0] < -0.05 || cua[1] < -0.05 || cua[2] > K.W + 0.05 || cua[3] > K.H + 0.05) {
+          Object.keys(d.co || {}).forEach(function (id) {
+            var a = typeof d.co[id] === "string" ? d.co[id].split("|").map(parseFloat) : null;
+            if (a && a.length === 4 && !a.some(function (v) { return isNaN(v) || v < -60 || v > 110; })) gop(a);
+          });
+          tl = Math.min(1, (K.W - 2 * LE) / (cua[2] - cua[0]), (K.H - 2 * LE) / (cua[3] - cua[1]));
+          dx = K.W / 2 - tl * (cua[0] + cua[2]) / 2; dy = K.H / 2 - tl * (cua[1] + cua[3]) / 2;
+        }
+      }
+      var khoaCua = tl === 1 && !dx && !dy ? "" : [tl.toFixed(4), dx.toFixed(2), dy.toFixed(2)].concat(cua.map(f2)).join("|");
+      if (khoaCua !== K.cua) {
+        K.cua = khoaCua;
+        [K.lopLuoi, K.lop].forEach(function (g) { if (khoaCua) g.setAttribute("transform", "translate(" + f2(dx * U) + " " + f2(dy * U) + ") scale(" + tl.toFixed(4) + ")"); else g.removeAttribute("transform"); });
+        K.lopLuoi.textContent = "";
+        if (khoaCua) veLuoiRong(K.lopLuoi, cua, K.dan, true); else veLuoi(K.lopLuoi, K.dan);
+        K.o.classList.toggle("thu-nho", !!khoaCua);
+      }
       var thuTu = ds.map(function (x) { return x.so; }).join(",");
       if (thuTu !== K.thuTu) { K.thuTu = thuTu; ds.forEach(function (x) { K.lop.appendChild(K.g[x.so]); }); }   // chỉ xếp lại lớp khi thứ tự trên dưới đổi (xếp lại làm đứt chuyển động)
       var may = d.co ? Object.keys(d.co).length : 0, nd = demDung(nhap), ns = demSao(nhap);
@@ -1190,7 +1287,8 @@
     /* --- ảnh báo tường làm nền màn làm bài ---
        Ảnh có hình thầy cô nên KHÔNG nằm trên mạng. Trang chỉ lấy ảnh từ kho của trình duyệt trên máy thầy (IndexedDB "ruoc-duoc", cùng kho với trang Rước đuốc):
          khóa "baoTuongXep": ảnh thầy chọn ở trang này (Cài đặt);
-         khóa "baoTuong": ảnh thầy đã chọn ở trang Rước đuốc, chỉ dùng khi đúng tỉ lệ khổ A0 nằm ngang.
+         khóa "baoTuong2": ảnh báo tường bản 7 (4 ô A3) thầy đã chọn ở trang Rước đuốc, chỉ dùng khi đúng tỉ lệ khổ A0 nằm ngang.
+         KHÔNG đọc khóa cũ "baoTuong" nữa (14/11): trên máy thầy khóa đó có thể còn ảnh báo tường mẫu cũ, các ô dán nằm chỗ khác, bài của các nhóm sẽ lệch ô.
        Chưa có ảnh thì tivi hiện hình vẽ thay (vẽ sẵn trong index.html). */
     var TI_LE_A0 = 1189 / 841, anhUrl = null;
     function moKho(cb) {
@@ -1243,7 +1341,7 @@
         if (b) { datAnh(b, "rieng"); return; }
         var bo = null; try { bo = localStorage.getItem("xt-bt-bo"); } catch (e) { bo = null; }
         if (bo) { datAnh(null); return; }
-        layAnh("baoTuong", function (b2) {
+        layAnh("baoTuong2", function (b2) {
           if (!b2) { datAnh(null); return; }
           docAnh(b2, function (im, u) { if (u) URL.revokeObjectURL(u); if (im && dungTiLe(im)) datAnh(b2, "ruoc"); else datAnh(null); });
         });
@@ -1333,7 +1431,7 @@
   }
 
   /* cho bài thử gọi các hàm hình học */
-  window.XT = { BO: BO, MUC: MUC, THU_TU: THU_TU, TONG: TONG, CON: CON, kiemMuc: kiemMuc, daGiac: daGiac, toaDo: toaDo, doLun: doLun, dayVec: dayVec, kcDaGiac: kcDaGiac, cachChinh: cachChinh, canChinh: canChinh, vaoGiua: vaoGiua, giuTrong: giuTrong, vaoLuoi: vaoLuoi, trongTam: trongTam, BOCUC: BOCUC, NHOM: NHOM, NHE: NHE, viTriDau: viTriDau, mo: mo, goi: goi, dat: function (o) { if (o.de !== undefined) NHE.de = o.de; if (o.xaTach !== undefined) XA_TACH = o.xaTach; } };
+  window.XT = { BO: BO, MUC: MUC, THU_TU: THU_TU, TONG: TONG, CON: CON, kiemMuc: kiemMuc, daGiac: daGiac, toaDo: toaDo, doLun: doLun, dayVec: dayVec, kcDaGiac: kcDaGiac, cachChinh: cachChinh, canChinh: canChinh, vaoGiua: vaoGiua, giuTrong: giuTrong, vaoLuoi: vaoLuoi, trongTam: trongTam, BOCUC: BOCUC, NHOM: NHOM, NHE: NHE, viTriDau: viTriDau, cuaSo: cuaSo, mo: mo, goi: goi, dat: function (o) { if (o.de !== undefined) NHE.de = o.de; if (o.xaTach !== undefined) XA_TACH = o.xaTach; } };
 
   function batDau() {
     var ts = thamSo();

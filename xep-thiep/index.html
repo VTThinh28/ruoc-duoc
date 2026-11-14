@@ -131,20 +131,23 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .o-duoi .nut { width: 100%; min-height: 52px; font-size: 17px; }
 
 /* --- bước 2: bàn xếp có lưới --- */
-#dtKhungBan { flex: 1; min-height: 0; margin: 0 8px; display: flex; align-items: center; justify-content: center; }
-#dtBan { display: block; touch-action: none; border-radius: 4px; box-shadow: 0 2px 10px rgba(90, 60, 30, .2); background: #fffdf8; }
+/* lưới phủ kín khung này (thầy dặn 14/11 14:03: lưới kéo dài ra cả những chỗ trống) */
+#dtKhungBan { flex: 1; min-height: 0; margin: 0 8px; position: relative; }
+#dtBan { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; touch-action: none; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 10px rgba(90, 60, 30, .2); background: #fffdf8; }
+#dtBan .khung-thiep { fill: none; stroke: #e07b00; stroke-width: 1.8; stroke-dasharray: 8 5; pointer-events: none; }
 #dtBan .manh.chon .than { stroke: #1f6fd0; stroke-width: 2.4; }
 #dtBan .manh.chong .than { stroke: #d1281e; stroke-width: 2.2; stroke-dasharray: 5 3.5; }
 #dtBan .manh.le .than { stroke: #e07b00; stroke-width: 2.6; stroke-dasharray: 5 3.5; }
 .nhac { margin: 6px 10px 5px; min-height: 2.7em; font-size: 14px; line-height: 1.35; text-align: center; display: flex; align-items: center; justify-content: center; color: #6a5440; }
 .nhac.tot { color: #2f6b3c; font-weight: 600; }
 .nhac.xau { color: #b3261d; font-weight: 600; }
-.dt-nut { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 7px 8px 0; }
-.dt-nut2 { display: grid; grid-template-columns: 1fr 0.9fr 1.5fr; gap: 6px; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
+.dt-nut { display: grid; grid-template-columns: 1fr 1fr 1.32fr; gap: 6px; padding: 7px 8px 0; }
+.dt-nut2 { display: grid; grid-template-columns: 1fr 1.25fr; gap: 6px; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
 .dt-nut2.mot { grid-template-columns: 1fr; }
 .dt-nut .nut, .dt-nut2 .nut { padding: 0 4px; font-size: 14px; min-height: 48px; }
 .dt-nut2 .nut.chinh { font-size: 16px; }
 .dt-nut .bieu { font-size: 19px; line-height: 1; }
+.dt-nut .bieu-lat { width: 23px; height: 23px; flex: none; }   /* hình lật trái phải như nút Flip Horizontal của Word */
 
 /* --- bảng thông báo trên bàn xếp: xác nhận, báo mảnh đè lên nhau, báo chưa nhận ra hình --- */
 .hop { position: absolute; inset: 0; z-index: 8; background: rgba(74, 53, 36, .36); display: flex; align-items: flex-end; justify-content: center; padding: 14px 12px calc(14px + env(safe-area-inset-bottom)); }   /* bảng nằm phía dưới để các em vẫn thấy mảnh được tô viền trên bàn xếp */
@@ -196,6 +199,7 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 @media (min-width: 700px) and (min-height: 700px) {
   .dt-nut .nut, .dt-nut2 .nut { font-size: 18px; min-height: 60px; }
   .dt-nut2 .nut.chinh { font-size: 20px; }
+  .dt-nut .bieu-lat { width: 28px; height: 28px; }
   .nhac, .nhap-loi, .o-bao { font-size: 18px; }
   #dtNhom { font-size: 24px; } .dt-ten { font-size: 22px; }
   .nhap-luoi { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -275,6 +279,9 @@ body.tv { background: #eadfc9; }
 /* thiệp luôn rõ nét. Lưới bàn xếp hiện lúc đo, tính và lúc xếp; xong thì ẩn. 3 ô Tổng, Thiệp, Phần còn lại chỉ hiện lúc đo và tính */
 .thiep .lop-luoi, .thiep .lop-nhap { transition: opacity 500ms ease; }
 .khung.pha-xong .lop-luoi { opacity: 0; }
+/* có mảnh nằm ngoài tấm thiệp (lưới trên điện thoại rộng hơn thiệp): bàn xếp thu nhỏ thành một tấm lưới nằm trên thiệp, trang trí của thiệp mờ đi */
+.khung.thu-nho .lop-luoi .luoi-vien { stroke-width: 1.6; }
+.khung.thu-nho .lop-tt { opacity: .28; }
 .khung.pha-xep .lop-nhap, .khung.pha-xong .lop-nhap { opacity: 0; }
 .thiep .lop-manh .manh .than { transition: fill 400ms ease; }
 .thiep .lop-manh .manh .cham { display: none; }
@@ -361,11 +368,10 @@ body.tv { background: #eadfc9; }
       <div class="dt-nut">
         <button id="dtTrai" class="nut"><span class="bieu">↺</span> Xoay trái</button>
         <button id="dtPhai" class="nut"><span class="bieu">↻</span> Xoay phải</button>
-        <button id="dtLat" class="nut"><span class="bieu">⇋</span> Lật</button>
+        <button id="dtLat" class="nut"><svg class="bieu-lat" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5v21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.6 2.2"/><path d="M9.6 5v14H2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14.4 5v14H22z" fill="#4a8fe0" stroke="#2a62ad" stroke-width="1.2" stroke-linejoin="round"/></svg> Lật đối xứng</button>
       </div>
       <div class="dt-nut2">
-        <button id="dtSoDo" class="nut">Số đo</button>
-        <button id="dtLai" class="nut">Làm lại</button>
+        <button id="dtLai" class="nut">Làm lại từ đầu</button>
         <button id="dtXong" class="nut chinh">Hoàn thành</button>
       </div>
     </section>
@@ -478,6 +484,6 @@ body.tv { background: #eadfc9; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/xep-thiep.js?v=b8e771f2"></script>
+<script src="js/xep-thiep.js?v=a94baf10"></script>
 </body>
 </html>
