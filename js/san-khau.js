@@ -65,7 +65,8 @@
   const O = [[.0067, .0571, .2717, .5303], [.7216, .0571, .2717, .5303], [.0067, .6064, .3751, .3841], [.6182, .6064, .3751, .3841]]
     .map(o => ({ x: K.x + o[0] * K.w, y: K.y + o[1] * K.h, w: o[2] * K.w, h: o[3] * K.h }));
   // tâm số 51 kiểu nến (chữ số x 690–772, y 30–85; ngọn lửa nến y 12–28)
-  const C51 = [K.x + 731, K.y + 50];
+  // 14/11 chiều: số 51 nâng lên 24 điểm ảnh của tệp 4494 × 3179 (gần 8 đơn vị khung K): chữ số y 22–77, lửa nến y 7–20
+  const C51 = [K.x + 731, K.y + 44];
   // chỗ bạn cầm đuốc đứng trong ô thiệp (chân): bạn và thẻ tên nhóm nằm giữa ô
   const choO = i => { const o = O[i]; return [o.x + o.w / 2, o.y + o.h * (i < 2 ? .62 : .66)]; };
   // không có ảnh báo tường (bản GitHub chưa chọn ảnh): vẽ một tấm giả cùng bố cục
@@ -731,7 +732,7 @@
     c.fillStyle = rg; c.fillRect(C51[0] - 150, C51[1] - 150, 300, 300);
     c.restore();
     c.save(); c.globalAlpha = a51;
-    c.beginPath(); c.ellipse(C51[0], C51[1], 62, 52, 0, 0, 7);
+    c.beginPath(); c.ellipse(C51[0], C51[1], 62, 48, 0, 0, 7);
     c.strokeStyle = "rgba(255,215,106,.22)"; c.lineWidth = 22 + 3 * pu; c.stroke();
     c.strokeStyle = "rgba(255,215,106,.35)"; c.lineWidth = 13 + 3 * pu; c.stroke();
     c.strokeStyle = "rgba(255,230,130,.9)"; c.lineWidth = 5 + 3 * pu; c.stroke();
