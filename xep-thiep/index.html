@@ -339,6 +339,28 @@ body.tv { background: #eadfc9; }
 /* tên hoạt động (thầy đổi 14/11 16:32 thành "Tấm thiệp của nhóm em"): nằm ở lề phải, vì báo tường đã có băng rôn riêng */
 .tv-ten { position: absolute; left: 1733.5px; top: 300px; width: 180px; margin: 0; font-family: var(--chu-dam); font-weight: 800; font-size: 27px; line-height: 1.16; color: #6b3d1e; }
 #tv.dang-lon .tv-ten { visibility: hidden; }
+/* --- Tranh 3D (15/11): thầy chạm thiệp của nhóm đã hoàn thành, thiệp hiện to, bên phải có nút "Tranh 3D" và "Đóng".
+   Hoạt ảnh vẽ trên một canvas nằm đè lên tấm thiệp; lúc đó lớp mảnh của svg ẩn đi (canvas vẽ lại 10 mảnh). --- */
+.khung canvas.lop-3d { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 2px; }
+.khung.co-3d .lop-manh { visibility: hidden; }
+.dem-3d { position: absolute; left: 1733.5px; top: 524px; width: 180px; }
+.dem-3d b { display: block; font-family: var(--chu-dam); font-weight: 800; font-size: 24px; line-height: 1.1; color: #c2571a; }
+.dem-o { display: flex; gap: 8px; margin: 7px 0 6px; }
+.dem-o span { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #cbb89a; background: #fffaf0; color: #a08a6a; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+.dem-o span.da { background: #f08a2c; border-color: #c2571a; color: #fff; }
+.dem-3d p { margin: 0; font-size: 17px; line-height: 1.4; color: var(--chu-nhat); }
+#tv.dang-lon .dem-3d { visibility: hidden; }
+.bang-3d { position: absolute; top: 396px; display: flex; flex-direction: column; gap: 16px; }
+.bang-3d.dung { left: 1340px; width: 300px; }
+.bang-3d.ngang { left: 1652px; width: 250px; }
+.ten-3d { margin: 0 0 4px; font-family: var(--chu-dam); font-weight: 700; font-size: 28px; line-height: 1.15; color: #6b3d1e; }
+.ten-3d:empty { display: none; }
+#tv .bang-3d .nut { min-height: 84px; font-size: 29px; border-radius: 22px; white-space: nowrap; }
+#tv #nut3d { background: #f0771f; border-color: #c2571a; color: #fff; font-family: var(--chu-dam); font-weight: 700; font-size: 33px; }
+#tv #nut3d.dang-chay { background: #8a5a34; border-color: #6b3d1e; }
+#tv #nut3d:disabled { background: #e9dfcc; border-color: #d9c7a6; color: #9c8a6c; opacity: 1; }
+.tt-3d { margin: 0; text-align: center; font-size: 20px; line-height: 1.35; color: var(--chu-nhat); }
+.phao { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 30; }
 .xep-goi { position: absolute; left: 1733.5px; top: 380px; width: 176px; margin: 0; font-size: 17px; line-height: 1.4; color: var(--chu-nhat); }
 .tv-nut { position: absolute; left: 116px; bottom: 40px; display: flex; gap: 14px; align-items: center; }
 /* màn làm bài: tiêu đề ẩn (báo tường đã có băng rôn), các nút xếp dọc ở lề trái, dòng nối ở lề phải */
@@ -460,6 +482,8 @@ body.tv { background: #eadfc9; }
     <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao4"><div class="ma" id="ma4"></div><div class="ma-chu"><b>Nhóm 4</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
     <p class="tv-ten">Tấm thiệp<br>của nhóm em</p>
     <p class="xep-goi">Chạm vào một tấm thiệp để xem lớn.<br>★: nhập đúng ngay lần đầu.</p>
+    <div id="dem3d" class="dem-3d"><b>Tranh 3D</b><div class="dem-o"><span>1</span><span>2</span><span>3</span><span>4</span></div><p id="dem3dChu">Đã bấm 0/4 nhóm</p></div>
+    <div id="bang3d" class="bang-3d" hidden><p id="ten3d" class="ten-3d"></p><button id="nut3d" class="nut">▶ Tranh 3D</button><button id="dong3d" class="nut">✕ Đóng</button><p id="tt3d" class="tt-3d"></p></div>
   </section>
 
   <div class="tv-nut">
@@ -469,6 +493,8 @@ body.tv { background: #eadfc9; }
     <button id="nutCaiDat" class="nut chi-xep">Cài đặt</button>
     <button id="nutToan" class="nut">Toàn màn hình</button>
   </div>
+
+  <canvas id="phao" class="phao" width="1920" height="1080" hidden></canvas>
 
   <div id="dapSo" hidden>
     <div class="dap-hop">
@@ -502,6 +528,7 @@ body.tv { background: #eadfc9; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/xep-thiep.js?v=ce6e8372"></script>
+<script src="js/tranh-3d.js?v=2fd611de"></script>
+<script src="js/xep-thiep.js?v=edc07f81"></script>
 </body>
 </html>
