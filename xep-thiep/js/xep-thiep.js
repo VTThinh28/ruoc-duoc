@@ -87,7 +87,7 @@
      và đổi cái chữ bước thành chữ nhiệm vụ nhé … nó sẽ có cái mục ẩn hiện ở trong cái app của tôi … Bước 4 là dán tấm thiệp lên báo tường của lớp …
      một bạn giải thích ý nghĩa đó và đọc lời chúc". Chữ dưới đây do luồng "Ý tưởng" soạn, thầy đã đọc (21:32) và không sửa. Đổi chữ thì chỉ sửa ở đây.
      21:32 thầy dặn thêm: "Đổi toàn bộ thành nhiệm vụ nhé." → mọi chữ "Bước" trên điện thoại, tivi, máy giáo viên đều thành "Nhiệm vụ". */
-  var NHIEM_VU = {                                // lời thầy chốt 15/11 22:07 (luồng "Ý tưởng"). Dòng "phu" còn có thể đổi khi thầy chốt số phút
+  var NHIEM_VU = {                                // lời thầy chốt 15/11 22:07, nhiệm vụ 3 và 4 sửa 22:34 (luồng "Ý tưởng"). Sửa lời: chỉ sửa ở đây, bảng tự xếp lại
     ten: "TẤM THIỆP CỦA NHÓM EM",
     phu: "Thời gian hoàn thành: 15 phút",
     cot: [[0, 1], [2, 3]],                        // hai cột trên tivi: nhiệm vụ 1, 2 bên trái; 3, 4 bên phải
@@ -99,14 +99,41 @@
         "Nhóm nào đã tính xong diện tích phần còn lại thì báo thầy để thầy xác nhận, rồi chuyển sang nhiệm vụ 2."] },
       { ten: "Xếp hình", dong: [
         "Các nhóm thảo luận, dùng điện thoại để xếp 10 mảnh ghép thành một hình có ý nghĩa."] },
-      { ten: "Dán hình lên thiệp và viết lời chúc", dong: [
+      { ten: "Dán hình lên thiệp và nêu ý nghĩa tấm thiệp", dong: [        // 15/11 22:34 thầy đổi: bỏ dòng viết lời chúc (tấm thiệp không còn phần ghi lời chúc)
         "Các nhóm dán 10 mảnh lên thiệp theo hình đã xếp trên điện thoại. Lưu ý các mảnh không chồng lên nhau.",
-        "Diện tích phần còn lại của tấm thiệp, các nhóm viết lời chúc và trang trí thêm (nếu còn thời gian)."] },
+        "Thảo luận để chuẩn bị trình bày phần ý nghĩa tấm thiệp."] },
       { ten: "Dán thiệp lên báo tường", dong: [
         "Bốn nhóm đem tấm thiệp đã hoàn chỉnh lên dán vào báo tường.",
-        "Một bạn giải thích ý nghĩa bức tranh của nhóm và đọc lời chúc."] }
+        "Một bạn giải thích ý nghĩa bức tranh của nhóm."] }
     ]
   };
+  var DEM_NGUOC_PHUT = 15;                        // số phút của đồng hồ đếm ngược (thầy chốt 15/11 22:12). Muốn đổi: sửa một số này
+  function dnTinh(v, gio) {                       // đọc <phòng>/dn. Trả về null (tắt) hoặc { tt: "chay" | "dung" | "het", con: mili giây còn lại, tong: tổng mili giây }
+    var tong, con;
+    if (!v || typeof v !== "object") return null;
+    tong = +v.d > 0 ? +v.d : DEM_NGUOC_PHUT * 60000;
+    if (typeof v.c === "number") return { tt: v.c > 0 ? "dung" : "het", con: Math.max(0, Math.min(tong, v.c)), tong: tong };
+    if (typeof v.h !== "number") return null;
+    con = v.h - gio;
+    return con > 0 ? { tt: "chay", con: Math.min(tong, con), tong: tong } : { tt: "het", con: 0, tong: tong };
+  }
+  function dnChu(ms) {                            // 899400 → "15:00", 59000 → "00:59", 0 → "00:00"
+    var g = Math.max(0, Math.ceil(ms / 1000 - 1e-6)), ph = Math.floor(g / 60);
+    g -= ph * 60;
+    return (ph < 10 ? "0" : "") + ph + ":" + (g < 10 ? "0" : "") + g;
+  }
+  function dnLenh(T, v, viec) {                   // viec: "chay" (bắt đầu, hoặc chạy tiếp nếu đang tạm dừng), "dung" (tạm dừng), "tat"
+    var gio, tt, tong = DEM_NGUOC_PHUT * 60000;
+    if (!T) return;
+    gio = T.gio(); tt = dnTinh(v, gio);
+    if (viec === "tat") { T.set("dn", null); return; }
+    if (viec === "chay") {
+      if (tt && tt.tt === "dung") T.set("dn", { h: Math.round(gio + tt.con), d: tt.tong });
+      else if (!tt || tt.tt === "het") T.set("dn", { h: Math.round(gio + tong), d: tong });
+      return;
+    }
+    if (viec === "dung" && tt && tt.tt === "chay") T.set("dn", { c: Math.round(tt.con), d: tt.tong });
+  }
   function bamHaiLan(b, chuHoi, lam) {             // nút nguy hiểm trên máy giáo viên: bấm hai lần trong 3 giây mới làm
     var goc2 = b.textContent, luc = 0;
     b.onclick = function () {
@@ -694,7 +721,8 @@
     var V = "10.12.5", goc = "https://www.gstatic.com/firebasejs/" + V + "/";
     return napScript(goc + "firebase-app-compat.js").then(function () { return napScript(goc + "firebase-database-compat.js"); }).then(function () {
       var app = window.firebase.apps && window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(FB);
-      var db = app.database(), base = db.ref(NHANH + "/" + phong), coMat = [];
+      var db = app.database(), base = db.ref(NHANH + "/" + phong), coMat = [], lechGio = 0;
+      db.ref(".info/serverTimeOffset").on("value", function (sv) { lechGio = +sv.val() || 0; });     // đồng hồ của máy này lệch giờ máy chủ bao nhiêu: tivi và máy giáo viên đếm ngược theo cùng một giờ
       db.ref(".info/connected").on("value", function (s) {
         bao(s.val() ? "ok" : "cho");
         if (s.val()) coMat.forEach(function (c) { c.r.onDisconnect().remove(); c.r.set(c.v); });
@@ -702,6 +730,7 @@
       function loi(e) { if (e) { console.error(e); bao("loi", (e.code || e.message || e) + ""); } }
       return {
         kieu: "firebase",
+        gio: function () { return Date.now() + lechGio; },
         set: function (p, v) { base.child(p).set(v, loi); },
         update: function (o) { base.update(o, loi); },            // nhiều đường dẫn một lần; giá trị null là xóa
         remove: function (p) { base.child(p).remove(loi); },
@@ -740,6 +769,7 @@
     bao("cungmay");
     return Promise.resolve({
       kieu: "cungmay",
+      gio: function () { return Date.now(); },
       set: ghi,
       update: function (o) { cay = doc(); Object.keys(o).forEach(function (p) { dat(p, o[p]); }); luu(); phat(""); if (kenh) { try { kenh.postMessage({ p: "" }); } catch (e) { /* bỏ qua */ } } },
       remove: function (p) { ghi(p, null); },
@@ -1782,7 +1812,7 @@
     }
     function doiXem(x) { xem = x; if (lon) phong_to(lon); capNhatMa(); }
     function xoaHinh() { if (!T) return; var o = {}; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/m"] = null; o["n" + k + "/xong"] = null; }); T.update(o); }
-    function lamLaiHet() { if (!T) return; var o = {}; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa"].forEach(function (p) { o["n" + k + "/" + p] = null; }); }); T.update(o); }
+    function lamLaiHet() { if (!T) return; var o = { dn: null }; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa"].forEach(function (p) { o["n" + k + "/" + p] = null; }); }); T.update(o); }      // xóa hết thì tắt luôn đồng hồ đếm ngược
     function hoiHaiLan(b, chuHoi, lam) {           // nút nguy hiểm: bấm hai lần trong 3 giây mới làm
       var goc2 = b.textContent, luc = 0;
       b.onclick = function () {
@@ -1892,6 +1922,88 @@
     $("nutMa").onclick = function () { var dangHien = [1, 2, 3, 4].some(hienMa); veBaoTuong(); doiXem(dangHien ? "xep" : "ma"); };
     $("nutCaiDat").onclick = function () { $("dapSo").hidden = true; $("nhiemVu").hidden = true; $("gvMa").hidden = true; $("caiDat").hidden = false; bao3d(); };
     $("nutNhiemVu").onclick = function () { hienNhiemVu(true); };
+    /* --- đồng hồ đếm ngược (15/11 22:12): vòng tròn vơi dần theo chiều kim đồng hồ, đốm lửa nhỏ đi đầu, số đổi bằng cách trượt nhẹ; không phóng to thu nhỏ --- */
+    var dnV = null, dnCu = { tt: "", chu: "", mau: "", nho: null, vach: -1 }, dnMoLuc = 0, dnHenT = 0, dnHenF = 0, DN_R = 124, DN_C = 2 * Math.PI * 124;
+    function dnDungVach(n) {                        // n chấm quanh vòng, mỗi chấm một phút
+      var g = $("dnVach"), i, a, c;
+      while (g.firstChild) g.removeChild(g.firstChild);
+      if (n < 2 || n > 30) return;
+      for (i = 1; i <= n; i++) {
+        a = i / n * 2 * Math.PI;
+        c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("cx", (150 + 143.5 * Math.sin(a)).toFixed(2)); c.setAttribute("cy", (150 - 143.5 * Math.cos(a)).toFixed(2)); c.setAttribute("r", "4");
+        g.appendChild(c);
+      }
+    }
+    function dnDoiSo(chu) {                         // "14:59": 4 ô số, ô nào đổi thì số cũ trượt lên mờ dần, số mới trượt từ dưới vào
+      var o = $("dnSo").querySelectorAll(".dn-o"), so = chu.replace(":", ""), cu = dnCu.chu.replace(":", ""), i;
+      for (i = 0; i < 4; i++) (function (e, moi, truoc) {
+        var b, c;
+        if (moi === truoc && e.firstChild) return;
+        c = e.querySelector("b:not(.ra)");
+        b = document.createElement("b"); b.textContent = moi;
+        if (c && truoc) { c.className = "ra"; b.className = "vao"; setTimeout(function () { if (c.parentNode) c.parentNode.removeChild(c); }, 340); }
+        else while (e.firstChild) e.removeChild(e.firstChild);
+        e.appendChild(b);
+      })(o[i], so.charAt(i), cu.charAt(i));
+    }
+    function dnRoiHoa() {                           // hết giờ: vài cánh hoa rơi nhẹ trong khung đồng hồ
+      var k = $("dnHoa"), mau = ["#f6c453", "#f29f8d", "#f7d9a0", "#e98a6b", "#f3b8c4"], i, e;
+      while (k.firstChild) k.removeChild(k.firstChild);
+      for (i = 0; i < 16; i++) {
+        e = document.createElement("i");
+        e.style.left = (6 + Math.random() * 88) + "%"; e.style.background = mau[i % mau.length];
+        e.style.setProperty("--x", (Math.random() * 70 - 35).toFixed(0) + "px"); e.style.setProperty("--r", (Math.random() * 500 - 250).toFixed(0) + "deg");
+        e.style.animationDelay = (Math.random() * 1.6).toFixed(2) + "s";
+        k.appendChild(e);
+      }
+      setTimeout(function () { while (k.firstChild) k.removeChild(k.firstChild); }, 6500);
+    }
+    function dnVe() {
+      var e = $("dn"), st = dnTinh(dnV, T ? T.gio() : Date.now()), phan, hien, goc2, a, x, y, chu, mau, nho, daQua, vach, mo;
+      dnHenT = 0; dnHenF = 0;
+      if (!st) { e.hidden = true; dnCu = { tt: "", chu: "", mau: "", nho: null, vach: -1 }; return; }
+      if (e.hidden) { e.hidden = false; dnDungVach(Math.round(st.tong / 60000)); }
+      if (st.tt === "chay" && dnCu.tt !== "chay" && dnCu.tt !== "dung" && st.con > st.tong - 2500) dnMoLuc = Date.now();     // vừa bấm bắt đầu: vòng tròn vẽ ra một vòng rồi mới chạy
+      mo = dnMoLuc ? Math.min(1, (Date.now() - dnMoLuc) / 900) : 1;
+      if (mo >= 1) dnMoLuc = 0;
+      mo = 1 - Math.pow(1 - mo, 3);
+      phan = st.tt === "het" ? 1 : st.con / st.tong;                 // hết giờ: vòng đầy màu vàng
+      hien = phan * mo;
+      goc2 = st.tt === "het" || mo < 1 ? 0 : 360 * (1 - phan);       // phần đã trôi qua mất dần từ đỉnh theo chiều kim đồng hồ
+      $("dnCung").setAttribute("stroke-dasharray", (hien * DN_C).toFixed(1) + " " + (DN_C + 10).toFixed(1));
+      $("dnCung").setAttribute("transform", "rotate(" + (goc2 - 90).toFixed(2) + " 150 150)");
+      a = (mo < 1 ? 360 * hien : goc2) * Math.PI / 180;
+      x = 150 + DN_R * Math.sin(a); y = 150 - DN_R * Math.cos(a);
+      $("dnLua").setAttribute("transform", "translate(" + x.toFixed(2) + " " + y.toFixed(2) + ")");
+      chu = dnChu(st.con);
+      if (chu !== dnCu.chu) { dnDoiSo(chu); dnCu.chu = chu; }
+      mau = st.tt === "het" ? "" : st.con <= 60000 ? "mau-do" : st.con <= st.tong / 3 ? "mau-cam" : "";
+      nho = !!lon || !$("nhiemVu").hidden || !$("dapSo").hidden || !$("caiDat").hidden || !$("gvMa").hidden;
+      if (st.tt !== dnCu.tt || mau !== dnCu.mau || nho !== dnCu.nho) {
+        e.className = "dn " + st.tt + (mau ? " " + mau : "") + (nho ? " nho" : "");
+        $("dnNhan").textContent = st.tt === "dung" ? "Đang tạm dừng" : st.tt === "het" ? "" : "Thời gian còn lại";
+        $("dnSo").hidden = st.tt === "het"; $("dnHet").hidden = st.tt !== "het";
+        if (st.tt === "het" && dnCu.tt === "chay") dnRoiHoa();
+        dnCu.tt = st.tt; dnCu.mau = mau; dnCu.nho = nho;
+        $("nutDn").textContent = st.tt === "chay" ? "Tạm dừng đồng hồ" : st.tt === "dung" ? "▶ Chạy tiếp đồng hồ" : "▶ Đếm ngược " + DEM_NGUOC_PHUT + " phút";
+      }
+      daQua = st.tt === "het" ? 0 : Math.floor((st.tong - st.con) / 60000 + 1e-6);
+      if (daQua !== dnCu.vach) { vach = $("dnVach").childNodes; for (a = 0; a < vach.length; a++) vach[a].setAttribute("class", a < daQua ? "qua" : ""); dnCu.vach = daQua; }
+      if (mo < 1) dnHenF = requestAnimationFrame(dnVe);
+      else dnHenT = setTimeout(dnVe, st.tt === "chay" ? 100 : 400);           // tạm dừng, hết giờ: chỉ còn theo dõi bảng nào đang che để thu gọn
+    }
+    function dnNhan(v) {
+      dnV = v && typeof v === "object" ? v : null;
+      if (dnHenT) { clearTimeout(dnHenT); dnHenT = 0; }
+      if (dnHenF) { cancelAnimationFrame(dnHenF); dnHenF = 0; }
+      $("nutDnTat").disabled = !dnV;
+      if (!dnV) $("nutDn").textContent = "▶ Đếm ngược " + DEM_NGUOC_PHUT + " phút";
+      dnVe();
+    }
+    $("nutDn").textContent = "▶ Đếm ngược " + DEM_NGUOC_PHUT + " phút";
+    $("nutDn").onclick = function () { var st = dnTinh(dnV, T ? T.gio() : Date.now()); dnLenh(T, dnV, st && st.tt === "chay" ? "dung" : "chay"); $("caiDat").hidden = true; };
+    hoiHaiLan($("nutDnTat"), "Bấm lần nữa để tắt", function () { dnLenh(T, dnV, "tat"); });
     $("dongNhiemVu").onclick = function () { hienNhiemVu(false); };
     (function dungNhiemVu() {                      // dựng bảng Nhiệm vụ từ NHIEM_VU; chưa có chữ thì không có nút
       var V = NHIEM_VU, than = $("nvThan"), cot;
@@ -1990,6 +2102,7 @@
       T.coMat("tv/" + layMayId());                // cho máy giáo viên biết tivi đang mở trang
       bao3d();
       T.on("lenh", nhanLenh);
+      T.on("dn", dnNhan);
     });
   }
 
@@ -2053,8 +2166,33 @@
     $("gvVe").onclick = function () { lenh("ve", 0); };
     bamHaiLan($("gvMoHet"), "Bấm lần nữa để mở cho cả 4 nhóm", function () { var o = {}; if (!T) return; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/mo"] = 1; }); T.update(o); });
     bamHaiLan($("gvXoaHinh"), "Bấm lần nữa để xóa cả 4 hình", function () { var o = {}; if (!T) return; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/m"] = null; o["n" + k + "/xong"] = null; }); T.update(o); });
-    bamHaiLan($("gvLamLai"), "Bấm lần nữa để xóa hết", function () { var o = {}; if (!T) return; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa"].forEach(function (d) { o["n" + k + "/" + d] = null; }); }); T.update(o); });
+    bamHaiLan($("gvLamLai"), "Bấm lần nữa để xóa hết", function () { var o = { dn: null }; if (!T) return; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa"].forEach(function (d) { o["n" + k + "/" + d] = null; }); }); T.update(o); });
     $("gvCdMo").onclick = function () { $("gvCd").hidden = !$("gvCd").hidden; $("gvCdMo").classList.toggle("dang-mo", !$("gvCd").hidden); };
+    /* 15/11 22:12: hàng đếm ngược. Máy này ghi thẳng <phòng>/dn; tivi và máy này cùng tính giờ còn lại theo giờ máy chủ. */
+    var dn = null, dnHoi = 0, dnDong = 0;
+    function veDn() {
+      var st = dnTinh(dn, T ? T.gio() : Date.now()), tt = st ? st.tt : "", dangHoi = Date.now() - dnHoi <= 3000;
+      $("gvDnChu").innerHTML = "";
+      if (!st) H("span", null, "Đồng hồ đếm ngược " + DEM_NGUOC_PHUT + " phút", $("gvDnChu"));
+      else if (tt === "het") H("b", "het", "Hết giờ", $("gvDnChu"));
+      else { H("span", null, tt === "dung" ? "Dừng ở " : "Còn ", $("gvDnChu")); H("b", null, dnChu(st.con), $("gvDnChu")); }
+      $("gvDn").className = "gv-dn" + (tt ? " " + tt : "");
+      $("gvDnChay").hidden = tt === "het";
+      $("gvDnChay").textContent = tt === "chay" ? "Tạm dừng" : tt === "dung" ? "▶ Chạy tiếp" : "▶ Bắt đầu";
+      $("gvDnChay").disabled = !coTv && tt !== "chay";
+      $("gvDnTat").hidden = !st;
+      $("gvDnTat").textContent = dangHoi && st ? "Bấm lần nữa" : tt === "het" ? "Tắt đồng hồ" : "Tắt";
+      $("gvDnTat").classList.toggle("hoi", dangHoi && !!st);
+      if (tt === "chay" && !dnDong) dnDong = setInterval(veDn, 250);
+      if (tt !== "chay" && dnDong) { clearInterval(dnDong); dnDong = 0; }
+    }
+    $("gvDnChay").onclick = function () { var st = dnTinh(dn, T ? T.gio() : Date.now()); dnLenh(T, dn, st && st.tt === "chay" ? "dung" : "chay"); };
+    $("gvDnTat").onclick = function () {
+      var st = dnTinh(dn, T ? T.gio() : Date.now());
+      if (!st) return;
+      if (st.tt !== "het" && Date.now() - dnHoi > 3000) { dnHoi = Date.now(); veDn(); setTimeout(veDn, 3050); return; }     // đang chạy hay tạm dừng: bấm hai lần mới tắt
+      dnHoi = 0; dnLenh(T, dn, "tat");
+    };
     function ve(k) {
       var d = D[k] || {}, nhap = d.d || {}, s = d.s || {}, kh3 = d.khoa || {}, X = O[k];
       var pha = d.xong ? "xong" : d.mo ? "xep" : "nhap", nd = demDung(nhap), may = d.co ? Object.keys(d.co).length : 0;
@@ -2092,6 +2230,7 @@
       hai($("gvDap"), d ? "Ẩn" : "Hiện"); $("gvDap").classList.toggle("dang-hien", !!d);
       $("gvVe").disabled = !(l || d || nv);
       if (!$("gvMoHet").classList.contains("hoi")) $("gvMoHet").disabled = !conNhap;
+      veDn();
     }
     veHet();
     noi(phong, thu, function (kieu) {
@@ -2104,6 +2243,7 @@
       [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { D[k] = d || {}; veHet(); }); });
       T.on("tv3d", function (v) { tv = v && typeof v === "object" ? v : null; veHet(); });
       T.on("tv", function (v) { coTv = !!v && typeof v === "object" && Object.keys(v).length > 0; veHet(); });
+      T.on("dn", function (v) { dn = v && typeof v === "object" ? v : null; veDn(); });
     });
   }
 
