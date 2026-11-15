@@ -47,10 +47,15 @@
   };
   Object.keys(MAU).forEach(function (k) { MAU[k] = MAU[k].map(function (t) { return PAL[t]; }); });
   var MAU_XAM = "#e6e1d8";
-  /* bố cục thiệp đã cắt 29 × 42 cm (bản in 13/11), cm thật: khung = khung tiêu đề, dan = chỗ dán hình, ngan = vạch ngăn chuỗi hạt, viet = chỗ ghi lời chúc */
+  /* bố cục thiệp đã cắt 29 × 42 cm, cm thật: khung = khung tiêu đề, dan = chỗ dán hình, ngan = vạch ngăn chuỗi hạt, viet = chỗ ghi lời chúc.
+     Thầy dặn 15/11 22:33 (luồng thiệp): "cái bốn cái tấm thiệp ấy sẽ không còn cái phần mà ghi lời chúc nữa, bỏ luôn nhé. Và điều chỉnh các cái tấm hình
+     cho nó ra giữa hết đi. Rồi sau đó kêu các luồng khác cũng chỉnh lại vậy." Bản in mới (bo-cuc-thiep-a3.json, 15/11 15:54 UTC): không còn chuỗi hạt,
+     nhãn "Nhóm …" và dòng chấm (ngan = viet = null); chỗ dán hình rộng gần hết tấm thiệp; thiệp ngang có khung tiêu đề ra giữa; hình mẫu dời ra giữa
+     (xem Tranh3D.DOI_HINH). Bản in 13/11 (còn chỗ lời chúc): dung dan [1.5, 5.0, 27.5, 31.0], ngan ["ngang", 31.8], viet [1.7, 33.4, 27.3, 41.4];
+     ngang khung [2.6, 1.1, 30.6, 4.5], dan [1.5, 4.6, 32.0, 27.6], ngan ["doc", 32.6], viet [33.4, 2.5, 41.4, 28.1]. veTrangTri vẫn vẽ được cả hai kiểu. */
   var THIEP = {
-    dung: { W: 29, H: 42, khung: [0.8, 1.0, 28.2, 4.4], dan: [1.5, 5.0, 27.5, 31.0], ngan: ["ngang", 31.8], viet: [1.7, 33.4, 27.3, 41.4] },
-    ngang: { W: 42, H: 29, khung: [2.6, 1.1, 30.6, 4.5], dan: [1.5, 4.6, 32.0, 27.6], ngan: ["doc", 32.6], viet: [33.4, 2.5, 41.4, 28.1] }
+    dung: { W: 29, H: 42, khung: [0.8, 1.0, 28.2, 4.4], dan: [1.5, 5.4, 27.5, 41.0], ngan: null, viet: null },
+    ngang: { W: 42, H: 29, khung: [7.0, 1.1, 35.0, 4.5], dan: [1.5, 5.5, 40.5, 28.0], ngan: null, viet: null }
   };
   /* Thầy dặn 15/11 18:31: "các cái phần mà xếp hình đó, bạn chỉnh lại cho nó giống y chang như cái tờ A3 luôn, để học sinh nó xoay các cái hình
      trên tờ A3 luôn, chứ đừng có để trong cái bìa màu vàng đậm". Từ đó bàn xếp CHÍNH LÀ tấm thiệp A3: BOCUC.ban = cả tấm thiệp, mảnh đúng cỡ thật
@@ -462,11 +467,15 @@
   /* 15/11 19:15, thầy gửi ảnh tivi có khung đỏ quanh chỗ dán hình: "phần xếp hình thì sẽ chỉ hiện ra phần xếp nằm trong khung này thôi
      còn mấy phần kia các em sẽ không kéo xuống được". Từ đó 10 mảnh chỉ nằm và chỉ kéo được trong chỗ dán hình (dan) của tờ A3.
      Bảng dưới tính lại từ 4 ảnh thầy gửi 18:31, dồn vào chỗ dán hình (test/tinh-dau.js, KHE=1.9,1.5,2.2,2.0). */
+  /* 15/11 22:33 thầy bỏ chỗ ghi lời chúc, chỗ dán hình rộng ra: cả 10 mảnh dời theo một khối, vẫn đúng cách thầy xếp trong 4 ảnh 18:31.
+     Dời đúng bằng hình mẫu (thiệp dọc: xuống 5,2 cm; thiệp ngang: sang phải 4,25 cm, xuống 0,65 cm), nên các mảnh nằm giữa chỗ dán hình
+     và vẫn đúng nấc lưới như trước. Tivi lúc nhóm còn đo và tính: xem CHO_O (thiệp ngang tạm vẽ các mảnh lệch sang trái để có chỗ cho 3 ô).
+     Bảng trước lúc dời: xep-thiep-truoc-bo-loi-chuc (ban-cu/site-15-11-22h50). */
   var MAU_DAU = {
-    1: [[17.816, 10.866, 116.57, 0], [4.6, 8.148, 75, 0], [24.618, 8.541, 135, 0], [19.867, 22.357, 165, 0], [22.53, 27.914, 15, 0], [9.997, 28.007, 345, 0], [4.436, 14.937, 296.56, 0], [24.567, 14.841, 63.44, 0], [10.782, 18.659, 105, 0], [4.234, 21.89, 75, 1]],
-    2: [[16.816, 10.866, 116.57, 0], [6.158, 8.171, 63.43, 0], [22.158, 9.171, 63.43, 0], [7.827, 26.175, 210, 0], [23.766, 28.323, 333.43, 0], [20.656, 21.495, 30, 0], [8.79, 19.787, 150, 0], [9.99, 13.28, 120, 0], [24.775, 15.481, 315, 1], [4, 15.5, 90, 0]],
-    3: [[28.316, 10.716, 116.57, 0], [22.755, 7.376, 135, 0], [16.649, 6.971, 135, 0], [19.875, 20.116, 150, 0], [10.595, 7.018, 315, 0], [7.178, 17.44, 195, 0], [15.339, 13.228, 75, 0], [4.199, 10.729, 285, 0], [8.26, 24.866, 165, 1], [28.275, 24.866, 195, 0]],
-    4: [[13.12, 10.721, 296.57, 0], [19.492, 7.337, 236, 0], [28.107, 6.429, 153.43, 0], [26.415, 24.08, 15, 0], [5.17, 25.264, 153.43, 0], [26.532, 11.975, 345, 0], [19.996, 18.287, 105, 0], [29.018, 17.495, 330, 0], [5.639, 15.716, 225, 1], [12.062, 19.889, 315, 0]]
+    1: [[17.816, 16.066, 116.57, 0], [4.6, 13.348, 75, 0], [24.618, 13.741, 135, 0], [19.867, 27.557, 165, 0], [22.53, 33.114, 15, 0], [9.997, 33.207, 345, 0], [4.436, 20.137, 296.56, 0], [24.567, 20.041, 63.44, 0], [10.782, 23.859, 105, 0], [4.234, 27.09, 75, 1]],
+    2: [[16.816, 16.066, 116.57, 0], [6.158, 13.371, 63.43, 0], [22.158, 14.371, 63.43, 0], [7.827, 31.375, 210, 0], [23.766, 33.523, 333.43, 0], [20.656, 26.695, 30, 0], [8.79, 24.987, 150, 0], [9.99, 18.48, 120, 0], [24.775, 20.681, 315, 1], [4, 20.7, 90, 0]],
+    3: [[32.566, 11.366, 116.57, 0], [27.005, 8.026, 135, 0], [20.899, 7.621, 135, 0], [24.125, 20.766, 150, 0], [14.845, 7.668, 315, 0], [11.428, 18.09, 195, 0], [19.589, 13.878, 75, 0], [8.449, 11.379, 285, 0], [12.51, 25.516, 165, 1], [32.525, 25.516, 195, 0]],
+    4: [[17.37, 11.371, 296.57, 0], [23.742, 7.987, 236, 0], [32.357, 7.079, 153.43, 0], [30.665, 24.73, 15, 0], [9.42, 25.914, 153.43, 0], [30.782, 12.625, 345, 0], [24.246, 18.937, 105, 0], [33.268, 18.145, 330, 0], [9.889, 16.366, 225, 1], [16.312, 20.539, 315, 0]]
   };
   var dauNho = {};
   function viTriDau(k) {
@@ -806,7 +815,7 @@
     return sv;
   }
 
-  /* ---------- vẽ tấm thiệp (bản in 13/11): khung tiêu đề kiểu nhãn vở, vạch ngăn chuỗi hạt, dòng chấm ghi lời chúc ---------- */
+  /* ---------- vẽ tấm thiệp: khung tiêu đề kiểu nhãn vở (bản in 13/11 còn vạch ngăn chuỗi hạt và dòng chấm ghi lời chúc; thầy bỏ 15/11 22:33) ---------- */
   function duongNhan(X0, Y0, X1, Y1, e, R) {      // chữ nhật khuyết 4 góc theo cung tròn tâm ở góc; e = lùi vào trong, R = bán kính cung
     var d = Math.sqrt(R * R - e * e), A = "A" + R + " " + R + " 0 0 0 ";
     return "M" + (X0 + d) + " " + (Y0 + e) + "L" + (X1 - d) + " " + (Y0 + e) + A + (X1 - e) + " " + (Y0 + d) +
@@ -831,6 +840,7 @@
     });
     Sc(g, (x0 + x1) / 2, yc - 6.75, "tieu-de", DONG1, { "text-anchor": "middle", dy: "0.35em" });
     Sc(g, (x0 + x1) / 2, yc + 6.75, "tieu-de", DONG2, { "text-anchor": "middle", dy: "0.35em", textLength: 248, lengthAdjust: "spacingAndGlyphs" });
+    if (!bc.ngan || !v) return;                   // từ 15/11 22:33 tấm thiệp không còn chuỗi hạt và chỗ ghi lời chúc; phần dưới chỉ vẽ cho bố cục cũ
     // vạch ngăn: chuỗi hạt hình học trên sợi dây, giữa là ngôi sao
     var doc = bc.ngan[0] === "doc", vt = bc.ngan[1], L0 = R2, L1 = (doc ? bc.H : bc.W) - R2, mid = (L0 + L1) / 2;
     function P(t, n2) { return doc ? [(vt + (n2 || 0)) * U, t * U] : [t * U, (vt + (n2 || 0)) * U]; }
@@ -975,11 +985,11 @@
       ["tong", "thiep", "con"].forEach(function (kh) {
         var b = oDong[kh], d = nhap[kh], kq = b.querySelector(".dong-kq"), khoa = khoaMuc(kh), o = MUC[kh].o, kb = biKhoa(kh);
         b.classList.toggle("xong", !!d); b.classList.toggle("khoa", !d && !!khoa && !kb); b.classList.toggle("bi-khoa", kb);
-        kq.textContent = d ? (d === "s" ? "★ " : "✓ ") + o[o.length - 1].dung + " cm²" + (kh === "con" ? ": chỗ để ghi lời chúc" : "") : kb ? CHU_KHOA : khoa ? khoa : "Chạm để nhập";
+        kq.textContent = d ? (d === "s" ? "★ " : "✓ ") + o[o.length - 1].dung + " cm²" : kb ? CHU_KHOA : khoa ? khoa : "Chạm để nhập";
       });
       var n = demDung(nhap), loi = $("nhapLoi");
       loi.className = "nhap-loi";
-      if (nhap.con) { loi.textContent = "Đúng hết rồi! Phần còn trống rộng " + CON + " cm²: chỗ để ghi lời chúc và trang trí thêm."; loi.classList.add("tot"); }
+      if (nhap.con) { loi.textContent = "Đúng hết rồi! Phần còn lại của tấm thiệp rộng " + CON + " cm²."; /* 15/11 22:33 thầy bỏ chỗ ghi lời chúc; tên mới của phần còn lại thầy chưa chốt */ loi.classList.add("tot"); }
       else if (THU_TU.some(biKhoa)) { loi.textContent = "Có mục nhập sai " + SAI_KHOA + " lần nên đã khóa. " + CHU_KHOA + "."; loi.classList.add("xau"); }
       else if (daMo) loi.textContent = "Giáo viên đã mở nhiệm vụ 2. Các em vẫn nhập tiếp số đo được. Đã đúng " + n + "/10.";
       else loi.textContent = n ? "Đã đúng " + n + "/10. Chạm mảnh chưa có màu để nhập tiếp." : "Đo từng mảnh, tính diện tích rồi chạm vào mảnh để nhập. Hai mảnh giống nhau chỉ nhập một lần.";
@@ -1104,7 +1114,7 @@
        lúc Hoàn thành hình phải vừa cỡ chỗ dán, chưa vừa thì hiện khung nét đứt (khungThiep) cho các em thấy. */
     var svg = $("dtBan"), lopLuoi = S("g", { "class": "lop-luoi" }, svg), lopTT = S("g", { "class": "lop-tt" }, svg), lopManh = S("g", {}, svg), khungThiep = S("rect", { "class": "khung-thiep" }, svg), coNhom = {}, duDau = [0, 0, 0, 0], dauSan = viTriDau(k);
     var ban = bc.ban.slice(), vungKeo = [-1e6, -1e6, 1e6, 1e6], banDaVe = "", luoi = luoiGoc(k);
-    veTrangTri(lopTT, k);                          // 15/11 18:31: bàn xếp là tờ thiệp A3 (khung tiêu đề, chuỗi hạt, chỗ ghi lời chúc), mảnh nằm ngay trên tờ thiệp   // chưa đo được màn hình (đang ở bước nhập số): chưa giữ mảnh vào đâu cả
+    veTrangTri(lopTT, k);                          // 15/11 18:31: bàn xếp là tờ thiệp A3 (khung tiêu đề; chuỗi hạt và chỗ ghi lời chúc thầy bỏ 22:33), mảnh nằm ngay trên tờ thiệp   // chưa đo được màn hình (đang ở bước nhập số): chưa giữ mảnh vào đâu cả
     khungThiep.style.display = "none";
     function macDinh(i) { var d = dauSan[i]; return { x: d.x, y: d.y, r: d.r, f: d.f, t: 0 }; }   // chỗ nằm sẵn của mảnh thứ i (theo hình mẫu của nhóm, xem MAU_DAU)
     function chuCua() {                           // phần lưới máy này đang thấy; đã đo được màn hình bàn xếp thì kèm số nửa ô lưới trống quanh chỗ dán hình
@@ -1133,7 +1143,7 @@
         var moi = cuaSo(bc), khoa = moi.map(f2).join("|");
         if (khoa !== banDaVe) {
           banDaVe = khoa; ban = moi;
-          vungKeo = dan.slice();                    // 15/11 19:15: mảnh chỉ kéo được trong chỗ dán hình của tờ thiệp, không xuống phần lời chúc
+          vungKeo = dan.slice();                    // 15/11 19:15: mảnh chỉ kéo được trong chỗ dán hình của tờ thiệp (từ 22:33 chỗ dán hình là gần hết tấm thiệp, dưới khung tiêu đề)
           svg.setAttribute("viewBox", [ban[0] * U, ban[1] * U, (ban[2] - ban[0]) * U, (ban[3] - ban[1]) * U].join(" "));
           veLuoiRong(lopLuoi, dan, luoi, true);     // lưới mờ và viền chỉ trong chỗ dán hình
           tinhDau();
@@ -1286,7 +1296,7 @@
         ds.forEach(function (A) { var kh = khung(toaDo(A.goc, A.st)); x0 = Math.min(x0, kh[0]); y0 = Math.min(y0, kh[1]); x1 = Math.max(x1, kh[2]); y1 = Math.max(y1, kh[3]); });
         if (x1 - x0 > rw + 1e-6 || y1 - y0 > rh + 1e-6) {
           var kx = Math.max(ban[0], Math.min(ban[2] - rw, (x0 + x1) / 2 - rw / 2)), ky = Math.max(ban[1], Math.min(ban[3] - rh, (y0 + y1) / 2 - rh / 2));
-          kq.to = { rong: x1 - x0 > rw + 1e-6, cao: y1 - y0 > rh + 1e-6, khung: [kx, ky, kx + rw, ky + rh], manh: [] };   // khung = khung cỡ chỗ dán đặt quanh hình; manh = các mảnh thò ra ngoài khung
+          kq.to = { rong: x1 - x0 > rw + 0.05, cao: y1 - y0 > rh + 0.05, khung: [kx, ky, kx + rw, ky + rh], manh: [] };   // khung = khung cỡ chỗ dán đặt quanh hình; manh = các mảnh thò ra ngoài khung
           ds.forEach(function (A, i) { var kh = khung(toaDo(A.goc, A.st)); if (kh[0] < kx - 0.05 || kh[1] < ky - 0.05 || kh[2] > kx + rw + 0.05 || kh[3] > ky + rh + 0.05) kq.to.manh.push(i); });
         }
       }
@@ -1489,10 +1499,14 @@
      TIVI
      ===================================================================== */
   /* chỗ đặt 3 ô Tổng, Thiệp, Phần còn lại trên tấm thiệp lúc nhóm còn đo và tính: [x, y của tâm ô (cm trên thiệp), bề rộng, chữ].
-     Từ 14/11 16:16 các mảnh nằm sẵn theo hình mẫu, kín cả chỗ dán hình, nên 3 ô nằm ở chỗ ghi lời chúc (thiệp ngang: xếp dọc, thu còn 0,8). */
+     Từ 14/11 16:16 các mảnh nằm sẵn theo hình mẫu, kín cả chỗ dán hình, nên 3 ô nằm ở chỗ ghi lời chúc (thiệp ngang: xếp dọc, thu còn 0,8).
+     15/11 22:33 thầy bỏ chỗ ghi lời chúc: 3 ô nằm ở phần chỗ dán hình mà 10 mảnh nằm sẵn không chiếm (thiệp dọc: dải dưới; thiệp ngang: dải bên phải),
+     xem MAU_DAU. Các em kéo mảnh vào đó được, nhưng 3 ô chỉ hiện lúc nhóm còn đo và tính (chưa ai kéo mảnh).
+     Thiệp ngang: 10 mảnh nằm sẵn ở GIỮA tấm thiệp (kín bề ngang trừ 4,5 cm mỗi bên), không còn dải nào đủ rộng cho 3 ô. Nên riêng lúc nhóm còn đo và tính,
+     tivi vẽ các mảnh lệch sang trái doi[0] cm (chỉ là chỗ vẽ, dữ liệu không đổi); thầy mở nhiệm vụ 2 thì 3 ô mờ đi và các mảnh về đúng chỗ (xem veNhom). */
   var CHO_O = {
-    dung: { tl: 1, tong: [5.4, 36.6, 6, "Tổng"], thiep: [13.2, 36.6, 6.5, "Thiệp"], con: [22.3, 36.6, 9.5, "Phần còn lại"] },
-    ngang: { tl: 0.8, tong: [37.4, 8.6, 6, "Tổng"], thiep: [37.4, 12.6, 6.5, "Thiệp"], con: [37.4, 16.6, 9.5, "Phần còn lại"] }
+    dung: { tl: 1, tong: [5.4, 38.6, 6, "Tổng"], thiep: [13.2, 38.6, 6.5, "Thiệp"], con: [22.3, 38.6, 9.5, "Phần còn lại"] },
+    ngang: { tl: 0.8, doi: [-4, 0], tong: [37.2, 12.75, 6, "Tổng"], thiep: [37.2, 16.75, 6.5, "Thiệp"], con: [37.2, 20.75, 9.5, "Phần còn lại"] }
   };
 
   /* Một tấm thiệp trên báo tường (tivi): giấy, trang trí thiệp, lưới bàn xếp, 3 ô theo dõi, 10 mảnh.
@@ -1749,11 +1763,12 @@
       var dau = viTriDau(k);      // chỗ nằm sẵn (theo 4 ảnh thầy gửi 15/11), tính như trên điện thoại
       for (so = 1; so <= goc.length; so++) ds.push({ so: so, st: mo(m["p" + so]) || { x: dau[so - 1].x, y: dau[so - 1].y, r: dau[so - 1].r, f: dau[so - 1].f, t: 0 } });
       ds.sort(function (a, b) { return a.st.t - b.st.t || a.so - b.so; });
+      var doiN = pha === "nhap" && !Object.keys(m).length && CHO_O[NHOM[k]].doi || [0, 0];      // lúc còn đo và tính: thiệp ngang vẽ các mảnh lệch đi cho 3 ô có chỗ (xem CHO_O)
       ds.forEach(function (x) {
         var g = K.g[x.so], v = nhap[K.khoaCua[x.so]], r = x.st.r, cu = K.hien[x.so];
         if (cu !== undefined) r += Math.round((cu - r) / 360) * 360;      // góc quay liên tục: chọn giá trị gần góc đang hiện nhất để mảnh không quay một vòng thừa
         K.hien[x.so] = r;
-        g.style.transform = "translate(" + (x.st.x * U).toFixed(2) + "px," + (x.st.y * U).toFixed(2) + "px) rotate(" + r + "deg)";
+        g.style.transform = "translate(" + ((x.st.x + doiN[0]) * U).toFixed(2) + "px," + ((x.st.y + doiN[1]) * U).toFixed(2) + "px) rotate(" + r + "deg)";
         var p = diem(diemGoc(goc[x.so - 1], x.st.f));
         g.children[0].setAttribute("points", p); g.children[1].setAttribute("points", p);
         g.children[1].setAttribute("fill", pha === "nhap" && !v ? MAU_XAM : mau[x.so - 1]);
