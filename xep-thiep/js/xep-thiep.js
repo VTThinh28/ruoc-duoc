@@ -1479,6 +1479,12 @@
     if (!phong || !/^[a-z0-9]{3,12}$/.test(phong)) phong = maNgauNhien(5);
     try { localStorage.setItem("xt-phong", phong); } catch (e) { /* bỏ qua */ }
     giuSang();
+    /* Máy giáo viên (thầy dặn 15/11 19:18). Mỗi phòng có một mã giáo viên, nằm trong link cho máy giáo viên (Cài đặt → "Mã cho máy giáo viên").
+       Tivi ghi mã lên máy chủ (<phòng>/gv); trang giáo viên chỉ hiện nút khi mã trong link của nó trùng mã này. Phòng đã có mã thì tivi dùng mã đó. */
+    var maGV = null, luuGV;
+    try { luuGV = (localStorage.getItem("xt-gv") || "").split(":"); if (luuGV[0] === phong && /^[a-z0-9]{6}$/.test(luuGV[1] || "")) maGV = luuGV[1]; } catch (e) { maGV = null; }
+    if (!maGV) { maGV = maNgauNhien(6); try { localStorage.setItem("xt-gv", phong + ":" + maGV); } catch (e) { /* bỏ qua */ } }
+    function linkGV() { return location.origin + location.pathname + "?p=" + phong + "&gv=" + maGV + (thu ? "&thu=1" : ""); }
 
     function coGian() {
       var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
@@ -1513,7 +1519,35 @@
       lon = lon === k ? 0 : k;
       [1, 2, 3, 4].forEach(function (i) { khungNhom[i].o.classList.toggle("lon", lon === i); khungNhom[i].o.classList.toggle("an", lon && lon !== i); });
       $("tv").classList.toggle("dang-lon", !!lon);
-      veBang3d(); veLai3d();
+      veBang3d(); veLai3d(); bao3d();
+    }
+    /* Tivi báo cho máy giáo viên trong <phòng>/tv3d: l = thiệp đang hiện to (0 = báo tường), c = "0100" nhóm đang chạy Tranh 3D, b = "1100" nhóm đã được bấm. */
+    var tt3dCu = null;
+    function bao3d() {
+      var c = "", b = "", ky;
+      if (!T) return;
+      [1, 2, 3, 4].forEach(function (k) { c += hx[k].chay ? "1" : "0"; b += hx[k].bam ? "1" : "0"; });
+      ky = lon + "|" + c + "|" + b;
+      if (ky === tt3dCu) return;
+      tt3dCu = ky; T.set("tv3d", { l: lon, c: c, b: b });
+    }
+    /* Lệnh từ máy giáo viên, trong <phòng>/lenh = { i: mã lệnh, v, k }: v = "3d" hiện to thiệp nhóm k và chạy Tranh 3D; "dung" dừng Tranh 3D nhóm k; "ve" về báo tường.
+       Lệnh đang nằm sẵn lúc tivi mở trang là lệnh cũ: không làm. */
+    var lenhCu;
+    function nhanLenh(L) {
+      var i = L && L.i ? String(L.i) : "", k;
+      if (lenhCu === undefined) { lenhCu = i; return; }
+      if (!i || i === lenhCu) return;
+      lenhCu = i; k = +L.k;
+      if (L.v === "ve") { if (lon) phong_to(lon); return; }
+      if (!(k >= 1 && k <= 4)) return;
+      if (L.v === "3d") {
+        if (!T3 || !(duLieu[k] || {}).xong) return;
+        $("caiDat").hidden = true; $("dapSo").hidden = true; $("gvMa").hidden = true;      // thầy đang bấm từ điện thoại: dẹp các bảng đang che thiệp
+        if (hienMa(k)) { xem = "xep"; capNhatMa(); }
+        if (lon !== k) phong_to(k);
+        bat3d(k);
+      } else if (L.v === "dung") dung3d(k);
     }
 
     /* ---------- Tranh 3D (15/11; phần vẽ ở js/tranh-3d.js) ----------
@@ -1607,7 +1641,7 @@
       var n = 0, o = $("dem3d").querySelectorAll(".dem-o span");
       [1, 2, 3, 4].forEach(function (k) { var b = !!hx[k].bam; if (b) n++; o[k - 1].classList.toggle("da", b); });
       $("dem3dChu").textContent = "Đã bấm " + n + "/4 nhóm";
-      veBang3d();
+      veBang3d(); bao3d();
     }
     function veBang3d() {                          // bảng nút bên phải tấm thiệp đang hiện to
       var b = $("bang3d"), k = lon, X, xong;
@@ -1810,6 +1844,18 @@
     $("nutMa").onclick = function () { doiXem([1, 2, 3, 4].some(hienMa) ? "xep" : "ma"); };
     $("nutCaiDat").onclick = function () { $("caiDat").hidden = false; };
     $("dongCaiDat").onclick = function () { $("caiDat").hidden = true; };
+    $("nutMaGV").onclick = function () {           // mã QR riêng cho máy giáo viên: chỉ hiện khi thầy bấm
+      var l = linkGV(), o = $("maGV"), q;
+      if (window.qrcode) { q = window.qrcode(0, "M"); q.addData(l); q.make(); o.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); } else o.textContent = "";
+      o.setAttribute("data-link", l);
+      $("linkGV").textContent = l; $("chepGV").textContent = "Chép link";
+      $("caiDat").hidden = true; $("gvMa").hidden = false;
+    };
+    $("dongGvMa").onclick = function () { $("gvMa").hidden = true; };
+    $("chepGV").onclick = function () {
+      var b = $("chepGV");
+      try { navigator.clipboard.writeText(linkGV()).then(function () { b.textContent = "Đã chép link"; }, function () { b.textContent = "Không chép được"; }); } catch (e) { b.textContent = "Không chép được"; }
+    };
     $("nutToan").onclick = function () {
       var d = document;
       if (d.fullscreenElement) d.exitFullscreen(); else if (d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(function () {});
@@ -1851,6 +1897,113 @@
     noi(phong, thu, trangThai).then(function (t) {
       T = t;
       [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { veNhom(k, d); }); });
+      var daGhiGV = false;
+      T.on("gv", function (v) {
+        if (typeof v === "string" && /^[a-z0-9]{6}$/.test(v)) { if (v !== maGV) { maGV = v; try { localStorage.setItem("xt-gv", phong + ":" + maGV); } catch (e) { /* bỏ qua */ } } }
+        else if (!daGhiGV) { daGhiGV = true; T.set("gv", maGV); }
+      });
+      T.coMat("tv/" + layMayId());                // cho máy giáo viên biết tivi đang mở trang
+      bao3d();
+      T.on("lenh", nhanLenh);
+    });
+  }
+
+  /* ---------- máy giáo viên ----------
+     Thầy dặn 15/11 19:18: "app của giáo viên sẽ hiện ra các nhóm sai từ 4 lần trở lên và nút mở khóa, phím Bước 2 bàn xếp cho từng nhóm. Phím tranh 3d."
+     Link: ?p=<phòng>&gv=<mã giáo viên>, lấy ở tivi: Cài đặt → "Mã cho máy giáo viên". Trang này đọc n1..n4, gv, tv, tv3d và chỉ ghi:
+       n<k>/khoa = null (Mở khóa);  n<k>/mo = 1 (Mở bước 2);  lenh = { i, v, k } (Tranh 3D, Dừng, Về báo tường: xem nhanLenh ở phần tivi).
+     Khóa: máy học sinh khóa một mục sau mỗi 3 lần nhập sai (SAI_KHOA). Trang này hiện mục đang khóa kèm số lần đã sai. */
+  function chayGiaoVien(ts) {
+    document.body.className = "gv";
+    $("gv").hidden = false;
+    var phong = ts.p, thu = ts.thu, T = null, D = {}, tv = null, coTv = false, ma = "cho", O = {}, hoi = {};
+    giuSang();
+    function baoLoi(chu, nhe) {
+      $("gvLoi").textContent = chu; $("gvLoi").hidden = !chu; $("gvLoi").classList.toggle("nhe", !!nhe);
+      $("gvThan").hidden = !!chu;
+    }
+    if (!phong || !/^[a-z0-9]{3,12}$/.test(phong) || !ts.gv) {
+      $("gvNoi").hidden = true;
+      baoLoi("Link này thiếu mã phòng. Thầy quét lại mã ở tivi: Cài đặt, nút “Mã cho máy giáo viên”.");
+      return;
+    }
+    function chay(k) { return coTv && !!tv && typeof tv.c === "string" && tv.c.charAt(k - 1) === "1"; }
+    function daBam(k) { return coTv && !!tv && typeof tv.b === "string" && tv.b.charAt(k - 1) === "1"; }
+    function lenh(v, k) { if (T) T.set("lenh", { i: maNgauNhien(8), v: v, k: k || 0 }); }
+    [1, 2, 3, 4].forEach(function (k) {
+      var o = H("section", "gv-nhom", null, $("gvDs")), h, kh, n, X = { o: o };
+      o.id = "gvNhom" + k;
+      o.style.setProperty("--m", MAU_NHOM[k]);
+      h = H("div", "gv-hang1", null, o);
+      H("b", "gv-so", "Nhóm " + k, h);
+      X.tt = H("span", "gv-tt", "", h);
+      X.may = H("span", "gv-may", "", h);
+      kh = H("div", "gv-khoa", null, o); kh.hidden = true;
+      X.khoa = kh;
+      X.khoaChu = H("span", "gv-khoa-chu", "", kh);
+      X.moKhoa = H("button", "nut gv-mo-khoa", "Mở khóa", kh);
+      n = H("div", "gv-nut", null, o);
+      X.b2 = H("button", "nut gv-b2", null, n);
+      X.b2a = H("span", "gv-b2a", "Mở bước 2", X.b2); X.b2b = H("span", "gv-b2b", "bàn xếp", X.b2);
+      X.b3 = H("button", "nut gv-3d", "▶ Tranh 3D", n);
+      O[k] = X;
+      X.moKhoa.onclick = function () { var u = {}; if (!T) return; u["n" + k + "/khoa"] = null; T.update(u); };
+      X.b2.onclick = function () {
+        var d = D[k] || {};
+        if (!T || d.mo || d.xong) return;
+        if (demDung(d.d) < THU_TU.length && Date.now() - (hoi[k] || 0) > 3000) {      // nhóm chưa xong bước 1: bấm hai lần trong 3 giây mới mở, tránh chạm nhầm
+          hoi[k] = Date.now(); ve(k); setTimeout(function () { ve(k); }, 3050); return;
+        }
+        hoi[k] = 0; T.set("n" + k + "/mo", 1);
+      };
+      X.b3.onclick = function () { if (!T || !(D[k] || {}).xong) return; lenh(chay(k) ? "dung" : "3d", k); };
+    });
+    $("gvVe").onclick = function () { lenh("ve", 0); };
+    function ve(k) {
+      var d = D[k] || {}, nhap = d.d || {}, s = d.s || {}, kh3 = d.khoa || {}, X = O[k];
+      var pha = d.xong ? "xong" : d.mo ? "xep" : "nhap", nd = demDung(nhap), may = d.co ? Object.keys(d.co).length : 0;
+      var ds = pha === "xong" ? [] : THU_TU.filter(function (kh) { return kh3[kh] && !nhap[kh]; });
+      var choMo = pha === "nhap" && nd === THU_TU.length, dangHoi = pha === "nhap" && !choMo && Date.now() - (hoi[k] || 0) <= 3000, c3 = !!d.xong && chay(k);
+      X.o.classList.toggle("bi-khoa", ds.length > 0); X.o.classList.toggle("cho-mo", choMo);
+      X.tt.textContent = pha === "xong" ? "Đã hoàn thành hình" : pha === "xep" ? "Bước 2: đang xếp hình" : choMo ? "Xong bước 1, chờ mở bước 2" : nd ? "Bước 1: đúng " + nd + "/10" : may ? "Bước 1: đang đo và tính" : "Chưa có máy nào vào";
+      X.may.textContent = may ? may + " máy" : "";
+      X.khoa.hidden = !ds.length;
+      X.khoaChu.textContent = "Đã khóa: " + ds.map(function (kh) { return MUC[kh].ngan + " (sai " + (s[kh] || SAI_KHOA) + " lần)"; }).join(", ");
+      X.b2.disabled = pha !== "nhap";
+      X.b2a.textContent = pha !== "nhap" ? "Bước 2 đã mở" : dangHoi ? "Chưa xong bước 1. Bấm lần nữa để mở" : "Mở bước 2";
+      X.b2b.hidden = pha !== "nhap" || dangHoi;
+      X.b2.classList.toggle("san", choMo); X.b2.classList.toggle("hoi", dangHoi);
+      X.b3.disabled = !d.xong;
+      X.b3.textContent = c3 ? "■ Dừng Tranh 3D" : "▶ Tranh 3D";
+      X.b3.classList.toggle("dang-chay", c3);
+      return ds.length > 0;
+    }
+    function veHet() {
+      var chu = ma === "dung" ? "" : ma === "cho" ? "Đang nối với tivi…"
+        : ma === "chua" ? "Chưa thấy tivi của phòng này. Thầy mở trang Xếp thiệp trên tivi trước, rồi quét lại mã ở Cài đặt, nút “Mã cho máy giáo viên”."
+        : "Mã này không còn dùng được. Thầy quét lại mã ở tivi: Cài đặt, nút “Mã cho máy giáo viên”.";
+      var dsK = [], l, n = 0;
+      baoLoi(chu, ma === "cho");
+      if (chu) return;
+      [1, 2, 3, 4].forEach(function (k) { if (ve(k)) dsK.push(k); if (daBam(k)) n++; });
+      $("gvTom").textContent = dsK.length ? "Đang bị khóa: nhóm " + dsK.join(", nhóm ") : "Chưa có nhóm nào bị khóa";
+      $("gvTom").classList.toggle("xau", dsK.length > 0);
+      l = coTv && tv ? +tv.l || 0 : 0;
+      $("gvTv").textContent = !coTv ? "Tivi chưa mở trang Xếp thiệp nên chưa bấm Tranh 3D được." : (l ? "Tivi đang hiện to thiệp nhóm " + l + "." : "Tivi đang hiện báo tường.") + " Tranh 3D: đã bấm " + n + "/4 nhóm.";
+      $("gvTv").classList.toggle("xau", !coTv);
+      $("gvVe").disabled = !l;
+    }
+    veHet();
+    noi(phong, thu, function (kieu) {
+      var e = $("gvNoi");
+      e.className = "noi " + kieu;
+      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : "Đang nối…";
+    }).then(function (t) {
+      T = t;
+      T.on("gv", function (v) { ma = v === null || v === undefined ? "chua" : String(v) === String(ts.gv) ? "dung" : "sai"; veHet(); });
+      [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { D[k] = d || {}; veHet(); }); });
+      T.on("tv3d", function (v) { tv = v && typeof v === "object" ? v : null; veHet(); });
+      T.on("tv", function (v) { coTv = !!v && typeof v === "object" && Object.keys(v).length > 0; veHet(); });
     });
   }
 
@@ -1859,7 +2012,7 @@
 
   function batDau() {
     var ts = thamSo();
-    if (ts.n !== undefined || ts.dt !== undefined) chayDienThoai(ts); else chayTivi(ts);
+    if (ts.gv !== undefined) chayGiaoVien(ts); else if (ts.n !== undefined || ts.dt !== undefined) chayDienThoai(ts); else chayTivi(ts);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", batDau); else batDau();
 })();
