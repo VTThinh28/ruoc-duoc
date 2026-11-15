@@ -665,6 +665,10 @@
     $("#nutThuHang").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "finish") tiep(); });
     $("#nutTiepTheo").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "rank") tiep(); });
     $("#nutHienBao").addEventListener("click", function () { A.mo(); if (nowHopLe().step === "tuong") tiep(); });
+    // 15/11: nút "Tấm thiệp của nhóm em" (hiện sau hoạt cảnh cuối) mở trang Xếp thiệp. Trên GitHub trang đó nằm cạnh trang này
+    //   (xep-thiep/), mở ngay trong thẻ đang xem. Trong Claude không có trang đó: mở trang GitHub ở thẻ mới.
+    var nutThiep = $("#nutThiep");
+    if (nutThiep && RD.trongClaude) { nutThiep.href = "https://vtthinh28.github.io/ruoc-duoc/xep-thiep/"; nutThiep.target = "_blank"; nutThiep.rel = "noopener"; }
     $("#cbVan").addEventListener("click", function () { if (choXacNhan) choXacNhan(true); });
     $("#cbThem").addEventListener("click", function () { if (choXacNhan) choXacNhan(false); });
     document.addEventListener("keydown", function (e) {
@@ -1347,7 +1351,7 @@
     else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (tấm vải xanh lá còn che dải băng chúc mừng). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo tấm vải xanh lá bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
     else if (step === "bao") {
       var hang = RD.xepHang(tinh());
-      html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ".";
+      html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ". Pháo giấy rơi hết thì trên TV hiện nút <b>Tấm thiệp của nhóm em</b>: bấm nút đó trên TV để sang hoạt động tiếp theo.";
     }
     $("#dtGhi").hidden = !html;
     if (ghi.dataset.html !== html) { ghi.innerHTML = html; ghi.dataset.html = html; }

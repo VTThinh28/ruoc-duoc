@@ -111,7 +111,9 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 #world .nut-tv.bam{box-shadow:0 2px 0 #9c6a07,0 6px 14px rgba(0,0,0,.5)}
 /* 8/11: nút Tổng kết đã bấm, đang chờ các nhóm thắp đuốc và Claude bình luận rồi đổi thành Tiếp theo */
 #world .nut-tv.cho{cursor:default;box-shadow:0 3px 0 #9c6a07,0 6px 14px rgba(0,0,0,.4)}
-#world #nutHienBao{top:auto;right:8px;bottom:calc(var(--hbDuoi,8px) - var(--bdT,0px));transform-origin:100% 100%}
+#world #nutHienBao,#world #nutThiep{top:auto;right:8px;bottom:calc(var(--hbDuoi,8px) - var(--bdT,0px));transform-origin:100% 100%}
+/* 15/11: nút sang hoạt động "Tấm thiệp của nhóm em" là thẻ a (trình duyệt tự mở trang Xếp thiệp) */
+#world a.nut-tv{text-decoration:none;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 #goiY{position:absolute;right:36px;bottom:calc(30px - var(--bdT,0px));z-index:8000;padding:10px 22px;border-radius:999px;background:rgba(20,14,8,.6);color:#fff;font:700 28px/1.2 var(--f-chu)}
 #canhBao{position:absolute;inset:0;z-index:9500;display:grid;place-items:center;background:rgba(20,12,4,.55)}
 #canhBao>div{width:1100px;padding:40px 56px;border-radius:32px;background:var(--giay);border:5px solid var(--do);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -449,6 +451,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <button type="button" class="nut-tv" id="nutThuHang" hidden>Tổng kết <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <button type="button" class="nut-tv" id="nutTiepTheo" hidden>Tiếp theo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <button type="button" class="nut-tv" id="nutHienBao" hidden>Tiếp theo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <a class="nut-tv" id="nutThiep" href="xep-thiep/" draggable="false" hidden>Tấm thiệp của nhóm em <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
     <div id="manCau" hidden>
       <div class="mc-nen"><i class="nn-giua"></i><i class="nn-tren"></i><i class="nn-duoi"></i><i class="nn-trai"></i><i class="nn-phai"></i></div>
       <div class="mc-the" id="mcThe">
@@ -546,14 +549,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="js/cau-hinh.js?v=5db0f709"></script>
-<script src="js/scanlib.js?v=5db0f709"></script>
-<script src="js/du-lieu.js?v=5db0f709"></script>
-<script src="js/dong-bo.js?v=5db0f709"></script>
-<script src="js/am-thanh.js?v=5db0f709"></script>
-<script src="js/quet.js?v=5db0f709"></script>
-<script src="js/cay-cau.js?v=5db0f709"></script>
-<script src="js/san-khau.js?v=5db0f709"></script>
-<script src="js/tro-choi.js?v=5db0f709"></script>
+<script src="js/cau-hinh.js?v=3a660f45"></script>
+<script src="js/scanlib.js?v=3a660f45"></script>
+<script src="js/du-lieu.js?v=3a660f45"></script>
+<script src="js/dong-bo.js?v=3a660f45"></script>
+<script src="js/am-thanh.js?v=3a660f45"></script>
+<script src="js/quet.js?v=3a660f45"></script>
+<script src="js/cay-cau.js?v=3a660f45"></script>
+<script src="js/san-khau.js?v=3a660f45"></script>
+<script src="js/tro-choi.js?v=3a660f45"></script>
 </body>
 </html>

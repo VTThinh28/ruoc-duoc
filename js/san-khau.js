@@ -494,6 +494,9 @@
   //   6. XONG: pháo giấy bắn lên từ hai góc dưới và rơi khắp khung xem; vệt sáng lướt qua dòng chữ lần nữa; sao vàng lấp lánh
   //      quanh dòng chữ và số 51 chừng 9 giây rồi đứng yên.
   const QUET = .8, BC0 = .55, BC1 = 1.45, NANG = 1.75, HIEN = NANG + .75, VIET = 1.1, XONG = HIEN + VIET;
+  // 15/11 (thầy Thịnh: "hoạt cảnh cuối cùng xong sẽ hiện ra nút bấm Tấm thiệp của nhóm em để qua hoạt động tiếp theo"): pháo giấy
+  //   rơi hết (XONG + 6,1 giây) thì nút "Tấm thiệp của nhóm em" (#nutThiep) hiện ra
+  const THIEP = XONG + 6.3;
   // biến đổi đưa khung báo tường K về khung đầy màn hình KF
   function bienKF() {
     const F = S.ext && S.ext.KF; if (!F) return null;
@@ -1374,6 +1377,14 @@
     if (KK && S.che === "bao" && t < S.H0 + .25) { hbHien = true; hbBam = true; hbS = .93; }
     datAn(UI.nutHB, !hbHien);
     if (hbHien) { UI.nutHB.classList.toggle("bam", hbBam); datKieu(UI.nutHB, "transform", "scale(" + (hbS * NT).toFixed(3) + ")"); datKieu(UI.nutHB, "opacity", String(hbA)); }
+    // 15/11: hoạt cảnh cuối xong thì nút "Tấm thiệp của nhóm em" hiện đúng chỗ nút "Tiếp theo" cuối, nảy nhẹ như các nút kia.
+    //   Vào thẳng bước báo tường (tải lại trang, S.H0 = XA) thì nút có sẵn. Nút là thẻ a: bấm thì trình duyệt mở trang Xếp thiệp
+    //   (địa chỉ đặt trong tro-choi.js); phím mũi tên và nút "Bước tiếp" không mở, kẻo lỡ tay rời báo tường.
+    if (UI.nutTP) {
+      const TP0 = S.H0 + THIEP, tpHien = S.che === "bao" && t >= TP0;
+      datAn(UI.nutTP, !tpHien);
+      if (tpHien) { datKieu(UI.nutTP, "transform", "scale(" + ((.8 + .2 * eb(lin(t, TP0, TP0 + .5))) * (1 + .03 * Math.sin(t * 4)) * NT).toFixed(3) + ")"); datKieu(UI.nutTP, "opacity", String(lin(t, TP0, TP0 + .3))); }
+    }
     // báo tường đã lộ ra: hai cụm nút (góc trái, góc phải) dựng thành cột sát mép trái và mép phải, khỏi che góc báo tường
     const docNut = !!KK && !(S.ext && S.ext.nutHang) && (S.che === "bao" || (S.che === "hang" && t >= KK.BURN1));
     if (UI.tvNut) UI.tvNut.classList.toggle("doc", docNut);
@@ -1514,7 +1525,7 @@
   SK.khoiTao = function () {
     cv = $("#cv"); ctx = cv.getContext("2d");
     UI.tieu = $("#tieu"); UI.luat = $("#luat"); UI.luatAn = $("#luatAn"); UI.luatCho = $("#luatCho"); UI.luatHien = $("#luatHien"); UI.pill = $("#pill"); UI.binh = $("#binh"); UI.bx = $("#bx");
-    UI.nutTH = $("#nutThuHang"); UI.nutTT = $("#nutTiepTheo"); UI.nutHB = $("#nutHienBao"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut"); UI.tvNutPhai = $("#tvNutPhai");
+    UI.nutTH = $("#nutThuHang"); UI.nutTT = $("#nutTiepTheo"); UI.nutHB = $("#nutHienBao"); UI.nutTP = $("#nutThiep"); UI.nenNgoai = $("#nenNgoai"); UI.tvNut = $("#tvNut"); UI.tvNutPhai = $("#tvNutPhai");
     UI.dong = RD.TO.map(T => {
       const d = document.createElement("div"); d.className = "dong"; d.style.setProperty("--m", T.mau); d.style.setProperty("--n", T.nhat);
       d.innerHTML = '<i class="quang"></i><i class="luot"></i><span class="h">1</span><img src="' + T.mat + '" alt=""><span class="t">' + T.ten + '</span><span class="d">0</span>' + VUONG_MIEN;
