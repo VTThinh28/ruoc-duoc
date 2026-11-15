@@ -34,7 +34,14 @@
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
     ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
   };
-  let cv, ctx, A = null, rDo = 1, bao = null, baoSo = 0, baoKhung = null, daSanSang = false;
+  let cv, ctx, A = null, rDo = 1, bao = null, baoSo = 0, baoKhung = [null, null], daSanSang = false;
+  // 15/11 (thầy Thịnh: "tại sao file báo tường jpg ảnh rất nét nhưng gửi lên rước đuốc thì mờ tịt"): khung vẽ trước đây tối đa
+  //   1920 × 1080 và ảnh báo tường bị thu về K.w × K.h (1472 × 1041) lúc nạp; màn hình nhiều điểm ảnh hơn (laptop thầy 2560 × 1600,
+  //   tivi 4K) thì cả tấm bị kéo giãn nên mờ. Nay giữ ảnh gốc (baoGoc); từ lúc báo tường hiện trọn (bước thứ hạng sau mốc S0, bước
+  //   báo tường) khung vẽ lên đúng số điểm ảnh thật của màn hình (rDoCao, tối đa gấp 2), và ảnh gốc được thu MỘT lần về đúng số
+  //   điểm ảnh báo tường chiếm trên màn hình (anhCo) rồi chép thẳng, không co giãn thêm lần nào. Các bước khác giữ mức cũ (rDoNen)
+  //   cho nhẹ máy. netBao: máy vẽ không kịp ở mức nét cao thì tắt hẳn (vòng vẽ tự đo).
+  let baoGoc = null, rDoNen = 1, rDoCao = 1, netBao = true;
   const UI = {};
 
   /* ---------- tải hình ---------- */
@@ -145,27 +152,91 @@
   let baoLan = 0;
   SK.anhBao = async function (url) {
     const lan = ++baoLan;
-    let im = url ? await tai(url) : null;
-    if (im) { try { im = await vuaCoBao(im); } catch (e) { /* giữ ảnh gốc */ } }
+    const goc = url ? await tai(url) : null;
+    let im = goc;
+    if (goc) { try { im = await vuaCoBao(goc); } catch (e) { /* giữ ảnh gốc */ } }
     const moi = im || await baoGia();
     if (lan !== baoLan) return;
-    bao = moi; baoSo++; baoKhung = null;
+    bao = moi; baoSo++; baoKhung = [null, null];
+    baoGoc = goc && (goc.naturalWidth || goc.width) > K.w * 1.1 ? goc : null;      // ảnh gốc đủ lớn mới có mức nét cao
+    anhCo.forEach(v => { if (v && v.close) v.close(); }); anhCo.clear();
     SK.coAnhBao = !!im;
-    henRanh(khungBao);
+    if (cv) SK.vuaManHinh();                 // có hay mất ảnh gốc lớn thì mức nét của bước báo tường đổi theo
+    henRanh(() => { khungBao(0); khungBao(1); });
   };
-  // khung báo tường (viền gỗ vàng, bóng đổ) vẽ sẵn một lần cho mỗi ảnh
-  function khungBao() {
-    if (baoKhung || !bao) return baoKhung;
-    const P = 140, c = document.createElement("canvas");
-    c.width = K.w + 32 + 2 * P; c.height = K.h + 32 + 2 * P;
+  // khung báo tường (viền gỗ vàng, bóng đổ) vẽ sẵn cho mỗi ảnh.
+  // 15/11: mỗi khung dựng ở tỉ lệ z điểm ảnh cho mỗi đơn vị khung K, z = số điểm ảnh thật của màn hình trên một đơn vị K ở chỗ
+  //   khung đó hiện ra, nên lúc vẽ chỉ chép thẳng, không co giãn. Hai khung: loại 0 cho báo tường ở khung K (lúc lửa đốt, lúc chờ
+  //   bấm nút cuối), loại 1 cho báo tường đầy màn hình (khung KF, sau khi bấm nút cuối). Màn hình nhỏ (1366 × 768) thì z nhỏ hơn 1.
+  //   Không có ảnh gốc lớn (báo tường vẽ tạm) thì khung dựng từ ảnh 1472 điểm ảnh co giãn một lần. Đổi cỡ cửa sổ làm z đổi thì
+  //   dựng lại. w, h: cỡ khung theo đơn vị thế giới.
+  //   Đã tắt mức nét cao (máy yếu) thì rDoCao = rDoNen, khung vẫn dựng đúng tỉ lệ đó: lúc vẽ vẫn chỉ chép thẳng (vẽ có co giãn
+  //   mỗi khung hình chậm gấp mấy lần chép thẳng).
+  function tiLeKhung(loai) {
+    const E = S.ext, sb = loai && E && E.KF ? E.KF.w / K.w : 1;
+    const z = Math.max(.5, Math.min(2, rDoCao * sb));
+    return Math.abs(z - 1) < .0015 ? 1 : z;        // sát 1 thì lấy đúng 1: chép thẳng ảnh 1472 điểm ảnh, khỏi thu lại
+  }
+  // ảnh gốc thu về đúng z điểm ảnh cho mỗi đơn vị K (một lần, chất lượng cao, làm ngầm); chưa xong thì trả null
+  const anhCo = new Map();
+  function anhDungCo(z) {
+    const khoa = z.toFixed(4), co = anhCo.get(khoa);
+    if (co !== undefined) return co || null;
+    anhCo.set(khoa, 0);                                       // 0: đang làm
+    const goc = baoGoc, so = baoSo, w = Math.round(K.w * z), h = Math.round(K.h * z);
+    const xong = b => {
+      if (so !== baoSo || anhCo.get(khoa) !== 0) { if (b && b.close) b.close(); return; }
+      anhCo.set(khoa, b);
+      baoKhung = baoKhung.map(k => (k && !k.net && Math.abs(k.z - z) < .0015 ? null : k));     // khung dựng tạm bằng ảnh nhỏ: dựng lại
+      henRanh(() => { khungBao(0); khungBao(1); });           // dựng lại ngay lúc rảnh, khỏi dồn vào khung hình đầu của bước báo tường
+    };
+    const bangKhungVe = () => {
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(goc, 0, 0, w, h);
+      return c;
+    };
+    let p = null;
+    try { if (window.createImageBitmap) p = createImageBitmap(goc, { resizeWidth: w, resizeHeight: h, resizeQuality: "high" }); } catch (e) { p = null; }
+    if (p) p.then(xong, () => { try { xong(bangKhungVe()); } catch (e) { /* giữ khung dựng bằng ảnh nhỏ */ } });
+    else { try { xong(bangKhungVe()); } catch (e) { /* giữ khung dựng bằng ảnh nhỏ */ } }
+    return anhCo.get(khoa) || null;
+  }
+  // bỏ các ảnh đã thu theo cỡ không còn dùng (cửa sổ đổi cỡ)
+  function donAnhCo() {
+    const giu = [tiLeKhung(0).toFixed(4), tiLeKhung(1).toFixed(4)];
+    anhCo.forEach((v, k) => { if (giu.indexOf(k) < 0) { if (v && v.close) v.close(); anhCo.delete(k); } });
+  }
+  let soKhung = 0;
+  function khungBao(loai) {
+    loai = loai ? 1 : 0;
+    if (!bao) return null;
+    const z = tiLeKhung(loai), cu = baoKhung[loai];
+    if (cu && Math.abs(cu.z - z) < .0015) return cu;
+    const khac = baoKhung[1 - loai];
+    if (khac && Math.abs(khac.z - z) < .0015) return (baoKhung[loai] = khac);       // hai loại cùng tỉ lệ (màn hình 16:9): dùng chung
+    const anh = baoGoc && Math.abs(z - 1) > .0015 ? anhDungCo(z) : null;      // không có ảnh gốc lớn (báo tường vẽ tạm): co giãn ảnh nhỏ một lần
+    const P = 140, w = K.w + 32 + 2 * P, h = K.h + 32 + 2 * P, c = document.createElement("canvas");
+    c.width = Math.round(w * z); c.height = Math.round(h * z);
     const g = c.getContext("2d");
-    g.translate(P + 16 - K.x, P + 16 - K.y);
-    g.save(); g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 80; g.shadowOffsetY = 30;
+    g.scale(z, z); g.translate(P + 16 - K.x, P + 16 - K.y);
+    g.save(); g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 80 * z; g.shadowOffsetY = 30 * z;   // bóng đổ không theo phép co giãn
     g.fillStyle = "#b8892f"; g.fillRect(K.x - 16, K.y - 16, K.w + 32, K.h + 32); g.restore();
     g.fillStyle = "#f6e7c4"; g.fillRect(K.x - 10, K.y - 10, K.w + 20, K.h + 20);
-    g.drawImage(bao, K.x, K.y, K.w, K.h);
-    baoKhung = { c, dx: K.x - 16 - P, dy: K.y - 16 - P };
-    return baoKhung;
+    if (anh) {              // ảnh đã đúng cỡ: chép thẳng vào đúng điểm ảnh nguyên
+      g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(anh, Math.round((P + 16) * z), Math.round((P + 16) * z));
+    } else { g.imageSmoothingQuality = "high"; g.drawImage(bao, K.x, K.y, K.w, K.h); }
+    // net: khung đã ở mức nét cuối cùng (ảnh đúng cỡ, hoặc tỉ lệ 1); false: dựng tạm bằng ảnh nhỏ trong lúc chờ ảnh đúng cỡ
+    return (baoKhung[loai] = { c, dx: K.x - 16 - P, dy: K.y - 16 - P, w, h, z, net: !!anh || !baoGoc || Math.abs(z - 1) <= .0015, so: ++soKhung });
+  }
+  // vẽ khung báo tường lên c ở chỗ (kb.dx, kb.dy) theo phép biến đổi đang có. Tỉ lệ đang vẽ đúng bằng tỉ lệ của khung thì chép
+  //   thẳng, đặt vào đúng điểm ảnh nguyên (lệch nửa điểm ảnh là cả tấm nhoè); khác thì vẽ có co giãn.
+  function veKhungBao(c, kb) {
+    const m = c.getTransform();
+    if (!m.b && !m.c && Math.abs(m.a - kb.z) < .002 && Math.abs(m.d - kb.z) < .002) {
+      c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
+      c.drawImage(kb.c, Math.round(m.a * kb.dx + m.e), Math.round(m.d * kb.dy + m.f));
+      c.restore();
+    } else c.drawImage(kb.c, kb.dx, kb.dy, kb.w, kb.h);       // hiếm gặp (tỉ lệ vượt mức 2): vẽ có co giãn, chất lượng thường cho nhẹ máy
   }
 
   /* ---------- tính sẵn khi có số liệu mới ---------- */
@@ -430,24 +501,26 @@
   }
   // báo tường nhoè phủ kín khung vẽ (vẽ nhỏ rồi phóng to thì tự nhoè). 6/11 tối: phóng to một lần ra đúng cỡ khung vẽ rồi giữ lại;
   //   trước đây phóng to mỗi khung hình, mất khoảng 9 ms mỗi khung trên máy không có card đồ hoạ.
-  let moLon = null, khoaMo = "";
-  function nenMo() {
+  // 15/11: giữ hai tấm (mức nét thường, mức nét cao) như canhBao, để lúc bấm nút cuối không phải dựng tấm cỡ lớn. r: mức nét cần.
+  let khoMo = [];
+  function nenMo(r) {
     if (!bao || !cv) return null;
-    const E = S.ext, khoa = [cv.width, cv.height, baoSo, E.EW.toFixed(1), E.EH.toFixed(1)].join("|");
-    if (moLon && khoa === khoaMo) return moLon;
+    if (!(r > 0)) r = rDo;
+    const E = S.ext, rong = Math.round(E.EW * r), cao = Math.round(E.EH * r), khoa = [rong, cao, baoSo, E.EW.toFixed(1), E.EH.toFixed(1)].join("|");
+    for (let i = 0; i < khoMo.length; i++) if (khoMo[i].khoa === khoa) return khoMo[i].c;
     const nho = document.createElement("canvas"); nho.width = 120; nho.height = 85;
     let g = nho.getContext("2d");
     try { g.filter = "blur(2px)"; } catch (e) { /* bỏ qua */ }
     g.drawImage(bao, -6, -6, 132, 97); g.filter = "none";
     g.fillStyle = "rgba(30,17,6,.66)"; g.fillRect(0, 0, 120, 85);
-    if (!moLon) moLon = document.createElement("canvas");
-    moLon.width = cv.width; moLon.height = cv.height;
+    const o = khoMo.length >= 2 ? khoMo.shift() : { c: document.createElement("canvas"), khoa: "" }, moLon = o.c;
+    moLon.width = rong; moLon.height = cao;
     g = moLon.getContext("2d");
     g.fillStyle = "#130c06"; g.fillRect(0, 0, moLon.width, moLon.height);      // phủ kín (ảnh có chỗ trong suốt cũng không lộ)
     const s = Math.max(moLon.width / 120, moLon.height / 85), w = 120 * s, h = 85 * s;
     g.imageSmoothingQuality = "high";
     g.drawImage(nho, (moLon.width - w) / 2, (moLon.height - h) / 2, w, h);
-    khoaMo = khoa;
+    o.khoa = khoa; khoMo.push(o);
     return moLon;
   }
   const nenBao = () => CC.veSan("nenBao", W, H, 0, g => {
@@ -457,19 +530,25 @@
   });
   // nền tối và khung báo tường vẽ chung một tấm đúng cỡ, đúng độ nét khung vẽ (6/11 tối): lúc lửa đốt và lúc chờ bấm nút cuối
   //   "Tiếp theo" mỗi khung chỉ chép một tấm này (trước đây chép hai tấm lớn, một tấm có bóng đổ trong suốt)
-  let cvCanhBao = null, khoaCanhBao = "";
-  function canhBao() {
-    const kb = khungBao(); if (!kb || !cv) return null;
-    const E = S.ext, khoa = [cv.width, cv.height, rDo.toFixed(4), baoSo, E.bn.toFixed(2), E.bd.toFixed(2)].join("|");
-    if (!cvCanhBao || khoa !== khoaCanhBao) {
-      if (!cvCanhBao) cvCanhBao = document.createElement("canvas");
-      cvCanhBao.width = cv.width; cvCanhBao.height = cv.height;
-      const g = cvCanhBao.getContext("2d");
-      g.setTransform(rDo, 0, 0, rDo, Math.round(E.bn * rDo), Math.round(E.bd * rDo));
-      g.drawImage(nenBao(), 0, 0); g.drawImage(kb.c, kb.dx, kb.dy);
-      khoaCanhBao = khoa;
+  // 15/11: giữ hai tấm (mức nét thường và mức nét cao của bước báo tường) để lúc khung vẽ lên mức nét cao (mốc S0) đã có sẵn
+  //   tấm cỡ lớn, không khựng một nhịp. r: mức nét cần tấm (mặc định là mức đang vẽ).
+  let khoCanhBao = [];
+  function canhBao(r) {
+    const kb = khungBao(0); if (!kb || !cv) return null;
+    if (!(r > 0)) r = rDo;
+    const E = S.ext, w = Math.round(E.EW * r), h = Math.round(E.EH * r);
+    const khoa = [w, h, r.toFixed(4), baoSo, E.bn.toFixed(2), E.bd.toFixed(2), kb.so].join("|");
+    let o = null;
+    for (let i = 0; i < khoCanhBao.length; i++) if (khoCanhBao[i].khoa === khoa) o = khoCanhBao[i];
+    if (!o) {
+      o = khoCanhBao.length >= 2 ? khoCanhBao.shift() : { c: document.createElement("canvas"), khoa: "" };
+      o.c.width = w; o.c.height = h;
+      const g = o.c.getContext("2d");
+      g.setTransform(r, 0, 0, r, Math.round(E.bn * r), Math.round(E.bd * r));
+      g.drawImage(nenBao(), 0, 0); veKhungBao(g, kb);
+      o.khoa = khoa; khoCanhBao.push(o);
     }
-    return cvCanhBao;
+    return o.c;
   }
   // cây cầu lúc lửa đốt màn đêm (6/11 tối): vẽ sẵn cả cây cầu một tấm ở bước thứ hạng (thảm đỏ, số điểm, nhãn nhóm đã xong;
   //   vệt sáng trên miếng vàng đứng yên), mỗi khung chỉ vẽ lửa bốn ngọn đuốc. Trước đây vẽ lại cả cây cầu mỗi khung (khoảng 20 ms).
@@ -494,13 +573,15 @@
   //   về đích, không đợi tới khung hình đầu tiên cần tới
   let khoaHenKet = "";
   function chuanBiKet() {
-    const khoa = [S.che, cv.width, cv.height, baoSo, CC.Y0, CC.LH].join("|");
+    // 15/11: khoá theo hai mức nét (thường, cao) chứ không theo cỡ khung vẽ lúc này: khung vẽ lên mức nét cao ở mốc S0 thì không
+    //   dựng lại gì nữa (trước đó dựng lại cả cây cầu cỡ lớn ngay lúc các bạn đang đi vào báo tường: khựng một nhịp)
+    const khoa = [S.che, rDoNen.toFixed(4), rDoCao.toFixed(4), S.ext.EW.toFixed(1), S.ext.EH.toFixed(1), baoSo, soKhung, CC.Y0, CC.LH].join("|");
     if (khoa === khoaHenKet) return;
     khoaHenKet = khoa;
     henRanh(() => { if (S.che === "hang" && daSanSang && S.ls && S.ls.length >= 6) cauKet(trangThai(dongHo()).st); });
-    henRanh(() => { nenBao(); khungBao(); });
-    henRanh(canhBao);
-    henRanh(nenMo);
+    henRanh(() => { nenBao(); khungBao(0); khungBao(1); });
+    henRanh(() => { canhBao(rDoNen); if (rDoCao > rDoNen + 1e-6) canhBao(rDoCao); });
+    henRanh(() => { nenMo(rDoNen); if (rDoCao > rDoNen + 1e-6) nenMo(rDoCao); });
     henRanh(() => { vaiXanh(); bongVai(); bangTrong(); vetLuot(); domCat(); domLap(); });     // vải xanh lá, tấm xoá chữ, vệt sáng
   }
   // vệt sáng quét chéo (góc QG so với trục ngang) từ góc trên trái xuống góc dưới phải khung xem; s: vị trí giữa vệt sáng, đo dọc
@@ -533,7 +614,7 @@
     c.restore();
   }
   function veBao(c, t, nguoi) {
-    const kb = khungBao(); if (!kb) return;
+    if (!bao) return;
     const f = S.che === "bao" ? lin(t, S.H0, S.H0 + QUET) : 0, s = f > 0 && f < 1 ? mepQuet(f) : 0;
     if (f < 1) {
       // báo tường như lúc chưa bấm (khung K trên nền tối): chép tấm vẽ sẵn
@@ -552,7 +633,7 @@
       if (m) { c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(m, 0, 0); c.restore(); } else c.drawImage(nenBao(), 0, 0);
       const b = bienKF();
       if (b) { c.translate(b.cx, b.cy); c.scale(b.s, b.s); c.translate(-b.cx0, -b.cy0); }
-      c.drawImage(kb.c, kb.dx, kb.dy);
+      veKhungBao(c, khungBao(1));
       veTrenBao(c, t, nguoi, true);
       c.restore();
       if (f < 1) veVetQuet(c, s, t);
@@ -1080,7 +1161,30 @@
   /* ---------- vẽ một khung hình ---------- */
   // 6/11 chiều: bỏ máy quay phóng to (thầy Thịnh: "chỉnh đường chạy dài lên trên và xuống dưới chứ không phải phóng to");
   //   cả cây cầu luôn nằm trọn trong màn hình, làn cao ra theo khung xem (vuaManHinh).
+  // 15/11: mức nét của khung vẽ theo bước: báo tường đã hiện trọn (bước thứ hạng từ mốc S0, bước báo tường) thì lên mức nét cao
+  //   rDoCao, các bước khác rDoNen. Đổi mức thì đổi cỡ khung vẽ ngay trước khi vẽ khung hình đó (các tấm vẽ sẵn tự dựng lại theo
+  //   cỡ mới) và đo lại tốc độ vẽ từ đầu.
+  // 15/11: hộp của khung vẽ trong #world (left, top, width, height) có số lẻ thì trình duyệt làm tròn hộp về số nguyên theo đơn vị
+  //   của #world, khung vẽ bị co giãn đi một chút (1366 điểm ảnh vẽ vào 1365,3): nhoè nhẹ. Nay hộp đặt ở (0, 0), rộng cao ứng
+  //   đúng với số điểm ảnh của khung vẽ (số nguyên); chỗ đặt và tỉ lệ dồn vào transform (không bị làm tròn). Chỗ đặt = góc trên
+  //   trái màn hình (gocX, gocY), nên khung vẽ gấp đúng số điểm ảnh thật thì mỗi điểm ảnh của nó rơi đúng một điểm ảnh màn hình.
+  function datCoKhung() {
+    const E = S.ext, w = Math.round(E.EW * rDo), h = Math.round(E.EH * rDo);
+    if (cv.width !== w) cv.width = w;
+    if (cv.height !== h) cv.height = h;
+    // hộp rộng w / d, cao h / d (d: tỉ lệ điểm ảnh của máy): trình duyệt dàn trang theo điểm ảnh thật, hộp như vậy chiếm đúng
+    //   w × h điểm ảnh thật (số nguyên) nên không bị làm tròn, kể cả máy để tỉ lệ 125 %, 150 %
+    const d = window.devicePixelRatio || 1;
+    datKieu(cv, "left", "0"); datKieu(cv, "top", "0"); datKieu(cv, "width", (w / d).toFixed(4) + "px"); datKieu(cv, "height", (h / d).toFixed(4) + "px");
+    datKieu(cv, "transformOrigin", "0 0");
+    datKieu(cv, "transform", "translate(" + E.gocX.toFixed(4) + "px," + E.gocY.toFixed(4) + "px) scale(" + (E.EW * d / w) + "," + (E.EH * d / h) + ")");
+  }
+  function mucNet(t) {
+    const KK = S.K, cao = !!KK && (S.che === "bao" || (S.che === "hang" && t >= KK.S0));
+    return cao ? rDoCao : rDoNen;
+  }
   function veKhung(t) {
+    { const muon = mucNet(t); if (muon !== rDo) { rDo = muon; datCoKhung(); dts = []; } }
     const E = S.ext, ox = Math.round(E.bn * rDo), oy = Math.round(E.bd * rDo);   // gốc khung 16:9 trong khung vẽ
     const KK = S.K, ket = (S.che === "hang" || S.che === "bao") && KK, dem = !ket || t < KK.BURN0;
     const sanSang = daSanSang && S.ls;
@@ -1347,11 +1451,23 @@
     if (S.phu) { S.tCu = 0; return; }
     try { veKhung(t); veChu(t); } catch (e) { console.error(e); }
     // máy yếu: khung hình quá chậm thì giảm độ nét của cảnh (chỉ giảm, không tăng lại)
-    if (S.tCu && document.visibilityState === "visible") {
-      dts.push(t - S.tCu); if (dts.length > 90) dts.shift();
+    // 15/11: chỉ tính khi máy chậm ĐỀU. Một khung hình đứng lâu (chuyển cửa sổ rồi quay lại, hộp chọn tệp, giải mã ảnh lớn) trước đây
+    //   kéo trung bình 90 khung lên quá ngưỡng và độ nét bị giảm oan, giảm rồi không tăng lại: khung dài hơn 0,25 giây thì bỏ
+    //   cả đợt đo, đo lại từ đầu.
+    const dt = S.tCu ? t - S.tCu : -1;
+    if (dt > .25) dts = [];
+    else if (dt >= 0 && document.visibilityState === "visible") {
+      dts.push(dt); if (dts.length > 90) dts.shift();
+      // 15/11: đang ở mức nét cao của báo tường mà 24 khung hình liền (tính từ lúc lên mức nét cao) trung bình quá 30 ms: máy vẽ
+      //   không kịp, lùi ngay về mức cũ, khỏi đợi đủ 90 khung
+      if (netBao && rDo > rDoNen + 1e-6 && dts.length >= 24) {
+        let tong = 0; for (let i = dts.length - 24; i < dts.length; i++) tong += dts[i];
+        if (tong / 24 > .03) { netBao = false; hThap = t; dts = []; SK.vuaManHinh(); }
+      }
       if (dts.length >= 90 && t > hThap + 3) {
         const tb = dts.reduce((a, b) => a + b, 0) / dts.length;
-        if (tb > .024 && SK.doNet > .7) { SK.doNet = Math.max(.7, SK.doNet - .15); hThap = t; dts = []; SK.vuaManHinh(); }
+        if (tb > .024 && netBao && rDo > rDoNen + 1e-6) { netBao = false; hThap = t; dts = []; SK.vuaManHinh(); }   // 15/11: bỏ mức nét cao của báo tường
+        else if (tb > .024 && SK.doNet > .7) { SK.doNet = Math.max(.7, SK.doNet - .15); hThap = t; dts = []; SK.vuaManHinh(); }
       }
     }
     S.tCu = t;
@@ -1416,22 +1532,48 @@
     }
     window.addEventListener("resize", SK.vuaManHinh);
     SK.vuaManHinh();
+    // #tv vừa hiện ra, hay cỡ có số lẻ của nó đổi mà cửa sổ không báo đổi cỡ: tính lại
+    if (window.ResizeObserver) {
+      try {
+        new ResizeObserver(() => {
+          const r = $("#tv").getBoundingClientRect();
+          if (r.width > 0 && (Math.abs(r.width - SK.vw) > .01 || Math.abs(r.height - SK.vh) > .01)) SK.vuaManHinh();
+        }).observe($("#tv"));
+      } catch (e) { /* không có thì dùng sự kiện đổi cỡ cửa sổ như cũ */ }
+    }
     taiHinh();
     if (!bao) SK.anhBao(null);
     requestAnimationFrame(vong);
   };
   SK.vuaManHinh = function () {
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const k = Math.min(vw / W, vh / H), wd = $("#world");
+    const wd = $("#world");
+    // 15/11: máy Windows để tỉ lệ hiển thị 125 %, 150 % thì khung xem có số lẻ (2560 điểm ảnh thật / 1,5 = 1706,67), mà
+    //   innerWidth làm tròn thành 1707: khung vẽ lệch nửa điểm ảnh so với màn hình, trình duyệt co giãn lại cả tấm nên nhoè.
+    //   Lấy cỡ có số lẻ của #tv (phủ kín khung xem) để khung vẽ khớp từng điểm ảnh thật.
+    let vw = window.innerWidth, vh = window.innerHeight;
+    const hop = wd.parentNode && wd.parentNode.getBoundingClientRect ? wd.parentNode.getBoundingClientRect() : null;
+    if (hop && Math.abs(hop.width - vw) < 1 && Math.abs(hop.height - vh) < 1) { vw = hop.width; vh = hop.height; }
+    SK.vw = vw; SK.vh = vh;
+    const k = Math.min(vw / W, vh / H);
     SK.k = k;
-    wd.style.transform = "translate(-50%,-50%) scale(" + k + ")";
+    // 15/11: #world đặt tâm ở giữa khung xem (left, top) rồi dịch lùi nửa cỡ. Khung xem có số điểm ảnh thật lẻ (cửa sổ cao 1437)
+    //   thì tâm rơi vào nửa điểm ảnh, trình duyệt làm tròn chỗ đặt làm cả khung vẽ lệch nửa điểm ảnh: nhoè. Nay tâm làm tròn sẵn
+    //   về điểm ảnh thật (tx, ty; #world lệch tối đa nửa điểm ảnh, không ai thấy), còn khung vẽ tự đặt cho mép trùng mép màn hình
+    //   (datCoKhung, dùng gocX, gocY = toạ độ thế giới của góc trên trái màn hình).
+    const dTL = window.devicePixelRatio || 1, tamX = Math.round(vw / 2 * dTL) / dTL, tamY = Math.round(vh / 2 * dTL) / dTL;
+    datKieu(wd, "left", tamX.toFixed(4) + "px"); datKieu(wd, "top", tamY.toFixed(4) + "px");
+    datKieu(wd, "transform", "translate(-50%,-50%) scale(" + k + ")");
     // 6/11 thầy Thịnh: khung xem không đúng tỉ lệ 16:9 (cửa sổ Claude, máy 16:10) thì phần dư trên dưới (hoặc hai bên)
     //   vẽ tiếp dòng sông bằng ảnh nền lật gương, không còn hai viền đen. Dư thêm 40 px cho màn câu hỏi làm mờ không bị viền tối.
     wd.style.setProperty("--bd", (Math.max(0, Math.ceil((vh / k - H) / 2)) + 40) + "px");
     wd.style.setProperty("--bn", (Math.max(0, Math.ceil((vw / k - W) / 2)) + 40) + "px");
     if (wd.parentNode && wd.parentNode.style) wd.parentNode.style.setProperty("--k", String(k));   // nền báo tường kéo dài ra phần dư
-    // độ nét của cảnh theo cỡ màn hình thật (màn nhỏ thì vẽ nhỏ cho nhẹ máy), tối đa 1920×1080
-    rDo = Math.max(.5, Math.min(1, k * (window.devicePixelRatio || 1))) * SK.doNet;
+    // độ nét của cảnh theo cỡ màn hình thật (màn nhỏ thì vẽ nhỏ cho nhẹ máy), tối đa 1920×1080; riêng lúc báo tường hiện trọn
+    //   (15/11) lên tới đúng số điểm ảnh thật của màn hình, tối đa gấp 2 (xem mucNet)
+    const kd = k * (window.devicePixelRatio || 1);
+    rDoNen = Math.max(.5, Math.min(1, kd)) * SK.doNet;
+    rDoCao = (netBao && baoGoc) ? Math.max(.5, Math.min(2, kd)) * SK.doNet : rDoNen;
+    if (rDoCao < rDoNen) rDoCao = rDoNen;
     // khung vẽ phủ cả phần dư; khung 16:9 nằm giữa, lệch (bn, bd)
     const bn = Math.max(0, (vw / k - W) / 2), bd = Math.max(0, (vh / k - H) / 2);
     wd.style.setProperty("--bdT", bd.toFixed(2) + "px");          // chữ và nút neo theo đỉnh, đáy màn hình thật
@@ -1452,7 +1594,7 @@
     const hCot = Math.min(vh - 16, (vw - 152) * tl), hHang = Math.min(vh - 2 * (ND + 8), (vw - 24) * tl);
     const nutHang = hHang > hCot && vh / 2 + (K.y + K.h + 16 - H / 2) * k <= vh - ND - 8;
     const sb = Math.max(1, (nutHang ? hHang : hCot) / k / (K.h + 32)), hb = K.h * sb, wb = K.w * sb;
-    S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, KF: { x: W / 2 - wb / 2, y: H / 2 - hb / 2, w: wb, h: hb }, nutHang,
+    S.ext = { bn, bd, EW: W + 2 * bn, EH: H + 2 * bd, gocX: W / 2 - tamX / k, gocY: H / 2 - tamY / k, KF: { x: W / 2 - wb / 2, y: H / 2 - hb / 2, w: wb, h: hb }, nutHang,
       // đáy cho khung luật chơi (toạ độ thế giới): trên hai cụm nút góc, như đáy thẻ câu hỏi
       day: Math.min(H - 14, H + bd - ND / k),
       // nút Tổng kết / Tiếp theo / Tiếp theo cuối: chữ trên màn hình thật không nhỏ hơn 16 px (điện thoại)
@@ -1460,14 +1602,15 @@
     // nút "Tiếp theo" cuối (#nutHienBao, góc phải dưới): nút dưới đáy thì đứng trên các hàng nút
     wd.style.setProperty("--hbDuoi", (nutHang ? ND / k : 8).toFixed(1) + "px");
     S.luatDo = true;
-    datKieu(cv, "left", (-bn).toFixed(1) + "px"); datKieu(cv, "top", (-bd).toFixed(1) + "px");
-    datKieu(cv, "width", S.ext.EW.toFixed(1) + "px"); datKieu(cv, "height", S.ext.EH.toFixed(1) + "px");
-    { const w = Math.round(S.ext.EW * rDo), h = Math.round(S.ext.EH * rDo); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; }
+    rDo = mucNet(dongHo());
+    datCoKhung();
+    donAnhCo();
+    if (bao && baoGoc) henRanh(() => { khungBao(0); khungBao(1); });      // thu ảnh gốc về cỡ mới ngay, khỏi đợi tới bước báo tường
   };
 
   // cho bài thử: khung báo tường (kể cả viền gỗ) trên màn hình thật, điểm ảnh CSS; nutHang: nút vẫn nằm dưới đáy
   SK.khungBao = function () {
-    const k = SK.k, vw = window.innerWidth, vh = window.innerHeight, E = S.ext;
+    const k = SK.k, vw = SK.vw || window.innerWidth, vh = SK.vh || window.innerHeight, E = S.ext;
     const F = (S.che === "bao" && E && E.KF) ? E.KF : K, v = 16 * F.w / K.w;
     return { l: vw / 2 + (F.x - v - W / 2) * k, t: vh / 2 + (F.y - v - H / 2) * k, r: vw / 2 + (F.x + F.w + v - W / 2) * k,
       b: vh / 2 + (F.y + F.h + v - H / 2) * k, nutHang: !!(E && E.nutHang) };
@@ -1538,5 +1681,7 @@
   // 14/11: lúc tấm vải xanh lá đã bay khỏi màn hình (dòng chữ chúc mừng bắt đầu hiện); mở thẳng bước bao thì là mốc đã qua từ lâu
   SK.lucVaiDi = () => S.che === "bao" ? S.H0 + HIEN : null;
   SK._S = S;
+  SK._net = () => ({ rDo, rDoNen, rDoCao, netBao, doNet: SK.doNet, goc: baoGoc ? [baoGoc.naturalWidth, baoGoc.naturalHeight] : null, khung: baoKhung.map(k => (k ? { z: +k.z.toFixed(4), co: [k.c.width, k.c.height], net: k.net } : null)) });
+  SK._datNet = v => { netBao = !!v; SK.doNet = 1; SK.vuaManHinh(); };
   SK._ve = t => { veKhung(t); veChu(t); };
 })();
