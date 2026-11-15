@@ -61,8 +61,34 @@ body[data-nhom="3"] { --mau-nhom: #3d8fc4; }
 body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .dt-thong-bao { margin: auto; padding: 24px; text-align: center; font-size: 18px; line-height: 1.5; max-width: 420px; }
 .dt-thong-bao h1 { font-family: var(--chu-dam); font-size: 30px; margin: 0 0 8px; color: #5a3a22; }
-#dtChonNut { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-.chon-nhom { min-height: 64px; font-size: 20px; }
+/* màn chọn nhóm (15/11): 4 mã QR trên tivi giống nhau, máy chọn sẵn một nhóm, em đổi được, bấm Xác nhận mới vào */
+.chon-hoi { margin: 0; font-family: var(--chu-dam); font-weight: 700; font-size: 23px; color: #5a3a22; }
+.chon-chu { margin: 2px 0 0; min-height: 3em; font-size: 16.5px; line-height: 1.5; }
+#dtChonNut { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 16px; }
+.nut.chon-nhom { position: relative; min-height: 86px; font-family: var(--chu-dam); font-weight: 700; font-size: 27px; border-radius: 18px; border: 3px solid var(--m); color: var(--m); background: #fffdf8; }
+.nut.chon-nhom.dang-chon, .nut.chon-nhom.dang-chon:active:not(:disabled) { background: var(--m); color: #fff; box-shadow: 0 0 0 4px #fffdf8, 0 0 0 7px var(--m); }
+.nut.chon-nhom.dang-chon::after { content: "✓"; position: absolute; right: 12px; top: 5px; font-size: 21px; line-height: 1.2; }
+#dtChonXong { width: 100%; min-height: 64px; font-size: 21px; border-radius: 18px; background: var(--mau-nhom, #b3322b); border-color: rgba(60, 40, 20, .28); }
+@media (max-height: 480px) {      /* điện thoại cầm ngang: 4 nhóm thành một hàng cho vừa màn hình */
+  #dtChon { padding: 8px 16px; max-width: 640px; }
+  #dtChon h1 { font-size: 22px; margin: 0; }
+  #dtChon .chon-hoi { font-size: 18px; }
+  #dtChon .chon-chu { min-height: 0; font-size: 15px; }
+  #dtChon #dtChonNut { grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 8px 0 10px; }
+  #dtChon .nut.chon-nhom { min-height: 58px; font-size: 22px; }
+  #dtChon #dtChonXong { min-height: 52px; font-size: 19px; }
+  #dtChon .nut.chon-nhom.dang-chon::after { right: 6px; top: 1px; font-size: 14px; }
+}
+@media (max-width: 359px) { #dtChon h1 { font-size: 25px; } }      /* điện thoại hẹp: tên hoạt động nằm trên một dòng */
+@media (min-width: 700px) and (min-height: 700px) {      /* máy tính bảng */
+  #dtChon { max-width: 560px; }
+  #dtChon h1 { font-size: 38px; }
+  #dtChon .chon-hoi { font-size: 28px; }
+  #dtChon .chon-chu { font-size: 20px; }
+  #dtChon #dtChonNut { gap: 16px; margin: 16px 0 22px; }
+  #dtChon .nut.chon-nhom { min-height: 112px; font-size: 34px; }
+  #dtChon #dtChonXong { min-height: 76px; font-size: 25px; }
+}
 #dtChinh { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; padding-top: env(safe-area-inset-top); }
 .man { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .dt-dau { display: flex; align-items: center; gap: 10px; padding: 7px 10px 6px; }
@@ -231,7 +257,8 @@ body.tv { background: #eadfc9; }
 
 /* --- mã QR vào phòng --- */
 .ma { width: 300px; height: 300px; margin: 0; flex: none; font-size: 12px; word-break: break-all; }
-/* Mã QR của nhóm nằm ngay trên tấm thiệp của nhóm đó (14/11 16:18: báo tường hiện suốt, không còn màn mã QR riêng).
+/* 15/11 13:44: 4 mã ở 4 chỗ này là CÙNG MỘT mã (quét mã nào cũng được, điện thoại hỏi nhóm sau). Chỗ nằm giữ như 14/11:
+   Mã QR nằm ngay trên tấm thiệp của từng nhóm (14/11 16:18: báo tường hiện suốt, không còn màn mã QR riêng).
    Thầy dặn 16:32: "để tránh các nhóm quét lộn thì mã qr của các nhóm để xa ra" → 4 mã nằm ở 4 góc ngoài của báo tường:
    nhóm 1, 2 sát mép trên; nhóm 3 sát góc dưới trái; nhóm 4 sát góc dưới phải. Hai mã gần nhau nhất cách nhau 346 px (1/3 chiều cao tivi). */
 .khung .ma-phu { position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; padding: 12px; display: none; gap: 14px; background: rgba(255, 253, 248, .96); border-radius: 2px; }
@@ -352,7 +379,7 @@ body.tv { background: #eadfc9; }
 <!-- ============ ĐIỆN THOẠI / MÁY TÍNH BẢNG ============ -->
 <div id="dt" hidden>
   <div id="dtCho" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p id="dtChoChu"></p></div>
-  <div id="dtChon" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p>Em ở nhóm nào?</p><div id="dtChonNut"></div></div>
+  <div id="dtChon" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p class="chon-hoi">Em ở nhóm nào?</p><p id="dtChonChu" class="chon-chu"></p><div id="dtChonNut"></div><button id="dtChonXong" class="nut chinh" disabled>Xác nhận</button></div>
   <div id="dtChinh" hidden>
     <div class="dt-dau"><span id="dtNhom"></span><span class="dt-ten" id="dtTen">Bước 1: Đo và tính</span><span id="dtNoi" class="noi">Đang nối…</span></div>
 
@@ -427,10 +454,10 @@ body.tv { background: #eadfc9; }
         <rect x="735" y="510" width="446" height="323" class="bt-o"/>
       </svg>
     </div>
-    <div class="khung dung pha-nhap" id="khung1"><div class="the"><span class="ten">Nhóm 1</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao1"><div class="ma" id="ma1"></div><div class="ma-chu"><b>Nhóm 1</b><span>Quét mã để vào</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
-    <div class="khung dung pha-nhap" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao2"><div class="ma" id="ma2"></div><div class="ma-chu"><b>Nhóm 2</b><span>Quét mã để vào</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
-    <div class="khung ngang pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao3"><div class="ma" id="ma3"></div><div class="ma-chu"><b>Nhóm 3</b><span>Quét mã để vào</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
-    <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao4"><div class="ma" id="ma4"></div><div class="ma-chu"><b>Nhóm 4</b><span>Quét mã để vào</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung dung pha-nhap" id="khung1"><div class="the"><span class="ten">Nhóm 1</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao1"><div class="ma" id="ma1"></div><div class="ma-chu"><b>Nhóm 1</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung dung pha-nhap" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao2"><div class="ma" id="ma2"></div><div class="ma-chu"><b>Nhóm 2</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung ngang pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao3"><div class="ma" id="ma3"></div><div class="ma-chu"><b>Nhóm 3</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao4"><div class="ma" id="ma4"></div><div class="ma-chu"><b>Nhóm 4</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
     <p class="tv-ten">Tấm thiệp<br>của nhóm em</p>
     <p class="xep-goi">Chạm vào một tấm thiệp để xem lớn.<br>★: nhập đúng ngay lần đầu.</p>
   </section>
@@ -475,6 +502,6 @@ body.tv { background: #eadfc9; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/xep-thiep.js?v=f0bc8fc0"></script>
+<script src="js/xep-thiep.js?v=ce6e8372"></script>
 </body>
 </html>

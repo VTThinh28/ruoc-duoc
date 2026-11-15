@@ -462,6 +462,11 @@
     for (i = 0; i < 10; i++) { a = Math.PI / 5 * i - Math.PI / 2; d = i % 2 ? r : R; p.push((cx + d * Math.cos(a)).toFixed(2) + "," + (cy + d * Math.sin(a)).toFixed(2)); }
     return p.join(" ");
   }
+  function layMayId() {                          // mã riêng của máy này (mỗi thẻ trình duyệt một mã), dùng để báo có mặt
+    var v = null; try { v = sessionStorage.getItem("xt-may"); } catch (e) { v = null; }
+    if (!v) { v = maNgauNhien(6); try { sessionStorage.setItem("xt-may", v); } catch (e) { /* bỏ qua */ } }
+    return v;
+  }
   function giuSang() { try { if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(function () {}); } catch (e) { /* bỏ qua */ } }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") giuSang(); });   // quay lại trang thì xin giữ sáng màn hình lại
 
@@ -638,29 +643,62 @@
   /* =====================================================================
      ĐIỆN THOẠI
      ===================================================================== */
+  /* Màn chọn nhóm. Thầy dặn 15/11 13:42 và 13:44: "khi quét vẫn hay dính qr nhóm khác" → "vẫn 4 mã nhưng vẫn 4 phía như trên. nhưng tuy là 4 mã
+     nhưng mã giống nhau hết. hiện xong máy sẽ tự chọn nhóm nhưng nhóm có thể chọn lại nhóm khác rồi mới bấm xác nhận".
+     4 mã trên tivi là MỘT mã (?p=<phòng>&n=0) nên máy không biết em ở nhóm nào. Máy chọn sẵn nhóm đang có ít máy nhất (bằng nhau thì nhóm số nhỏ),
+     tính cả các máy còn đang ở màn này (cho/<máy> = nhóm đang chọn) để mấy máy quét cùng lúc không cùng nhận một nhóm.
+     Máy chỉ tự chọn MỘT lần (không tự đổi lúc em đang nhìn). Em chạm nhóm khác để đổi; bấm Xác nhận mới vào nhóm. */
+  var MAU_NHOM = { 1: "#d9463c", 2: "#e07b2a", 3: "#3d8fc4", 4: "#4f9140" };
+  function chonNhom(ts, phong) {
+    var chon = 0, mayChon = false, T = null, nut = {}, mayId = layMayId(), daTinh = false;
+    $("dtChon").hidden = false;
+    function ve() {
+      [1, 2, 3, 4].forEach(function (i) { nut[i].classList.toggle("dang-chon", i === chon); nut[i].setAttribute("aria-pressed", i === chon ? "true" : "false"); });
+      if (chon) document.body.setAttribute("data-nhom", chon); else document.body.removeAttribute("data-nhom");
+      $("dtChonChu").textContent = !chon ? "Em chạm vào nhóm của mình." : mayChon ? "Máy chọn sẵn Nhóm " + chon + ". Chưa đúng thì em chạm vào nhóm của mình." : "Em đã chọn Nhóm " + chon + ".";
+      $("dtChonXong").disabled = !chon;
+      $("dtChonXong").textContent = chon ? "Xác nhận: Nhóm " + chon : "Xác nhận";
+    }
+    function dat(i, may) { chon = i; mayChon = may; ve(); if (T) T.coMat("cho/" + mayId, chon); }
+    [1, 2, 3, 4].forEach(function (i) {
+      var b = H("button", "nut chon-nhom", "Nhóm " + i, $("dtChonNut"));
+      b.style.setProperty("--m", MAU_NHOM[i]);
+      b.onclick = function () { dat(i, false); };
+      nut[i] = b;
+    });
+    $("dtChonXong").onclick = function () { if (chon) location.search = "?p=" + encodeURIComponent(phong) + "&n=" + chon + (ts.thu ? "&thu=1" : ""); };
+    ve();
+    noi(phong, ts.thu, function () {}).then(function (t) {
+      T = t;
+      T.on("", function (d) {
+        if (daTinh) return;
+        daTinh = true;
+        if (chon) { T.coMat("cho/" + mayId, chon); return; }      // em đã tự chạm một nhóm trước khi nối xong
+        d = d || {};
+        var tai = [0, 0, 0, 0, 0], cho = d.cho || {}, tot = 1;
+        [1, 2, 3, 4].forEach(function (i) {
+          var co = d["n" + i] && d["n" + i].co;
+          if (co && typeof co === "object") tai[i] = Object.keys(co).filter(function (id) { return id !== mayId; }).length;
+        });
+        if (typeof cho === "object") Object.keys(cho).forEach(function (id) { var v = +cho[id]; if (id !== mayId && v >= 1 && v <= 4) tai[v]++; });
+        [2, 3, 4].forEach(function (i) { if (tai[i] < tai[tot]) tot = i; });
+        dat(tot, true);
+      });
+    });
+  }
+
   function chayDienThoai(ts) {
     var k = parseInt(ts.n, 10), phong = ts.p;
     document.body.className = "dt";
     $("dt").hidden = false;
-    if (!phong) { $("dtCho").hidden = false; $("dtChoChu").textContent = "Thầy mở trang này trên tivi, rồi các em quét mã QR của nhóm mình."; return; }
-    if (!(k >= 1 && k <= 4)) {
-      $("dtChon").hidden = false;
-      [1, 2, 3, 4].forEach(function (i) {
-        var b = H("button", "nut chon-nhom", "Nhóm " + i, $("dtChonNut"));
-        b.onclick = function () { location.search = "?p=" + encodeURIComponent(phong) + "&n=" + i + (ts.thu ? "&thu=1" : ""); };
-      });
-      return;
-    }
+    if (!phong) { $("dtCho").hidden = false; $("dtChoChu").textContent = "Thầy mở trang này trên tivi, rồi các em quét mã QR trên tivi."; return; }
+    if (!(k >= 1 && k <= 4)) { chonNhom(ts, phong); return; }
     document.body.setAttribute("data-nhom", k);
     var bc = BOCUC[NHOM[k]], dan = bc.dan, mau = MAU[k], goc = BO.map(daGiac);
     var T = null, nhap = {}, sai = {}, daMo = false, xong = false, man = "nhap", lanDau = true;
     var manh = [], chon = null, keo = null, xoay2 = null, tro = {}, guiCho = {}, guiLuc = {}, chuaNhan = null, baoDe = null, quaTo = null, dangChot = false;
     var to = window.innerWidth >= 700 && window.innerHeight >= 700;
-    var mayId = (function () {
-      var v = null; try { v = sessionStorage.getItem("xt-may"); } catch (e) { v = null; }
-      if (!v) { v = maNgauNhien(6); try { sessionStorage.setItem("xt-may", v); } catch (e) { /* bỏ qua */ } }
-      return v;
-    })();
+    var mayId = layMayId();
     $("dtNhom").textContent = "Nhóm " + k;
     $("dtChinh").hidden = false;
     giuSang();
@@ -1228,7 +1266,7 @@
     document.body.className = "tv";
     $("tv").hidden = false;
     var phong = ts.p, thu = ts.thu, T = null, goc = BO.map(daGiac), khungNhom = {}, duLieu = {}, lon = 0;
-    /* Thầy dặn 14/11 16:18: "cái hình báo tường sẽ hiện xuyên suốt cái hoạt động này luôn". Tivi chỉ còn một màn là tấm báo tường; mã QR của nhóm nào nằm ngay trên tấm thiệp của nhóm đó.
+    /* Thầy dặn 14/11 16:18: "cái hình báo tường sẽ hiện xuyên suốt cái hoạt động này luôn". Tivi chỉ còn một màn là tấm báo tường; mỗi tấm thiệp có một mã QR nằm ngay trên nó (từ 15/11 cả 4 là cùng một mã).
        xem = "vao": mới mở trang, mã hiện trên thiệp của nhóm chưa nhập đúng mục nào (nhóm đã làm được thì mã tự ẩn để thấy bài);
              "ma": thầy bấm Mã QR, mã hiện ở cả 4 thiệp (cho máy vào sau); "xep": thầy bấm Ẩn mã QR, không hiện mã. */
     var xem = "vao";
@@ -1243,15 +1281,16 @@
     }
     window.addEventListener("resize", coGian); coGian();
 
-    function link(k) { return location.origin + location.pathname + "?p=" + phong + "&n=" + k + (thu ? "&thu=1" : ""); }
+    /* 15/11 13:44, thầy: "vẫn 4 mã nhưng vẫn 4 phía như trên. nhưng tuy là 4 mã nhưng mã giống nhau hết" → 4 chỗ hiện cùng MỘT mã.
+       n=0 = chưa biết nhóm: điện thoại mở màn chọn nhóm (chonNhom). Link cũ có n=1..4 vẫn vào thẳng nhóm đó. */
+    function link() { return location.origin + location.pathname + "?p=" + phong + "&n=0" + (thu ? "&thu=1" : ""); }
     function veMa() {
+      var l = link(), hinh = "";
+      if (window.qrcode) { var q = window.qrcode(0, "M"); q.addData(l); q.make(); hinh = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); }
       [1, 2, 3, 4].forEach(function (k) {
-        var o = $("ma" + k); o.textContent = "";
-        if (window.qrcode) {
-          var q = window.qrcode(0, "M"); q.addData(link(k)); q.make();
-          o.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
-        } else o.textContent = link(k);
-        o.setAttribute("data-link", link(k));
+        var o = $("ma" + k);
+        if (hinh) o.innerHTML = hinh; else o.textContent = l;
+        o.setAttribute("data-link", l);
       });
       $("maPhong").textContent = phong;
     }
