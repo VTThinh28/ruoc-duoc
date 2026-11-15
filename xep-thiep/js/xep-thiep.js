@@ -1,7 +1,8 @@
-/* Xếp thiệp, tên hoạt động "Tấm thiệp của nhóm em" (bản 14/11/2026, sửa theo lời thầy lúc 13:21, 13:23, 14:03, 16:06, 16:16, 16:18, 16:32): mỗi nhóm dùng điện thoại hoặc máy tính bảng, tivi theo dõi 4 nhóm cùng lúc.
+/* Xếp thiệp, tên hoạt động "Tấm thiệp của nhóm em" (bản 14/11/2026, sửa theo lời thầy 14/11 lúc 13:21, 13:23, 14:03, 16:06, 16:16, 16:18, 16:32 và 15/11 lúc 10:08): mỗi nhóm dùng điện thoại hoặc máy tính bảng, tivi theo dõi 4 nhóm cùng lúc.
    Bước 1 (điện thoại): đo, tính rồi nhập số đo và diện tích của 7 loại mảnh (2 mảnh giống nhau chỉ nhập một lần),
             tổng diện tích 10 mảnh, tấm thiệp, phần còn lại. Đúng phần còn lại thì bàn xếp mở.
-   Bước 2: 10 mảnh nằm sẵn trên bàn có lưới theo hình mẫu của nhóm, đã xoay sẵn và tách ra 4 phía (MAU_DAU), các em chỉ kéo vô lại. Không có nam châm, không tự đẩy: thả mảnh đè lên mảnh khác thì vẫn để yên.
+   Bước 2: 10 mảnh nằm sẵn trên bàn có lưới, mỗi mảnh ở gần chỗ của nó trong hình mẫu của nhóm, tách ra 4 phía (MAU_DAU), nằm thẳng chưa xoay:
+            các em tự xoay, lật rồi kéo vô. Không có nam châm, không tự đẩy: thả mảnh đè lên mảnh khác thì vẫn để yên.
    Bước 3: bấm Hoàn thành. Còn mảnh đè lên nhau thì hiện bảng báo mảnh số mấy cần chỉnh. Mảnh còn nằm rời thì báo "chưa nhận ra hình".
             Hình ổn thì hiện bảng xác nhận; nhóm đồng ý thì máy chỉnh nhẹ rồi đưa hình vào giữa chỗ dán của thiệp 29 × 42.
    Tivi: mở trang không có tham số. Chỉ có một màn là tấm báo tường A0, hiện từ đầu tới cuối; 4 mã QR nằm trên 4 tấm thiệp, ở 4 góc ngoài cho xa nhau; bài của mỗi nhóm hiện ngay trên tấm thiệp của nhóm đó, đúng ô dán trên báo tường.
@@ -368,8 +369,9 @@
   }
 
   /* Chỗ nằm sẵn của 10 mảnh khi mới mở bàn xếp. Thầy dặn 14/11 16:06 và 16:16: "dựa theo hình mẫu đã xếp sẵn của từng nhóm á,
-     rồi tách các mảnh đó ra 4 phía, tự các em kéo vô lại". Mỗi mảnh giữ hướng xoay và mặt lật như trong hình mẫu của nhóm
-     (file in 4-thiep-a3, toa-do-manh-a3-bo-198.json), chỉ dời ra xa nhau; các mảnh cách nhau ít nhất HO_DAU cm nên chưa xếp thì máy không coi là hình.
+     rồi tách các mảnh đó ra 4 phía, tự các em kéo vô lại". Bản 14/11 giữ cả hướng xoay và mặt lật của mẫu; thầy dặn 15/11 10:08:
+     "thôi quay lại lúc để các em tự xoay đi" → từ 15/11 mảnh nằm THẲNG (góc 0, không lật), chỉ lấy CHỖ của mảnh trong hình mẫu của nhóm
+     (file in 4-thiep-a3, toa-do-manh-a3-bo-198.json) rồi dời ra xa nhau; các mảnh cách nhau ít nhất HO_DAU cm nên chưa xếp thì máy không coi là hình.
      MAU_DAU[nhóm][mảnh − 1] = [x, y, góc, lật, wx, wy]:
        (x, y) = chỗ nằm khi lưới chỉ vừa bằng chỗ dán hình (máy nào cũng thấy chỗ dán nên chỗ này dùng được ở mọi máy);
        wx, wy trong [−1, 1] = lưới còn trống thêm ở phía nào thì mảnh dời thêm về phía đó ngần ấy phần của khoảng trống
@@ -377,10 +379,10 @@
      Bảng do test/no-mau.js tính; test/xem-dau.js đã thử HẾT mọi mức trống tới DU_TOI_DA: không cặp mảnh nào gần hơn HO_DAU, không mảnh nào ra ngoài lưới.
      Mảnh chưa ai kéo thì KHÔNG có trong dữ liệu: điện thoại và tivi cùng tính ra chỗ này từ phần lưới mà mọi máy của nhóm đang thấy (duChung). */
   var MAU_DAU = {
-    1: [[14.5, 11.5, 90, 0, 0, -0.75], [8.152, 9.367, 50, 0, -0.66, -1], [20.848, 9.367, 310, 0, 0.66, -1], [14.5, 21.278, 180, 0, 0, 0.3], [14.5, 29.433, 180, 0, 0, 1], [14.5, 26, 0, 0, 0, 0.7], [9.922, 15.317, 333.44, 0, -0.48, -0.31], [19.078, 15.317, 26.56, 0, 0.48, -0.31], [4.95, 15.509, 65, 1, -1, -0.29], [24.05, 15.509, 295, 0, 1, -0.29]],
-    2: [[14.5, 11.5, 90, 0, 0, -1], [6, 12, 90, 0, -0.86, -0.92], [23, 12, 90, 0, 0.86, -0.92], [14.5, 25.278, 180, 0, 0, 0.65], [14.5, 29.567, 0, 0, 0, 1], [14.5, 21, 0, 0, 0, 0.26], [9.5, 16.5, 0, 0, -0.51, -0.23], [19.5, 16.5, 0, 0, 0.51, -0.23], [24.362, 19.181, 304, 1, 1, 0.1], [4.638, 19.181, 56, 0, -1, 0.1]],
-    3: [[22.5, 12.1, 90, 0, 0.53, -0.42], [27, 6.6, 0, 0, 0.95, -1], [7, 9.6, 90, 0, -0.8, -0.68], [23, 20.878, 180, 0, 0.58, 0.53], [7, 14.667, 0, 0, -0.8, -0.16], [7, 25.6, 0, 0, -0.8, 1], [9.5, 18.6, 0, 0, -0.59, 0.26], [4.5, 21.1, 0, 0, -1, 0.53], [18.5, 25.6, 0, 1, 0.16, 1], [27.5, 25.6, 0, 0, 1, 1]],
-    4: [[9, 16.1, 90, 0, -0.6, 0], [21.458, 8.1, 56, 0, 0.39, -1], [28.913, 8.1, 304, 0, 1, -1], [25, 24.822, 0, 0, 0.68, 0.85], [9.5, 26.033, 180, 0, -0.56, 1], [25, 14.1, 0, 0, 0.68, -0.25], [22.5, 19.1, 0, 0, 0.47, 0.3], [27.5, 19.1, 0, 0, 0.88, 0.3], [3.907, 19.233, 85, 1, -1, 0.31], [14.593, 19.233, 275, 0, -0.17, 0.31]]
+    1: [[14.5, 10.5, 0, 0, 0, -0.75], [8, 8, 0, 0, -0.76, -1], [21, 8, 0, 0, 0.76, -1], [14.5, 21.722, 0, 0, 0, 0.3], [14.5, 29.567, 0, 0, 0, 1], [14.5, 26, 0, 0, 0, 0.7], [7.5, 18.5, 0, 0, -0.82, 0.04], [21.5, 18.5, 0, 0, 0.82, 0.04], [6, 14, 0, 0, -1, -0.4], [23, 14, 0, 0, 1, -0.4]],
+    2: [[15.5, 9.5, 0, 0, 0.12, -1], [9, 12, 0, 0, -0.65, -0.71], [20.5, 13, 0, 0, 0.71, -0.59], [14.5, 25.722, 0, 0, 0, 0.65], [14.5, 29.567, 0, 0, 0, 1], [16, 21, 0, 0, 0.18, 0.26], [11, 16.5, 0, 0, -0.41, -0.18], [16, 16.5, 0, 0, 0.18, -0.18], [23, 17, 0, 0, 1, -0.12], [6, 20.5, 0, 0, -1, 0.22]],
+    3: [[23, 13.1, 0, 0, 0.58, -0.32], [26.5, 6.6, 0, 0, 0.91, -1], [7, 8.6, 0, 0, -1, -0.79], [23, 21.322, 0, 0, 0.58, 0.53], [7, 12.167, 0, 0, -1, -0.42], [7, 25.6, 0, 0, -1, 1], [7, 16.1, 0, 0, -1, 0], [7, 21.1, 0, 0, -1, 0.53], [18.5, 25.6, 0, 0, 0.16, 1], [27.5, 25.6, 0, 0, 1, 1]],
+    4: [[9.5, 14.6, 0, 0, -0.67, -0.19], [21, 8.1, 0, 0, 0.38, -1], [28, 8.1, 0, 0, 1, -1], [24.5, 24.822, 0, 0, 0.69, 0.85], [10, 26.167, 0, 0, -0.63, 1], [24.5, 14.1, 0, 0, 0.69, -0.25], [22, 19.1, 0, 0, 0.47, 0.3], [27, 19.1, 0, 0, 0.91, 0.3], [6, 19.6, 0, 0, -1, 0.35], [15, 19.6, 0, 0, -0.16, 0.35]]
   };
   var DU_TOI_DA = [24, 32, 24, 32];             // số nửa ô lưới trống nhiều nhất được dùng ở trái, trên, phải, dưới (bảng trên đã thử tới mức này)
   function viTriDau(k, du) {                    // du = [trái, trên, phải, dưới] số nửa ô lưới trống quanh chỗ dán hình; bỏ trống = 0 cả 4 phía
