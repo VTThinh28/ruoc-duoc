@@ -68,17 +68,21 @@
   var KHOA_MANH = ["t1", "t2", "g1", "g2", "cn", "v", "bh"];
   var THU_TU = KHOA_MANH.concat(["tong", "thiep", "con"]);
   var MUC = {
-    t1: { so: [1], ten: "Hình thoi (mảnh to)", hinh: "hình thoi" },
-    t2: { so: [2, 3], ten: "Hình thoi (mảnh nhỏ)", hinh: "hình thoi" },
-    g1: { so: [4], ten: "Hình thang cân (mảnh to)", hinh: "hình thang cân" },
-    g2: { so: [5], ten: "Hình thang cân (mảnh nhỏ)", hinh: "hình thang cân" },
-    cn: { so: [6], ten: "Hình chữ nhật", hinh: "hình chữ nhật" },
-    v: { so: [7, 8], ten: "Hình vuông", hinh: "hình vuông" },
-    bh: { so: [9, 10], ten: "Hình bình hành", hinh: "hình bình hành" },
-    tong: { ten: "Tổng diện tích 10 mảnh" },
-    thiep: { ten: "Tấm thiệp" },
-    con: { ten: "Phần còn lại" }
+    t1: { so: [1], ten: "Hình thoi (mảnh to)", hinh: "hình thoi", ngan: "hình thoi to" },
+    t2: { so: [2, 3], ten: "Hình thoi (mảnh nhỏ)", hinh: "hình thoi", ngan: "hình thoi nhỏ" },
+    g1: { so: [4], ten: "Hình thang cân (mảnh to)", hinh: "hình thang cân", ngan: "hình thang cân to" },
+    g2: { so: [5], ten: "Hình thang cân (mảnh nhỏ)", hinh: "hình thang cân", ngan: "hình thang cân nhỏ" },
+    cn: { so: [6], ten: "Hình chữ nhật", hinh: "hình chữ nhật", ngan: "hình chữ nhật" },
+    v: { so: [7, 8], ten: "Hình vuông", hinh: "hình vuông", ngan: "hình vuông" },
+    bh: { so: [9, 10], ten: "Hình bình hành", hinh: "hình bình hành", ngan: "hình bình hành" },
+    tong: { ten: "Tổng diện tích 10 mảnh", ngan: "tổng diện tích" },
+    thiep: { ten: "Diện tích tấm thiệp", ngan: "tấm thiệp" },      // thầy dặn 15/11 19:15
+    con: { ten: "Diện tích phần còn lại", ngan: "phần còn lại" }
   };
+  /* Thầy dặn 15/11 19:02: "mục nào các em nhập sai 3 lần thì hiện lên là báo GVCN để mở khóa."
+     Mỗi mục đếm số lần sai trong n<k>/s/<mục> (đã có từ trước, dùng cho ngôi sao). Cứ đủ 3 lần sai thì ghi n<k>/khoa/<mục> = 1:
+     mọi máy của nhóm đều không nhập được mục đó nữa. Thầy bấm "Mở khóa" trên tivi (xóa n<k>/khoa) thì nhóm được nhập tiếp 3 lần. */
+  var SAI_KHOA = 3, CHU_KHOA = "Báo GVCN để mở khóa";
   var TONG = 0, TONG_MOT = 0, THIEP_D = 42, THIEP_R = 29, THIEP_S = THIEP_D * THIEP_R;
   BO.forEach(function (m) { TONG += dienTich(m); });
   KHOA_MANH.forEach(function (kh) {
@@ -397,11 +401,14 @@
      Cách tính (test/tinh-dau.js): đọc tâm, góc, mặt lật của 40 mảnh trong 4 ảnh (test/doc-anh-thay-2.py), góc đưa về đúng nấc xoay,
      chỗ nằm đổi từ bàn 32 × 35 ô sang phần tấm thiệp dưới khung tiêu đề (giữ thứ tự trái phải, trên dưới như ảnh), rồi nhích cho không mảnh nào
      cách mảnh khác dưới 1 cm. Mảnh chưa ai kéo thì KHÔNG có trong dữ liệu: điện thoại và tivi cùng tính ra chỗ này. */
+  /* 15/11 19:15, thầy gửi ảnh tivi có khung đỏ quanh chỗ dán hình: "phần xếp hình thì sẽ chỉ hiện ra phần xếp nằm trong khung này thôi
+     còn mấy phần kia các em sẽ không kéo xuống được". Từ đó 10 mảnh chỉ nằm và chỉ kéo được trong chỗ dán hình (dan) của tờ A3.
+     Bảng dưới tính lại từ 4 ảnh thầy gửi 18:31, dồn vào chỗ dán hình (test/tinh-dau.js, KHE=1.9,1.5,2.2,2.0). */
   var MAU_DAU = {
-    1: [[18.184, 14.134, 116.57, 0], [3.462, 9.613, 75, 0], [25.138, 9.965, 135, 0], [20.714, 27.748, 165, 0], [23.393, 37.475, 15, 0], [8.243, 37.973, 345, 0], [3.318, 20.539, 296.56, 0], [24.703, 20.542, 63.44, 0], [11.544, 23.346, 105, 0], [4.545, 29.532, 75, 1]],
-    2: [[17.184, 12.134, 116.57, 0], [5.158, 9.171, 63.43, 0], [22.842, 12.829, 63.43, 0], [7.31, 33.081, 210, 0], [24.766, 38.323, 333.43, 0], [22.451, 26.398, 30, 0], [8.226, 25.825, 150, 0], [10.003, 17.365, 120, 0], [25.39, 19.468, 315, 1], [3, 18.5, 90, 0]],
-    3: [[36.684, 10.984, 116.57, 0], [29.602, 7.785, 135, 0], [13.99, 7.334, 135, 0], [28.446, 21.824, 150, 0], [5.208, 9.115, 315, 0], [12.05, 20.169, 195, 0], [17.048, 13.002, 75, 0], [4.19, 15.848, 285, 0], [16.565, 26.216, 165, 1], [36.912, 25.865, 195, 0]],
-    4: [[12.12, 10.721, 296.57, 0], [29.265, 7.387, 236, 0], [34.765, 9.745, 153.43, 0], [29.707, 25.43, 15, 0], [11.17, 26.264, 153.43, 0], [36.476, 14.164, 345, 0], [27.942, 18.818, 105, 0], [36.061, 21.646, 330, 0], [5.211, 16.065, 225, 1], [12.965, 20.172, 315, 0]]
+    1: [[17.816, 10.866, 116.57, 0], [4.6, 8.148, 75, 0], [24.618, 8.541, 135, 0], [19.867, 22.357, 165, 0], [22.53, 27.914, 15, 0], [9.997, 28.007, 345, 0], [4.436, 14.937, 296.56, 0], [24.567, 14.841, 63.44, 0], [10.782, 18.659, 105, 0], [4.234, 21.89, 75, 1]],
+    2: [[16.816, 10.866, 116.57, 0], [6.158, 8.171, 63.43, 0], [22.158, 9.171, 63.43, 0], [7.827, 26.175, 210, 0], [23.766, 28.323, 333.43, 0], [20.656, 21.495, 30, 0], [8.79, 19.787, 150, 0], [9.99, 13.28, 120, 0], [24.775, 15.481, 315, 1], [4, 15.5, 90, 0]],
+    3: [[28.316, 10.716, 116.57, 0], [22.755, 7.376, 135, 0], [16.649, 6.971, 135, 0], [19.875, 20.116, 150, 0], [10.595, 7.018, 315, 0], [7.178, 17.44, 195, 0], [15.339, 13.228, 75, 0], [4.199, 10.729, 285, 0], [8.26, 24.866, 165, 1], [28.275, 24.866, 195, 0]],
+    4: [[13.12, 10.721, 296.57, 0], [19.492, 7.337, 236, 0], [28.107, 6.429, 153.43, 0], [26.415, 24.08, 15, 0], [5.17, 25.264, 153.43, 0], [26.532, 11.975, 345, 0], [19.996, 18.287, 105, 0], [29.018, 17.495, 330, 0], [5.639, 15.716, 225, 1], [12.062, 19.889, 315, 0]]
   };
   var dauNho = {};
   function viTriDau(k) {
@@ -410,7 +417,7 @@
       dauNho[k] = MAU_DAU[k].map(function (m, i) {
         var st = { x: m[0], y: m[1], r: m[2], f: m[3] }, nac = nacXoay(k, i, st.f), g = nacGan(nac, st.r);
         if (Math.abs(lechVong(g - st.r)) <= 4) st.r = g;
-        vaoLuoi(goc[i], st, lg); giuTrong(goc[i], st, bc.ban);
+        vaoLuoi(goc[i], st, lg); giuTrong(goc[i], st, bc.dan);
         return { x: f3(st.x), y: f3(st.y), r: st.r, f: st.f };
       });
     }
@@ -860,15 +867,18 @@
     if (!(k >= 1 && k <= 4)) { chonNhom(ts, phong); return; }
     document.body.setAttribute("data-nhom", k);
     var bc = BOCUC[NHOM[k]], dan = bc.dan, mau = MAU[k], goc = BO.map(daGiac);
-    var T = null, nhap = {}, sai = {}, daMo = false, xong = false, man = "nhap", lanDau = true;
+    var T = null, nhap = {}, sai = {}, khoa3 = {}, daMo = false, xong = false, man = "nhap", lanDau = true;
     var manh = [], chon = null, keo = null, xoay2 = null, tro = {}, guiCho = {}, guiLuc = {}, chuaNhan = null, baoDe = null, quaTo = null, dangChot = false;
     var to = window.innerWidth >= 700 && window.innerHeight >= 700;
     var mayId = layMayId();
     $("dtNhom").textContent = "Nhóm " + k;
     $("dtChinh").hidden = false;
     giuSang();
-    function duocXep() { return daMo || !!nhap.con; }
+    /* Thầy dặn 15/11 19:15: "Khi các em nhập đúng hết thì hiện ra dòng Chúc mừng nhóm 1 đã hoàn thành rất tốt bước 1. rồi sau đó các em báo giáo viên,
+       giáo viên sẽ mở bước 2 cho các em." Từ đó đúng phần còn lại KHÔNG tự mở bàn xếp nữa: chỉ khi giáo viên mở (n<k>/mo = 1). */
+    function duocXep() { return daMo; }
     function du7() { return KHOA_MANH.every(function (kh) { return nhap[kh]; }); }
+    function biKhoa(kh) { return !!khoa3[kh] && !nhap[kh]; }      // mục đã sai đủ 3 lần, đang chờ GVCN mở khóa
 
     /* ---------------- bước 1: nhập số đo ---------------- */
     var oManh = {}, oDong = {};
@@ -895,24 +905,29 @@
     }
     function veNhap() {
       KHOA_MANH.forEach(function (kh) {
-        var M = MUC[kh], o = oManh[kh], d = nhap[kh];
-        o.nut.classList.toggle("xong", !!d); o.nut.classList.toggle("sao", d === "s");
+        var M = MUC[kh], o = oManh[kh], d = nhap[kh], kb = biKhoa(kh);
+        o.nut.classList.toggle("xong", !!d); o.nut.classList.toggle("sao", d === "s"); o.nut.classList.toggle("bi-khoa", kb);
         o.than.setAttribute("fill", d ? mau[M.so[0] - 1] : MAU_XAM);
         o.nut.querySelector(".o-dau").textContent = d === "s" ? "★" : d ? "✓" : "";
-        o.nut.querySelector(".o-kq").textContent = d ? M.dt + " cm²" : "";
+        o.nut.querySelector(".o-kq").textContent = d ? M.dt + " cm²" : kb ? "Đã khóa" : "";
       });
       ["tong", "thiep", "con"].forEach(function (kh) {
-        var b = oDong[kh], d = nhap[kh], kq = b.querySelector(".dong-kq"), khoa = khoaMuc(kh), o = MUC[kh].o;
-        b.classList.toggle("xong", !!d); b.classList.toggle("khoa", !d && !!khoa);
-        kq.textContent = d ? (d === "s" ? "★ " : "✓ ") + o[o.length - 1].dung + " cm²" : khoa ? khoa : "Chạm để nhập";
+        var b = oDong[kh], d = nhap[kh], kq = b.querySelector(".dong-kq"), khoa = khoaMuc(kh), o = MUC[kh].o, kb = biKhoa(kh);
+        b.classList.toggle("xong", !!d); b.classList.toggle("khoa", !d && !!khoa && !kb); b.classList.toggle("bi-khoa", kb);
+        kq.textContent = d ? (d === "s" ? "★ " : "✓ ") + o[o.length - 1].dung + " cm²" + (kh === "con" ? ": chỗ để ghi lời chúc" : "") : kb ? CHU_KHOA : khoa ? khoa : "Chạm để nhập";
       });
       var n = demDung(nhap), loi = $("nhapLoi");
       loi.className = "nhap-loi";
       if (nhap.con) { loi.textContent = "Đúng hết rồi! Phần còn trống rộng " + CON + " cm²: chỗ để ghi lời chúc và trang trí thêm."; loi.classList.add("tot"); }
-      else if (daMo) loi.textContent = "Thầy đã mở bàn xếp. Các em vẫn nhập tiếp số đo được. Đã đúng " + n + "/10.";
+      else if (THU_TU.some(biKhoa)) { loi.textContent = "Có mục nhập sai " + SAI_KHOA + " lần nên đã khóa. " + CHU_KHOA + "."; loi.classList.add("xau"); }
+      else if (daMo) loi.textContent = "Giáo viên đã mở bước 2. Các em vẫn nhập tiếp số đo được. Đã đúng " + n + "/10.";
       else loi.textContent = n ? "Đã đúng " + n + "/10. Chạm mảnh chưa có màu để nhập tiếp." : "Đo từng mảnh, tính diện tích rồi chạm vào mảnh để nhập. Hai mảnh giống nhau chỉ nhập một lần.";
+      var du10 = n === THU_TU.length;
+      $("nhapMung").hidden = !(du10 && !daMo);
+      loi.hidden = du10 && !daMo;                 // lúc có lời chúc mừng thì lời chúc nằm ở chỗ dòng nhắc (đầu màn), dòng nhắc ẩn
+      $("nhapMung1").textContent = "Chúc mừng nhóm " + k + " đã hoàn thành rất tốt bước 1.";
       $("nhapSang").disabled = !duocXep();
-      $("nhapSang").textContent = duocXep() ? "Sang bàn xếp" : "Đúng phần còn lại thì mở bàn xếp";
+      $("nhapDuoi").hidden = !duocXep();          // nút sang bước 2 chỉ hiện khi giáo viên đã mở bước 2 (trước đó là một nút mờ không bấm được, rối mắt)
       if (O.kh) veO();
     }
 
@@ -962,7 +977,7 @@
       }
     }
     function veO() {
-      var kh = O.kh, M = MUC[kh], d = nhap[kh], hop = $("oO");
+      var kh = O.kh, M = MUC[kh], d = nhap[kh], hop = $("oO"), kb = biKhoa(kh);
       $("oTen").textContent = M.ten;
       if (M.so && M.so.length > 1) H("small", null, "có 2 hình cùng diện tích", $("oTen"));   // thầy dặn 14/11 16:06
       hop.textContent = "";
@@ -973,23 +988,24 @@
         H("span", "o-dv", x.dv || "cm", b);
         if (d) b.classList.add("dung");
         else {
-          if (i === O.i) b.classList.add("dang");
+          if (i === O.i && !kb) b.classList.add("dang");
           if (O.kq && O.v[i] !== "" && O.kq.v[i] === O.v[i]) b.classList.add(O.kq.dung[i] ? "dung" : "sai");
-          if (!O.v[i] && i === O.i) so.classList.add("nhay");
-          b.onclick = function () { O.i = i; veO(); };
+          if (!O.v[i] && i === O.i && !kb) so.classList.add("nhay");
+          if (!kb) b.onclick = function () { O.i = i; veO(); };
         }
       });
       var bao = $("oBao");
-      bao.className = "o-bao " + (d ? "tot" : O.lopBao);
-      bao.textContent = d ? (d === "s" ? "Đúng rồi! Đúng ngay lần đầu nên nhóm được 1 ngôi sao." : "Đúng rồi!") : O.bao;
-      $("oPhim").classList.toggle("tat", !!d);
-      $("oKiem").disabled = !!d || !T;
-      $("oKiem").textContent = d ? "Đã đúng" : "Kiểm tra";
+      bao.className = "o-bao " + (d ? "tot" : kb ? "xau khoa3" : O.lopBao);
+      bao.textContent = d ? (d === "s" ? "Đúng rồi! Đúng ngay lần đầu nên nhóm được 1 ngôi sao." : "Đúng rồi!") : kb ? "Nhóm đã nhập sai " + SAI_KHOA + " lần. " + CHU_KHOA + "." : O.bao;
+      $("o").classList.toggle("bi-khoa", kb);
+      $("oPhim").classList.toggle("tat", !!d || kb);
+      $("oKiem").disabled = !!d || !T || kb;
+      $("oKiem").textContent = d ? "Đã đúng" : kb ? "Đã khóa" : "Kiểm tra";
       var hinh = $("oHinh").querySelector(".o-svg .than");
       if (hinh && M.manh) hinh.setAttribute("fill", d ? mau[M.so[0] - 1] : "#f1ece2");
     }
     function bam(p) {
-      if (!O.kh || nhap[O.kh]) return;
+      if (!O.kh || nhap[O.kh] || biKhoa(O.kh)) return;
       var n = MUC[O.kh].o.length, s = O.v[O.i];
       if (p === "tiep") O.i = (O.i + 1) % n;
       else if (p === "xoa") { if (s) O.v[O.i] = s.slice(0, -1); else if (O.i > 0) O.i--; }
@@ -997,7 +1013,7 @@
       veO();
     }
     $("oKiem").onclick = function () {
-      var kh = O.kh; if (!kh || nhap[kh] || !T) return;
+      var kh = O.kh; if (!kh || nhap[kh] || !T || biKhoa(kh)) return;
       var trong = O.v.findIndex(function (s) { return s === ""; });
       if (trong >= 0) { O.i = trong; O.bao = "Em nhập đủ các ô rồi bấm Kiểm tra nhé."; O.lopBao = ""; veO(); return; }
       var kq = kiemMuc(kh, O.v.map(Number));
@@ -1009,10 +1025,12 @@
         O.dong = setTimeout(dongO, 1300);
       } else {
         sai[kh] = (sai[kh] || 0) + 1;
-        T.set("n" + k + "/s/" + kh, sai[kh]);
+        var ghi = {}; ghi["n" + k + "/s/" + kh] = sai[kh];
+        if (sai[kh] % SAI_KHOA === 0) { khoa3[kh] = 1; ghi["n" + k + "/khoa/" + kh] = 1; }      // đủ 3 lần sai: khóa mục này trên mọi máy của nhóm (ghi cùng một lần với số lần sai)
+        T.update(ghi);
         O.bao = kq.goi; O.lopBao = "xau";
         var saiDau = kq.dung.indexOf(false); if (saiDau >= 0) O.i = saiDau;
-        veO();
+        veNhap();
       }
     };
     $("nhapSang").onclick = function () { if (duocXep()) { man = "xep"; doiMan(); } };
@@ -1054,9 +1072,9 @@
         var moi = cuaSo(bc), khoa = moi.map(f2).join("|");
         if (khoa !== banDaVe) {
           banDaVe = khoa; ban = moi;
-          vungKeo = ban.slice();                    // mảnh kéo được tới mọi chỗ trên tấm thiệp, không ra ngoài tấm thiệp
+          vungKeo = dan.slice();                    // 15/11 19:15: mảnh chỉ kéo được trong chỗ dán hình của tờ thiệp, không xuống phần lời chúc
           svg.setAttribute("viewBox", [ban[0] * U, ban[1] * U, (ban[2] - ban[0]) * U, (ban[3] - ban[1]) * U].join(" "));
-          veLuoiRong(lopLuoi, ban, luoi);
+          veLuoiRong(lopLuoi, dan, luoi, true);     // lưới mờ và viền chỉ trong chỗ dán hình
           tinhDau();
           manh.forEach(function (m, i) {           // m.dau: mảnh chưa ai kéo, nằm ở chỗ sẵn (chỗ này đổi theo phần lưới các máy thấy). m.db = chỗ thật của mảnh theo máy chủ:
             if (m.dau) m.st = macDinh(i);          // mảnh máy khác để ở chỗ máy này không thấy thì hiện sát mép (chỉ trên máy này, chưa ghi lên)
@@ -1381,7 +1399,12 @@
       baoCua();
       T.on("n" + k, function (d) {                 // mọi thay đổi của nhóm: số đo đã đúng, vị trí mảnh, đã hoàn thành
         d = d || {};
-        nhap = d.d || {}; sai = d.s || {}; daMo = !!d.mo;
+        var khoaCu = khoa3, moCu = daMo;
+        nhap = d.d || {}; sai = d.s || {}; daMo = !!d.mo; khoa3 = d.khoa || {};
+        if (daMo && !moCu && !lanDau && demDung(nhap) === THU_TU.length && man === "nhap") { dongO(); man = "xep"; }      // giáo viên vừa mở bước 2 cho nhóm đã xong bước 1: máy tự sang bàn xếp
+        if (O.kh && khoaCu[O.kh] && !khoa3[O.kh] && !nhap[O.kh]) {      // GVCN vừa mở khóa mục đang mở trên máy này: xóa số cũ, cho nhập lại
+          O.v = MUC[O.kh].o.map(function () { return ""; }); O.i = 0; O.kq = null; O.bao = "GVCN đã mở khóa. Em tính lại rồi nhập nhé."; O.lopBao = "";
+        }
         var o = d.m || {};
         coNhom = d.co || {}; tinhDau();           // máy khác vào hay rời bàn xếp: chỗ nằm sẵn có thể đổi
         manh.forEach(function (m, i) {
@@ -1484,6 +1507,7 @@
       o.querySelector(".the").onclick = function () { phong_to(k); };
       svg.onclick = function () { phong_to(k); };
       o.querySelector(".mo-ban").onclick = function (e) { e.stopPropagation(); if (T) T.set("n" + k + "/mo", 1); };
+      o.querySelector(".mo-khoa").onclick = function (e) { e.stopPropagation(); if (!T) return; var u = {}; u["n" + k + "/khoa"] = null; T.update(u); };      // 15/11 19:02: thầy mở khóa các mục nhóm đã nhập sai 3 lần
     });
     function phong_to(k) {                        // chạm một khung: hiện riêng khung đó thật lớn, chạm lần nữa để về
       lon = lon === k ? 0 : k;
@@ -1605,7 +1629,7 @@
     function veNhom(k, d) {
       d = d || {}; duLieu[k] = d;
       var K = khungNhom[k], m = d.m || {}, nhap = d.d || {}, ds = [], so, mau = MAU[k];
-      var pha = d.xong ? "xong" : (d.mo || nhap.con) ? "xep" : "nhap";
+      var pha = d.xong ? "xong" : d.mo ? "xep" : "nhap";      // 15/11 19:15: bước 2 chỉ mở khi giáo viên bấm
       if (pha === "xong" && K.pha && K.pha !== "xong") { K.o.classList.add("chot"); clearTimeout(K.hen); K.hen = setTimeout(function () { K.o.classList.remove("chot"); }, 1200); }
       if (pha !== K.pha) { K.o.classList.remove("pha-nhap", "pha-xep", "pha-xong"); K.o.classList.add("pha-" + pha); K.pha = pha; }
       ["tong", "thiep", "con"].forEach(function (kh) {
@@ -1656,7 +1680,11 @@
       if (thuTu !== K.thuTu) { K.thuTu = thuTu; ds.forEach(function (x) { K.lop.appendChild(K.g[x.so]); }); }   // chỉ xếp lại lớp khi thứ tự trên dưới đổi (xếp lại làm đứt chuyển động)
       var may = d.co ? Object.keys(d.co).length : 0, nd = demDung(nhap), ns = demSao(nhap);
       K.o.classList.toggle("co-may", may > 0);
-      K.tt.textContent = pha === "xong" ? "Đã hoàn thành" : pha === "xep" ? "Đang xếp hình" : nd ? "Đo và tính: đúng " + nd + "/10" : may ? "Đã vào, đang đo và tính" : "Chưa có máy nào vào";
+      var kh3 = d.khoa || {}, dsKhoa = pha === "xong" ? [] : THU_TU.filter(function (kh) { return kh3[kh] && !nhap[kh]; });      // mục nhóm đã nhập sai 3 lần, đang chờ thầy mở khóa
+      K.o.classList.toggle("bi-khoa", dsKhoa.length > 0);
+      var choMo = pha === "nhap" && nd === THU_TU.length;      // nhóm đã đúng hết bước 1, chờ giáo viên mở bước 2
+      K.o.classList.toggle("cho-mo", choMo);
+      K.tt.textContent = dsKhoa.length ? "Sai " + SAI_KHOA + " lần, đã khóa: " + dsKhoa.map(function (kh) { return MUC[kh].ngan; }).join(", ") : pha === "xong" ? "Đã hoàn thành" : pha === "xep" ? "Đang xếp hình" : choMo ? "Xong bước 1, chờ mở bước 2" : nd ? "Đo và tính: đúng " + nd + "/10" : may ? "Đã vào, đang đo và tính" : "Chưa có máy nào vào";
       K.sao.textContent = ns ? "★ " + ns : "";
       $("vao" + k).querySelector(".vao-tt").textContent = may ? "Đã vào: " + may + " máy" : "Chưa có máy nào";
       capNhatMa();
@@ -1672,7 +1700,7 @@
     }
     function doiXem(x) { xem = x; if (lon) phong_to(lon); capNhatMa(); }
     function xoaHinh() { if (!T) return; var o = {}; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/m"] = null; o["n" + k + "/xong"] = null; }); T.update(o); }
-    function lamLaiHet() { if (!T) return; var o = {}; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo"].forEach(function (p) { o["n" + k + "/" + p] = null; }); }); T.update(o); }
+    function lamLaiHet() { if (!T) return; var o = {}; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa"].forEach(function (p) { o["n" + k + "/" + p] = null; }); }); T.update(o); }
     function hoiHaiLan(b, chuHoi, lam) {           // nút nguy hiểm: bấm hai lần trong 3 giây mới làm
       var goc2 = b.textContent, luc = 0;
       b.onclick = function () {

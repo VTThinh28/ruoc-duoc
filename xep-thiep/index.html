@@ -31,7 +31,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .nut.chinh { background: #d9463c; border-color: #b3322b; color: #fff; }
 .nut.chinh:active:not(:disabled) { background: #c23a31; }
 .nut.hoi { background: #fde9c4; border-color: #e0a63a; }
-.noi { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #efe4cf; color: var(--chu-nhat); white-space: nowrap; }
+.noi { font-size: 13.5px; padding: 4px 11px; border-radius: 999px; background: #efe4cf; color: var(--chu-nhat); white-space: nowrap; }
 .noi.ok { background: #dff0dd; color: #2f6b3c; }
 .noi.loi { background: #f8dcd8; color: #9c2a22; }
 
@@ -91,12 +91,14 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 }
 #dtChinh { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; padding-top: env(safe-area-inset-top); }
 .man { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.dt-dau { display: flex; align-items: center; gap: 10px; padding: 7px 10px 6px; }
+/* 15/11 19:28, thầy: trên điện thoại chữ "Bước 1: Đo và tính" bị mất. "Nhóm 1" nằm cạnh "Đã nối với tivi", tên bước xuống dòng riêng, đủ chữ. Màn rộng (cầm ngang, máy tính bảng) thì vẫn một dòng. */
+.dt-dau { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 10px; padding: 7px 10px 4px; }
 #dtNhom { font-family: var(--chu-dam); font-weight: 700; font-size: 19px; line-height: 1.5; color: #fff; background: var(--mau-nhom, #b3322b); padding: 0 14px; border-radius: 999px; white-space: nowrap; }
-.dt-ten { font-family: var(--chu-dam); font-weight: 700; font-size: 17px; color: #5a3a22; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dt-ten { font-family: var(--chu-dam); font-weight: 700; font-size: 19px; line-height: 1.3; color: #5a3a22; flex: 0 0 100%; padding-left: 2px; }
+@media (min-width: 560px) { .dt-ten { flex: 1 1 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
 
 /* --- bước 1: nhập số đo --- */
-.nhap-loi { margin: 0 12px 6px; min-height: 2.7em; font-size: 14.5px; line-height: 1.35; color: #6a5440; display: flex; align-items: center; }
+.nhap-loi { margin: 0 12px 6px; min-height: 2.7em; font-size: 15px; line-height: 1.35; color: #5f4a37; display: flex; align-items: center; }
 .nhap-loi.tot { color: #2f6b3c; font-weight: 600; }
 .nhap-cuon { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 4px; touch-action: pan-y; }
 .nhap-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 7px; }
@@ -110,15 +112,16 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .o-manh .o-kq { position: absolute; right: 7px; bottom: 3px; font-size: 12px; font-weight: 700; color: #2f6b3c; }
 .o-manh.xong { border-color: #9fcfa8; background: #f4fbf3; }
 .nhap-dong { display: grid; gap: 7px; margin-top: 9px; }
-.dong { border: 2px solid var(--nut-vien); background: var(--giay); border-radius: 14px; min-height: 50px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+.dong { border: 2px solid var(--nut-vien); background: var(--giay); border-radius: 14px; min-height: 54px; padding: 6px 14px; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 1px; text-align: left; }
 .dong:active { background: #f3e6cb; }
-.dong-ten { font-weight: 600; font-size: 15.5px; }
-.dong-kq { font-size: 13px; color: var(--chu-nhat); text-align: right; }
+.dong-ten { font-weight: 700; font-size: 16px; line-height: 1.25; }
+.dong-kq { font-size: 13.5px; line-height: 1.3; color: var(--chu-nhat); text-align: left; }
 .dong.xong { border-color: #9fcfa8; background: #f4fbf3; }
 .dong.xong .dong-kq { color: #2f6b3c; font-weight: 700; font-size: 15px; }
 .dong.khoa { opacity: .55; }
 .dong.rung { animation: rung 240ms linear 2; }
 .nhap-duoi { padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); }
+.nhap-duoi[hidden] { display: none; }
 .nhap-duoi .nut { width: 100%; min-height: 52px; font-size: 16px; }
 
 /* --- bảng nhập một mục --- */
@@ -154,6 +157,23 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .phim.phu { font-size: 15px; }
 .phim:active { background: #f3e6cb; }
 .o-phim.tat { opacity: .35; pointer-events: none; }
+/* 15/11 19:02: mục nhập sai 3 lần thì khóa, hiện "Báo GVCN để mở khóa" */
+:root { --o-khoa: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23b3261d' d='M6 10V7a6 6 0 0 1 12 0v3h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1zm2.5 0h7V7a3.5 3.5 0 0 0-7 0z'/%3E%3C/svg%3E"); --o-khoa-trang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M6 10V7a6 6 0 0 1 12 0v3h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1zm2.5 0h7V7a3.5 3.5 0 0 0-7 0z'/%3E%3C/svg%3E"); }
+.o-manh.bi-khoa { border-color: #e3a49e; background: #fdf0ee; }
+.o-manh.bi-khoa .o-dau { width: 18px; height: 18px; background: var(--o-khoa) center / contain no-repeat; }
+.o-manh.bi-khoa .o-kq { color: #b3261d; }
+.o-manh.bi-khoa .o-hai { display: none; }
+.dong.bi-khoa { border-color: #e3a49e; background: #fdf0ee; }
+.dong.bi-khoa .dong-kq { color: #b3261d; font-weight: 700; font-size: 14px; }
+.dong.bi-khoa .dong-kq::before, .o-bao.khoa3::before { content: ""; display: inline-block; flex: none; width: 1.1em; height: 1.1em; margin-right: .35em; vertical-align: -0.16em; background: var(--o-khoa) center / contain no-repeat; }
+.nhap-loi.xau { color: #b3261d; font-weight: 600; }
+/* 15/11 19:15: đúng hết bước 1 thì hiện lời chúc mừng, chờ giáo viên mở bước 2 */
+.nhap-mung { margin: 0 10px 8px; padding: 12px 14px; border-radius: 14px; background: #e6f4e3; border: 2px solid #8fc79a; color: #1f5b31; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.nhap-mung[hidden], .nhap-loi[hidden] { display: none; }
+.nhap-mung b { font-family: var(--chu-dam); font-size: 17.5px; line-height: 1.3; }
+.nhap-mung span { font-size: 15px; line-height: 1.35; }
+#dtBan .luoi-vien { stroke: #c9b79a; stroke-width: 1px; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.o-bao.khoa3 { font-size: 16.5px; font-weight: 700; }
 .o-duoi { padding: 7px 12px calc(8px + env(safe-area-inset-bottom)); }
 .o-duoi .nut { width: 100%; min-height: 52px; font-size: 17px; }
 
@@ -306,6 +326,17 @@ body.tv { background: #eadfc9; }
 .khung .so-sao:empty { display: none; }
 #tv .khung .mo-ban { display: none; font-size: 17px; min-height: 40px; padding: 0 12px; border-radius: 12px; white-space: nowrap; }
 #tv .khung.pha-nhap .mo-ban { display: inline-flex; }
+/* 15/11 19:02: nhóm có mục nhập sai 3 lần: thẻ nhóm báo đỏ, có nút Mở khóa cho thầy (viền nút sáng lên rồi dịu xuống, không phóng to thu nhỏ) */
+#tv .khung .mo-khoa { display: none; font-size: 18px; min-height: 44px; padding: 0 14px 0 12px; border-radius: 12px; white-space: nowrap; background: #d9463c; border-color: #a92f27; color: #fff; font-weight: 700; animation: khoa-sang 1.6s ease-in-out infinite; }
+#tv .khung .mo-khoa::before { content: ""; display: inline-block; width: 20px; height: 20px; margin-right: 7px; background: var(--o-khoa-trang) center / contain no-repeat; }
+#tv .khung.bi-khoa .mo-khoa { display: inline-flex; align-items: center; }
+.khung.bi-khoa .tt { color: #b3261d !important; font-weight: 700; }
+.khung.bi-khoa .so-sao { display: none; }
+.khung.bi-khoa svg.thiep { box-shadow: 0 0 0 5px #e0574d, 0 2px 9px rgba(60, 40, 20, .38); }
+/* nhóm đã đúng hết bước 1, chờ giáo viên mở bước 2: dòng trạng thái và nút Mở bước 2 chuyển màu xanh */
+.khung.cho-mo .tt { color: #23643a; font-weight: 700; }
+#tv .khung.cho-mo .mo-ban { background: #3f8f52; border-color: #2c6e3d; color: #fff; font-weight: 700; }
+@keyframes khoa-sang { 0%, 100% { box-shadow: 0 0 0 0 rgba(217, 70, 60, 0); } 50% { box-shadow: 0 0 0 8px rgba(217, 70, 60, .32); } }
 .khung svg.thiep { display: block; width: 100%; height: auto; border-radius: 2px; box-shadow: 0 2px 9px rgba(60, 40, 20, .38); cursor: pointer; background: #fff; }
 .khung.pha-xong svg.thiep { box-shadow: 0 0 0 5px #6fb37c, 0 2px 9px rgba(60, 40, 20, .38); }
 /* thiệp luôn rõ nét. Lưới bàn xếp hiện lúc đo, tính và lúc xếp; xong thì ẩn. 3 ô Tổng, Thiệp, Phần còn lại chỉ hiện lúc đo và tính */
@@ -407,15 +438,16 @@ body.tv { background: #eadfc9; }
   <div id="dtCho" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p id="dtChoChu"></p></div>
   <div id="dtChon" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p class="chon-hoi">Em ở nhóm nào?</p><p id="dtChonChu" class="chon-chu"></p><div id="dtChonNut"></div><button id="dtChonXong" class="nut chinh" disabled>Xác nhận</button></div>
   <div id="dtChinh" hidden>
-    <div class="dt-dau"><span id="dtNhom"></span><span class="dt-ten" id="dtTen">Bước 1: Đo và tính</span><span id="dtNoi" class="noi">Đang nối…</span></div>
+    <div class="dt-dau"><span id="dtNhom"></span><span id="dtNoi" class="noi">Đang nối…</span><span class="dt-ten" id="dtTen">Bước 1: Đo và tính</span></div>
 
     <section id="manNhap" class="man">
       <p id="nhapLoi" class="nhap-loi"></p>
+      <div id="nhapMung" class="nhap-mung" hidden><b id="nhapMung1"></b><span>Các em báo giáo viên để mở bước 2.</span></div>
       <div class="nhap-cuon">
         <div id="nhapManh" class="nhap-luoi"></div>
         <div id="nhapDong" class="nhap-dong"></div>
       </div>
-      <div class="nhap-duoi"><button id="nhapSang" class="nut chinh" disabled>Sang bàn xếp</button></div>
+      <div id="nhapDuoi" class="nhap-duoi" hidden><button id="nhapSang" class="nut chinh" disabled>Sang bước 2: Xếp hình</button></div>
     </section>
 
     <section id="manXep" class="man" hidden>
@@ -480,10 +512,10 @@ body.tv { background: #eadfc9; }
         <rect x="735" y="510" width="446" height="323" class="bt-o"/>
       </svg>
     </div>
-    <div class="khung dung pha-nhap" id="khung1"><div class="the"><span class="ten">Nhóm 1</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao1"><div class="ma" id="ma1"></div><div class="ma-chu"><b>Nhóm 1</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
-    <div class="khung dung pha-nhap" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao2"><div class="ma" id="ma2"></div><div class="ma-chu"><b>Nhóm 2</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
-    <div class="khung ngang pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao3"><div class="ma" id="ma3"></div><div class="ma-chu"><b>Nhóm 3</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
-    <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-ban">Mở bàn xếp</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao4"><div class="ma" id="ma4"></div><div class="ma-chu"><b>Nhóm 4</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung dung pha-nhap" id="khung1"><div class="the"><span class="ten">Nhóm 1</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-khoa">Mở khóa</button><button class="nut mo-ban">Mở bước 2</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao1"><div class="ma" id="ma1"></div><div class="ma-chu"><b>Nhóm 1</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung dung pha-nhap" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-khoa">Mở khóa</button><button class="nut mo-ban">Mở bước 2</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao2"><div class="ma" id="ma2"></div><div class="ma-chu"><b>Nhóm 2</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung ngang pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-khoa">Mở khóa</button><button class="nut mo-ban">Mở bước 2</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao3"><div class="ma" id="ma3"></div><div class="ma-chu"><b>Nhóm 3</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
+    <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span><button class="nut mo-khoa">Mở khóa</button><button class="nut mo-ban">Mở bước 2</button></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao4"><div class="ma" id="ma4"></div><div class="ma-chu"><b>Nhóm 4</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
     <p class="tv-ten">Tấm thiệp<br>của nhóm em</p>
     <p class="xep-goi">Chạm vào một tấm thiệp để xem lớn.<br>★: nhập đúng ngay lần đầu.</p>
     <div id="dem3d" class="dem-3d"><b>Tranh 3D</b><div class="dem-o"><span>1</span><span>2</span><span>3</span><span>4</span></div><p id="dem3dChu">Đã bấm 0/4 nhóm</p></div>
@@ -492,7 +524,7 @@ body.tv { background: #eadfc9; }
 
   <div class="tv-nut">
     <button id="nutMa" class="nut chi-xep">Ẩn mã QR</button>
-    <button id="nutMoHet" class="nut chi-xep">Mở bàn xếp cả 4 nhóm</button>
+    <button id="nutMoHet" class="nut chi-xep">Mở bước 2 cả 4 nhóm</button>
     <button id="nutDapSo" class="nut chi-xep">Đáp số</button>
     <button id="nutCaiDat" class="nut chi-xep">Cài đặt</button>
     <button id="nutToan" class="nut">Toàn màn hình</button>
@@ -533,6 +565,6 @@ body.tv { background: #eadfc9; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=2fd611de"></script>
-<script src="js/xep-thiep.js?v=5fe29afe"></script>
+<script src="js/xep-thiep.js?v=9dff0687"></script>
 </body>
 </html>
