@@ -594,36 +594,22 @@ body.tv { background: #130c06; }
 .nv-dong li { font-size: calc(36px * var(--nv)); line-height: 1.27; margin-top: 4px; text-wrap: pretty; }
 .nv-luu-y { margin: 14px 0 0; text-align: center; font-size: calc(34px * var(--nv)); line-height: 1.3; font-weight: 600; color: #9c2a22; }
 /* --- đồng hồ đếm ngược. Chỗ nằm: giữa phía dưới báo tường, giữa thiệp nhóm 3 và nhóm 4 (15/11 22:12).
-   16/11 22:08, thầy: "đồng hồ thiết kế theo kiểu mặt trời lặn đang sáng rồi tối dần có mặt trời chuyển mặt trăng, có sao" → khung trời có mặt trời lặn dần, trăng lên, sao hiện (js: dnCanh).
-   16/11 23:48, thầy: "cho hình mặt trời mọc trời sáng rồi tối từ từ đến hết giờ thì báo chuông xong là đồng hồ biến mất hiện ra lại báo tường" → mặt trời mọc lúc bắt đầu, tối dần đều; hết chuông thì đồng hồ tự ẩn.
-   Màu trời, đồi, mây, mặt trời do js đặt vào các biến --t1 … --dia trên #dn; --dem = 0 (ngày) → 1 (đêm). Không phóng to thu nhỏ: chỉ trôi, đổi màu, mờ dần --- */
-.dn { position: absolute; left: 795px; top: 642px; width: 330px; height: 404px; scale: var(--bt); transform-origin: 165px -102px; z-index: 12; box-sizing: border-box; padding: 10px 0 0; background: #63b8ee; border-radius: 28px; box-shadow: 0 0 0 4px #f6e7c4, 0 0 0 6.5px #d9b25a, 0 14px 40px rgba(60, 40, 20, .34); display: flex; flex-direction: column; align-items: center; overflow: hidden; animation: dnHien .5s ease-out both; }
+   16/11 22:08 và 23:48 đồng hồ là khung trời có mặt trời (bản 5dc397f, 9ff1878).
+   17/11 00:57, thầy: "cái đếm giờ che mất mấy cái nút kìa, chỉnh lại nhé. thôi cái mặt trời đổi lại trống trường đi, bắt đầu thì gõ và hết giờ thì gõ"
+   → đồng hồ thấp lại (380) và nhích lên: đáy cách hàng nút gần 30 px (trước chỉ 6 px). To nhỏ theo báo tường bằng transform: scale(var(--bt)) quanh tâm màn hình
+     (bản trước dùng thuộc tính "scale" riêng: trình duyệt cũ không hiểu, đồng hồ to hơn một chút và đè lên đầu cả 5 nút).
+   → trong khung là tấm bảng số và cái trống trường đỏ trên giá gỗ, nền tường vàng nhạt, sàn gỗ. Lúc bắt đầu và lúc hết giờ js (dnGo) xoay dùi gõ vào mặt trống,
+     rung nhẹ thân trống, làm sáng mặt trống, hiện vệt tiếng và chữ "Tùng!". Không phóng to thu nhỏ: chỉ xoay, trôi, mờ dần --- */
+.dn { position: absolute; left: 800px; top: 626px; width: 320px; height: 380px; transform: scale(var(--bt)); transform-origin: 160px -86px; z-index: 12; box-sizing: border-box; padding: 10px 0 0; background: linear-gradient(180deg, #fff6dc 0%, #fcecc0 69%, #ebcd92 69.6%, #e2bf80 78%, #d6af70 100%); border-radius: 28px; box-shadow: 0 0 0 4px #f6e7c4, 0 0 0 6.5px #d9b25a, 0 8px 22px rgba(60, 40, 20, .26); display: flex; flex-direction: column; align-items: center; overflow: hidden; animation: dnMo .5s ease-out both; }
+@keyframes dnMo { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dnHien { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .dn[hidden] { display: none; }
-/* 16/11 23:48: hết giờ, báo chuông xong thì đồng hồ mờ dần rồi ẩn (js: lớp tan), báo tường hiện lại */
+/* 16/11 23:48: hết giờ, báo xong thì đồng hồ mờ dần rồi ẩn (js: lớp tan), báo tường hiện lại. 17/11 00:57: báo bằng trống */
 @keyframes dnTan { from { opacity: 1; } to { opacity: 0; } }
 .dn.tan, .dn.nho.tan { animation: dnTan .9s ease-in both; }
-.dn-canh { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-.dn-t1 { stop-color: var(--t1, #63b8ee); }
-.dn-t2 { stop-color: var(--t2, #a9dbf4); }
-.dn-t3 { stop-color: var(--t3, #eef8fb); }
-.dn-doi.xa { fill: var(--doi1, #a8d8a6); }
-.dn-doi.gan { fill: var(--doi2, #6dbb74); }
-.dn-cay { fill: var(--doi3, #57a465); }
-.dn-dia { fill: var(--dia, #ffe36e); }
-.dn-may { fill: var(--may, #fff); opacity: calc(.94 - .66 * var(--dem, 0)); }
-.dn-may g { animation: dnMay 46s ease-in-out infinite alternate; }
-.dn-may g + g { animation-duration: 61s; animation-direction: alternate-reverse; }
-@keyframes dnMay { from { transform: translateX(-13px); } to { transform: translateX(15px); } }
-.dn-sao { opacity: var(--dem, 0); }
-.dn-sao circle { fill: #fff8d6; animation: dnNhay 2.6s ease-in-out infinite; }
-@keyframes dnNhay { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
-.dn-trang { opacity: 0; }
-.dn-trang-luoi { fill: #fff3c4; }
-.dn.dung .dn-may g, .dn.dung .dn-sao circle { animation-play-state: paused; }
-.dn-nhan { position: relative; z-index: 1; height: 34px; font-size: 25px; line-height: 34px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(20, 30, 70, .75), 0 0 10px rgba(20, 30, 70, .5); white-space: nowrap; }
-.dn-giua { position: relative; z-index: 1; margin-top: 4px; min-width: 250px; box-sizing: border-box; padding: 7px 16px 9px; border-radius: 22px; background: rgba(22, 32, 76, .3); text-align: center; }
-.dn-so { display: inline-flex; align-items: center; font-family: var(--chu-dam); font-weight: 800; font-size: 78px; line-height: 1; color: #fff; text-shadow: 0 2px 3px rgba(20, 30, 70, .55); transition: opacity .4s, color 1.2s; }
+.dn-nhan { position: relative; z-index: 1; height: 34px; font-size: 25px; line-height: 34px; font-weight: 700; color: #6b3d1e; white-space: nowrap; }
+.dn-giua { position: relative; z-index: 1; margin-top: 4px; min-width: 250px; box-sizing: border-box; padding: 6px 16px 8px; border-radius: 22px; background: #fffaf0; box-shadow: 0 0 0 2.5px #d9b25a, 0 4px 10px rgba(90, 58, 34, .16); text-align: center; }
+.dn-so { display: inline-flex; align-items: center; font-family: var(--chu-dam); font-weight: 800; font-size: 78px; line-height: 1; color: #5a3a22; transition: opacity .4s, color 1.2s; }
 .dn-so[hidden] { display: none; }
 .dn-o { position: relative; display: inline-block; width: .62em; height: 1.08em; overflow: hidden; }
 .dn-o b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: inherit; }
@@ -632,25 +618,38 @@ body.tv { background: #130c06; }
 @keyframes dnVao { from { transform: translateY(55%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes dnRa { from { transform: none; opacity: 1; } to { transform: translateY(-55%); opacity: 0; } }
 .dn-so i { font-style: normal; width: .3em; text-align: center; margin-top: -.1em; }
-.dn-het { font-family: var(--chu-dam); font-weight: 800; font-size: 58px; line-height: 1.2; color: #ffe9a8; text-shadow: 0 2px 3px rgba(10, 14, 40, .6); animation: dnHien .6s ease-out both; }
-.dn.mau-cam .dn-so { color: #fff4d6; }
-.dn.mau-do .dn-so { color: #ffe08a; }
+.dn-het { font-family: var(--chu-dam); font-weight: 800; font-size: 58px; line-height: 1.2; color: #c8392f; animation: dnHien .6s ease-out both; }
+.dn.mau-cam .dn-so { color: #b4561f; }
+.dn.mau-do .dn-so { color: #c8392f; }
 .dn.mau-do.chay .dn-giua { animation: dnTho 1.8s ease-in-out infinite; }
-@keyframes dnTho { 0%, 100% { background-color: rgba(22, 32, 76, .3); } 50% { background-color: rgba(22, 32, 76, .52); } }
-.dn.dung .dn-so { opacity: .6; }
-.dn-hoa { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.dn-hoa i { position: absolute; width: 74px; height: 2.6px; border-radius: 2px; background: linear-gradient(90deg, #fff8d6, rgba(255, 248, 214, 0)); rotate: -28deg; opacity: 0; animation: dnBang 1.5s ease-out both; }
-@keyframes dnBang { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateX(-190px); opacity: 0; } }
-/* thu gọn: khi có bảng che (Nhiệm vụ, Đáp số, Cài đặt) hoặc đang xem lớn một thiệp, đồng hồ thành viên nhỏ ở góc trên bên trái: khung trời thu vào một ô tròn, số nằm bên cạnh */
-.dn.nho { left: 56px; top: 36px; scale: none; width: auto; height: 72px; padding: 0 24px 0 11px; flex-direction: row; gap: 10px; border-radius: 999px; animation: none; background: rgba(255, 251, 240, .97); box-shadow: 0 0 0 2px #e3d2ae, 0 14px 40px rgba(60, 40, 20, .28); }
+@keyframes dnTho { 0%, 100% { background-color: #fffaf0; } 50% { background-color: #ffe0d4; } }
+.dn.dung .dn-so { opacity: .55; }
+/* cái trống trường: svg 300 × 226, 30 px trên cùng để chữ "Tùng!" (thu gọn thì js đổi viewBox, chỉ còn cái trống) */
+.dn-trong { position: relative; display: block; flex: none; width: 300px; height: 226px; margin-top: 4px; }
+.dn-bong { fill: rgba(90, 58, 34, .2); }
+.dn-go { fill: #93623a; }
+.dn-go.sang { fill: #b07b4a; }
+.dn-vach { fill: none; stroke: #8c2a1e; stroke-width: 1.6; opacity: .32; }
+.dn-bong-than { fill: none; stroke: #f7a98d; stroke-width: 7; stroke-linecap: round; opacity: .55; }
+.dn-dinh circle { fill: #f2cf6a; stroke: #a8792b; stroke-width: .8; }
+.dn-vien-mat { fill: none; stroke: #b8892f; stroke-width: 3.2; }
+.dn-mat-giua { fill: #e2c387; opacity: .75; }
+.dn-sang { fill: #fffbe8; }
+.dn-song path { fill: none; stroke: #c98a2e; stroke-width: 3.2; stroke-linecap: round; }
+.dn-dui-than { fill: #c99a62; }
+.dn-dui-dau { fill: #a8703f; }
+.dn-dui-cam { fill: #7e5230; }
+.dn-tung { font-family: var(--chu-dam); font-weight: 800; font-size: 27px; fill: #c8402e; stroke: #fffaf0; stroke-width: 5px; paint-order: stroke; stroke-linejoin: round; text-anchor: middle; }
+/* thu gọn: khi có bảng che (Nhiệm vụ, Đáp số, Cài đặt) hoặc đang xem lớn một thiệp, đồng hồ thành viên nhỏ ở góc trên bên trái: cái trống nhỏ, số nằm bên cạnh */
+.dn.nho { left: 56px; top: 36px; transform: none; width: auto; height: 72px; padding: 0 24px 0 10px; flex-direction: row; gap: 8px; border-radius: 999px; animation: none; background: rgba(255, 251, 240, .97); box-shadow: 0 0 0 2px #e3d2ae, 0 14px 40px rgba(60, 40, 20, .28); }
 /* thiệp đang hiện to (không có bảng che): viên đồng hồ to nhỏ theo báo tường như tấm thiệp, nên ở cỡ màn hình nào cũng không chạm thiệp (thiệp ngang hiện to bắt đầu từ x = 265 trong hệ của .xep) */
-.dn.nho.theo-thiep { left: 22px; top: 22px; scale: var(--bt); transform-origin: 938px 518px; }
-.dn.nho .dn-nhan, .dn.nho .dn-hoa { display: none; }
-.dn.nho .dn-canh { position: static; flex: none; width: 50px; height: 50px; border-radius: 50%; }
-.dn.nho .dn-giua, .dn.nho.mau-do.chay .dn-giua { margin: 0; min-width: 0; padding: 0; background: none; animation: none; }
-.dn.nho .dn-so { font-size: 46px; color: #5a3a22; text-shadow: none; }
+.dn.nho.theo-thiep { left: 22px; top: 22px; transform: scale(var(--bt)); transform-origin: 938px 518px; }
+.dn.nho .dn-nhan { display: none; }
+.dn.nho .dn-trong { order: -1; width: 74px; height: 47px; margin: 0; }
+.dn.nho .dn-giua, .dn.nho.mau-do.chay .dn-giua { margin: 0; min-width: 0; padding: 0; background: none; box-shadow: none; animation: none; }
+.dn.nho .dn-so { font-size: 46px; color: #5a3a22; }
 .dn.nho.mau-do .dn-so { color: #c8392f; }
-.dn.nho .dn-het { font-size: 34px; color: #c8392f; text-shadow: none; animation: none; }
+.dn.nho .dn-het { font-size: 34px; color: #c8392f; animation: none; }
 #tv .nut.nv-x { position: absolute; right: 22px; top: 20px; width: 60px; min-height: 60px; padding: 0; border-radius: 50%; font-size: 26px; color: var(--chu-nhat); }
 
 /* --- mã cho máy giáo viên (15/11 19:18): bảng riêng có mã to. Từ 16/11 13:11 mã nằm sẵn trong Cài đặt (.cd-gv), chạm vào mã thì mở bảng này --- */
@@ -867,31 +866,42 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
   </div>
 
   <div id="dn" class="dn" hidden>
-    <!-- 16/11 22:08, 23:48: khung trời của đồng hồ (mặt trời mọc, lên cao, lặn dần, trăng lên, sao hiện). js đặt chỗ mặt trời (#dnMatTroi), mặt trăng (#dnTrang), dựng sao (#dnSao) và đổi màu -->
-    <svg class="dn-canh" viewBox="0 0 330 404" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id="dnTroi" x1="0" y1="0" x2="0" y2="1"><stop class="dn-t1" offset="0"/><stop class="dn-t2" offset=".58"/><stop class="dn-t3" offset=".9"/></linearGradient>
-        <radialGradient id="dnQuang"><stop offset="0" stop-color="#fff9d8" stop-opacity=".95"/><stop offset=".4" stop-color="#ffdf80" stop-opacity=".5"/><stop offset="1" stop-color="#ffdf80" stop-opacity="0"/></radialGradient>
-        <radialGradient id="dnQuangTrang"><stop offset="0" stop-color="#fff6d0" stop-opacity=".55"/><stop offset="1" stop-color="#fff6d0" stop-opacity="0"/></radialGradient>
-      </defs>
-      <rect width="330" height="404" fill="url(#dnTroi)"/>
-      <g id="dnSao" class="dn-sao"></g>
-      <g id="dnTrang" class="dn-trang"><circle r="46" fill="url(#dnQuangTrang)"/><path class="dn-trang-luoi" d="M7 -20A20.5 20.5 0 1 0 7 20A16 16 0 1 1 7 -20Z"/></g>
-      <g id="dnMatTroi" transform="translate(37.7 362.2)"><circle r="66" fill="url(#dnQuang)"/><circle class="dn-dia" r="24"/></g>
-      <g class="dn-may">
-        <g><ellipse cx="62" cy="212" rx="30" ry="11"/><ellipse cx="46" cy="207" rx="16" ry="10"/><ellipse cx="72" cy="203" rx="19" ry="12"/></g>
-        <g><ellipse cx="262" cy="248" rx="34" ry="11"/><ellipse cx="246" cy="242" rx="17" ry="11"/><ellipse cx="274" cy="239" rx="20" ry="12"/></g>
-      </g>
-      <path class="dn-doi xa" d="M0 336C46 312 96 316 150 331S262 302 330 322V404H0Z"/>
-      <path class="dn-doi gan" d="M0 368C58 342 128 350 190 366S290 352 330 359V404H0Z"/>
-      <g class="dn-cay"><ellipse cx="44" cy="349" rx="11" ry="14"/><rect x="42.6" y="356" width="2.8" height="12" rx="1"/><ellipse cx="66" cy="353" rx="8" ry="10"/><rect x="65" y="358" width="2.2" height="9" rx="1"/><ellipse cx="287" cy="346" rx="10" ry="13"/><rect x="285.7" y="352" width="2.6" height="11" rx="1"/></g>
-    </svg>
+    <!-- 17/11 00:57, thầy: "thôi cái mặt trời đổi lại trống trường đi, bắt đầu thì gõ và hết giờ thì gõ" → tấm bảng số phút giây và cái trống trường trên giá gỗ.
+         js (dnGo) xoay dùi (#dnDui) gõ vào mặt trống, rung thân trống (#dnThan), làm sáng mặt trống (#dnSang), hiện vệt tiếng (#dnSong) và chữ "Tùng!" (#dnChu) -->
     <div class="dn-nhan" id="dnNhan">Thời gian còn lại</div>
     <div class="dn-giua">
       <div class="dn-so" id="dnSo"><span class="dn-o"></span><span class="dn-o"></span><i>:</i><span class="dn-o"></span><span class="dn-o"></span></div>
       <div class="dn-het" id="dnHet" hidden>Hết giờ</div>
     </div>
-    <div class="dn-hoa" id="dnHoa"></div>
+    <svg class="dn-trong" id="dnTrong" viewBox="0 0 300 226" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="dnThanMau" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8714f"/><stop offset=".32" stop-color="#d24b34"/><stop offset=".78" stop-color="#b43a28"/><stop offset="1" stop-color="#8c2a1e"/></linearGradient>
+        <radialGradient id="dnDaMau" cx=".4" cy=".42" r=".66"><stop offset="0" stop-color="#fcefcf"/><stop offset=".72" stop-color="#f1daa6"/><stop offset="1" stop-color="#dcb878"/></radialGradient>
+      </defs>
+      <g id="dnChu"></g>
+      <g transform="translate(0 30)">
+        <ellipse class="dn-bong" cx="140" cy="188" rx="118" ry="8"/>
+        <path class="dn-go" d="M74 128H90L95 184H69Z"/><path class="dn-go" d="M184 128H200L205 184H179Z"/>
+        <rect class="dn-go sang" x="84" y="160" width="106" height="9" rx="3"/>
+        <rect class="dn-go" x="60" y="180" width="44" height="8" rx="3"/><rect class="dn-go" x="170" y="180" width="44" height="8" rx="3"/>
+        <g id="dnSong" class="dn-song" opacity="0"><path d="M26 66Q13 92 26 118"/><path d="M13 55Q-3 92 13 129"/></g>
+        <g id="dnThan">
+          <path d="M212 30C180 19 96 17 58 38A24 54 0 0 0 58 146C96 167 180 165 212 154Z" fill="url(#dnThanMau)"/>
+          <path class="dn-vach" d="M62 70C100 59 170 59 208 66M60 116C100 127 170 127 208 120"/>
+          <path class="dn-bong-than" d="M72 44C110 30 168 29 202 37"/>
+          <g class="dn-dinh"><circle cx="197.8" cy="151.1" r="2.6"/><circle cx="189.8" cy="145.9" r="2.6"/><circle cx="182.9" cy="136.6" r="2.6"/><circle cx="177.6" cy="123.8" r="2.6"/><circle cx="174.2" cy="108.5" r="2.6"/><circle cx="173.0" cy="92.0" r="2.6"/><circle cx="174.2" cy="75.5" r="2.6"/><circle cx="177.6" cy="60.2" r="2.6"/><circle cx="182.9" cy="47.4" r="2.6"/><circle cx="189.8" cy="38.1" r="2.6"/><circle cx="197.8" cy="32.9" r="2.6"/><circle cx="71.8" cy="42.8" r="2.6"/><circle cx="77.6" cy="47.1" r="2.6"/><circle cx="82.7" cy="54.8" r="2.6"/><circle cx="86.7" cy="65.5" r="2.6"/><circle cx="89.1" cy="78.2" r="2.6"/><circle cx="90.0" cy="92.0" r="2.6"/><circle cx="89.1" cy="105.8" r="2.6"/><circle cx="86.7" cy="118.5" r="2.6"/><circle cx="82.7" cy="129.2" r="2.6"/><circle cx="77.6" cy="136.9" r="2.6"/><circle cx="71.8" cy="141.2" r="2.6"/></g>
+          <ellipse cx="212" cy="92" rx="30" ry="62" fill="url(#dnDaMau)"/>
+          <ellipse class="dn-vien-mat" cx="212" cy="92" rx="30" ry="62"/>
+          <ellipse class="dn-mat-giua" cx="215" cy="92" rx="13" ry="29"/>
+          <ellipse id="dnSang" class="dn-sang" cx="215" cy="92" rx="22" ry="46" opacity="0"/>
+        </g>
+        <g id="dnDui" transform="translate(290 22) rotate(18)">
+          <path class="dn-dui-than" d="M-4.6 6L4.6 6L3.3 80L-3.3 80Z"/>
+          <circle class="dn-dui-dau" cx="0" cy="84" r="8.5"/>
+          <rect class="dn-dui-cam" x="-5.4" y="-6" width="10.8" height="24" rx="4.5"/>
+        </g>
+      </g>
+    </svg>
   </div>
 
   <div id="nhiemVu" hidden>
@@ -973,6 +983,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=4e76cc2a"></script>
-<script src="js/xep-thiep.js?v=fa458c9f"></script>
+<script src="js/xep-thiep.js?v=6de9d383"></script>
 </body>
 </html>
