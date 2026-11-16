@@ -439,27 +439,47 @@ body.tv { background: #130c06; }
 .khung svg.thiep { display: block; width: 100%; height: auto; border-radius: 2px; box-shadow: 0 2px 9px rgba(60, 40, 20, .38); cursor: pointer; background: #fff; }
 .khung.pha-xong svg.thiep { box-shadow: 0 0 0 5px #6fb37c, 0 2px 9px rgba(60, 40, 20, .38); }
 /* thiệp luôn rõ nét. Lưới bàn xếp hiện lúc đo, tính và lúc xếp; xong thì ẩn. 3 ô Tổng, Thiệp, Phần còn lại chỉ hiện lúc đo và tính */
-.thiep .lop-luoi, .thiep .lop-nhap { transition: opacity 500ms ease; }
+.thiep .lop-luoi, .thiep .lop-nv1, .thiep .lop-manh { transition: opacity 500ms ease; }
 .khung.pha-xong .lop-luoi { opacity: 0; }
 /* có mảnh nằm ngoài tấm thiệp (lưới trên điện thoại rộng hơn thiệp): bàn xếp thu nhỏ thành một tấm lưới nằm trên thiệp, trang trí của thiệp mờ đi */
 .khung.thu-nho .lop-luoi .luoi-vien { stroke-width: 1.6; }
 .khung.thu-nho .lop-tt { opacity: .28; }
-.khung.pha-xep .lop-nhap, .khung.pha-xong .lop-nhap, .khung.hien-ma .lop-nhap { opacity: 0; }
-.khung svg.thiep { overflow: visible; }      /* 16/11: 3 ô Tổng / Thiệp / Phần còn lại vắt trên mép dưới tấm thiệp (xem CHO_O) */
+/* 16/11 13:11: lúc nhóm còn làm nhiệm vụ 1, thiệp trên tivi hiện bảng nhiệm vụ 1 (7 ô mảnh, 3 dòng) thay cho 10 mảnh; xem BANG_NV1 trong js */
+.khung.pha-xep .lop-nv1, .khung.pha-xong .lop-nv1, .khung.hien-ma .lop-nv1 { opacity: 0; }
+.khung.pha-nhap .lop-manh { opacity: 0; }
+.nv1-ten { font-family: var(--chu-dam); font-weight: 700; font-size: 12px; fill: #6b3d1e; }
+.nv1-nen { fill: #fffdf8; stroke: #d9c9a8; stroke-width: 1; transition: fill 400ms ease, stroke 400ms ease; }
+.nv1-than { stroke: #4d4541; stroke-width: 0.9; stroke-linejoin: round; transition: fill 400ms ease; }
+.nv1-hai { font-family: var(--chu-thuong); font-weight: 600; font-size: 7.8px; fill: #8a7458; }
+.nv1-kq { font-family: var(--chu-thuong); font-weight: 700; font-size: 7.8px; fill: #2f6b3c; }
+.nv1-d-ten { font-family: var(--chu-thuong); font-weight: 700; font-size: 10.6px; fill: #4a3524; }
+.nv1-d-kq { font-family: var(--chu-thuong); font-weight: 500; font-size: 8.6px; fill: #8a7458; }
+.khung.ngang .nv1-d-ten { font-size: 10.2px; }
+.nv1-dem .nv1-nen { fill: #fbf3df; stroke: #e2cf9f; }
+.nv1-dem-nhan { font-family: var(--chu-thuong); font-weight: 600; font-size: 9.6px; fill: #8a7458; }
+.nv1-dem-so { font-family: var(--chu-dam); font-weight: 700; font-size: 25px; fill: #6b3d1e; }
+.nv1-dem-sao { font-family: var(--chu-thuong); font-weight: 600; font-size: 7.6px; fill: #a87700; }
+.nv1-o.dung .nv1-nen, .nv1-d.dung .nv1-nen { fill: #eef8ec; stroke: #7fbf8d; stroke-width: 1.3; }
+.nv1-d.dung .nv1-d-kq { fill: #2f6b3c; font-weight: 700; }
+.nv1-o.bi-khoa .nv1-nen, .nv1-d.bi-khoa .nv1-nen { fill: #fdf0ee; stroke: #e0574d; stroke-width: 1.5; }
+.nv1-o.bi-khoa .nv1-hai { display: none; }
+.bi-khoa > .nv1-kq, .nv1-d.bi-khoa .nv1-d-kq { fill: #b3261d; font-weight: 700; }
+.nv1-dau { opacity: 0; transition: opacity 300ms ease; }
+.dung > .nv1-dau, .bi-khoa > .nv1-dau { opacity: 1; }
+.sao > .nv1-dau .dau-sao { display: block; }
+.sao > .nv1-dau .dau-v { display: none; }
+.sao > .nv1-dau .dau-nen { stroke: #d59a00; }
+.nv1-khoa { display: none; }
+.nv1-khoa-quai { fill: none; stroke: #b3261d; stroke-width: 1.5; stroke-linecap: round; }
+.nv1-khoa-than { fill: #b3261d; }
+.bi-khoa > .nv1-dau .nv1-khoa { display: block; }
+.bi-khoa > .nv1-dau .dau-v, .bi-khoa > .nv1-dau .dau-sao { display: none; }
+.bi-khoa > .nv1-dau .dau-nen { stroke: #b3261d; }
 .thiep .lop-manh .manh .than { transition: fill 400ms ease; }
 .thiep .lop-manh .manh .cham { display: none; }
-.lop-manh .dau { opacity: 0; transition: opacity 300ms ease; }
-.khung.pha-nhap .lop-manh .manh.dung .dau { opacity: 1; }
 .dau-nen { fill: #fff; stroke: #3f8f52; stroke-width: 1.2; }
 .dau-v { fill: none; stroke: #2f8a45; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .dau-sao { fill: #ffc21a; stroke: #a87700; stroke-width: 0.6; display: none; }
-.muc.sao .dau-sao, .manh.sao .dau-sao { display: block; }
-.manh.sao .dau-v { display: none; }
-.manh.sao .dau-nen { stroke: #d59a00; }
-.o-chu .o-nen { fill: #efe9de; stroke: #cfc5b3; stroke-width: 0.8; transition: fill 400ms ease; }
-.o-chu .o-ten { font-family: var(--chu-thuong); font-weight: 600; font-size: 10.5px; fill: #8a7458; }
-.o-chu.dung .o-nen { fill: #dff0dd; stroke: #3f8f52; }
-.o-chu.dung .o-ten { fill: #23643a; }
 .khung.an { display: none; }
 /* chạm một thiệp: thiệp đó hiện thật lớn (đổi ngay, không phóng dần), báo tường mờ đi; chạm lần nữa để về */
 .khung.dung.lon { left: 610px !important; top: 33px !important; width: 700px !important; }
@@ -491,9 +511,9 @@ body.tv { background: #130c06; }
 #caiDat { z-index: 9; }
 /* các bảng che phủ rộng hơn sân 1920 × 1080: màn hình không phải 16:9 thì báo tường (to theo --bt) ló ra ngoài sân, lớp mờ vẫn che hết */
 #caiDat, #nhiemVu, #dapSo, #gvMa { inset: -700px; }
-.cd-hop { width: 1660px; background: var(--giay); border-radius: 30px; padding: 28px 44px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
+.cd-hop { width: 1660px; background: var(--giay); border-radius: 30px; padding: 24px 44px 26px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
 .cd-hop h2 { margin: 0 0 2px; font-family: var(--chu-dam); font-size: 44px; color: #6b3d1e; }
-.cd-hop h3 { margin: 20px 0 9px; font-size: 26px; }
+.cd-hop h3 { margin: 16px 0 8px; font-size: 26px; }
 .cd-hop p { margin: 7px 0 0; font-size: 20px; color: var(--chu-nhat); line-height: 1.38; }
 .cd-hop p.xau { color: #b3261d; font-weight: 600; }
 #btTinh { color: var(--chu); }
@@ -506,6 +526,12 @@ body.tv { background: #130c06; }
 .cd-hop h4 { margin: 16px 0 8px; font-size: 22px; font-weight: 600; color: var(--chu); }
 .cd-hop .cd-truoc { margin: 0 0 12px; }
 .cd-hang.cd-cach { margin-top: 12px; }
+.cd-gv { display: flex; gap: 22px; align-items: flex-start; }
+#tv .cd-gv-ma { flex: none; width: 232px; height: 232px; padding: 0; border: 2px solid var(--nut-vien); border-radius: 14px; background: #fff; cursor: pointer; overflow: hidden; }
+.cd-gv-ma span, .cd-gv-ma svg { display: block; width: 100%; height: 100%; }
+.cd-gv-chu { flex: 1; min-width: 0; }
+.cd-hop .cd-gv-chu p:first-child { margin-top: 0; }
+.cd-gv-chu p b { color: var(--chu); }
 #tv .cd-hop .nut.nho { font-size: 21px; min-height: 52px; padding: 0 16px; border-radius: 14px; }
 #tv .cd-hop .nut.nho.san { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
 #tv .cd-hop .nut.nho.bat { background: #fde9c4; border-color: #e0a63a; }
@@ -596,7 +622,7 @@ body.tv { background: #130c06; }
 .dn.nho .dn-lua { r: 22px; stroke-width: 10; }
 #tv .nut.nv-x { position: absolute; right: 22px; top: 20px; width: 60px; min-height: 60px; padding: 0; border-radius: 50%; font-size: 26px; color: var(--chu-nhat); }
 
-/* --- mã cho máy giáo viên (15/11 19:18): bảng riêng, chỉ hiện khi thầy bấm trong Cài đặt --- */
+/* --- mã cho máy giáo viên (15/11 19:18): bảng riêng có mã to. Từ 16/11 13:11 mã nằm sẵn trong Cài đặt (.cd-gv), chạm vào mã thì mở bảng này --- */
 #gvMa { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .4); display: flex; align-items: center; justify-content: center; }
 .gvma-hop { width: 1180px; background: var(--giay); border-radius: 30px; padding: 28px 46px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
 .gvma-hop h2 { margin: 0 0 14px; font-family: var(--chu-dam); font-size: 44px; color: #6b3d1e; }
@@ -613,16 +639,32 @@ body.tv { background: #130c06; }
 
 /* --- đáp số (chỉ hiện khi thầy bấm) --- */
 #dapSo { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .4); display: flex; align-items: center; justify-content: center; }
-.dap-hop { width: 1500px; background: var(--giay); border-radius: 30px; padding: 26px 50px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
-.dap-hop h2 { margin: 0 0 8px; font-family: var(--chu-dam); font-size: 46px; color: #6b3d1e; }
-.dap-hang { display: grid; grid-template-columns: 150px 470px 1fr; align-items: center; column-gap: 18px; min-height: 66px; border-bottom: 1px solid #eadfc9; font-size: 31px; }
+/* 16/11 13:11, thầy: "Đáp số tạo bảng cho dễ nhìn đi. Không ghi kiểu ngang vậy khó nhìn. Với lại cho màu nền khác": bảng 4 cột, nền xanh nhạt */
+.dap-hop { width: 1560px; background: #e9f3fa; border-radius: 30px; padding: 24px 46px 28px; box-shadow: 0 20px 60px rgba(40, 60, 80, .32); }
+.dap-hop h2 { margin: 0 0 10px; font-family: var(--chu-dam); font-size: 46px; color: #1f5f8b; }
+.dap-bang { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 30px; color: #2c3a45; border: 2px solid #9cc3de; border-radius: 16px; overflow: hidden; background: #fff; }
+.dap-bang th { background: #2f7fb5; color: #fff; font-weight: 700; font-size: 25px; line-height: 1.2; padding: 12px 18px; text-align: left; }
+.dap-bang th:nth-child(2), .dap-bang th:nth-child(4) { text-align: right; }
+.dap-bang th:nth-child(3) { text-align: center; }
+.dap-bang td { height: 66px; padding: 0 18px; border-top: 1.5px solid #cfe2ef; vertical-align: middle; }
+.dap-bang tbody tr:nth-child(even) td { background: #f1f8fd; }
+.dap-hinh { width: 124px; padding: 0 0 0 14px !important; }
 .dap-hinh svg { display: block; margin: auto; overflow: visible; }
 .dap-hinh .than { stroke: #4d4541; stroke-width: 1.3; stroke-linejoin: round; }
 .dap-ten { font-weight: 600; }
-.dap-tinh { font-variant-numeric: tabular-nums; }
-#dapCuoi { margin-top: 10px; }
-.dap-hang.rong { grid-template-columns: 580px 1fr; min-height: 58px; border-bottom: 0; }
-.dap-hang.rong .dap-tinh { font-weight: 700; color: #8f2a22; }
+td.dap-ten:not([colspan]) { padding-left: 6px; }
+.dap-tinh, .dap-dt, .dap-so { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dap-tinh { text-align: right; }
+.dap-so { text-align: center; width: 150px; }
+.dap-dt { text-align: right; width: 250px; }
+.dap-dt b { font-weight: 800; color: #1f5f8b; }
+.dap-nhan { color: #6d8496; }
+#dapCuoi td { background: #fff7d6 !important; border-top-color: #e3cf8f; height: 64px; }
+#dapCuoi tr:first-child td { border-top: 3px solid #2f7fb5; }
+#dapCuoi .dap-ten { font-weight: 700; }
+#dapCuoi .dap-dt b { color: #8f2a22; }
+#dapCuoi tr.con td { background: #ffe9a3 !important; }
+#dapCuoi tr.con .dap-dt b { font-size: 36px; }
 </style>
 </head>
 <body>
@@ -702,6 +744,7 @@ body.tv { background: #130c06; }
     <p id="gvTom" class="gv-tom"></p>
     <div class="gv-tivi">
       <p id="gvTv" class="gv-tv"></p>
+      <p id="gvAm" class="gv-tv xau" hidden>Tivi chưa phát được tiếng (âm báo đồng hồ, nhạc). Thầy chạm một lần vào màn hình tivi.</p>
       <div class="gv-4nut">
         <button id="gvNv" class="nut"><span>Hiện</span><b>nhiệm vụ</b></button>
         <button id="gvQr" class="nut"><span>Ẩn</span><b>mã QR</b></button>
@@ -730,7 +773,7 @@ body.tv { background: #130c06; }
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
         <p>Xóa cả số đo đã nhập và hình của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">★: số mục nhóm nhập đúng ngay lần đầu. Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Xem màn hình: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <p class="gv-ghi">★: số mục nhóm nhập đúng ngay lần đầu. Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
     </div>
   </div>
 </div>
@@ -780,8 +823,11 @@ body.tv { background: #130c06; }
   <div id="dapSo" hidden>
     <div class="dap-hop">
       <h2>Đáp số</h2>
-      <div id="dapBang"></div>
-      <div id="dapCuoi"></div>
+      <table class="dap-bang">
+        <thead><tr><th colspan="2">Mảnh ghép</th><th>Diện tích một mảnh (cm²)</th><th>Số mảnh</th><th>Diện tích (cm²)</th></tr></thead>
+        <tbody id="dapBang"></tbody>
+        <tbody id="dapCuoi"></tbody>
+      </table>
       <div class="cd-duoi"><button id="dongDapSo" class="nut chinh">Đóng</button></div>
     </div>
   </div>
@@ -823,14 +869,20 @@ body.tv { background: #130c06; }
           <h3>Ảnh báo tường</h3>
           <div class="cd-hang"><button id="nutChonAnh" class="nut">Chọn ảnh báo tường từ máy</button><button id="nutBoAnh" class="nut" hidden>Bỏ ảnh</button><input id="btTep" type="file" accept="image/*" hidden></div>
           <p id="btTinh"></p>
-          <p>Ảnh chỉ nằm trong trình duyệt của máy này, không đưa lên mạng. Chọn một lần, lần sau mở trang vẫn còn.</p>
+          <p>Ảnh chỉ lưu trong máy này, không đưa lên mạng. Lần sau mở trang vẫn còn.</p>
           <h3>Nhạc nền</h3>
           <div class="cd-hang"><button id="nhacXep" class="nut nho">Xếp thiệp</button><button id="nhacHV" class="nut nho">Học Vui Mỗi Ngày</button><button id="nhacChon" class="nut nho">Chọn bài hát từ máy</button><input id="nhacTep" type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" hidden></div>
           <div class="cd-hang cd-lien cd-nhac"><p id="nhacTinh"></p><button id="nhacBat" class="nut nho nhac-bat">▶ Bật nhạc</button></div>
           <h3>Phòng và máy giáo viên</h3>
-          <div class="cd-hang"><span style="font-size:24px">Mã phòng: <span id="maPhong"></span></span><button id="nutPhongMoi" class="nut">Tạo phòng mới</button></div>
-          <div class="cd-hang cd-cach"><button id="nutMaGV" class="nut">Mã cho máy giáo viên</button></div>
-          <p>Mở lại trang trên tivi vẫn giữ phòng cũ và bài đang làm. Tạo phòng mới thì các nhóm và máy giáo viên phải quét mã lại.</p>
+          <!-- 16/11 13:11, thầy: "Mã quét cho giáo viên trong cài đặt sẽ luôn hiện sẵn chứ không cần bấm mở lên" -->
+          <div class="cd-gv">
+            <button id="nutMaGV" class="cd-gv-ma" aria-label="Mã cho máy giáo viên. Chạm để xem to" title="Chạm để xem to"><span id="maGVNho"></span></button>
+            <div class="cd-gv-chu">
+              <p><b>Mã cho máy giáo viên.</b> Thầy quét bằng điện thoại của mình. Chạm vào mã để xem to.</p>
+              <div class="cd-hang cd-cach"><span style="font-size:24px">Mã phòng: <span id="maPhong"></span></span><button id="nutPhongMoi" class="nut">Tạo phòng mới</button></div>
+              <p>Mở lại trang trên tivi vẫn giữ phòng cũ và bài đang làm. Tạo phòng mới thì các nhóm và máy giáo viên phải quét mã lại.</p>
+            </div>
+          </div>
         </div>
         <div>
           <h3>Nút dự phòng</h3>
@@ -860,7 +912,7 @@ body.tv { background: #130c06; }
           <p>Thầy quét mã này bằng điện thoại của mình. Trên máy đó có:</p>
           <ul>
             <li>nhóm đang bị khóa và nút Mở khóa;</li>
-            <li>nút Mở nhiệm vụ 2 (bàn xếp), Tranh 3D, Xem màn hình và Cho sửa lại hình của từng nhóm;</li>
+            <li>nút Mở nhiệm vụ 2 (bàn xếp), Tranh 3D, Xem ĐT nhóm và Cho sửa lại hình của từng nhóm;</li>
             <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc.</li>
           </ul>
           <p class="gvma-nhac">Mã này chỉ dành cho giáo viên. Thầy quét trước giờ học, lúc học sinh chưa nhìn màn hình.</p>
@@ -876,6 +928,6 @@ body.tv { background: #130c06; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=4e76cc2a"></script>
-<script src="js/xep-thiep.js?v=b34e835f"></script>
+<script src="js/xep-thiep.js?v=e38b7326"></script>
 </body>
 </html>
