@@ -113,14 +113,14 @@
     ]
   };
   var DEM_NGUOC_PHUT = 15;                        // số phút của đồng hồ đếm ngược (thầy chốt 15/11 22:12). Muốn đổi: sửa một số này
-  function dnTinh(v, gio) {                       // đọc <phòng>/dn. Trả về null (tắt) hoặc { tt: "chay" | "dung" | "het", con: mili giây còn lại, tong: tổng mili giây }
+  function dnTinh(v, gio) {                       // đọc <phòng>/dn. Trả về null (tắt) hoặc { tt: "chay" | "dung" | "het", con: mili giây còn lại, tong: tổng mili giây, qua: mili giây đã qua kể từ lúc hết giờ }
     var tong, con;
     if (!v || typeof v !== "object") return null;
     tong = +v.d > 0 ? +v.d : DEM_NGUOC_PHUT * 60000;
-    if (typeof v.c === "number") return { tt: v.c > 0 ? "dung" : "het", con: Math.max(0, Math.min(tong, v.c)), tong: tong };
+    if (typeof v.c === "number") return { tt: v.c > 0 ? "dung" : "het", con: Math.max(0, Math.min(tong, v.c)), tong: tong, qua: v.c > 0 ? 0 : 1e9 };
     if (typeof v.h !== "number") return null;
     con = v.h - gio;
-    return con > 0 ? { tt: "chay", con: Math.min(tong, con), tong: tong } : { tt: "het", con: 0, tong: tong };
+    return con > 0 ? { tt: "chay", con: Math.min(tong, con), tong: tong, qua: 0 } : { tt: "het", con: 0, tong: tong, qua: -con };
   }
   function dnChu(ms) {                            // 899400 → "15:00", 59000 → "00:59", 0 → "00:00"
     var g = Math.max(0, Math.ceil(ms / 1000 - 1e-6)), ph = Math.floor(g / 60);
@@ -2423,22 +2423,26 @@
     $("nutNhiemVu").onclick = function () { hienNhiemVu(true); };
     /* --- đồng hồ đếm ngược. Bản 15/11 22:12 là một vòng tròn vơi dần.
        16/11 22:08, thầy: "còn đồng hồ thiết kế theo kiểu mặtr trời lặn đang sáng rồi tối dần có mặt trời chuyển mặt trăng, có sao này nọ etc...."
-       Từ đó đồng hồ là một khung trời. p = phần thời gian đã trôi (0 → 1):
-         lúc bắt đầu trời xanh, mặt trời trên cao; mặt trời xuống dần về bên phải; một phần ba cuối trời ngả vàng cam (hoàng hôn);
-         phút cuối (với 15 phút) mặt trời khuất sau đồi, trời tím dần, trăng lên ở bên trái, sao hiện ra; hết giờ là trời đêm có trăng sao và vài vệt sao băng.
+       Từ đó đồng hồ là một khung trời. p = phần thời gian đã trôi (0 → 1). Cảnh hiện nay (sửa 16/11 23:48, xem ngay dưới):
+         lúc bắt đầu là bình minh, mặt trời còn sau đồi bên trái; mặt trời mọc, trời sáng hẳn, lên cao nhất gần giữa giờ; rồi xuống dần về bên phải, trời tối dần đều;
+         gần hết giờ mặt trời khuất sau đồi, trời tím dần, trăng lên ở bên trái, sao hiện ra; hết giờ là trời đêm có trăng sao và vài vệt sao băng.
        Số phút giây nằm trên một tấm nền mờ phía trên khung trời. Mọi thứ chỉ trôi, đổi màu, mờ dần; không phóng to thu nhỏ.
        Màu theo các mốc DN_MOC (trộn đều giữa hai mốc kề nhau): t1, t2, t3 = trời (trên, giữa, dưới); doi1, doi2, doi3 = đồi xa, đồi gần, cây; may = mây; dia = mặt trời. --- */
     var dnV = null, dnCu = { tt: "", chu: "", mau: "", nho: null, p: -1 }, dnHenT = 0;
-    var DN_MOC = [0, 0.45, 0.68, 0.82, 0.92, 1];
+    /* 16/11 23:48, thầy: "cho hình mặt trời mọc trời sáng rồi tối từ từ đến hết giờ thì báo chuông xong là đồng hồ biến mất hiện ra lại báo tường".
+       Các mốc (p = phần thời gian đã trôi): 0 bình minh (mặt trời còn sau đồi), 0,07 sáng sớm, 0,2 trời sáng hẳn, 0,45 trưa, rồi tối dần đều: 0,62 xế chiều, 0,76 hoàng hôn, 0,88 chạng vạng, 1 đêm.
+       Hết giờ: chữ "Hết giờ" đứng DN_HET_GIU mili giây (đủ 3 hồi chuông), mờ dần trong DN_HET_TAN mili giây rồi ẩn; tivi xóa luôn <phòng>/dn để máy giáo viên về lại nút "Bắt đầu". */
+    var DN_HET_GIU = 4600, DN_HET_TAN = 900, dnDaXoa = null;
+    var DN_MOC = [0, 0.07, 0.2, 0.45, 0.62, 0.76, 0.88, 1];
     var DN_MAU = {
-      t1: ["#63b8ee", "#5aa9e6", "#7d8fd0", "#5b5aa6", "#2f3270", "#141a45"],
-      t2: ["#a9dbf4", "#bfe0ee", "#f6b38c", "#e9836f", "#6b4f8e", "#27306b"],
-      t3: ["#eef8fb", "#ffe9bf", "#ffd48a", "#fcb96b", "#d47a6a", "#4a4a86"],
-      doi1: ["#a8d8a6", "#a9d39a", "#c7b67c", "#ab7869", "#4b4470", "#262b56"],
-      doi2: ["#6dbb74", "#69b56c", "#6f9a58", "#5c6b4c", "#2d3a4e", "#151c38"],
-      doi3: ["#57a465", "#539d5d", "#58804a", "#48563f", "#232e42", "#0f152c"],
-      may: ["#ffffff", "#fff6e6", "#ffdcbd", "#f4a892", "#8572a6", "#4f548a"],
-      dia: ["#ffe36e", "#ffd957", "#ffb84a", "#ff8f4c", "#f2684a", "#f2684a"]
+      t1: ["#7a9fd6", "#6fb4ea", "#63b8ee", "#5aa9e6", "#7d8fd0", "#5b5aa6", "#2f3270", "#141a45"],
+      t2: ["#f3b9a0", "#c9e2ee", "#a9dbf4", "#bfe0ee", "#f6b38c", "#e9836f", "#6b4f8e", "#27306b"],
+      t3: ["#ffd89a", "#fff0cc", "#eef8fb", "#ffe9bf", "#ffd48a", "#fcb96b", "#d47a6a", "#4a4a86"],
+      doi1: ["#b9c391", "#aed6a0", "#a8d8a6", "#a9d39a", "#c7b67c", "#ab7869", "#4b4470", "#262b56"],
+      doi2: ["#6c9f66", "#6cb771", "#6dbb74", "#69b56c", "#6f9a58", "#5c6b4c", "#2d3a4e", "#151c38"],
+      doi3: ["#55875a", "#56a163", "#57a465", "#539d5d", "#58804a", "#48563f", "#232e42", "#0f152c"],
+      may: ["#ffe3d0", "#fff7ec", "#ffffff", "#fff6e6", "#ffdcbd", "#f4a892", "#8572a6", "#4f548a"],
+      dia: ["#ffa648", "#ffcf58", "#ffe36e", "#ffd957", "#ffb84a", "#ff8f4c", "#f2684a", "#f2684a"]
     };
     function dnMau(ds, p) {                         // trộn màu theo p
       var i = 0, t, a, b;
@@ -2458,10 +2462,10 @@
     function dnCanh(p) {                            // vẽ khung trời theo p
       var e = $("dn"), s = e.style, a, x, y, dem, tr;
       ["t1", "t2", "t3", "doi1", "doi2", "doi3", "may", "dia"].forEach(function (ten) { s.setProperty("--" + ten, dnMau(DN_MAU[ten], p)); });
-      a = (-12 + 108 * Math.min(1, p / 0.93)) * Math.PI / 180;       // mặt trời đi trên một cung elip từ trên cao (bên trái) xuống đường chân trời bên phải, khuất hẳn lúc p = 0,93
-      x = 150 + 130 * Math.sin(a); y = 345 - 175 * Math.cos(a);
+      a = (-96 + 192 * Math.min(1, p / 0.86)) * Math.PI / 180;       // mặt trời đi trọn một cung elip: mọc từ sau đồi bên trái (p = 0), lên cao nhất lúc p = 0,43, lặn sau đồi bên phải (khuất hẳn lúc p = 0,86)
+      x = 165 + 128 * Math.sin(a); y = 345 - 165 * Math.cos(a);
       $("dnMatTroi").setAttribute("transform", "translate(" + x.toFixed(1) + " " + y.toFixed(1) + ")");
-      $("dnMatTroi").style.opacity = Math.max(0, Math.min(1, (0.985 - p) / 0.075)).toFixed(3);      // mặt trời đã khuất: quầng sáng sau đồi tắt dần, đêm thì không còn
+      $("dnMatTroi").style.opacity = Math.max(0, Math.min(1, (0.93 - p) / 0.07)).toFixed(3);      // mặt trời đã lặn: quầng sáng sau đồi tắt dần, đêm thì không còn
       dem = Math.max(0, Math.min(1, (p - 0.8) / 0.2));               // 0 = ngày, 1 = đêm: sao hiện dần, mây mờ dần
       s.setProperty("--dem", dem.toFixed(3));
       tr = Math.max(0, Math.min(1, (p - 0.84) / 0.16));              // trăng lên từ sau đồi bên trái
@@ -2496,7 +2500,11 @@
     function dnVe() {
       var e = $("dn"), st = dnTinh(dnV, T ? T.gio() : Date.now()), chu, mau, nho, p;
       dnHenT = 0;
-      if (!st) { e.hidden = true; dnCu = { tt: "", chu: "", mau: "", nho: null, p: -1 }; return; }
+      if (st && st.tt === "het" && st.qua >= DN_HET_GIU + DN_HET_TAN) {      // chuông đã xong (hoặc tivi mở trang lúc đã hết giờ từ lâu): đồng hồ biến mất, trả lại báo tường
+        if (T && dnV && dnDaXoa !== dnV) { dnDaXoa = dnV; T.remove("dn"); }
+        st = null;
+      }
+      if (!st) { e.hidden = true; e.classList.remove("tan"); dnCu = { tt: "", chu: "", mau: "", nho: null, p: -1 }; return; }
       if (e.hidden) e.hidden = false;
       if (st.tt === "chay" && dnCu.tt !== "chay" && dnCu.tt !== "dung" && st.con > st.tong - 2500) amBao("mo");     // vừa bấm bắt đầu: có âm báo (16/11 13:11)
       p = st.tt === "het" ? 1 : Math.max(0, Math.min(1, 1 - st.con / st.tong));
@@ -2517,7 +2525,8 @@
           $("nutDn").textContent = st.tt === "chay" ? "Tạm dừng đồng hồ" : st.tt === "dung" ? "▶ Chạy tiếp đồng hồ" : "▶ Đếm ngược " + DEM_NGUOC_PHUT + " phút";
         }
       }
-      dnHenT = setTimeout(dnVe, st.tt === "chay" ? 100 : 400);           // tạm dừng, hết giờ: chỉ còn theo dõi bảng nào đang che để thu gọn
+      e.classList.toggle("tan", st.tt === "het" && st.qua >= DN_HET_GIU);      // hết chuông: mờ dần
+      dnHenT = setTimeout(dnVe, st.tt === "chay" ? 100 : st.tt === "het" ? 150 : 400);           // tạm dừng: chỉ còn theo dõi bảng nào đang che để thu gọn
     }
     function dnNhan(v) {
       dnV = v && typeof v === "object" ? v : null;
@@ -2769,6 +2778,7 @@
     function veDn() {
       var st = dnTinh(dn, T ? T.gio() : Date.now()), tt = st ? st.tt : "", dangHoi = Date.now() - dnHoi <= 3000, hoiChay = tt === "dung" && Date.now() - dnHoiC <= 3000;
       $("gvDnChu").innerHTML = "";
+      if (!st) { dnHoi = 0; dnHoiC = 0; }           // đồng hồ đã tắt (kể cả khi tivi tự cất sau hồi chuông hết giờ, 16/11 23:48): bỏ câu hỏi lại đang dở, lần sau vẫn phải bấm đủ hai lần
       if (!st) H("span", null, "Đồng hồ đếm ngược " + DEM_NGUOC_PHUT + " phút", $("gvDnChu"));
       else if (tt === "het") H("b", "het", "Hết giờ", $("gvDnChu"));
       else { H("span", null, tt === "dung" ? "Dừng ở " : "Còn ", $("gvDnChu")); H("b", null, dnChu(st.con), $("gvDnChu")); }
