@@ -1544,6 +1544,7 @@
 
   function chayTivi(ts) {
     document.body.className = "tv";
+    $("tvNen").hidden = false;
     $("tv").hidden = false;
     var phong = ts.p, thu = ts.thu, T = null, goc = BO.map(daGiac), khungNhom = {}, duLieu = {}, lon = 0;
     /* Thầy dặn 14/11 16:18: "cái hình báo tường sẽ hiện xuyên suốt cái hoạt động này luôn". Tivi chỉ còn một màn là tấm báo tường; mỗi tấm thiệp có một mã QR nằm ngay trên nó (từ 15/11 cả 4 là cùng một mã).
@@ -1561,9 +1562,15 @@
     if (!maGV) { maGV = maNgauNhien(6); try { localStorage.setItem("xt-gv", phong + ":" + maGV); } catch (e) { /* bỏ qua */ } }
     function linkGV() { return location.origin + location.pathname + "?p=" + phong + "&gv=" + maGV + (thu ? "&thu=1" : ""); }
 
+    /* 16/11 06:30, thầy: "MÀN HÌNH HIỆN RA Y CHANG LÚC CHƠI TRÒ RƯỚC ĐUỐC". Báo tường nằm đúng như màn cuối của trang Rước đuốc (js/san-khau.js: khung K và vuaManHinh):
+       ảnh 1472 × 1041 nằm giữa màn hình 1920 × 1080. Màn hình không phải 16:9 thì cả khung gỗ (ảnh thêm 16 px mỗi phía) cao vừa màn hình, cách mép 8 px,
+       hai bên chừa ít nhất 76 px, y như bên đó. Trang này vẽ báo tường rộng 1527 nên phần .xep (báo tường, 4 thiệp, nút Cài đặt) và đồng hồ đếm ngược co theo --bt quanh tâm màn hình. */
+    var BT_RONG = 1472, BT_CAO = 1041;
     function coGian() {
-      var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      var vw = window.innerWidth, vh = window.innerHeight, s = Math.min(vw / 1920, vh / 1080);
+      var tl = (BT_CAO + 32) / (BT_RONG + 32), cao = Math.min(vh - 16, (vw - 152) * tl), sb = Math.max(1, cao / s / (BT_CAO + 32));
       $("tv").style.transform = "translate(-50%,-50%) scale(" + s + ")";
+      $("tv").style.setProperty("--bt", (BT_RONG * sb / 1527).toFixed(5));
     }
     window.addEventListener("resize", coGian); coGian();
 
@@ -1597,7 +1604,7 @@
       lon = lon === k ? 0 : k;
       [1, 2, 3, 4].forEach(function (i) { khungNhom[i].o.classList.toggle("lon", lon === i); khungNhom[i].o.classList.toggle("an", lon && lon !== i); });
       $("tv").classList.toggle("dang-lon", !!lon);
-      veBang3d(); veLai3d(); bao3d();
+      veNut3d(); veLai3d(); bao3d();
     }
     /* Tivi báo cho máy giáo viên trong <phòng>/tv3d: l = thiệp đang hiện to (0 = báo tường), c = "0100" nhóm đang chạy Tranh 3D, b = "1100" nhóm đã được bấm,
        q = 1 khi mã QR đang hiện trên thiệp nào đó, d = 1 khi bảng Đáp số đang mở, n = 1 khi bảng Nhiệm vụ đang mở. */
@@ -1670,6 +1677,7 @@
       if (!X.cv) { X.cv = document.createElement("canvas"); X.cv.className = "lop-3d"; K.o.insertBefore(X.cv, K.o.querySelector(".ma-phu")); X.c = X.cv.getContext("2d"); X.a = 0; }
       X.chay = true; X.bam = true; X.tinh = false; X.t0 = performance.now();
       K.o.classList.add("co-3d");
+      K.o.setAttribute("data-3d", String(X.kieu));      // 1..4 = hình khớp mẫu của nhóm đó, "td" = hình nhóm tự nghĩ (bài thử đọc)
       if (!daNo && [1, 2, 3, 4].every(function (i) { return hx[i].bam; })) { daNo = true; phaoLuc = performance.now() + 400; }   // đủ 4 nhóm: pháo bông nổ sau lần bấm thứ tư 0,4 giây
       capNhat3d(); chayVong();
     }
@@ -1677,7 +1685,7 @@
     function bo3d(k) {
       var X = hx[k];
       if (X.cv && X.cv.parentNode) X.cv.parentNode.removeChild(X.cv);
-      khungNhom[k].o.classList.remove("co-3d");
+      khungNhom[k].o.classList.remove("co-3d"); khungNhom[k].o.removeAttribute("data-3d");
       if (X.bam) daNo = false;                     // nhóm này phải được bấm lại; khi đủ 4 nhóm lần nữa thì pháo bông nổ lần nữa
       hx[k] = {};
       capNhat3d();
@@ -1730,22 +1738,28 @@
       var n = 0, o = $("dem3d").querySelectorAll(".dem-o span");
       [1, 2, 3, 4].forEach(function (k) { var b = !!hx[k].bam; if (b) n++; o[k - 1].classList.toggle("da", b); });
       $("dem3dChu").textContent = "Đã bấm " + n + "/4 nhóm";
-      veBang3d(); bao3d();
+      veNut3d(); bao3d();
     }
-    function veBang3d() {                          // bảng nút bên phải tấm thiệp đang hiện to
-      var b = $("bang3d"), k = lon, X, xong;
-      b.hidden = !k || !T3;
-      if (b.hidden) return;
-      xong = !!(duLieu[k] || {}).xong; X = hx[k];
-      b.className = "bang-3d " + NHOM[k];
-      $("ten3d").textContent = !xong ? "" : chuan3d(k).kieu === "td" ? "Hình nhóm tự nghĩ" : T3.TEN[k];
-      $("nut3d").disabled = !xong;
-      $("nut3d").textContent = X.chay ? "■ Dừng" : "▶ Tranh 3D";
-      $("nut3d").classList.toggle("dang-chay", !!X.chay);
-      $("tt3d").textContent = !xong ? "Nhóm chưa hoàn thành hình nên chưa bấm được." : X.chay ? "Tranh 3D đang chạy" : "Thiệp đang đứng yên";
+    /* 16/11 06:30, thầy: "ẩn hết luôn, chỉ có chọn trên điện thoại của giáo viên" → bảng nút cạnh thiệp hiện to ("▶ Tranh 3D", "✕ Đóng") đã bỏ; thầy bấm Tranh 3D trên máy giáo viên.
+       Nút dự phòng nằm trong bảng Cài đặt (cd3d<k>): bấm thì thiệp nhóm đó hiện to và chạy; nhóm đang chạy thì nút ghi "■ Dừng nhóm k". Thiệp đang hiện to: chạm vào thiệp để về báo tường. */
+    function veNut3d() {
+      [1, 2, 3, 4].forEach(function (k) {
+        var b = $("cd3d" + k), c = !!hx[k].chay;
+        b.disabled = !T3 || !(duLieu[k] || {}).xong;
+        b.textContent = c ? "■ Dừng nhóm " + k : "Nhóm " + k;
+        b.classList.toggle("bat", c);
+      });
     }
-    $("nut3d").onclick = function () { if (!lon) return; if (hx[lon].chay) dung3d(lon); else bat3d(lon); };
-    $("dong3d").onclick = function () { if (lon) phong_to(lon); };
+    [1, 2, 3, 4].forEach(function (k) {
+      $("cd3d" + k).onclick = function () {
+        if (!T3 || !(duLieu[k] || {}).xong) return;
+        if (hx[k].chay) { dung3d(k); return; }
+        dongBang();
+        if (hienMa(k)) { xem = "xep"; capNhatMa(); }
+        if (lon !== k) phong_to(k);
+        bat3d(k);
+      };
+    });
     window.addEventListener("resize", veLai3d);
     if (!T3) $("dem3d").hidden = true;
 
@@ -1816,8 +1830,8 @@
       capNhatMa();
       if (T3) {
         if (hx[k].ky !== undefined && (!d.xong || daGiacNhom(k).ky !== hx[k].ky)) bo3d(k);      // hình của nhóm đổi: bỏ tranh 3D của nhóm đó
-        if (lon === k) veBang3d();
       }
+      veNut3d();
     }
     function hienMa(k) { var d = duLieu[k] || {}; return xem === "ma" || (xem === "vao" && !(d.mo || d.xong || demDung(d.d) > 0)); }
     function capNhatMa() {
@@ -1878,10 +1892,26 @@
       im.src = u;
     }
     function dungTiLe(im) { return Math.abs(im.naturalWidth / im.naturalHeight - TI_LE_A0) < 0.04 * TI_LE_A0; }
+    /* nền tối sau báo tường, làm đúng như nenMo của trang Rước đuốc (js/san-khau.js): chính tấm báo tường thu còn 120 × 85, nhoè 2 px, phủ màu rgba(30,17,6,.66),
+       rồi phóng to cho kín màn hình (phóng to thì tự nhoè). Chưa có ảnh báo tường thì nền là vầng nâu tối vẽ sẵn trong index.html (#tvNen), như nenBao bên đó.
+       Ảnh nền nhỏ này chỉ nằm trong trang đang mở trên máy thầy, không gửi đi đâu. */
+    var soNen = 0;
+    function veNen(im) {
+      var o = $("tvNen"), c, g;
+      if (!im) { o.style.backgroundImage = ""; return; }
+      try {
+        c = document.createElement("canvas"); c.width = 120; c.height = 85; g = c.getContext("2d");
+        try { g.filter = "blur(2px)"; } catch (e) { /* bỏ qua */ }
+        g.drawImage(im, -6, -6, 132, 97); g.filter = "none";
+        g.fillStyle = "rgba(30,17,6,.66)"; g.fillRect(0, 0, 120, 85);
+        o.style.backgroundImage = "url(" + c.toDataURL("image/png") + ")";
+      } catch (e) { o.style.backgroundImage = ""; }
+    }
     function datAnh(blob, nguon, loi) {
-      var o = $("baoTuong");
+      var o = $("baoTuong"), lan = ++soNen;
       if (anhUrl) { URL.revokeObjectURL(anhUrl); anhUrl = null; }
       if (blob) { anhUrl = URL.createObjectURL(blob); o.style.backgroundImage = "url(\"" + anhUrl + "\")"; } else o.style.backgroundImage = "";
+      if (blob) docAnh(blob, function (im, u) { if (lan === soNen) veNen(im); if (u) URL.revokeObjectURL(u); }); else veNen(null);
       o.classList.toggle("co-anh", !!blob);
       o.setAttribute("data-nguon", blob ? nguon : "");
       $("btTinh").textContent = loi || (blob ? (nguon === "rieng" ? "Đang dùng ảnh thầy đã chọn ở trang này." : "Đang dùng ảnh báo tường thầy đã chọn ở trang Rước đuốc.") : "Chưa có ảnh: tivi đang hiện hình vẽ thay cho báo tường.");
@@ -1994,9 +2024,9 @@
       chu = dnChu(st.con);
       if (chu !== dnCu.chu) { dnDoiSo(chu); dnCu.chu = chu; }
       mau = st.tt === "het" ? "" : st.con <= 60000 ? "mau-do" : st.con <= st.tong / 3 ? "mau-cam" : "";
-      nho = !!lon || !$("nhiemVu").hidden || !$("dapSo").hidden || !$("caiDat").hidden || !$("gvMa").hidden;
+      nho = !$("nhiemVu").hidden || !$("dapSo").hidden || !$("caiDat").hidden || !$("gvMa").hidden ? "nho" : lon ? "nho theo-thiep" : "";      // có bảng che: góc trên trái của sân; chỉ có thiệp hiện to: theo báo tường
       if (st.tt !== dnCu.tt || mau !== dnCu.mau || nho !== dnCu.nho) {
-        e.className = "dn " + st.tt + (mau ? " " + mau : "") + (nho ? " nho" : "");
+        e.className = "dn " + st.tt + (mau ? " " + mau : "") + (nho ? " " + nho : "");
         $("dnNhan").textContent = st.tt === "dung" ? "Đang tạm dừng" : st.tt === "het" ? "" : "Thời gian còn lại";
         $("dnSo").hidden = st.tt === "het"; $("dnHet").hidden = st.tt !== "het";
         if (st.tt === "het" && dnCu.tt === "chay") dnRoiHoa();
@@ -2098,10 +2128,15 @@
     $("nutDapSo").onclick = function () { hienDapSo(true); };
     $("dongDapSo").onclick = function () { hienDapSo(false); };
 
+    /* 16/11 06:30: dòng này ẩn theo lời thầy. Chỉ hiện khi mất kết nối, hoặc nối quá 8 giây chưa được, để thầy biết tivi đang không nhận bài của các nhóm. */
+    var henNoi = 0;
     function trangThai(kieu) {
       var e = $("tvNoi");
       e.className = "noi " + kieu;
       e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử trên một máy" : kieu === "loi" ? "Mất kết nối" : "Đang nối…";
+      clearTimeout(henNoi);
+      if (kieu === "loi") e.classList.add("hien");
+      else if (kieu !== "ok" && kieu !== "cungmay") henNoi = setTimeout(function () { e.classList.add("hien"); }, 8000);
     }
     $("tv").classList.add("xem-xep");
     veMa(); doiXem("vao");
@@ -2150,6 +2185,7 @@
       h = H("div", "gv-hang1", null, o);
       H("b", "gv-so", "Nhóm " + k, h);
       X.tt = H("span", "gv-tt", "", h);
+      X.sao = H("span", "gv-sao", "", h);         // 16/11: số sao (mục nhập đúng ngay lần đầu) dời từ thẻ nhóm trên tivi sang đây
       X.may = H("span", "gv-may", "", h);
       kh = H("div", "gv-khoa", null, o); kh.hidden = true;
       X.khoa = kh;
@@ -2216,6 +2252,7 @@
       X.o.classList.toggle("bi-khoa", ds.length > 0); X.o.classList.toggle("cho-mo", choMo);
       X.tt.textContent = pha === "xong" ? "Đã hoàn thành hình" : pha === "xep" ? "Nhiệm vụ 2: đang xếp hình" : choMo ? "Xong nhiệm vụ 1, chờ mở nhiệm vụ 2" : nd || may ? "Nhiệm vụ 1: đúng " + nd + "/10" : "Chưa có máy nào vào";
       X.may.textContent = may ? may + " máy" : "";
+      X.sao.textContent = demSao(nhap) ? "★ " + demSao(nhap) : "";
       X.khoa.hidden = !ds.length;
       X.khoaChu.textContent = "Đã khóa: " + ds.map(function (kh) { return MUC[kh].ngan + " (sai " + (s[kh] || SAI_KHOA) + " lần)"; }).join(", ");
       X.b2.disabled = pha !== "nhap";

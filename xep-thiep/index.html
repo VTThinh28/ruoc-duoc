@@ -285,6 +285,8 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .gv-tt { flex: 1; min-width: 0; font-size: 15px; line-height: 1.3; }
 .gv-nhom.cho-mo .gv-tt { color: #23643a; font-weight: 700; }
 .gv-may { flex: none; font-size: 13.5px; color: var(--chu-nhat); white-space: nowrap; }
+.gv-sao { flex: none; font-size: 14.5px; font-weight: 700; color: #b97a00; white-space: nowrap; }
+.gv-sao:empty { display: none; }
 .gv-khoa { display: flex; align-items: center; gap: 8px; padding: 6px 7px 6px 10px; border-radius: 12px; background: #fdf0ee; border: 2px solid #e3a49e; }
 .gv-khoa-chu { flex: 1; min-width: 0; font-size: 15px; line-height: 1.35; color: #9c2a22; font-weight: 600; }
 .gv-khoa-chu::before { content: ""; display: inline-block; width: 1.05em; height: 1.05em; margin-right: .35em; vertical-align: -0.14em; background: var(--o-khoa) center / contain no-repeat; }
@@ -328,14 +330,14 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .gv-duoi .nut { min-height: 48px; font-size: 16px; }
 .gv-ghi { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--chu-nhat); }
 
-body.tv { background: #eadfc9; }
-#tv {
-  position: fixed; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 50% 50%; overflow: hidden;
-  background:
-    radial-gradient(900px 520px at 12% 0%, rgba(255, 244, 214, .9), rgba(255, 244, 214, 0) 70%),
-    radial-gradient(800px 600px at 100% 100%, rgba(246, 208, 190, .35), rgba(246, 208, 190, 0) 70%),
-    linear-gradient(160deg, #fbf5e8, #f3e9d6);
-}
+/* 16/11 06:30, thầy (kèm 2 ảnh chụp hai cột bên của tivi): "TÔI MUỐN MẤY CÁI NÀY ẨN HẾT LUÔN, CHỈ CÓ CHỌN TRÊN ĐIỆN THOẠI CỦA GIÁO VIÊN. MÀN HÌNH HIỆN RA Y CHANG LÚC CHƠI TRÒ RƯỚC ĐUỐC"
+   → tivi chỉ còn tấm báo tường trong khung gỗ trên nền tối, đúng như màn cuối của trang Rước đuốc (js/san-khau.js: ảnh báo tường 1472 × 1041 nằm giữa màn hình 1920 × 1080,
+   viền kem 10 px, viền gỗ 16 px, bóng đổ; nền là chính báo tường thu nhỏ, nhoè, phủ tối: hàm veNen trong js/xep-thiep.js). Thẻ nhóm ở hai lề, tên hoạt động, dòng gợi ý,
+   ô đếm Tranh 3D, dòng "Đã nối" và bảng nút cạnh thiệp hiện to: ẩn hoặc bỏ hết. Mọi nút bấm nằm trên máy giáo viên; tivi chỉ còn nút Cài đặt.
+   --bt: báo tường trong trang này vẽ rộng 1527 (xem #baoTuong), nên cả phần .xep thu lại 1472 / 1527 quanh tâm màn hình; hàm coGian đặt lại --bt khi màn hình không phải 16:9. */
+body.tv { background: #130c06; }
+#tvNen { position: fixed; inset: 0; background: #130c06 radial-gradient(circle 60vw at 50% 40%, #3b2a17 4%, #130c06 76%) center / cover no-repeat; }
+#tv { position: fixed; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 50% 50%; --bt: .96398; }
 #tvNoi { position: absolute; left: 720px; top: 52px; font-size: 20px; padding: 5px 16px; }
 #tv .nut { font-size: 24px; min-height: 60px; padding: 0 22px; border-radius: 18px; white-space: nowrap; }
 
@@ -360,8 +362,9 @@ body.tv { background: #eadfc9; }
 
 /* --- màn làm bài: tấm báo tường A0 (1189 × 841) cao hết sân, 4 tấm thiệp nằm đúng 4 ô dán ---
    Báo tường: trái 196.5, rộng 1527, cao 1080 (1 mm = 1,2842 px). Chỗ của 4 thiệp lấy từ bo-cuc-canva-a3.json (thiệp đã cắt 29 × 42). */
-.xep { position: absolute; inset: 0; }
-#baoTuong { position: absolute; left: 196.5px; top: 0; width: 1527px; height: 1080px; overflow: hidden; background: #fbf1da no-repeat 0 0 / 100% 100%; box-shadow: 0 0 0 1px rgba(110, 75, 35, .28), 0 0 36px rgba(110, 75, 35, .28); }
+.xep { position: absolute; inset: 0; transform-origin: 960px 540px; transform: scale(var(--bt)); }
+/* khung của báo tường như trang Rước đuốc (khungBao): viền kem 10 px, ngoài là viền gỗ tới 16 px, bóng đổ rgba(0,0,0,.6) nhoè 80 lệch xuống 30. Số ở đây đã chia cho .96398. */
+#baoTuong { position: absolute; left: 196.5px; top: 0; width: 1527px; height: 1080px; background: #fbf1da no-repeat 0 0 / 100% 100%; box-shadow: 0 0 0 10.37px #f6e7c4, 0 0 0 16.6px #b8892f, 0 31.1px 83px 16.6px rgba(0, 0, 0, .6); }
 #baoTuong svg { display: block; width: 100%; height: 100%; }
 #baoTuong.co-anh svg { display: none; }
 .bt-o { fill: rgba(255, 255, 255, .45); stroke: #c9a66b; stroke-width: 2.2; stroke-dasharray: 9 7; }
@@ -374,8 +377,9 @@ body.tv { background: #eadfc9; }
 #khung2 { left: 1319.6px; top: 78.3px; width: 372.4px; --ho: 41.5px; --mau: #e07b2a; }
 #khung3 { left: 223.5px; top: 676.1px; width: 539.4px; --ho: 37px; --mau: #3d8fc4; }
 #khung4 { left: 1157.1px; top: 676.1px; width: 539.4px; --ho: 37px; --mau: #4f9140; }
-/* thẻ của nhóm (tên, đang làm gì, số sao, nút Mở bàn xếp) nằm ở lề ngoài báo tường, ngang mép trên tấm thiệp */
-.khung .the { position: absolute; top: 0; width: 176px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; cursor: pointer; }
+/* thẻ của nhóm (tên, đang làm gì, số sao) từng nằm ở lề ngoài báo tường; nay ẩn, các dòng định dạng bên dưới chỉ còn để dành */
+/* 16/11 06:30: thẻ nhóm ẩn (thầy: "ẩn hết luôn"). Dòng trạng thái và số sao của từng nhóm xem trên máy giáo viên; trang vẫn ghi vào các ô này để bài thử đọc. */
+.khung .the { display: none; }
 #khung1 .the, #khung3 .the { right: calc(100% + var(--ho)); }
 #khung2 .the, #khung4 .the { left: calc(100% + var(--ho)); }
 .khung .ten { font-family: var(--chu-dam); font-weight: 700; font-size: 27px; line-height: 38px; color: #fff; background: var(--mau); padding: 0 18px; border-radius: 999px; white-space: nowrap; flex: none; }
@@ -422,50 +426,35 @@ body.tv { background: #eadfc9; }
 .o-chu.dung .o-ten { fill: #23643a; }
 .khung.an { display: none; }
 /* chạm một thiệp: thiệp đó hiện thật lớn (đổi ngay, không phóng dần), báo tường mờ đi; chạm lần nữa để về */
-.khung.dung.lon { left: 628px !important; top: 62px !important; width: 664px !important; }
-.khung.ngang.lon { left: 290px !important; top: 96px !important; width: 1340px !important; }
-.khung.lon .the { left: 0 !important; right: auto !important; top: auto; bottom: calc(100% + 8px); width: 100%; flex-direction: row; align-items: center; gap: 12px; }
-.khung.lon .the::after { content: "Chạm vào thiệp để về báo tường"; margin-left: auto; font-size: 20px; color: var(--chu-nhat); white-space: nowrap; }
-.khung.lon .tt { white-space: nowrap; }
-#tv.dang-lon #baoTuong { opacity: .1; }
-#tv.dang-lon .tv-nut, #tv.dang-lon .xep-goi, #tv.dang-lon #tvNoi { visibility: hidden; }
+.khung.dung.lon { left: 610px !important; top: 33px !important; width: 700px !important; }
+.khung.ngang.lon { left: 265px !important; top: 60px !important; width: 1390px !important; }
+#tv.dang-lon #baoTuong { opacity: .16; }
+#tv.dang-lon .tv-nut, #tv.dang-lon #tvNoi { visibility: hidden; }
 .thiep .lop-manh .manh { transition: transform 120ms linear, opacity 220ms ease; }
 .khung.chot .lop-manh .manh { transition: transform 800ms cubic-bezier(.3, .1, .2, 1), opacity 220ms ease; }
-/* tên hoạt động (thầy đổi 14/11 16:32 thành "Tấm thiệp của nhóm em"): nằm ở lề phải, vì báo tường đã có băng rôn riêng */
-.tv-ten { position: absolute; left: 1733.5px; top: 300px; width: 180px; margin: 0; font-family: var(--chu-dam); font-weight: 800; font-size: 27px; line-height: 1.16; color: #6b3d1e; }
-#tv.dang-lon .tv-ten { visibility: hidden; }
-/* --- Tranh 3D (15/11): thầy chạm thiệp của nhóm đã hoàn thành, thiệp hiện to, bên phải có nút "Tranh 3D" và "Đóng".
+/* tên hoạt động "Tấm thiệp của nhóm em" từng nằm ở lề phải: bỏ 16/11 06:30 (thầy: "ẩn hết luôn") */
+/* --- Tranh 3D (15/11): thiệp của nhóm đã hoàn thành hiện to rồi chạy hoạt ảnh. Từ 16/11 06:30 thầy bấm trên máy giáo viên (bảng nút cạnh thiệp đã bỏ).
    Hoạt ảnh vẽ trên một canvas nằm đè lên tấm thiệp; lúc đó lớp mảnh của svg ẩn đi (canvas vẽ lại 10 mảnh). --- */
 .khung canvas.lop-3d { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 2px; }
 .khung.co-3d .lop-manh { visibility: hidden; }
-.dem-3d { position: absolute; left: 1733.5px; top: 524px; width: 180px; }
+/* 16/11 06:30: ô đếm Tranh 3D ẩn (máy giáo viên ghi "Tranh 3D: đã bấm n/4 nhóm"); trang vẫn cập nhật ô này cho bài thử đọc */
+.dem-3d { display: none; }
 .dem-3d b { display: block; font-family: var(--chu-dam); font-weight: 800; font-size: 24px; line-height: 1.1; color: #c2571a; }
 .dem-o { display: flex; gap: 8px; margin: 7px 0 6px; }
 .dem-o span { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #cbb89a; background: #fffaf0; color: #a08a6a; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
 .dem-o span.da { background: #f08a2c; border-color: #c2571a; color: #fff; }
 .dem-3d p { margin: 0; font-size: 17px; line-height: 1.4; color: var(--chu-nhat); }
 #tv.dang-lon .dem-3d { visibility: hidden; }
-.bang-3d { position: absolute; top: 396px; display: flex; flex-direction: column; gap: 16px; }
-.bang-3d.dung { left: 1340px; width: 300px; }
-.bang-3d.ngang { left: 1652px; width: 250px; }
-.ten-3d { margin: 0 0 4px; font-family: var(--chu-dam); font-weight: 700; font-size: 28px; line-height: 1.15; color: #6b3d1e; }
-.ten-3d:empty { display: none; }
-#tv .bang-3d .nut { min-height: 84px; font-size: 29px; border-radius: 22px; white-space: nowrap; }
-#tv #nut3d { background: #f0771f; border-color: #c2571a; color: #fff; font-family: var(--chu-dam); font-weight: 700; font-size: 33px; }
-#tv #nut3d.dang-chay { background: #8a5a34; border-color: #6b3d1e; }
-#tv #nut3d:disabled { background: #e9dfcc; border-color: #d9c7a6; color: #9c8a6c; opacity: 1; }
-.tt-3d { margin: 0; text-align: center; font-size: 20px; line-height: 1.35; color: var(--chu-nhat); }
 .phao { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 30; }
-.xep-goi { position: absolute; left: 1733.5px; top: 380px; width: 176px; margin: 0; font-size: 17px; line-height: 1.4; color: var(--chu-nhat); }
-.tv-nut { position: absolute; left: 116px; bottom: 40px; display: flex; gap: 14px; align-items: center; }
-/* màn làm bài: tiêu đề ẩn (báo tường đã có băng rôn), các nút xếp dọc ở lề trái, dòng nối ở lề phải */
-#tv.xem-xep .tv-nut { left: 10px; top: 322px; bottom: auto; width: 176px; flex-direction: column; align-items: stretch; gap: 10px; }
-#tv.xem-xep .tv-nut .nut { font-size: 19px; min-height: 54px; padding: 4px 8px; border-radius: 14px; white-space: normal; }
-#tv.xem-xep #tvNoi { left: 1733.5px; top: auto; bottom: 14px; max-width: 176px; font-size: 16px; line-height: 1.25; padding: 4px 12px; white-space: normal; text-align: center; border-radius: 14px; }
+/* dòng báo nối máy chủ: ẩn (16/11 06:30). Chỉ hiện khi mất kết nối hoặc nối mãi chưa được (lớp "hien", xem trangThai), ở lề phải phía dưới */
+#tv.xem-xep #tvNoi { display: none; left: auto; right: 16px; top: auto; bottom: 14px; max-width: 176px; font-size: 16px; line-height: 1.25; padding: 4px 12px; white-space: normal; text-align: center; border-radius: 14px; }
+#tv.xem-xep #tvNoi.hien { display: block; }
 
 /* --- cài đặt --- */
 #caiDat { position: absolute; inset: 0; background: rgba(74, 53, 36, .35); display: flex; align-items: center; justify-content: center; }
 #caiDat { z-index: 9; }
+/* các bảng che phủ rộng hơn sân 1920 × 1080: màn hình không phải 16:9 thì báo tường (to theo --bt) ló ra ngoài sân, lớp mờ vẫn che hết */
+#caiDat, #nhiemVu, #dapSo, #gvMa { inset: -700px; }
 .cd-hop { width: 1660px; background: var(--giay); border-radius: 30px; padding: 28px 44px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
 .cd-hop h2 { margin: 0 0 2px; font-family: var(--chu-dam); font-size: 44px; color: #6b3d1e; }
 .cd-hop h3 { margin: 20px 0 9px; font-size: 26px; }
@@ -484,10 +473,12 @@ body.tv { background: #eadfc9; }
 #tv .cd-hop .nut.nho { font-size: 21px; min-height: 52px; padding: 0 16px; border-radius: 14px; }
 #tv .cd-hop .nut.nho.san { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
 #tv .cd-hop #cdKhoa1:not(:disabled), #tv .cd-hop #cdKhoa2:not(:disabled), #tv .cd-hop #cdKhoa3:not(:disabled), #tv .cd-hop #cdKhoa4:not(:disabled) { background: #d9463c; border-color: #a92f27; color: #fff; }
-/* nút bánh răng: nút duy nhất còn trên màn hình tivi, nhỏ và nhạt để không lấn báo tường */
-.tv-nut, #tv.xem-xep .tv-nut { left: 14px; top: auto; bottom: 14px; width: auto; flex-direction: row; }
-#tv .nut.nut-rang, #tv.xem-xep .tv-nut .nut.nut-rang { width: 58px; min-height: 58px; padding: 0; border-radius: 50%; color: #8a7458; background: rgba(255, 250, 240, .7); border-color: #d9c7a6; }
-.nut-rang svg { display: block; width: 32px; height: 32px; }
+/* nút bánh răng (Cài đặt): nút duy nhất còn trên màn hình tivi.
+   16/11 06:39, thầy (kèm ảnh khoanh đỏ ở giữa mép dưới báo tường): "NÚT CÀI ĐẶT CHO NẰM Ở PHẦN MÀU ĐỎ NÈ" → nút nằm giữa mép dưới báo tường, cưỡi lên viền khung,
+   màu kem viền gỗ như chính cái khung. Nút nằm trong .xep nên to nhỏ theo báo tường. */
+.tv-nut { position: absolute; left: 960px; top: 1074px; width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+#tv .nut.nut-rang { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; color: #7a5a2a; background: #f6e7c4; border: 2px solid #b8892f; box-shadow: 0 2px 7px rgba(0, 0, 0, .4); }
+.nut-rang svg { display: block; width: 26px; height: 26px; }
 
 /* --- bảng Nhiệm vụ (15/11 21:28): 4 nhiệm vụ của hoạt động, thầy bật tắt từ máy giáo viên. Cỡ chữ cho tivi 70 inch, học sinh cuối lớp đọc được --- */
 #nhiemVu { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .45); display: flex; align-items: center; justify-content: center; }
@@ -505,7 +496,7 @@ body.tv { background: #eadfc9; }
 .nv-dong li { font-size: calc(36px * var(--nv)); line-height: 1.27; margin-top: 4px; text-wrap: pretty; }
 .nv-luu-y { margin: 14px 0 0; text-align: center; font-size: calc(34px * var(--nv)); line-height: 1.3; font-weight: 600; color: #9c2a22; }
 /* --- đồng hồ đếm ngược (15/11 22:12). Chỗ nằm: giữa phía dưới báo tường, giữa thiệp nhóm 3 và nhóm 4. Không phóng to thu nhỏ: chỉ mờ dần, trượt nhẹ --- */
-.dn { --dn-mau: #3f9a5a; position: absolute; left: 795px; top: 660px; width: 330px; height: 404px; z-index: 12; box-sizing: border-box; padding: 12px 0 0; background: rgba(255, 251, 240, .97); border: 2px solid #e3d2ae; border-radius: 28px; box-shadow: 0 14px 40px rgba(60, 40, 20, .28); display: flex; flex-direction: column; align-items: center; overflow: hidden; animation: dnHien .5s ease-out both; }
+.dn { --dn-mau: #3f9a5a; position: absolute; left: 795px; top: 642px; width: 330px; height: 404px; scale: var(--bt); transform-origin: 165px -102px; z-index: 12; box-sizing: border-box; padding: 12px 0 0; background: rgba(255, 251, 240, .97); border: 2px solid #e3d2ae; border-radius: 28px; box-shadow: 0 14px 40px rgba(60, 40, 20, .28); display: flex; flex-direction: column; align-items: center; overflow: hidden; animation: dnHien .5s ease-out both; }
 @keyframes dnHien { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .dn[hidden] { display: none; }
 .dn-nhan { height: 34px; font-size: 27px; line-height: 34px; font-weight: 600; color: #7a5a3a; white-space: nowrap; }
@@ -541,7 +532,9 @@ body.tv { background: #eadfc9; }
 .dn-hoa i { position: absolute; top: -24px; width: 14px; height: 18px; border-radius: 60% 40% 60% 40%; opacity: 0; animation: dnRoi 4.4s ease-in both; }
 @keyframes dnRoi { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0; } 12% { opacity: .9; } 100% { transform: translate(var(--x), 440px) rotate(var(--r)); opacity: 0; } }
 /* thu gọn: khi có bảng che (Nhiệm vụ, Đáp số, Cài đặt) hoặc đang xem lớn một thiệp, đồng hồ thành viên nhỏ ở góc trên bên trái */
-.dn.nho { left: 56px; top: 36px; width: auto; height: 72px; padding: 0 24px 0 11px; flex-direction: row; gap: 10px; border-radius: 999px; animation: none; }
+.dn.nho { left: 56px; top: 36px; scale: none; width: auto; height: 72px; padding: 0 24px 0 11px; flex-direction: row; gap: 10px; border-radius: 999px; animation: none; }
+/* thiệp đang hiện to (không có bảng che): viên đồng hồ to nhỏ theo báo tường như tấm thiệp, nên ở cỡ màn hình nào cũng không chạm thiệp (thiệp ngang hiện to bắt đầu từ x = 265 trong hệ của .xep) */
+.dn.nho.theo-thiep { left: 22px; top: 22px; scale: var(--bt); transform-origin: 938px 518px; }
 .dn.nho .dn-nhan, .dn.nho .dn-hoa, .dn.nho .dn-vach { display: none; }
 .dn.nho .dn-vong { width: 50px; height: 50px; margin: 0; }
 .dn.nho .dn-giua { position: static; transform: none; }
@@ -669,11 +662,12 @@ body.tv { background: #eadfc9; }
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
         <p>Xóa cả số đo đã nhập và hình của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Toàn màn hình, chọn ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở góc dưới bên trái tivi.</p>
+      <p class="gv-ghi">★: số mục nhóm nhập đúng ngay lần đầu. Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Toàn màn hình, chọn ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
     </div>
   </div>
 </div>
 
+<div id="tvNen" hidden></div>
 <div id="tv" hidden>
   <span id="tvNoi" class="noi">Đang nối…</span>
 
@@ -700,17 +694,14 @@ body.tv { background: #eadfc9; }
     <div class="khung dung pha-nhap" id="khung2"><div class="the"><span class="ten">Nhóm 2</span><span class="tt"></span><span class="so-sao"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao2"><div class="ma" id="ma2"></div><div class="ma-chu"><b>Nhóm 2</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
     <div class="khung ngang pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span><span class="so-sao"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao3"><div class="ma" id="ma3"></div><div class="ma-chu"><b>Nhóm 3</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
     <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span><span class="so-sao"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao4"><div class="ma" id="ma4"></div><div class="ma-chu"><b>Nhóm 4</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
-    <p class="tv-ten">Tấm thiệp<br>của nhóm em</p>
-    <p class="xep-goi">Chạm vào một tấm thiệp để xem lớn.<br>★: nhập đúng ngay lần đầu.</p>
     <div id="dem3d" class="dem-3d"><b>Tranh 3D</b><div class="dem-o"><span>1</span><span>2</span><span>3</span><span>4</span></div><p id="dem3dChu">Đã bấm 0/4 nhóm</p></div>
-    <div id="bang3d" class="bang-3d" hidden><p id="ten3d" class="ten-3d"></p><button id="nut3d" class="nut">▶ Tranh 3D</button><button id="dong3d" class="nut">✕ Đóng</button><p id="tt3d" class="tt-3d"></p></div>
+    <!-- 15/11 21:29, thầy: "mấy nút này chuyển hết vào app cho tôi đi." 16/11 06:30: "ẩn hết luôn, chỉ có chọn trên điện thoại của giáo viên". Tivi chỉ còn nút bánh răng mở bảng Cài đặt:
+         việc phải làm ngay trên tivi (toàn màn hình, chọn ảnh báo tường, mã cho máy giáo viên, tạo phòng mới) và các nút dự phòng. Chỗ nằm: giữa mép dưới báo tường (thầy khoanh đỏ 16/11 06:39). -->
+    <div class="tv-nut">
+      <button id="nutCaiDat" class="nut nut-rang" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+    </div>
   </section>
 
-  <!-- 15/11 21:29, thầy: "mấy nút này chuyển hết vào app cho tôi đi." Cột nút đã dời sang máy giáo viên. Tivi chỉ còn nút bánh răng mở bảng Cài đặt:
-       việc phải làm ngay trên tivi (toàn màn hình, chọn ảnh báo tường, mã cho máy giáo viên, tạo phòng mới) và các nút dự phòng. -->
-  <div class="tv-nut">
-    <button id="nutCaiDat" class="nut nut-rang" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
-  </div>
 
   <canvas id="phao" class="phao" width="1920" height="1080" hidden></canvas>
 
@@ -776,6 +767,8 @@ body.tv { background: #eadfc9; }
           <div class="cd-hang"><button id="cdMo1" class="nut nho">Nhóm 1</button><button id="cdMo2" class="nut nho">Nhóm 2</button><button id="cdMo3" class="nut nho">Nhóm 3</button><button id="cdMo4" class="nut nho">Nhóm 4</button><button id="nutMoHet" class="nut nho">Cả 4 nhóm</button></div>
           <h4>Mở khóa (nút sáng là nhóm đang bị khóa)</h4>
           <div class="cd-hang"><button id="cdKhoa1" class="nut nho" disabled>Nhóm 1</button><button id="cdKhoa2" class="nut nho" disabled>Nhóm 2</button><button id="cdKhoa3" class="nut nho" disabled>Nhóm 3</button><button id="cdKhoa4" class="nut nho" disabled>Nhóm 4</button></div>
+          <h4>Tranh 3D (chạm thiệp đang hiện to để về báo tường)</h4>
+          <div class="cd-hang"><button id="cd3d1" class="nut nho" disabled>Nhóm 1</button><button id="cd3d2" class="nut nho" disabled>Nhóm 2</button><button id="cd3d3" class="nut nho" disabled>Nhóm 3</button><button id="cd3d4" class="nut nho" disabled>Nhóm 4</button></div>
           <h3>Xóa bài</h3>
           <div class="cd-hang"><button id="nutXoaHinh" class="nut">Xóa hình cả 4 nhóm</button><button id="nutLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button></div>
           <p>Xóa hình: các nhóm giữ số đo đã nhập, 10 mảnh về lại chỗ nằm sẵn. Xóa hết: xóa cả số đo đã nhập, dùng khi dạy lớp khác hoặc thử lại.</p>
@@ -809,6 +802,6 @@ body.tv { background: #eadfc9; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=734eb98b"></script>
-<script src="js/xep-thiep.js?v=babf093e"></script>
+<script src="js/xep-thiep.js?v=0a8197de"></script>
 </body>
 </html>
