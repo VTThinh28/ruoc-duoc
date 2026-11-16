@@ -199,6 +199,23 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .dt-nut2 .nut.chinh { font-size: 16px; }
 .dt-nut .bieu { font-size: 19px; line-height: 1; }
 .dt-nut .bieu-lat { width: 23px; height: 23px; flex: none; }   /* hình lật trái phải như nút Flip Horizontal của Word */
+/* 16/11 10:02: máy giáo viên vào xem màn hình của nhóm. Dải báo trên cùng, nút "Hình AI gợi ý" dưới hai hàng nút của nhóm, bảng hình mẫu. Máy học sinh không có các thứ này. */
+.dt-gv { display: flex; align-items: center; gap: 10px; padding: 6px 8px; background: #5a3a22; color: #fff8e8; font-size: 15px; font-weight: 600; line-height: 1.25; }
+.dt-gv .nut { flex: none; min-height: 40px; padding: 0 12px; font-size: 14.5px; border-radius: 11px; white-space: nowrap; color: var(--chu); }
+body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6px; }
+.dt-nut3 { padding: 0 8px; }
+.dt-nut3 .nut { width: 100%; min-height: 48px; margin: 0 0 calc(8px + env(safe-area-inset-bottom)); font-size: 16px; }
+.nut.goi-y-nut { background: #efe7ff; border-color: #9a7fd4; color: #47298c; }
+.nut.goi-y-nut:active:not(:disabled) { background: #e2d6fb; }
+.hop.goi-y { align-items: center; z-index: 9; }
+.hop.goi-y .hop-the { border-top-color: #9a7fd4; padding: 14px 16px 16px; max-height: 100%; overflow-y: auto; }
+.goi-y-hinh { display: block; margin: 0 auto 8px; background: #fff; border-radius: 3px; box-shadow: 0 0 0 1.5px #d9c9ab; max-width: 100%; }
+.hop-the.dung .goi-y-hinh { height: min(50vh, 440px); aspect-ratio: 29 / 42; }
+.hop-the.ngang .goi-y-hinh { width: 100%; aspect-ratio: 42 / 29; }
+.goi-y-hinh .manh .than { stroke-width: 0.7; }
+.goi-y-chu { margin: 0; font-size: 14.5px; line-height: 1.4; color: #6a5440; }
+.hop-nut.goi-y-nut2 { flex-direction: column; margin-top: 10px; }
+.hop-nut.goi-y-nut2 .nut { flex: none; min-height: 50px; }
 
 /* --- bảng thông báo trên bàn xếp: xác nhận, báo mảnh đè lên nhau, báo chưa nhận ra hình --- */
 .hop { position: absolute; inset: 0; z-index: 8; background: rgba(74, 53, 36, .36); display: flex; align-items: flex-end; justify-content: center; padding: 14px 12px calc(14px + env(safe-area-inset-bottom)); }   /* bảng nằm phía dưới để các em vẫn thấy mảnh được tô viền trên bàn xếp */
@@ -225,7 +242,8 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 }
 @media (orientation: landscape) and (min-width: 560px) {
   #dtChinh { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
-  #manXep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 34vw); grid-template-rows: auto 1fr auto auto; }
+  #manXep { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 34vw); grid-template-rows: auto 1fr auto auto auto; }
+  .dt-nut3 { grid-column: 2; grid-row: 5; }
   #dtKhungBan { grid-column: 1; grid-row: 1 / -1; margin: 0 4px 8px 8px; min-height: 0; }
   #manXep .nhac { grid-column: 2; grid-row: 1; }
   .dt-nut { grid-column: 2; grid-row: 3; }
@@ -246,6 +264,16 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
   .o-phim { grid-column: 2; grid-row: 2 / 4; align-content: center; }
   .o-duoi { grid-column: 2; grid-row: 4; }
   .phim { min-height: 38px; } .o-so { height: 34px; }
+  /* bảng Hình AI gợi ý khi cầm ngang: hình mẫu bên trái, chữ và 2 nút bên phải, để không phải kéo mới thấy nút */
+  .hop.goi-y { justify-content: center; padding: 8px 12px; }
+  .hop.goi-y .hop-the { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: 16px; align-content: center; width: auto; max-width: min(680px, 96vw); padding: 10px 16px 12px; }
+  .hop.goi-y .hop-the h2 { grid-column: 2; grid-row: 1; margin: 0 0 4px; font-size: 22px; }
+  .hop.goi-y .goi-y-hinh { grid-column: 1; grid-row: 1 / span 3; margin: 0; align-self: center; }
+  .hop.goi-y .goi-y-chu { grid-column: 2; grid-row: 2; font-size: 14px; }
+  .hop.goi-y .goi-y-nut2 { grid-column: 2; grid-row: 3; margin-top: 8px; gap: 6px; }
+  .hop.goi-y .goi-y-nut2 .nut { min-height: 44px; font-size: 16px; }
+  .hop-the.dung .goi-y-hinh { height: min(calc(100vh - 60px), 440px); }
+  .hop-the.ngang .goi-y-hinh { width: min(46vw, 330px); }
 }
 @media (min-width: 700px) and (min-height: 700px) {
   .dt-nut .nut, .dt-nut2 .nut { font-size: 18px; min-height: 60px; }
@@ -292,14 +320,17 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .gv-khoa-chu::before { content: ""; display: inline-block; width: 1.05em; height: 1.05em; margin-right: .35em; vertical-align: -0.14em; background: var(--o-khoa) center / contain no-repeat; }
 .gv-khoa .nut { flex: none; min-height: 46px; padding: 0 14px; background: #b3261d; border-color: #8f1d16; color: #fff; font-size: 16px; }
 .gv-khoa .nut:active:not(:disabled) { background: #9a1f17; }
-.gv-nut { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.gv-nut .nut { min-height: 50px; font-size: 15.5px; padding: 2px 6px; }
+.gv-nut { display: grid; grid-template-columns: 1.32fr 1.08fr 1fr; gap: 6px; }      /* 16/11: thêm nút thứ ba "Xem màn hình" */
+.gv-nut .nut { min-height: 52px; font-size: 14px; padding: 2px 3px; line-height: 1.2; }
+.gv-nut .nut.gv-xem { flex-direction: column; gap: 0; }
+.gv-nut .nut.gv-xem { background: #eef4fb; border-color: #9db9d8; color: #23507e; }
 .gv-b2 { flex-direction: column; gap: 0; }
 .gv-b2b { font-size: 12.5px; font-weight: 500; opacity: .8; line-height: 1.2; }
 .gv-b2a { line-height: 1.2; }
 .gv-nut .nut.san { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
 .gv-nut .nut.san:active:not(:disabled) { background: #357a45; }
 .gv-nut .nut.hoi { font-size: 13.5px; }
+.gv-nut .nut.dang-chay { font-size: 13.5px; }
 .gv-nut .nut.dang-chay { background: #fde9c4; border-color: #e0a63a; }
 .gv-duoi { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
 /* 4 nút cho tivi: dòng trên nhỏ nói việc sẽ làm (Hiện, Ẩn, Về), dòng dưới đậm nói thứ được bật tắt; đang hiện trên tivi thì nút có nền vàng */
@@ -313,6 +344,10 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .gv-dn.chay { background: #eef7ee; border-color: #8cc59a; }
 .gv-dn.dung { background: #fff3da; border-color: #e0a63a; }
 .gv-dn.het { background: #fdecea; border-color: #e3a29b; }
+.gv-nhac.tat { background: #f1ece2; }
+.gv-nhac .gv-dn-chu span { display: block; }
+.gv-nhac .gv-dn-chu i { display: block; font-style: normal; font-size: 13px; color: var(--chu-nhat); }
+.gv-dn .nut.gv-am { width: 42px; padding: 0; font-size: 24px; font-weight: 700; line-height: 1; }
 .gv-dn-chu { flex: 1 1 auto; min-width: 0; font-size: 14.5px; line-height: 1.25; }
 .gv-dn-chu b { margin-left: 3px; font-size: 23px; font-weight: 800; font-family: var(--chu-dam); letter-spacing: .5px; vertical-align: -2px; white-space: nowrap; }
 .gv-dn-chu b.het { margin-left: 0; }
@@ -409,7 +444,8 @@ body.tv { background: #130c06; }
 /* có mảnh nằm ngoài tấm thiệp (lưới trên điện thoại rộng hơn thiệp): bàn xếp thu nhỏ thành một tấm lưới nằm trên thiệp, trang trí của thiệp mờ đi */
 .khung.thu-nho .lop-luoi .luoi-vien { stroke-width: 1.6; }
 .khung.thu-nho .lop-tt { opacity: .28; }
-.khung.pha-xep .lop-nhap, .khung.pha-xong .lop-nhap { opacity: 0; }
+.khung.pha-xep .lop-nhap, .khung.pha-xong .lop-nhap, .khung.hien-ma .lop-nhap { opacity: 0; }
+.khung svg.thiep { overflow: visible; }      /* 16/11: 3 ô Tổng / Thiệp / Phần còn lại vắt trên mép dưới tấm thiệp (xem CHO_O) */
 .thiep .lop-manh .manh .than { transition: fill 400ms ease; }
 .thiep .lop-manh .manh .cham { display: none; }
 .lop-manh .dau { opacity: 0; transition: opacity 300ms ease; }
@@ -472,11 +508,26 @@ body.tv { background: #130c06; }
 .cd-hang.cd-cach { margin-top: 12px; }
 #tv .cd-hop .nut.nho { font-size: 21px; min-height: 52px; padding: 0 16px; border-radius: 14px; }
 #tv .cd-hop .nut.nho.san { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
+#tv .cd-hop .nut.nho.bat { background: #fde9c4; border-color: #e0a63a; }
+#tv .cd-hop .nut.nhac-bat { margin-left: auto; }
+.cd-ben { font-size: 20px; color: var(--chu-nhat); line-height: 1.3; }
+.cd-hang.cd-lien { flex-wrap: nowrap; }
+.cd-hang.cd-nhac { margin-top: 8px; min-height: 56px; }
+.cd-hang.cd-nhac p { margin: 0; flex: 1; }
 #tv .cd-hop #cdKhoa1:not(:disabled), #tv .cd-hop #cdKhoa2:not(:disabled), #tv .cd-hop #cdKhoa3:not(:disabled), #tv .cd-hop #cdKhoa4:not(:disabled) { background: #d9463c; border-color: #a92f27; color: #fff; }
 /* nút bánh răng (Cài đặt): nút duy nhất còn trên màn hình tivi.
    16/11 06:39, thầy (kèm ảnh khoanh đỏ ở giữa mép dưới báo tường): "NÚT CÀI ĐẶT CHO NẰM Ở PHẦN MÀU ĐỎ NÈ" → nút nằm giữa mép dưới báo tường, cưỡi lên viền khung,
    màu kem viền gỗ như chính cái khung. Nút nằm trong .xep nên to nhỏ theo báo tường. */
-.tv-nut { position: absolute; left: 960px; top: 1074px; width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+.tv-nut { position: absolute; left: 960px; top: 1074px; width: 268px; height: 44px; margin: -22px 0 0 -134px; display: flex; gap: 12px; }      /* 16/11 10:02: nút Toàn màn hình kế nút Cài đặt; 10:44: thêm 3 nút nhạc (bật / tắt, nhỏ, to) kế nút Toàn màn hình. Cả hàng nằm giữa mép dưới báo tường */
+.nut-nhac { position: relative; }
+.nut-nhac .bat, .nut-nhac.dang .tat { display: none; }
+.nut-nhac.dang .bat { display: block; }
+#tv .nut.nut-rang.nut-nhac.dang { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
+#tv .nut.nut-rang.nut-nhac.dang.cho { background: #e07b2a; border-color: #a95600; }
+.nut-nhac .muc { position: absolute; right: -7px; top: -8px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box; border-radius: 10px; background: #7a5a2a; color: #fff; font: 700 13px/20px var(--chu-thuong); text-align: center; }
+#tv .nut.nut-rang:disabled { opacity: .45; }
+.nut-toan .thu, .nut-toan.dang .mo { display: none; }
+.nut-toan.dang .thu { display: block; }
 #tv .nut.nut-rang { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; color: #7a5a2a; background: #f6e7c4; border: 2px solid #b8892f; box-shadow: 0 2px 7px rgba(0, 0, 0, .4); }
 .nut-rang svg { display: block; width: 26px; height: 26px; }
 
@@ -562,15 +613,15 @@ body.tv { background: #130c06; }
 
 /* --- đáp số (chỉ hiện khi thầy bấm) --- */
 #dapSo { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .4); display: flex; align-items: center; justify-content: center; }
-.dap-hop { width: 1240px; background: var(--giay); border-radius: 30px; padding: 26px 50px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
+.dap-hop { width: 1500px; background: var(--giay); border-radius: 30px; padding: 26px 50px 30px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
 .dap-hop h2 { margin: 0 0 8px; font-family: var(--chu-dam); font-size: 46px; color: #6b3d1e; }
-.dap-hang { display: grid; grid-template-columns: 150px 380px 1fr; align-items: center; column-gap: 18px; min-height: 66px; border-bottom: 1px solid #eadfc9; font-size: 31px; }
+.dap-hang { display: grid; grid-template-columns: 150px 470px 1fr; align-items: center; column-gap: 18px; min-height: 66px; border-bottom: 1px solid #eadfc9; font-size: 31px; }
 .dap-hinh svg { display: block; margin: auto; overflow: visible; }
 .dap-hinh .than { stroke: #4d4541; stroke-width: 1.3; stroke-linejoin: round; }
 .dap-ten { font-weight: 600; }
 .dap-tinh { font-variant-numeric: tabular-nums; }
 #dapCuoi { margin-top: 10px; }
-.dap-hang.rong { grid-template-columns: 548px 1fr; min-height: 58px; border-bottom: 0; }
+.dap-hang.rong { grid-template-columns: 580px 1fr; min-height: 58px; border-bottom: 0; }
 .dap-hang.rong .dap-tinh { font-weight: 700; color: #8f2a22; }
 </style>
 </head>
@@ -581,6 +632,7 @@ body.tv { background: #130c06; }
   <div id="dtCho" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p id="dtChoChu"></p></div>
   <div id="dtChon" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p class="chon-hoi">Em ở nhóm nào?</p><p id="dtChonChu" class="chon-chu"></p><div id="dtChonNut"></div><button id="dtChonXong" class="nut chinh" disabled>Xác nhận</button></div>
   <div id="dtChinh" hidden>
+    <div id="dtGV" class="dt-gv" hidden><button id="dtGVVe" class="nut">‹ Trang giáo viên</button><span id="dtGVChu"></span></div>
     <div class="dt-dau"><span id="dtNhom"></span><span id="dtNoi" class="noi">Đang nối…</span><span class="dt-ten" id="dtTen">Nhiệm vụ 1: Đo đạc và tính toán</span></div>
 
     <section id="manNhap" class="man">
@@ -605,12 +657,13 @@ body.tv { background: #130c06; }
         <button id="dtLai" class="nut">Làm lại từ đầu</button>
         <button id="dtXong" class="nut chinh">Hoàn thành</button>
       </div>
+      <div class="dt-nut3"><button id="dtGoiY" class="nut goi-y-nut" hidden>✦ Hình AI gợi ý</button></div>
     </section>
 
     <section id="manThiep" class="man" hidden>
       <div id="thiepKhung"><svg id="dtThiep" xmlns="http://www.w3.org/2000/svg"></svg></div>
-      <p class="nhac tot">Hình đã lên thiệp. Cả nhóm dán giấy theo hình này nhé.</p>
-      <div class="dt-nut2 mot"><button id="thiepSua" class="nut">Sửa lại hình</button></div>
+      <p id="thiepChu" class="nhac tot">Hình đã lên thiệp. Cả nhóm nhìn số trên từng mảnh để dán giấy nhé. Muốn sửa lại hình thì báo giáo viên.</p>
+      <div class="dt-nut2 mot"><button id="thiepSua" class="nut" hidden>Mở cho nhóm sửa lại hình</button></div>
     </section>
 
     <div id="hop" class="hop" hidden>
@@ -618,6 +671,15 @@ body.tv { background: #130c06; }
         <h2 id="hopTen"></h2>
         <div id="hopChu" class="hop-chu"></div>
         <div class="hop-nut"><button id="hopPhu" class="nut"></button><button id="hopChinh" class="nut chinh"></button></div>
+      </div>
+    </div>
+
+    <div id="goiY" class="hop goi-y" hidden>
+      <div id="goiYHop" class="hop-the" role="dialog" aria-modal="true" aria-labelledby="goiYTen">
+        <h2 id="goiYTen">Hình AI gợi ý</h2>
+        <svg id="goiYHinh" class="goi-y-hinh" xmlns="http://www.w3.org/2000/svg"></svg>
+        <p id="goiYChu" class="goi-y-chu"></p>
+        <div class="hop-nut goi-y-nut2"><button id="goiYXep" class="nut chinh">Xếp giúp nhóm theo hình này</button><button id="goiYDong" class="nut">Đóng</button></div>
       </div>
     </div>
 
@@ -651,6 +713,12 @@ body.tv { background: #130c06; }
         <button id="gvDnChay" class="nut">▶ Bắt đầu</button>
         <button id="gvDnTat" class="nut" hidden>Tắt</button>
       </div>
+      <div id="gvNhac" class="gv-dn gv-nhac">
+        <span id="gvNhacChu" class="gv-dn-chu">Nhạc nền</span>
+        <button id="gvNhacNho" class="nut gv-am" aria-label="Giảm âm lượng">−</button>
+        <button id="gvNhacTo" class="nut gv-am" aria-label="Tăng âm lượng">+</button>
+        <button id="gvNhacNut" class="nut">▶ Bật nhạc</button>
+      </div>
     </div>
     <div id="gvDs" class="gv-ds"></div>
     <div class="gv-duoi">
@@ -662,7 +730,7 @@ body.tv { background: #130c06; }
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
         <p>Xóa cả số đo đã nhập và hình của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">★: số mục nhóm nhập đúng ngay lần đầu. Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Toàn màn hình, chọn ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <p class="gv-ghi">★: số mục nhóm nhập đúng ngay lần đầu. Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Xem màn hình: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
     </div>
   </div>
 </div>
@@ -699,6 +767,10 @@ body.tv { background: #130c06; }
          việc phải làm ngay trên tivi (toàn màn hình, chọn ảnh báo tường, mã cho máy giáo viên, tạo phòng mới) và các nút dự phòng. Chỗ nằm: giữa mép dưới báo tường (thầy khoanh đỏ 16/11 06:39). -->
     <div class="tv-nut">
       <button id="nutCaiDat" class="nut nut-rang" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+      <button id="nutToanNgoai" class="nut nut-rang nut-toan" aria-label="Toàn màn hình" title="Toàn màn hình"><svg class="mo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg><svg class="thu" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
+      <button id="nutNhac" class="nut nut-rang nut-nhac" aria-label="Bật nhạc" title="Bật nhạc"><svg class="tat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.27 3L3 4.27l9 9v.28c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-1.73L19.73 21 21 19.73 4.27 3zM14 7h4V3h-6v5.18l2 2z"/></svg><svg class="bat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><span id="nhacMuc" class="muc">5</span></button>
+      <button id="nutNhacNho" class="nut nut-rang" aria-label="Giảm âm lượng" title="Giảm âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg></button>
+      <button id="nutNhacTo" class="nut nut-rang" aria-label="Tăng âm lượng" title="Tăng âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
     </div>
   </section>
 
@@ -747,12 +819,14 @@ body.tv { background: #130c06; }
       <div class="cd-cot">
         <div>
           <h3>Màn hình tivi</h3>
-          <div class="cd-hang"><button id="nutToan" class="nut">Toàn màn hình</button></div>
-          <p>Nút này phải bấm ngay trên tivi, điện thoại không bật giúp được.</p>
+          <div class="cd-hang cd-lien"><button id="nutToan" class="nut">Toàn màn hình</button><span class="cd-ben">Nút này cũng nằm cạnh nút bánh răng.</span></div>
           <h3>Ảnh báo tường</h3>
           <div class="cd-hang"><button id="nutChonAnh" class="nut">Chọn ảnh báo tường từ máy</button><button id="nutBoAnh" class="nut" hidden>Bỏ ảnh</button><input id="btTep" type="file" accept="image/*" hidden></div>
           <p id="btTinh"></p>
           <p>Ảnh chỉ nằm trong trình duyệt của máy này, không đưa lên mạng. Chọn một lần, lần sau mở trang vẫn còn.</p>
+          <h3>Nhạc nền</h3>
+          <div class="cd-hang"><button id="nhacXep" class="nut nho">Xếp thiệp</button><button id="nhacHV" class="nut nho">Học Vui Mỗi Ngày</button><button id="nhacChon" class="nut nho">Chọn bài hát từ máy</button><input id="nhacTep" type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" hidden></div>
+          <div class="cd-hang cd-lien cd-nhac"><p id="nhacTinh"></p><button id="nhacBat" class="nut nho nhac-bat">▶ Bật nhạc</button></div>
           <h3>Phòng và máy giáo viên</h3>
           <div class="cd-hang"><span style="font-size:24px">Mã phòng: <span id="maPhong"></span></span><button id="nutPhongMoi" class="nut">Tạo phòng mới</button></div>
           <div class="cd-hang cd-cach"><button id="nutMaGV" class="nut">Mã cho máy giáo viên</button></div>
@@ -767,7 +841,7 @@ body.tv { background: #130c06; }
           <div class="cd-hang"><button id="cdMo1" class="nut nho">Nhóm 1</button><button id="cdMo2" class="nut nho">Nhóm 2</button><button id="cdMo3" class="nut nho">Nhóm 3</button><button id="cdMo4" class="nut nho">Nhóm 4</button><button id="nutMoHet" class="nut nho">Cả 4 nhóm</button></div>
           <h4>Mở khóa (nút sáng là nhóm đang bị khóa)</h4>
           <div class="cd-hang"><button id="cdKhoa1" class="nut nho" disabled>Nhóm 1</button><button id="cdKhoa2" class="nut nho" disabled>Nhóm 2</button><button id="cdKhoa3" class="nut nho" disabled>Nhóm 3</button><button id="cdKhoa4" class="nut nho" disabled>Nhóm 4</button></div>
-          <h4>Tranh 3D (chạm thiệp đang hiện to để về báo tường)</h4>
+          <h4>Tranh 3D</h4>
           <div class="cd-hang"><button id="cd3d1" class="nut nho" disabled>Nhóm 1</button><button id="cd3d2" class="nut nho" disabled>Nhóm 2</button><button id="cd3d3" class="nut nho" disabled>Nhóm 3</button><button id="cd3d4" class="nut nho" disabled>Nhóm 4</button></div>
           <h3>Xóa bài</h3>
           <div class="cd-hang"><button id="nutXoaHinh" class="nut">Xóa hình cả 4 nhóm</button><button id="nutLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button></div>
@@ -786,8 +860,8 @@ body.tv { background: #130c06; }
           <p>Thầy quét mã này bằng điện thoại của mình. Trên máy đó có:</p>
           <ul>
             <li>nhóm đang bị khóa và nút Mở khóa;</li>
-            <li>nút Mở nhiệm vụ 2 (bàn xếp) và nút Tranh 3D cho từng nhóm;</li>
-            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi.</li>
+            <li>nút Mở nhiệm vụ 2 (bàn xếp), Tranh 3D, Xem màn hình và Cho sửa lại hình của từng nhóm;</li>
+            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc.</li>
           </ul>
           <p class="gvma-nhac">Mã này chỉ dành cho giáo viên. Thầy quét trước giờ học, lúc học sinh chưa nhìn màn hình.</p>
           <p>Quét một lần là đủ: link dùng được tới khi thầy bấm Tạo phòng mới.</p>
@@ -801,7 +875,7 @@ body.tv { background: #130c06; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/tranh-3d.js?v=734eb98b"></script>
-<script src="js/xep-thiep.js?v=0a8197de"></script>
+<script src="js/tranh-3d.js?v=4e76cc2a"></script>
+<script src="js/xep-thiep.js?v=b34e835f"></script>
 </body>
 </html>

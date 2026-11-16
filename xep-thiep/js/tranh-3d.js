@@ -72,8 +72,8 @@ function tanLua(c, t, a, o) {
     const y = lerp(o.y0, o.y1, rnd(i, o.hat + 5)) - o.len * (0.45 + 0.55 * rnd(i, o.hat + 3)) * u;
     const al = a * Math.pow(Math.sin(Math.PI * u), 1.4) * 0.95, r = 0.07 + 0.08 * rnd(i, o.hat + 4);
     if (al <= 0.01) continue;
-    if (i % 5 === 0) sao4(c, x, y, r * 4.2, al, '255,236,170');
-    else { c.beginPath(); c.arc(x, y, r, 0, PI2); c.fillStyle = `rgba(255,${190 + Math.round(50 * rnd(i, 9))},${90 + Math.round(60 * rnd(i, 8))},${al})`; c.shadowColor = `rgba(255,200,90,${al})`; c.shadowBlur = 0.2 * UPX; c.fill(); c.shadowBlur = 0; }
+    if (i % 5 === 0) sao4(c, x, y, r * 4.2, al, '255,176,50');      // 16/11: nền sáng nên tàn lửa màu cam đậm hơn (trước là vàng nhạt trên nền tối)
+    else { c.beginPath(); c.arc(x, y, r, 0, PI2); c.fillStyle = `rgba(255,${140 + Math.round(50 * rnd(i, 9))},${30 + Math.round(50 * rnd(i, 8))},${al})`; c.shadowColor = `rgba(255,160,60,${al})`; c.shadowBlur = 0.2 * UPX; c.fill(); c.shadowBlur = 0; }
   }
 }
 function phu(c, d, rgbTren, rgbDuoi, a1, a2) {
@@ -202,33 +202,50 @@ HX['1'] = function (c, t, a, P, M, d) {
     c.fillStyle = `rgba(${mauCanh[i % 4]},${al})`; c.shadowColor = `rgba(${mauCanh[i % 4]},${al * 0.8})`; c.shadowBlur = 0.12 * UPX; c.fill();
     c.restore();
   }
-  // cánh bướm bay tới sau khi hoa nở
-  const bay = a * muot((t - 2.6) / 0.8);
-  if (bay > 0) {
-    const bx = 14.5 + 8.6 * Math.sin(PI2 * t / 7.4 + 0.4), by = 8.3 + 2.6 * Math.sin(PI2 * t / 3.1 + 1) + 0.5 * Math.sin(t * 5);
-    const huong = Math.cos(PI2 * t / 7.4 + 0.4) >= 0 ? 1 : -1, vo = Math.abs(Math.sin(t * 13));
-    c.save(); c.translate(bx, by); c.scale(huong * 1.7, 1.7); c.rotate(-0.25); c.globalAlpha = bay;
+  // 16/11 10:02, thầy: "Hiệu ứng tranh 3d của hình 1 cho thêm vài con bướm nhé". Trước chỉ có một con màu xanh; nay 4 con, lần lượt bay tới sau khi hoa nở.
+  BUOM.forEach(([t0, cx, ax, Tx, px, cy, ay, Ty, py, co, mau1, mau2, vien], i) => {
+    const bay = a * muot((t - t0) / 0.8);
+    if (bay <= 0) return;
+    const bx = cx + ax * Math.sin(PI2 * t / Tx + px), by = cy + ay * Math.sin(PI2 * t / Ty + py) + 0.5 * Math.sin(t * 5 + i * 1.3);
+    const huong = Math.cos(PI2 * t / Tx + px) >= 0 ? 1 : -1, vo = Math.abs(Math.sin(t * 13 + i * 1.7));
+    c.save(); c.translate(bx, by); c.scale(huong * co, co); c.rotate(-0.25); c.globalAlpha = bay;
     for (const dau of [-1, 1]) {
       c.save(); c.scale(1, dau * (0.25 + 0.75 * vo));
-      c.beginPath(); c.ellipse(0.1, -0.62, 0.62, 0.5, -0.5, 0, PI2); c.fillStyle = 'rgba(96,150,235,0.95)'; c.fill(); c.lineWidth = 0.05; c.strokeStyle = 'rgba(60,84,150,0.8)'; c.stroke();
-      c.beginPath(); c.ellipse(-0.4, -0.42, 0.4, 0.32, 0.6, 0, PI2); c.fillStyle = 'rgba(150,196,250,0.97)'; c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(0.1, -0.62, 0.62, 0.5, -0.5, 0, PI2); c.fillStyle = mau1; c.fill(); c.lineWidth = 0.05; c.strokeStyle = vien; c.stroke();
+      c.beginPath(); c.ellipse(-0.4, -0.42, 0.4, 0.32, 0.6, 0, PI2); c.fillStyle = mau2; c.fill(); c.stroke();
       c.restore();
     }
     c.beginPath(); c.moveTo(-0.5, 0); c.lineTo(0.55, 0); c.lineWidth = 0.13; c.lineCap = 'round'; c.strokeStyle = '#5a4636'; c.stroke();
     c.restore();
-  }
+  });
 };
+// [lúc bay tới (giây), tâm x, biên độ x, chu kỳ x, pha x, tâm y, biên độ y, chu kỳ y, pha y, cỡ, màu cánh lớn, màu cánh nhỏ, màu viền]. Con đầu là con bướm xanh có từ trước.
+const BUOM = [
+  [2.6, 14.5, 8.6, 7.4, 0.4, 8.3, 2.6, 3.1, 1.0, 1.7, 'rgba(96,150,235,0.95)', 'rgba(150,196,250,0.97)', 'rgba(60,84,150,0.8)'],
+  [3.0, 8.6, 5.2, 6.1, 2.2, 13.4, 3.0, 4.3, 0.3, 1.25, 'rgba(255,190,50,0.96)', 'rgba(255,224,120,0.97)', 'rgba(176,112,20,0.8)'],
+  [3.4, 20.6, 4.8, 8.3, 4.1, 11.0, 3.2, 3.7, 2.0, 1.4, 'rgba(240,120,170,0.95)', 'rgba(250,176,206,0.97)', 'rgba(170,60,110,0.8)'],
+  [3.8, 14.5, 10.0, 9.7, 1.3, 19.0, 3.4, 5.3, 5.0, 1.15, 'rgba(160,120,230,0.95)', 'rgba(200,176,246,0.97)', 'rgba(96,66,160,0.8)'],
+];
 
 // Ô 2: bánh sinh nhật. Nến cháy lung linh, tàn lửa bay lên.
+// 16/11 10:02, thầy: "tranh 3d của bức 2 thì chỉnh sang nền sáng nhé, thêm hiệu ứng hoa giấy rơi hoặc cho số 51 xuất hiện ở đâu đó nhé."
+// Nền sáng: bỏ lớp phủ nâu tối, quanh nến chỉ còn quầng vàng ấm nhạt. Số 51 hiện trên hai hình vuông (thân bánh): "5" bên trái, "1" bên phải. Hoa giấy rơi khắp tấm thiệp.
+const MAU_GIAY = ['#ef4d44', '#ffc21a', '#499fd8', '#68bd51', '#f493af', '#f9a03b', '#9a7fd4'];
 HX['2'] = function (c, t, a, P, M, d) {
-  if (a > 0) phu(c, d, '92,58,24', '92,58,24', 0.2 * a, 0.13 * a);
-  [5, 4, 6, 7, 8].forEach(i => veManh(c, P[i], M[i]));
   const fl = 0.86 + 0.14 * Math.sin(t * 11) * Math.sin(t * 7.3 + 1);
-  if (a > 0) {
-    c.save(); c.globalCompositeOperation = 'lighter';
-    quang(c, 14.5, 11.5, 12.5, '255,170,70', 0.5 * a * fl); quang(c, 11, 14.5, 6, '255,190,90', 0.3 * a * fl); quang(c, 18, 14.5, 6, '255,190,90', 0.3 * a * fl);
+  if (a > 0) { quang(c, 14.5, 11.5, 13.5, '255,214,120', 0.42 * a * fl); quang(c, 11, 14.5, 6, '255,200,110', 0.22 * a * fl); quang(c, 18, 14.5, 6, '255,200,110', 0.22 * a * fl); }
+  [5, 4, 6, 7, 8].forEach(i => veManh(c, P[i], M[i]));
+  if (a > 0) [[7, '5', 0], [8, '1', 0.22]].forEach(([i, chu, tre]) => {      // số 51 hiện dần, trượt nhẹ từ dưới lên (không phóng to)
+    const q = muot((t - 1.0 - tre) / 0.6);
+    if (q <= 0) return;
+    const ct = tam(P[i]), u = (t - 1.2 - tre) / 0.9;
+    c.save(); c.globalAlpha = a * q; c.translate(ct[0], ct[1] + 0.2 + 0.5 * (1 - q)); c.scale(0.034, 0.034);
+    c.font = '800 100px "Baloo 2", "Be Vietnam Pro", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+    c.lineWidth = 13; c.strokeStyle = '#fffaf0'; c.strokeText(chu, 0, 0);
+    c.fillStyle = '#d9382e'; c.fillText(chu, 0, 0);
     c.restore();
-  }
+    if (u > 0 && u < 1) for (let j = 0; j < 4; j++) { const an = PI2 * j / 4 + 0.6 + i; sao4(c, ct[0] + (2.3 + 0.5 * u) * Math.cos(an), ct[1] + (2.3 + 0.5 * u) * Math.sin(an), 0.5 * Math.sin(Math.PI * u), a * Math.sin(Math.PI * u), '255,190,60'); }
+  });
   [[10, [10.5, 17.5]], [9, [18.5, 17.5]]].forEach(([i, o], j) => {
     c.save(); xoay(c, o[0], o[1], a * 2.4 * deg * gio(t * 1.1, j * 2 + 0.5)); veManh(c, P[i], M[i]);
     luaTrong(c, giua(P[i][0], P[i][3]), giua(P[i][1], P[i][2]), 2.1, t, 3 + j * 4, 0.6 * a, P[i]); c.restore();
@@ -237,32 +254,61 @@ HX['2'] = function (c, t, a, P, M, d) {
     c.save(); xoay(c, o[0], o[1], a * (i === 1 ? 2.2 : 3.6) * deg * gio(t * 1.25, j * 1.9 + 1)); veManh(c, P[i], M[i]);
     luaTrong(c, P[i][2], P[i][0], (i === 1 ? 6 : 3) * 0.62, t, j * 5 + 1, 0.9 * a, P[i]); c.restore();
   });
-  if (a > 0) tanLua(c, t, a, { x0: 6.5, x1: 22.5, y0: 16.5, y1: 9, len: 9.5, n: 30, hat: 2 });
+  if (a <= 0) return;
+  tanLua(c, t, a, { x0: 6.5, x1: 22.5, y0: 16.5, y1: 9, len: 9.5, n: 22, hat: 2 });
+  const roi = a * muot((t - 0.8) / 1.0);      // hoa giấy rơi: mảnh giấy nhỏ nhiều màu, vừa rơi vừa lật
+  for (let i = 0; i < 44; i++) {
+    const Pd = 4.6 + 3.2 * rnd(i, 81), u = frac(t / Pd + rnd(i, 82));
+    const x = 2 + 25 * rnd(i, 83) + 1.3 * Math.sin(t * (0.8 + rnd(i, 84)) + i * 1.9), y = 4.2 + 33.5 * u;
+    const al = roi * Math.min(1, u * 8) * Math.min(1, (1 - u) * 5) * 0.92;
+    if (al <= 0.01) continue;
+    c.save(); c.translate(x, y); c.rotate(t * (1.5 + 2 * rnd(i, 85)) + i); c.scale(1, Math.cos(t * (3 + 3 * rnd(i, 86)) + i));
+    c.globalAlpha = al; c.fillStyle = MAU_GIAY[i % 7];
+    if (i % 3) c.fillRect(-0.42, -0.23, 0.84, 0.46); else { c.beginPath(); c.arc(0, 0, 0.3, 0, PI2); c.fill(); }
+    c.restore();
+  }
+  c.globalAlpha = 1;
 };
 
-// Ô 3: hải đăng và con thuyền. Trời về chiều, đèn quét, thuyền dập dềnh, sóng, chim biển.
+// Ô 3: hải đăng và con thuyền. Đèn quét, thuyền dập dềnh, sóng, chim biển.
+// 16/11 10:02, thầy: "hiệu ứng tranh 3d hình 3 cũng để nền màu sáng nhé." Trước là trời về chiều (lớp phủ xanh tím, sao trời). Nay là trời ban ngày: dải trời xanh nhạt dưới khung tiêu đề,
+// mặt trời nhỏ và vài đám mây trôi; tia đèn hải đăng màu vàng đậm hơn cho còn thấy trên nền sáng.
+function may(c, x, y, s, al) {      // một đám mây trắng viền xanh nhạt
+  if (al <= 0) return;
+  c.save(); c.translate(x, y); c.scale(s, s); c.globalAlpha = al;
+  c.beginPath(); c.arc(-1.5, 0.25, 0.85, 0, PI2); c.arc(-0.5, -0.35, 1.15, 0, PI2); c.arc(0.8, -0.1, 0.95, 0, PI2); c.arc(1.75, 0.3, 0.7, 0, PI2); c.rect(-1.5, 0.1, 3.25, 1.0);
+  c.fillStyle = '#ffffff'; c.shadowColor = 'rgba(96,150,210,0.55)'; c.shadowBlur = 0.22 * UPX; c.fill();
+  c.restore();
+}
 HX['3'] = function (c, t, a, P, M, d) {
   const L = [8, 10.35];
   const th = (13.5 + 16.5 * Math.sin(PI2 * t / 4.4 - 1.2)) * deg;
   if (a > 0) {
-    phu(c, d, '40,56,120', '120,150,200', 0.4 * a, 0.2 * a);
-    for (let i = 0; i < 12; i++) {   // sao trời
-      const u = frac(t / (2.2 + rnd(i, 41)) + rnd(i, 42));
-      sao4(c, 1.5 + 29 * rnd(i, 43), 4.8 + 9 * rnd(i, 44), 0.2 + 0.25 * Math.sin(Math.PI * u), a * (0.35 + 0.6 * Math.sin(Math.PI * u)), '255,250,220');
+    const gt = c.createLinearGradient(0, 4.1, 0, 23);      // dải trời xanh nhạt, bắt đầu dưới khung tiêu đề, nhạt dần xuống mặt nước
+    gt.addColorStop(0, 'rgba(170,216,250,0)'); gt.addColorStop(0.24, `rgba(170,216,250,${0.5 * a})`); gt.addColorStop(0.6, `rgba(190,226,250,${0.3 * a})`); gt.addColorStop(1, 'rgba(190,226,250,0)');
+    c.fillStyle = gt; c.fillRect(-10, 4.1, 60, 18.9);
+    const mt = [33.2, 8.4];      // mặt trời ở khoảng trống bên phải con thuyền
+    quang(c, mt[0], mt[1], 5.2, '255,214,90', 0.5 * a);
+    c.save(); c.translate(mt[0], mt[1]); c.rotate(t * 0.25); c.lineCap = 'round'; c.lineWidth = 0.22; c.strokeStyle = `rgba(255,186,40,${0.85 * a})`;
+    for (let i = 0; i < 10; i++) { const an = PI2 * i / 10, r0 = 2.15, r1 = 2.75 + 0.25 * Math.sin(t * 2 + i); c.beginPath(); c.moveTo(r0 * Math.cos(an), r0 * Math.sin(an)); c.lineTo(r1 * Math.cos(an), r1 * Math.sin(an)); c.stroke(); }
+    c.restore();
+    c.beginPath(); c.arc(mt[0], mt[1], 1.6, 0, PI2); c.fillStyle = `rgba(255,206,60,${a})`; c.fill();
+    for (const [x0, y, sc, v] of [[2, 6.4, 0.9, 0.42], [17, 5.6, 0.7, 0.3], [29, 12.2, 0.6, 0.36]]) {      // mây trôi chậm từ trái sang phải
+      const x = ((x0 + t * v + 8) % 50) - 8;
+      may(c, x, y, sc, a * Math.min(1, (x + 8) / 3) * Math.min(1, (42 - x) / 3) * 0.95);
     }
     c.save();
     for (const [huong, al] of [[th, 1], [Math.PI - th, 0.5]]) {
-      for (let j = 0; j < 14; j++) {
-        const k = 1 - j / 15, aa = 0.075;
+      for (let j = 0; j < 42; j++) {      // 42 lớp mỏng chồng lên nhau (trước là 14): trên nền sáng, 14 lớp để lộ sọc ở cuối tia
+        const k = 1 - j / 45, aa = 0.03;
         const h = 10 * deg * k, len = 24.5;
         c.beginPath(); c.moveTo(L[0], L[1]); c.lineTo(L[0] + len * Math.cos(huong - h), L[1] + len * Math.sin(huong - h)); c.lineTo(L[0] + len * Math.cos(huong + h), L[1] + len * Math.sin(huong + h)); c.closePath();
         const g = c.createRadialGradient(L[0], L[1], 0.5, L[0], L[1], len);
-        g.addColorStop(0, `rgba(255,240,165,${aa * al * a})`); g.addColorStop(0.55, `rgba(255,240,165,${aa * al * a * 0.6})`); g.addColorStop(1, 'rgba(255,240,165,0)');
+        g.addColorStop(0, `rgba(255,210,70,${aa * al * a})`); g.addColorStop(0.42, `rgba(255,214,80,${aa * al * a * 0.6})`); g.addColorStop(0.78, 'rgba(255,214,80,0)'); g.addColorStop(1, 'rgba(255,214,80,0)');
         c.fillStyle = g; c.fill();
       }
     }
-    c.globalCompositeOperation = 'lighter';
-    quang(c, L[0], L[1], 5.5, '255,226,120', a * (0.6 + 0.2 * Math.sin(t * 5)));
+    quang(c, L[0], L[1], 5.5, '255,206,70', a * (0.55 + 0.2 * Math.sin(t * 5)));
     c.restore();
   }
   // hải đăng đứng yên
@@ -311,11 +357,11 @@ HX['3'] = function (c, t, a, P, M, d) {
 // Ô 4: trống trường và ngọn đuốc. Dùi gõ trống, lửa đuốc bập bùng.
 const NHIP = 0.44;
 HX['4'] = function (c, t, a, P, M, d) {
-  if (a > 0) phu(c, d, '92,58,24', '92,58,24', 0.2 * a, 0.13 * a);
+  // 16/11 10:02: thầy bảo thiệp 2 và 3 để nền sáng; thiệp này trước cũng phủ nâu tối như thiệp 2 nên bỏ luôn cho cả 4 thiệp cùng sáng. Nét sáng (tia, sóng âm, nốt nhạc) đổi sang cam đậm.
   // ---- đuốc
   veManh(c, P[5], M[5]);
   const fl = 0.86 + 0.14 * Math.sin(t * 10.3) * Math.sin(t * 6.7 + 2);
-  if (a > 0) { c.save(); c.globalCompositeOperation = 'lighter'; quang(c, 9.75, 16.5, 12, '255,150,60', 0.5 * a * fl); c.restore(); }
+  if (a > 0) quang(c, 9.75, 15.5, 12, '255,186,90', 0.42 * a * fl);
   [[9, P[9][0]], [10, P[10][3]]].forEach(([i, o], j) => {
     c.save(); xoay(c, o[0], o[1], a * 4.2 * deg * gio(t * 1.3, j * 2.2 + 0.4)); veManh(c, P[i], M[i]);
     luaTrong(c, giua(P[i][0], P[i][3]), giua(P[i][1], P[i][2]), 2.3, t, 7 + j * 3, 0.8 * a, P[i]); c.restore();
@@ -343,7 +389,7 @@ HX['4'] = function (c, t, a, P, M, d) {
       for (let i = 0; i < 6; i++) {
         const an = (-160 + i * 28) * deg, r0 = 0.45 + 1.0 * u, r1 = r0 + 0.65 * (1 - u * 0.5);
         c.beginPath(); c.moveTo(dinh[0] + r0 * Math.cos(an), dinh[1] - 0.15 + r0 * Math.sin(an)); c.lineTo(dinh[0] + r1 * Math.cos(an), dinh[1] - 0.15 + r1 * Math.sin(an));
-        c.lineWidth = 0.13; c.strokeStyle = `rgba(255,214,110,${(1 - u) * a})`; c.stroke();
+        c.lineWidth = 0.15; c.strokeStyle = `rgba(240,140,30,${(1 - u) * a})`; c.stroke();
       }
     }
     if (tau < 0.62 && t > 0.3) {   // sóng âm hai bên thân trống
@@ -351,7 +397,7 @@ HX['4'] = function (c, t, a, P, M, d) {
       for (const [x0, h] of [[19.6, Math.PI], [29.25, 0]]) for (let j = 0; j < 2; j++) {
         const r = 1.1 + 2.6 * u + j * 0.8;
         c.beginPath(); c.arc(x0, 17.3, r, h - 34 * deg, h + 34 * deg);
-        c.lineWidth = 0.15; c.strokeStyle = `rgba(255,205,110,${(1 - u) * 0.9 * a})`; c.stroke();
+        c.lineWidth = 0.16; c.strokeStyle = `rgba(232,136,36,${(1 - u) * 0.9 * a})`; c.stroke();
       }
     }
   }
@@ -360,7 +406,7 @@ HX['4'] = function (c, t, a, P, M, d) {
     const u = frac(t / 3.0 + i * 0.25 + 0.1), x = 17.6 + (i % 2) * 13.6 + (i % 2 ? 1 : -1) * 1.2 * u + 0.35 * Math.sin(t * 3 + i), y = 12.5 - 6 * u;
     const al = a * Math.min(1, u * 5) * Math.min(1, (1 - u) * 3);
     c.save(); c.translate(x, y); c.rotate(0.2 * Math.sin(t * 2 + i)); c.globalAlpha = al;
-    c.fillStyle = '#fff2c4'; c.strokeStyle = '#fff2c4'; c.shadowColor = 'rgba(255,220,130,0.9)'; c.shadowBlur = 0.2 * UPX;
+    c.fillStyle = '#b5521a'; c.strokeStyle = '#b5521a'; c.shadowColor = 'rgba(255,200,110,0.9)'; c.shadowBlur = 0.2 * UPX;
     c.beginPath(); c.ellipse(0, 0, 0.36, 0.26, -0.4, 0, PI2); c.fill();
     c.beginPath(); c.moveTo(0.3, -0.05); c.lineTo(0.3, -1.25); c.quadraticCurveTo(0.75, -1.15, 0.85, -0.6); c.lineWidth = 0.13; c.stroke();
     c.restore();
