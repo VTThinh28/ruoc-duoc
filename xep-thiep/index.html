@@ -599,7 +599,10 @@ body.tv { background: #130c06; }
    → đồng hồ thấp lại (380) và nhích lên: đáy cách hàng nút gần 30 px (trước chỉ 6 px). To nhỏ theo báo tường bằng transform: scale(var(--bt)) quanh tâm màn hình
      (bản trước dùng thuộc tính "scale" riêng: trình duyệt cũ không hiểu, đồng hồ to hơn một chút và đè lên đầu cả 5 nút).
    → trong khung là tấm bảng số và cái trống trường đỏ trên giá gỗ, nền tường vàng nhạt, sàn gỗ. Lúc bắt đầu và lúc hết giờ js (dnGo) xoay dùi gõ vào mặt trống,
-     rung nhẹ thân trống, làm sáng mặt trống, hiện vệt tiếng và chữ "Tùng!". Không phóng to thu nhỏ: chỉ xoay, trôi, mờ dần --- */
+     rung nhẹ thân trống, làm sáng mặt trống, hiện vệt tiếng và chữ "Tùng!". Không phóng to thu nhỏ: chỉ xoay, trôi, mờ dần.
+   18/11 01:46, thầy: "cái dùi trống quay ngược xuống dưới nhé ... kết thúc thì đếm số 00 thì mới đánh trống ... thường thì ngta sẽ gõ vào viền trống kêu cạch cạnh rồi mới đánh tùng tùng tùng"
+   → dùi trống lật lại: tay cầm ở dưới bên phải, đầu dùi ở trên. Dùi gõ vào viền trống 2 tiếng "Cạch!" (lóe tia ở viền, #dnTia), rồi đánh vào mặt trống 3 tiếng "Tùng!".
+   → hết giờ: số dừng ở 00:00 (đỏ), dòng chữ trên số thành "Hết giờ" (đỏ), rồi trống mới đánh. Không còn ô chữ "Hết giờ" thay chỗ số --- */
 .dn { position: absolute; left: 800px; top: 626px; width: 320px; height: 380px; transform: scale(var(--bt)); transform-origin: 160px -86px; z-index: 12; box-sizing: border-box; padding: 10px 0 0; background: linear-gradient(180deg, #fff6dc 0%, #fcecc0 69%, #ebcd92 69.6%, #e2bf80 78%, #d6af70 100%); border-radius: 28px; box-shadow: 0 0 0 4px #f6e7c4, 0 0 0 6.5px #d9b25a, 0 8px 22px rgba(60, 40, 20, .26); display: flex; flex-direction: column; align-items: center; overflow: hidden; animation: dnMo .5s ease-out both; }
 @keyframes dnMo { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dnHien { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
@@ -618,7 +621,8 @@ body.tv { background: #130c06; }
 @keyframes dnVao { from { transform: translateY(55%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes dnRa { from { transform: none; opacity: 1; } to { transform: translateY(-55%); opacity: 0; } }
 .dn-so i { font-style: normal; width: .3em; text-align: center; margin-top: -.1em; }
-.dn-het { font-family: var(--chu-dam); font-weight: 800; font-size: 58px; line-height: 1.2; color: #c8392f; animation: dnHien .6s ease-out both; }
+.dn.het .dn-nhan { font-family: var(--chu-dam); font-weight: 800; font-size: 28px; color: #c8392f; animation: dnHien .6s ease-out both; }
+.dn.het .dn-so, .dn.nho.het .dn-so { color: #c8392f; }
 .dn.mau-cam .dn-so { color: #b4561f; }
 .dn.mau-do .dn-so { color: #c8392f; }
 .dn.mau-do.chay .dn-giua { animation: dnTho 1.8s ease-in-out infinite; }
@@ -640,6 +644,8 @@ body.tv { background: #130c06; }
 .dn-dui-dau { fill: #a8703f; }
 .dn-dui-cam { fill: #7e5230; }
 .dn-tung { font-family: var(--chu-dam); font-weight: 800; font-size: 27px; fill: #c8402e; stroke: #fffaf0; stroke-width: 5px; paint-order: stroke; stroke-linejoin: round; text-anchor: middle; }
+.dn-cach { font-family: var(--chu-dam); font-weight: 800; font-size: 22px; fill: #8a5a2b; stroke: #fffaf0; stroke-width: 4.5px; paint-order: stroke; stroke-linejoin: round; text-anchor: middle; }
+.dn-tia path { fill: none; stroke: #e2a33c; stroke-width: 3.2; stroke-linecap: round; }
 /* thu gọn: khi có bảng che (Nhiệm vụ, Đáp số, Cài đặt) hoặc đang xem lớn một thiệp, đồng hồ thành viên nhỏ ở góc trên bên trái: cái trống nhỏ, số nằm bên cạnh */
 .dn.nho { left: 56px; top: 36px; transform: none; width: auto; height: 72px; padding: 0 24px 0 10px; flex-direction: row; gap: 8px; border-radius: 999px; animation: none; background: rgba(255, 251, 240, .97); box-shadow: 0 0 0 2px #e3d2ae, 0 14px 40px rgba(60, 40, 20, .28); }
 /* thiệp đang hiện to (không có bảng che): viên đồng hồ to nhỏ theo báo tường như tấm thiệp, nên ở cỡ màn hình nào cũng không chạm thiệp (thiệp ngang hiện to bắt đầu từ x = 265 trong hệ của .xep) */
@@ -649,7 +655,8 @@ body.tv { background: #130c06; }
 .dn.nho .dn-giua, .dn.nho.mau-do.chay .dn-giua { margin: 0; min-width: 0; padding: 0; background: none; box-shadow: none; animation: none; }
 .dn.nho .dn-so { font-size: 46px; color: #5a3a22; }
 .dn.nho.mau-do .dn-so { color: #c8392f; }
-.dn.nho .dn-het { font-size: 34px; color: #c8392f; animation: none; }
+.dn.nho.het .dn-nhan { display: block; order: 2; height: auto; font-size: 30px; line-height: 1; animation: none; }
+.dn.nho #dnChu { display: none; }
 #tv .nut.nv-x { position: absolute; right: 22px; top: 20px; width: 60px; min-height: 60px; padding: 0; border-radius: 50%; font-size: 26px; color: var(--chu-nhat); }
 
 /* --- mã cho máy giáo viên (15/11 19:18): bảng riêng có mã to. Từ 16/11 13:11 mã nằm sẵn trong Cài đặt (.cd-gv), chạm vào mã thì mở bảng này --- */
@@ -867,11 +874,11 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 
   <div id="dn" class="dn" hidden>
     <!-- 17/11 00:57, thầy: "thôi cái mặt trời đổi lại trống trường đi, bắt đầu thì gõ và hết giờ thì gõ" → tấm bảng số phút giây và cái trống trường trên giá gỗ.
-         js (dnGo) xoay dùi (#dnDui) gõ vào mặt trống, rung thân trống (#dnThan), làm sáng mặt trống (#dnSang), hiện vệt tiếng (#dnSong) và chữ "Tùng!" (#dnChu) -->
+         js (dnGo) xoay dùi (#dnDui) gõ vào mặt trống, rung thân trống (#dnThan), làm sáng mặt trống (#dnSang), hiện vệt tiếng (#dnSong) và chữ "Tùng!" (#dnChu).
+         18/11 01:46: dùi lật lại (tay cầm ở dưới), gõ viền trước ("Cạch!", tia ở viền #dnTia) rồi mới đánh mặt trống; hết giờ thì số đứng ở 00:00, chữ "Hết giờ" ở dòng #dnNhan -->
     <div class="dn-nhan" id="dnNhan">Thời gian còn lại</div>
     <div class="dn-giua">
       <div class="dn-so" id="dnSo"><span class="dn-o"></span><span class="dn-o"></span><i>:</i><span class="dn-o"></span><span class="dn-o"></span></div>
-      <div class="dn-het" id="dnHet" hidden>Hết giờ</div>
     </div>
     <svg class="dn-trong" id="dnTrong" viewBox="0 0 300 226" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
@@ -895,10 +902,11 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
           <ellipse class="dn-mat-giua" cx="215" cy="92" rx="13" ry="29"/>
           <ellipse id="dnSang" class="dn-sang" cx="215" cy="92" rx="22" ry="46" opacity="0"/>
         </g>
-        <g id="dnDui" transform="translate(290 22) rotate(18)">
-          <path class="dn-dui-than" d="M-4.6 6L4.6 6L3.3 80L-3.3 80Z"/>
-          <circle class="dn-dui-dau" cx="0" cy="84" r="8.5"/>
-          <rect class="dn-dui-cam" x="-5.4" y="-6" width="10.8" height="24" rx="4.5"/>
+        <g id="dnTia" class="dn-tia" opacity="0"><path d="M232.3 79.6L226.2 76.1"/><path d="M239.6 74L237.8 67.2"/><path d="M248.7 75.2L252.2 69.1"/></g>
+        <g id="dnDui" transform="translate(270 165) rotate(6)">
+          <path class="dn-dui-than" d="M-4.6 -6L4.6 -6L3.3 -80L-3.3 -80Z"/>
+          <circle class="dn-dui-dau" cx="0" cy="-84" r="8.5"/>
+          <rect class="dn-dui-cam" x="-5.4" y="-18" width="10.8" height="24" rx="4.5"/>
         </g>
       </g>
     </svg>
@@ -983,6 +991,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=4e76cc2a"></script>
-<script src="js/xep-thiep.js?v=6de9d383"></script>
+<script src="js/xep-thiep.js?v=90c1adc6"></script>
 </body>
 </html>

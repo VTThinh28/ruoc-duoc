@@ -113,14 +113,18 @@
     ]
   };
   var DEM_NGUOC_PHUT = 15;                        // số phút của đồng hồ đếm ngược (thầy chốt 15/11 22:12). Muốn đổi: sửa một số này
-  function dnTinh(v, gio) {                       // đọc <phòng>/dn. Trả về null (tắt) hoặc { tt: "chay" | "dung" | "het", con: mili giây còn lại, tong: tổng mili giây, qua: mili giây đã qua kể từ lúc hết giờ }
+  /* 18/11 01:46, thầy: "khi tôi bấm tính giờ thì trống sẽ đánh xong mới tính giờ". Bấm Bắt đầu thì máy giáo viên ghi lúc hết giờ muộn thêm DN_TRUOC mili giây:
+     trong DN_TRUOC mili giây đầu đồng hồ đứng ở 15:00 (dnTinh trả truoc > 0), trống trên tivi đánh (tiếng cuối ở 2,3 giây, ngân chừng 1 giây), rồi mới đếm.
+     Chạy tiếp sau khi tạm dừng thì không chờ (không có trống). */
+  var DN_TRUOC = 3600;
+  function dnTinh(v, gio) {                       // đọc <phòng>/dn. Trả về null (tắt) hoặc { tt: "chay" | "dung" | "het", con: mili giây còn lại, tong: tổng mili giây, qua: mili giây đã qua kể từ lúc hết giờ, truoc: mili giây còn lại trước khi bắt đầu đếm }
     var tong, con;
     if (!v || typeof v !== "object") return null;
     tong = +v.d > 0 ? +v.d : DEM_NGUOC_PHUT * 60000;
-    if (typeof v.c === "number") return { tt: v.c > 0 ? "dung" : "het", con: Math.max(0, Math.min(tong, v.c)), tong: tong, qua: v.c > 0 ? 0 : 1e9 };
+    if (typeof v.c === "number") return { tt: v.c > 0 ? "dung" : "het", con: Math.max(0, Math.min(tong, v.c)), tong: tong, qua: v.c > 0 ? 0 : 1e9, truoc: 0 };
     if (typeof v.h !== "number") return null;
     con = v.h - gio;
-    return con > 0 ? { tt: "chay", con: Math.min(tong, con), tong: tong, qua: 0 } : { tt: "het", con: 0, tong: tong, qua: -con };
+    return con > 0 ? { tt: "chay", con: Math.min(tong, con), tong: tong, qua: 0, truoc: Math.max(0, con - tong) } : { tt: "het", con: 0, tong: tong, qua: -con, truoc: 0 };
   }
   function dnChu(ms) {                            // 899400 → "15:00", 59000 → "00:59", 0 → "00:00"
     var g = Math.max(0, Math.ceil(ms / 1000 - 1e-6)), ph = Math.floor(g / 60);
@@ -134,7 +138,7 @@
     if (viec === "tat") { T.set("dn", null); return; }
     if (viec === "chay") {
       if (tt && tt.tt === "dung") T.set("dn", { h: Math.round(gio + tt.con), d: tt.tong });
-      else if (!tt || tt.tt === "het") T.set("dn", { h: Math.round(gio + tong), d: tong });
+      else if (!tt || tt.tt === "het") T.set("dn", { h: Math.round(gio + DN_TRUOC + tong), d: tong });      // bắt đầu mới: trống đánh xong (DN_TRUOC) mới đếm
       return;
     }
     if (viec === "dung" && tt && tt.tt === "chay") T.set("dn", { c: Math.round(tt.con), d: tt.tong });
@@ -2266,18 +2270,22 @@
     function nhacTT() { return N.tt; }
     /* ---------- âm báo của đồng hồ ----------
        16/11 13:11, thầy: "Đồng hồ lúc được mở lên và lúc hết giờ sẽ có âm báo". 17/11 00:57, thầy: "thôi cái mặt trời đổi lại trống trường đi, bắt đầu thì gõ và hết giờ thì gõ".
-       Tiếng trống trường tivi tự tạo bằng Web Audio, không cần file (amTrong: mặt da rung trầm, tần số tụt nhanh từ 122 xuống 74 Hz, các bội âm ở TRONG_BOI, tiếng dùi chạm ở TRONG_ON).
-       Loa tivi nhỏ thường không phát được tiếng dưới 150 đến 200 Hz, nên tiếng trống có thêm bội âm 2, 3, 4 lần và tiếng dùi ở dải giữa: loa nhỏ vẫn nghe rõ "tùng", loa lớn vẫn trầm.
-       Nhịp gõ ở DN_NHIP (mili giây kể từ tiếng đầu, mạnh nhẹ): lúc thầy bấm Bắt đầu là 3 tiếng "tùng, tùng, tùng"; lúc hết giờ là một hồi trống dồn dần rồi 3 tiếng
-       (cả thảy chừng 5 giây). Cái trống vẽ trên đồng hồ gõ cùng nhịp đó (dnGo). Chạy tiếp sau khi tạm dừng thì không gõ.
+       18/11 01:46, thầy: "tiếng trống nghe dở quá, tham khảo trên mạng để lấy cho tiếng trống nghe hay, to rõ như trong trường ý. thường thì ngta sẽ gõ vào viền trống
+       kêu cạch cạnh rồi mới đánh tùng tùng tùng".
+       Từ đó tiếng trống là tiếng thu thật, hai file nhac/trong-tung.wav (dùi đánh mặt trống) và nhac/trong-cach.wav (dùi gõ viền trống), làm từ hai bản thu CC0
+       (trống BigSoundBank số 2341 của Joseph Sardin; tiếng gỗ gõ wood_hit_06 trong bộ "100 CC0 metal and wood SFX" của rubberduck, OpenGameArt) bằng test/lam-trong.py:
+       hạ giọng cho ra trống to, thêm bội âm cho loa tivi nhỏ (loa nhỏ không phát được tiếng dưới 150 Hz), nén cho tiếng chắc. Tivi tải hai file lúc mở trang (amTai).
+       Chưa tải được (mất mạng, file hỏng) thì dùng tiếng tự tạo của bản 17/11: amTrong cho "tùng" (mặt da rung trầm, TRONG_BOI, TRONG_ON), amCachTao cho "cạch".
+       Nhịp gõ ở DN_NHIP: [mili giây kể từ tiếng đầu, "cach" hay "tung", mạnh nhẹ]. Lúc bắt đầu và lúc hết giờ đều là "cạch, cạch" rồi "tùng, tùng, tùng"
+       (tiếng cuối ở 2,3 giây). Cái trống vẽ trên đồng hồ gõ cùng nhịp đó (dnGo). Chạy tiếp sau khi tạm dừng thì không gõ.
        Tiếng ra thẳng loa, không theo nút âm lượng của nhạc nền (nhạc tắt vẫn có tiếng trống).
        Trình duyệt chỉ cho phát tiếng khi trang tivi đã được chạm một lần. Tivi tạo sẵn AudioContext lúc mở trang, lần chạm (hay bấm phím) đầu tiên thì cho nó chạy;
        tivi báo tv3d.a = 1 khi đã phát được tiếng, 0 khi chưa, để máy giáo viên nhắc thầy chạm vào tivi. Chưa phát được thì bỏ qua tiếng (không phát bù về sau); hình trống vẫn gõ. */
-    var DN_NHIP = {
-      mo: [[0, 1], [750, 0.95], [1500, 1]],
-      het: [[0, 0.8], [420, 0.78], [780, 0.74], [1080, 0.7], [1330, 0.66], [1540, 0.62], [1720, 0.6], [1880, 0.58], [2030, 0.56], [2650, 1], [3350, 0.95], [4050, 1]]
-    };
-    var AM_TRONG = 0.38;                            // độ to một tiếng trống mạnh nhất (đo bằng test/nghe-am.js: đỉnh chừng 0,5; cùng nhạc mức 10 vẫn dưới 1)
+    var NHIP_TRONG = [[0, "cach", 0.85], [300, "cach", 0.85], [900, "tung", 0.95], [1600, "tung", 0.95], [2300, "tung", 1]];
+    var DN_NHIP = { mo: NHIP_TRONG, het: NHIP_TRONG };
+    var AM_TO = { tung: 0.9, cach: 0.8 };          // độ to mỗi loại tiếng thu thật (file đã đưa đỉnh về 0,89); đo bằng test/nghe-am.js, cùng nhạc mức 10 vẫn dưới 1
+    var AM_TEP = { tung: "nhac/trong-tung.wav", cach: "nhac/trong-cach.wav" }, amMau = { tung: null, cach: null };
+    var AM_TRONG = 0.38;                            // tiếng tự tạo (khi chưa tải được file): độ to một tiếng "tùng" mạnh nhất, như bản 17/11
     var AM = { mo: 0, het: 0 };                    // số lần đã phát tiếng từng loại (bài thử đọc ở #dn[data-am] = "mở,hết giờ")
     function amAC() {
       var AC = window.AudioContext || window.webkitAudioContext;
@@ -2314,16 +2322,44 @@
         n.connect(f); f.connect(g2); g2.connect(ra); n.start(luc); n.stop(luc + 0.11);
       });
     }
+    function amCachTao(ac, ra, luc, to) {           // "cạch" tự tạo (khi chưa tải được file): tiếng ồn ngắn qua bộ lọc dải 1,8 kHz và một tiếng gỗ 900 Hz tắt nhanh
+      var n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), o = ac.createOscillator(), g2 = ac.createGain();
+      n.buffer = amOn(ac); f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 1.2;
+      g.gain.setValueAtTime(0.9 * to, luc); g.gain.exponentialRampToValueAtTime(0.0001, luc + 0.06);
+      n.connect(f); f.connect(g); g.connect(ra); n.start(luc); n.stop(luc + 0.11);
+      o.type = "triangle"; o.frequency.setValueAtTime(900, luc); o.frequency.exponentialRampToValueAtTime(760, luc + 0.08);
+      g2.gain.setValueAtTime(0.0001, luc); g2.gain.exponentialRampToValueAtTime(0.5 * to, luc + 0.002); g2.gain.exponentialRampToValueAtTime(0.0001, luc + 0.09);
+      o.connect(g2); g2.connect(ra); o.start(luc); o.stop(luc + 0.12);
+    }
+    function amTai() {                              // tải và giải mã hai tiếng trống thu thật, một lần lúc mở trang tivi (bài thử đọc ở #dn[data-mau] = "tùng,cạch", 1 là đã có)
+      var ac = amAC();
+      if (!ac || !window.fetch) return;
+      Object.keys(AM_TEP).forEach(function (k) {
+        fetch(AM_TEP[k]).then(function (r) { if (!r.ok) throw new Error("tải " + r.status); return r.arrayBuffer(); }).then(function (b) {
+          ac.decodeAudioData(b, function (buf) { amMau[k] = buf; $("dn").setAttribute("data-mau", (amMau.tung ? 1 : 0) + "," + (amMau.cach ? 1 : 0)); }, function () { /* giải mã hỏng: dùng tiếng tự tạo */ });
+        }).catch(function () { /* tải hỏng: dùng tiếng tự tạo */ });
+      });
+    }
+    function amGo(ac, ra, kieu, luc, to) {          // một tiếng trống lúc "luc" (giây, theo đồng hồ Web Audio): kieu "tung" (mặt trống) hay "cach" (viền trống), to: mạnh nhẹ
+      var s, g;
+      if (amMau[kieu]) {
+        s = ac.createBufferSource(); g = ac.createGain();
+        s.buffer = amMau[kieu]; g.gain.value = AM_TO[kieu] * to;
+        s.connect(g); g.connect(ra); s.start(luc);
+        return;
+      }
+      if (kieu === "tung") amTrong(ac, ra, luc, AM_TRONG * 0.7 * to, 1); else amCachTao(ac, ra, luc, 0.35 * to);
+    }
     var amRa = [];                                  // đường ra loa của các lần trống còn đang gõ (amDung cắt khi thầy tắt đồng hồ)
-    function amBao(loai) {                          // loai: "mo" (đồng hồ vừa bắt đầu), "het" (hết giờ)
+    function amBao(loai, cho) {                     // loai: "mo" (đồng hồ vừa bắt đầu), "het" (hết giờ); cho: mili giây chờ trước tiếng đầu (hết giờ: chờ số 00:00 hiện xong)
       var ac = amAC();
       function phat() {
         var ra, t;
-        ra = ac.createGain(); ra.gain.value = 0.7; ra.connect(ac.destination); t = ac.currentTime + 0.04;      // 0,04 giây: cùng mốc với cái trống vẽ trên đồng hồ (dnGo)
-        DN_NHIP[loai].forEach(function (n) { amTrong(ac, ra, t + n[0] / 1000, AM_TRONG * n[1], n[1] >= 0.9 ? 1 : 0.55); });      // hồi trống dồn: tiếng ngắn hơn
+        ra = ac.createGain(); ra.gain.value = 1; ra.connect(ac.destination); t = ac.currentTime + 0.04 + (cho || 0) / 1000;      // 0,04 giây: cùng mốc với cái trống vẽ trên đồng hồ (dnGo)
+        DN_NHIP[loai].forEach(function (n) { amGo(ac, ra, n[1], t + n[0] / 1000, n[2]); });
         AM[loai]++; $("dn").setAttribute("data-am", AM.mo + "," + AM.het);
         amRa.push(ra);
-        setTimeout(function () { try { ra.disconnect(); } catch (e) { /* bỏ qua */ } amRa = amRa.filter(function (x) { return x !== ra; }); }, 8000);
+        setTimeout(function () { try { ra.disconnect(); } catch (e) { /* bỏ qua */ } amRa = amRa.filter(function (x) { return x !== ra; }); }, 8000 + (cho || 0));
       }
       if (!ac) return;
       if (ac.state === "running") phat(); else { try { ac.resume(); } catch (e) { /* bỏ qua */ } }      // chưa phát được tiếng: bỏ qua lần báo này, không phát bù (báo muộn thì sai lúc)
@@ -2345,6 +2381,7 @@
       if (!ac) return;
       viec.forEach(function (v) { window.addEventListener(v, cham, true); });
     })();
+    amTai();
     function nhacDat(tt) { N.tt = tt; veNhac(); bao3d(); }
     function nhacTo() { return Math.min(1, Math.pow(N.am / NHAC_MUC, 1.7) * (NHAC_BAI[N.nguon] ? NHAC_BAI[N.nguon].bu : 1) * N.mo); }      // mức 1..10 → độ to; mức 5 ≈ 0,31
     function nhacDatTo() { var v = nhacTo(); if (N.g) { try { N.g.gain.value = v; } catch (e) { /* bỏ qua */ } } if (N.au) { try { N.au.volume = v; } catch (e2) { /* bỏ qua */ } } }
@@ -2462,52 +2499,70 @@
        Từ đó đồng hồ là tấm bảng số phút giây và cái trống trường đỏ trên giá gỗ, dùi trống ở bên phải. Lúc bắt đầu và lúc hết giờ dùi gõ vào mặt trống theo DN_NHIP,
        cùng lúc với tiếng trống (amBao): thân trống rung nhẹ, mặt trống sáng lên, vệt tiếng ở bên trái, chữ "Tùng!" ở các tiếng mạnh. Chỉ xoay, trôi, mờ; không phóng to thu nhỏ.
        Một phần ba thời gian cuối số chuyển màu cam; phút cuối số đỏ, tấm bảng hồng lên rồi nhạt đi (như các bản trước).
-       Hết giờ (16/11 23:48): chữ "Hết giờ" đứng DN_HET_GIU mili giây (đủ hồi trống), mờ dần trong DN_HET_TAN mili giây rồi ẩn; tivi xóa luôn <phòng>/dn để máy giáo viên về lại nút "Bắt đầu". */
+       Hết giờ (16/11 23:48): chữ "Hết giờ" đứng DN_HET_GIU mili giây (đủ hồi trống), mờ dần trong DN_HET_TAN mili giây rồi ẩn; tivi xóa luôn <phòng>/dn để máy giáo viên về lại nút "Bắt đầu".
+       18/11 01:46, thầy: "cái dùi trống quay ngược xuống dưới nhé. khi tôi bấm tính giờ thì trống sẽ đánh xong mới tính giờ, kết thúc thì đếm số 00 thì mới đánh trống ...
+       thường thì ngta sẽ gõ vào viền trống kêu cạch cạnh rồi mới đánh tùng tùng tùng".
+       → dùi lật lại: tay cầm ở dưới bên phải (gốc xoay ở 270, 165 trong hình trống), đầu dùi ở trên. Gõ viền (DUI.vien): đầu dùi chạm mép phải của mặt trống, lóe tia (#dnTia),
+         chữ "Cạch!"; đánh mặt trống (DUI.mat): đầu dùi vào giữa mặt trống, thân trống rung, mặt trống sáng, vệt tiếng, chữ "Tùng!".
+       → bấm Bắt đầu: đồng hồ đứng ở 15:00 trong lúc trống đánh (DN_TRUOC), đánh xong mới đếm.
+       → hết giờ: số dừng ở 00:00 (đỏ), dòng chữ trên số thành "Hết giờ"; DN_HET_CHO mili giây sau (số 00:00 đã hiện xong) trống mới đánh. Mờ dần lúc DN_HET_GIU, ẩn lúc DN_HET_GIU + DN_HET_TAN. */
     var dnV = null, dnCu = { tt: "", chu: "", mau: "", nho: null, p: -1 }, dnHenT = 0;
-    var DN_HET_GIU = 5300, DN_HET_TAN = 900, dnDaXoa = null;
-    var DUI = { nghi: 18, cham: 50, xuong: 90, len: 260 };      // dùi trống: góc lúc nghỉ, góc lúc chạm mặt trống (độ; 50 độ thì đầu dùi rơi vào mặt da, không vào vành); thời gian vung xuống, nhấc lên (mili giây)
-    var dnGoi = { ds: [], chu: [], raf: 0, dem: 0, so: 0, lan: { mo: 0, het: 0 } };      // ds: các tiếng gõ { t: lúc dùi chạm mặt trống (theo performance.now), m: mạnh nhẹ, xong }
-    function dnGo(loai) {                           // cái trống trên đồng hồ gõ theo DN_NHIP[loai]; tiếng trống phát riêng (amBao), cùng mốc 40 ms
-      var t0 = performance.now() + 40;
-      DN_NHIP[loai].forEach(function (n) { dnGoi.ds.push({ t: t0 + n[0], m: n[1], xong: false }); });
+    var DN_HET_CHO = 400, DN_HET_GIU = 4200, DN_HET_TAN = 900, dnDaXoa = null;
+    var DUI = { nghi: 6, vien: -19, mat: -39, xuong: 90, len: 260 };      // dùi trống: góc lúc nghỉ, lúc chạm viền trống, lúc chạm mặt trống (độ; âm là nghiêng về phía trống); thời gian vung tới, nhấc về (mili giây)
+    var dnGoi = { ds: [], chu: [], raf: 0, dem: 0, so: 0, soC: 0, cach: 0, tung: 0, lan: { mo: 0, het: 0 } };      // ds: các tiếng gõ { t: lúc dùi chạm trống (theo performance.now), k: "cach" | "tung", m: mạnh nhẹ, xong }
+    function dnGo(loai, cho) {                      // cái trống trên đồng hồ gõ theo DN_NHIP[loai]; tiếng trống phát riêng (amBao), cùng mốc 40 ms (+ cho)
+      var t0 = performance.now() + 40 + (cho || 0);
+      DN_NHIP[loai].forEach(function (n) { dnGoi.ds.push({ t: t0 + n[0], k: n[1], m: n[2], xong: false }); });
       dnGoi.ds.sort(function (a, b) { return a.t - b.t; });
-      dnGoi.so = 0; dnGoi.lan[loai]++;
+      dnGoi.so = 0; dnGoi.soC = 0; dnGoi.lan[loai]++;
       $("dn").setAttribute("data-go", dnGoi.lan.mo + "," + dnGoi.lan.het);      // bài thử đọc: số lần trống đã gõ lúc bắt đầu, lúc hết giờ
       if (!dnGoi.raf) dnGoi.raf = requestAnimationFrame(dnGoKhung);
     }
-    function dnCham(n) {                            // dùi vừa chạm mặt trống: đếm tiếng (bài thử đọc ở #dn[data-tung]); tiếng mạnh thì hiện chữ "Tùng!"
-      var e;
-      dnGoi.dem++; $("dn").setAttribute("data-tung", dnGoi.dem);
-      if (n.m < 0.9) return;                        // hồi trống dồn: không hiện chữ
-      e = S("text", { "class": "dn-tung", x: [70, 136, 202][dnGoi.so++ % 3], y: 30 }, $("dnChu"));
-      e.textContent = "Tùng!";
-      dnGoi.chu.push({ e: e, t: n.t });
+    function dnCham(n) {                            // dùi vừa chạm trống: đếm tiếng (bài thử đọc ở #dn[data-tung] = mọi tiếng, #dn[data-kieu] = "cạch,tùng"); hiện chữ "Cạch!" hay "Tùng!"
+      var e, o;
+      dnGoi.dem++; dnGoi[n.k]++;
+      $("dn").setAttribute("data-tung", dnGoi.dem); $("dn").setAttribute("data-kieu", dnGoi.cach + "," + dnGoi.tung);
+      if (n.k === "cach") {
+        o = [[232, 26], [268, 48]][dnGoi.soC++ % 2];
+        e = S("text", { "class": "dn-cach", x: o[0], y: o[1] }, $("dnChu"));
+        e.textContent = "Cạch!";
+      } else {
+        e = S("text", { "class": "dn-tung", x: [70, 136, 202][dnGoi.so++ % 3], y: 30 }, $("dnChu"));
+        e.textContent = "Tùng!";
+      }
+      dnGoi.chu.push({ e: e, t: n.t, y: +e.getAttribute("y") });
     }
     function dnGoKhung() {                          // vẽ một khung hình của cái trống đang gõ (requestAnimationFrame, chỉ chạy trong lúc gõ)
-      var t = performance.now(), ds = dnGoi.ds, truoc = null, sau = null, i, g, q, a0, k, rung = 0, sang = 0, song = 0;
+      var t = performance.now(), ds = dnGoi.ds, truoc = null, sau = null, i, g, q, a0, k, rung = 0, sang = 0, song = 0, tia = 0;
       for (i = 0; i < ds.length; i++) {
         if (ds[i].t <= t) { if (!ds[i].xong) { ds[i].xong = true; dnCham(ds[i]); } truoc = ds[i]; }
         else if (!sau) sau = ds[i];
       }
-      function len(tt) {                            // dùi nhấc lên sau tiếng gõ trước
+      function goc(n) { return n.k === "cach" ? DUI.vien : DUI.mat; }
+      function len(tt) {                            // dùi nhấc về chỗ nghỉ sau tiếng gõ trước
         var q2;
         if (!truoc) return DUI.nghi;
         q2 = Math.max(0, Math.min(1, (tt - truoc.t) / DUI.len));
-        return DUI.cham - (DUI.cham - DUI.nghi) * (1 - (1 - q2) * (1 - q2));
+        return goc(truoc) + (DUI.nghi - goc(truoc)) * (1 - (1 - q2) * (1 - q2));
       }
       g = len(t);
-      if (sau && t >= sau.t - DUI.xuong) { a0 = len(sau.t - DUI.xuong); q = (t - sau.t + DUI.xuong) / DUI.xuong; g = a0 + (DUI.cham - a0) * q * q; }      // vung xuống cho tiếng sau
-      $("dnDui").setAttribute("transform", "translate(290 22) rotate(" + g.toFixed(2) + ")");
-      if (truoc) { k = t - truoc.t; rung = 3.2 * truoc.m * Math.exp(-k / 60) * Math.sin(k / 9); sang = Math.max(0, 1 - k / 240) * truoc.m; song = Math.max(0, 1 - k / 450) * truoc.m; }
+      if (sau && t >= sau.t - DUI.xuong) { a0 = len(sau.t - DUI.xuong); q = (t - sau.t + DUI.xuong) / DUI.xuong; g = a0 + (goc(sau) - a0) * q * q; }      // vung tới cho tiếng sau
+      $("dnDui").setAttribute("transform", "translate(270 165) rotate(" + g.toFixed(2) + ")");
+      if (truoc) {
+        k = t - truoc.t;
+        if (truoc.k === "tung") { rung = 3.2 * truoc.m * Math.exp(-k / 60) * Math.sin(k / 9); sang = Math.max(0, 1 - k / 240) * truoc.m; song = Math.max(0, 1 - k / 450) * truoc.m; }
+        else { rung = 1.2 * truoc.m * Math.exp(-k / 40) * Math.sin(k / 6); tia = Math.max(0, 1 - k / 220); }      // gõ viền: thân trống chỉ rung khẽ, tia lóe ở viền
+      }
       $("dnThan").setAttribute("transform", "translate(" + rung.toFixed(2) + " 0)");
       $("dnSang").setAttribute("opacity", (0.6 * sang).toFixed(3));
       $("dnSong").setAttribute("opacity", song.toFixed(3));
       $("dnSong").setAttribute("transform", "translate(" + (-10 * (1 - song)).toFixed(2) + " 0)");
-      dnGoi.chu = dnGoi.chu.filter(function (c) {   // chữ "Tùng!": hiện nhanh, trôi lên 10 px, mờ dần trong 0,9 giây
+      $("dnTia").setAttribute("opacity", tia.toFixed(3));
+      dnGoi.chu = dnGoi.chu.filter(function (c) {   // chữ "Cạch!", "Tùng!": hiện nhanh, trôi lên 10 px, mờ dần trong 0,9 giây
         var q3 = (t - c.t) / 900;
         if (q3 >= 1) { if (c.e.parentNode) c.e.parentNode.removeChild(c.e); return false; }
         c.e.setAttribute("opacity", Math.max(0, q3 < 0.12 ? q3 / 0.12 : 1 - (q3 - 0.12) / 0.88).toFixed(3));
-        c.e.setAttribute("y", (30 - 10 * Math.max(0, q3)).toFixed(1));
+        c.e.setAttribute("y", (c.y - 10 * Math.max(0, q3)).toFixed(1));
         return true;
       });
       if (sau || (truoc && t - truoc.t < 600) || dnGoi.chu.length) dnGoi.raf = requestAnimationFrame(dnGoKhung);
@@ -2540,7 +2595,7 @@
       }
       if (!st) { if (dnCu.tt) dnDung(); e.hidden = true; e.classList.remove("tan"); dnCu = { tt: "", chu: "", mau: "", nho: null, p: -1 }; return; }
       if (e.hidden) e.hidden = false;
-      if (st.tt === "chay" && dnCu.tt !== "chay" && dnCu.tt !== "dung" && st.con > st.tong - 2500) { dnDung(); dnGo("mo"); amBao("mo"); }     // vừa bấm bắt đầu: trống gõ 3 tiếng (16/11 13:11 có âm báo; 17/11 00:57 thành tiếng trống)
+      if (st.tt === "chay" && dnCu.tt !== "chay" && dnCu.tt !== "dung" && (st.truoc > 0 || st.con > st.tong - 2500)) { dnDung(); dnGo("mo"); amBao("mo"); }     // vừa bấm bắt đầu: trống đánh (16/11 13:11 có âm báo; 17/11 00:57 thành tiếng trống; 18/11 đánh xong mới đếm)
       p = st.tt === "het" ? 1 : Math.max(0, Math.min(1, 1 - st.con / st.tong));
       if (dnCu.p < 0 || Math.abs(p - dnCu.p) >= 0.0004 || (p === 1 && dnCu.p !== 1)) { e.setAttribute("data-p", p.toFixed(4)); dnCu.p = p; }      // phần thời gian đã trôi (bài thử đọc ở #dn[data-p])
       chu = dnChu(st.con);
@@ -2551,9 +2606,8 @@
         var doiTT = st.tt !== dnCu.tt;               // chỉ khi đồng hồ đổi trạng thái mới đặt lại chữ nút dự phòng (mở bảng Cài đặt làm đồng hồ thu nhỏ: không được xóa câu "Bấm lần nữa")
         e.className = "dn " + st.tt + (mau ? " " + mau : "") + (nho ? " " + nho : "");
         $("dnTrong").setAttribute("viewBox", nho ? "0 40 300 188" : "0 0 300 226");      // thu gọn: chỉ còn cái trống, bỏ chỗ chữ "Tùng!" phía trên
-        $("dnNhan").textContent = st.tt === "dung" ? "Đang tạm dừng" : st.tt === "het" ? "" : "Thời gian còn lại";
-        $("dnSo").hidden = st.tt === "het"; $("dnHet").hidden = st.tt !== "het";
-        if (st.tt === "het" && dnCu.tt === "chay") { nhacHetGio(); dnDung(); dnGo("het"); amBao("het"); }      // 16/11 10:44: "bài hát sẽ lặp đi lặp lại cho đến khi hết giờ"; 16/11 13:11: hết giờ có âm báo
+        $("dnNhan").textContent = st.tt === "dung" ? "Đang tạm dừng" : st.tt === "het" ? "Hết giờ" : "Thời gian còn lại";      // 18/11: hết giờ thì số vẫn hiện (00:00), chữ "Hết giờ" ở dòng trên
+        if (st.tt === "het" && dnCu.tt === "chay") { nhacHetGio(); dnDung(); dnGo("het", DN_HET_CHO); amBao("het", DN_HET_CHO); }      // 16/11 10:44: "bài hát sẽ lặp đi lặp lại cho đến khi hết giờ"; 16/11 13:11: hết giờ có âm báo; 18/11: số về 00:00 rồi mới đánh trống
         dnCu.tt = st.tt; dnCu.mau = mau; dnCu.nho = nho;
         if (doiTT) {
           dnHoiTv = 0; $("nutDn").classList.remove("hoi");
