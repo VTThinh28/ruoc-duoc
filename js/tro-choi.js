@@ -97,7 +97,7 @@
   function chayDem(d) {
     clearTimeout(DEM.hen);
     DEM.id = d.id; DEM.q = d.q; DEM.bd = performance.now(); DEM.so = null;
-    CHO = {};   // hết giờ mới bắt đầu tính thời gian giữ chữ
+    CHO = {}; THAY = {}; HAI = {}; NGO = {};   // hết giờ mới bắt đầu tính thời gian giữ chữ
     // điện thoại có camera: mở camera ngay lúc bắt đầu đếm cho kịp, hết giờ mới ghi thẻ
     if (VAI === "dt" && Q.coCamera() && !Q.Live.chay && !camDangMo) batCam();
     (function nhip() {
@@ -1181,7 +1181,12 @@
      ===================================================================== */
   var moCD = false, PQ = null, CHO = {}, soAnh = 0, anhCuoi = null, henGhi = 0, ghiCuoi = 0, menuThe = null;
   var ROT = { doc: 0, ngang: 0, live: 0 };
-  try { var rr = JSON.parse(lsGet("rd-xoay", "null")); if (rr) { ROT.doc = rr.doc | 0; ROT.ngang = rr.ngang | 0; } } catch (e) { /* bỏ qua */ }
+  // thẻ mới 12/11: chữ nằm trong mã, không tính theo cạnh nào ở trên, nên không có chuyện "xoay chữ" (ROT luôn bằng 0)
+  // THAY[thẻ][chữ] = lúc vừa thấy chữ đó; HAI[thẻ] = lúc vừa thấy em đó giơ 2 thẻ khác chữ
+  var THAY = {}, HAI = {}, HAI_THE = 700;
+  // bản thử 13/11 (thẻ nằm trên bàn): NAM[thẻ.chữ] = lúc bộ đọc vừa coi mã đó là thẻ nằm; NGO[thẻ.chữ] = {n, moi}: số lần đọc "chưa rõ" liền nhau
+  //   NAM không xóa theo câu: nó chỉ nói "mã này vừa nằm trên bàn", tự hết hạn (3 giây với lần đọc chưa rõ, 1 giây với lần đọc rõ).
+  var NAM = {}, NGO = {}, NAM_NHO = 3000, NAM_GAN = 1000, NGO_CAN = 3, NGO_CACH = 1200;
   var NGHIENG = false;
   var ZOOM_MAY = false, dtBuocCu = null;   // ZOOM_MAY: camera tự chỉnh zoom được; không thì thu phóng bằng phần mềm
 
@@ -1252,7 +1257,7 @@
       var g = e.accelerationIncludingGravity;
       if (!g || g.x == null) return;
       var doc = !screen.orientation || screen.orientation.angle === 0 || screen.orientation.angle === 180;
-      var nghieng = doc && Math.abs(g.x) > Math.abs(g.y) + 2.5;
+      var nghieng = false && doc;   // thẻ mới: cầm điện thoại kiểu nào cũng đọc đúng chữ
       if (nghieng !== NGHIENG) { NGHIENG = nghieng; $("#dtXoayMay").hidden = !(NGHIENG && Q.Live.chay); }
     });
     Q.khoiDong();
@@ -1317,7 +1322,7 @@
     capNhatChuanBi($("#cbDT"));
     if (coQuet) { datCauQuet(q); veBangTo(); }
     else if (Q.Live.chay) dungCam();
-    $("#dtNc").hidden = !(coQuet && anhCuoi);
+    $("#dtNc").hidden = true;
     // 9/11: màn giới thiệu: nút hiện / ẩn luật chơi trên TV; bước đọc đề: nút Đếm ngược 5 giây
     var luatHien = !!now.luat, ln = $("#dtLuatNut");
     $("#dtLuat").hidden = step !== "intro";
@@ -1361,7 +1366,7 @@
     var key = ses() + ":" + q;
     if (!PQ || PQ.key !== key) {
       PQ = { key: key, q: q, obs: {}, man: {} };
-      CHO = {};
+      CHO = {}; THAY = {}; HAI = {}; NGO = {};
       anhCuoi = null;
       soAnh = 0;
       $("#dtAnhKhung").hidden = true;
@@ -1472,7 +1477,6 @@
       if (moi) { A.tich(); try { navigator.vibrate && navigator.vibrate(30); } catch (e) { /* bỏ qua */ } }
       ghiQuet(true);
       veBangTo();
-      $("#dtNc").hidden = false;
       void q;
     }, function (e) {
       $("#dtChupNhan").removeAttribute("aria-disabled");
@@ -1614,18 +1618,30 @@
   //   ghi rồi khóa nhầm (thẻ đã ghi thì giữ đáp án đầu tiên). tc: lúc chụp khung; kết quả đến trễ của khung chụp trước
   //   lần đọc mới nhất thì bỏ qua cho thẻ đó.
   var GIU_CHU = 150;
+  // bản thử 12/11 (thầy Thịnh: "tối ưu lại web"): "Ghi ngay" = ghi ở lần đọc rõ đầu tiên, không chờ giữ chữ 0,15 giây.
+  //   Mặc định BẬT: mã phải khớp đủ 16 ô, đo trên 5.460 khung ảnh thật không ra thẻ ma nào (the-4-mat/nguon/thu-ma-12-11/e7).
+  //   Tắt bằng ô trên màn quét, máy nhớ (rd-ghi-ngay = "0"). Luật "một em hiện 2 thẻ" đã bỏ 18/11.
+  var GHI_NGAY = lsGet("rd-ghi-ngay", "1") !== "0";
+  RD.ghiNgay = function (b) { if (b != null) { GHI_NGAY = !!b; lsSet("rd-ghi-ngay", GHI_NGAY ? "1" : "0"); } return GHI_NGAY; };
+  // bản thử: phần ghi số đo (js-the-moi/do.js) hỏi trạng thái quét và danh sách lớp
+  RD.trangThaiQuet = function () { return { key: PQ ? PQ.key : "", q: PQ ? PQ.q : 0, dem: dangDem(), n: PQ ? Object.keys(PQ.obs).length : 0, ghiNgay: GHI_NGAY }; };
+  RD.lopHienTai = function () { return RD.lop(cfg()); };
   function nhanKhung(cards, tc) {
     if (!PQ || NGHIENG || dangDem()) return;
     var lop = RD.lop(cfg()), t = tc || performance.now(), doi = false, moi = 0;
     cards.forEach(function (c) {
       if (!lop.toCua[c.id] || lop.vang[c.id]) return;
       var k = "t" + c.id, l = RD.CHU[c.k], ch = CHO[k];
+      // 18/11 (thầy Thịnh: "chỉ cần quét trúng mã là nhận không cần phải đo góc thẻ nằm trên bàn hay đang cầm"): bỏ luật thẻ nằm
+      //   (13/11), thẻ "chưa rõ" và luật "một em 2 thẻ" (12/11). Đọc trúng mã của em nào là ghi cho em đó, đáp án đầu tiên vẫn giữ.
+      //   Cùng một khung có 2 thẻ của một em thì bộ đọc đã chọn thẻ to hơn (thường là thẻ đang giơ, ở gần máy hơn).
       if (ch && t < ch.moi) return;
       if (ch && ch.l === l && t - ch.moi < 1600) ch.moi = t;
       else CHO[k] = ch = { l: l, dau: t, moi: t };
-      if (ch.moi - ch.dau >= GIU_CHU && !PQ.obs[k]) {
+      if (ch.moi - ch.dau >= (GHI_NGAY ? 0 : GIU_CHU) && !PQ.obs[k]) {
         moi++;
         PQ.obs[k] = { k: c.k, dang: "live", t: Date.now() };
+        if (RD.Do) RD.Do.ghi(c, t, PQ);   // bản thử: số đo
         doi = true;
       }
     });

@@ -4,7 +4,8 @@
   var RD = window.RD = window.RD || {};
 
   RD.CHU = ["A", "B", "C", "D"];
-  RD.MAXID = 60;          // bộ mã thẻ có 60 số
+  RD.MAXID = 46;          // thẻ mới 12/11: 46 bộ, mỗi bộ 4 thẻ A, B, C, D
+  RD.BO_THE = "moi";
   RD.SO_THE = 46;         // thẻ in sẵn: 1–45 và thẻ dự phòng 46
 
   // 4 tổ (thiết kế 3/11/2026): bạn cầm đuốc vẽ kiểu Ghibli, mặt tự vẽ, đồng phục theo ảnh của trường.

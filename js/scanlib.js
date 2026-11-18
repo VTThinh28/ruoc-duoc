@@ -1198,10 +1198,10 @@ AR.Detector.prototype.rotate2 = function (src, rotation) {
 /* Đọc thẻ trả lời từ ảnh chụp lớp. Dùng CV và AR của js-aruco2 (MIT).
    Mỗi thẻ là mã 4×4 có viền đen; chữ cái ở cạnh trên của thẻ trong ảnh là đáp án. */
 var THE = (function () {
-  var CODES = ["3a4b","2c4a","5f0d","bb61","096a","7639","d2b2","5b46","c74f","34d8","369e","e8e9","aedb","d821","e3fc","7ed2","1c93","d6ce","5395","dac5","9aca","e67a","7265","7c59","e05d","e0d3","965a","bf4a","de12","9be7","cbac","ca6f","ec8b","21ed","72d7","69a5","ae8d","25ba","6b99","1435","f505","7b0a","8e97","d8ae","b20a","c299","b2a6","5edc","4d1e","68cf","a924","b295","e3a9","1253","936e","7d91","f5e4","60bc","a0d4","1af4"];
+  var CODES = ["0569","07cb","0b5b","0db5","10b5","12de","136d","14a6","14d7","14f9","15ad","165b","1692","16bc","1869","19ab","1a5d","1a73","1a94","1acb","1ae5","1b09","1b27","1b56","1b78","1b9f","1c25","1c7a","1d2e","1d96","1de7","1e3f","1ea9","1f6b","214d","21db","239e","249c","24b2","252f","255e","2597","25b9","25e6","26d9","271b","278d","287d","2929","29bf","29ce","2b1d","2b6c","2b8b","2ba5","2d3a","2d4b","2d65","2d82","2dac","2e93","2ebd","2fc7","2fe9","31a7","31d6","32c7","32e9","335a","3429","357d","359a","35c5","35eb","361d","368b","36a5","36fa","385e","3897","38b9","390a","397b","39c3","39ed","3a1b","3a6a","3a8d","3ad2","3bd9","3caa","3cdb","3cf5","3d8f","3da1","3e79","3e9e","3f2d","3f95","417d","41c5","41eb","4349","45a7","475a","47bd","49a1","4b2d","4b95","4d7b","4ded","4f3e","4fd9","507b","50ed","523e","524f","52d9","531b","536a","538d","55db","562d","56bb","579e","581f","586e","58a7","58d6","593a","594b","59f3","5a2b","5a93","5abd","5b0e","5bb6","5bc7","5be9","5c7d","5ceb","5d29","5e49","5f1d","5f8b","5fa5","6399","65be","695f","6d3d","703d","70ab","7169","729f","735d","73cb","745f","74c9","759d","7859","78be","78cf","790d","799b","7a6d","7b39","7c3b","7cad","7e99","90a9","916b","929d","935f","945d","959f","973d","97ab","985b","9af9","9bad","9d6d","9e9b","b2db","27d2"];   // thẻ mới 12/11: 46 bộ × 4 chữ
   var LETTERS = ['A', 'B', 'C', 'D'];
-  AR.DICTIONARIES.THE_LOP = { nBits: 16, tau: 2, codeList: CODES };
-  var detector = new AR.Detector({ dictionaryName: 'THE_LOP', maxHammingDistance: 2 });
+  AR.DICTIONARIES.THE_LOP = { nBits: 16, tau: 1, codeList: CODES };   // thẻ mới: khớp đủ 16 ô mới nhận
+  var detector = new AR.Detector({ dictionaryName: 'THE_LOP', maxHammingDistance: 1 });
 
   /* ---------- 9/11: đọc nhanh hơn, kết quả y hệt bản js-aruco2 ----------
      Bản gốc tạo một đối tượng {x, y} cho từng điểm của mọi đường viền (vài trăm nghìn điểm mỗi khung), nên chậm.
@@ -1379,6 +1379,19 @@ var THE = (function () {
     return { ok: mn > 0 && mx / mn < 3, size: (s[0] + s[1] + s[2] + s[3]) / 4 };
   }
 
+  // Thẻ mới 12/11: độ "dẹt" của tứ giác = cos góc nghiêng của thẻ so với hướng nhìn (1: nhìn thẳng mặt thẻ).
+  // Thẻ đang giơ lệch tới 45° vẫn trên 0,7; thẻ nằm ngửa trên bàn nhìn từ chỗ thầy đứng thường dưới 0,45.
+  // 18/11 (thầy Thịnh: "chỉ cần quét trúng mã là nhận"): không loại thẻ theo độ nghiêng nữa (trước là 0,5: nghiêng quá 60° thì bỏ).
+  //   doDet vẫn tính để ghi số đo.
+  var DET_MIN = 0;
+  function doDet(c) {
+    var ax = ((c[1].x - c[0].x) + (c[2].x - c[3].x)) / 2, ay = ((c[1].y - c[0].y) + (c[2].y - c[3].y)) / 2;
+    var bx = ((c[3].x - c[0].x) + (c[2].x - c[1].x)) / 2, by = ((c[3].y - c[0].y) + (c[2].y - c[1].y)) / 2;
+    var p = ax * ax + ay * ay, q = ax * bx + ay * by, r = bx * bx + by * by;
+    var tr = p + r, k = Math.sqrt(Math.max(0, tr * tr / 4 - (p * r - q * q)));
+    return tr > 0 ? Math.sqrt(Math.max(0, tr / 2 - k) / (tr / 2 + k)) : 0;
+  }
+
   function pass(g, w, h, scale, out, vai) {
     var grey = new CV.Image(w, h, g);
     var cands = ungVien(g, w, h, Math.min(40, Math.max(16, w * 0.01)), 8, vai || "F");
@@ -1390,34 +1403,354 @@ var THE = (function () {
       var corners = m.corners.map(function (p) { return { x: (p.x + 0.5) * scale, y: (p.y + 0.5) * scale }; });
       var sh = shapeOk(corners);
       if (!sh.ok) continue;
+      var det = doDet(corners), kk = m.id % 4;   // mã = (số thẻ − 1) × 4 + chữ (0..3 = A..D); det dưới DET_MIN thì scan() bỏ
       out.push({
-        id: m.id + 1, dist: m.hammingDistance, corners: corners, size: sh.size,
+        id: (m.id - kk) / 4 + 1, ma: m.id + 1, det: det, dist: m.hammingDistance, corners: corners, size: sh.size,
         cx: (corners[0].x + corners[1].x + corners[2].x + corners[3].x) / 4,
         cy: (corners[0].y + corners[1].y + corners[2].y + corners[3].y) / 4,
-        letter: letterOf(corners), k: LETTERS.indexOf(letterOf(corners))
+        letter: LETTERS[kk], k: kk
       });
     }
     return { candidates: cands.length };
   }
 
+  /* ---------- 13/11/2026: thẻ nằm ngửa trên bàn ----------
+     Thầy Thịnh quét thử ở lớp: "có mấy thẻ để dưới bàn và một thẻ cầm trên tay thì … máy hay quét các thẻ nằm dưới bàn".
+     Luật cũ (det dưới 0,5) chỉ loại thẻ nghiêng quá 60° so với hướng nhìn. Thầy đứng sát bàn nhìn xuống thì thẻ trên bàn chỉ
+     nghiêng 40 đến 55° nên lọt. Cách mới: điện thoại cho biết hướng "trên" (cảm biến nghiêng); từ 4 góc của khung mã tính được
+     mặt thẻ đang quay về đâu. Mặt thẻ ngửa lên trần (lệch hướng "trên" dưới chừng 30°) là thẻ nằm trên bàn, bỏ.
+       - Chỉ nhìn độ dẹt thì không đủ: thẻ nằm và thẻ dựng "soi gương qua tia nhìn" cho cùng một hình dẹt. Hai thẻ đó khác nhau
+         ở chỗ cạnh nào xa hơn (cạnh xa ngắn hơn), nên phải khớp cả phép chiếu phối cảnh, và 4 góc phải chính xác dưới 1 điểm ảnh
+         (tinhGoc dò lại mép đen/trắng của khung mã).
+       - ttSai(n): sai số nhỏ nhất khi đặt một hình vuông (tuỳ cỡ, tuỳ xoay, tuỳ chỗ) lên mặt phẳng có pháp tuyến n rồi chiếu lên 4 góc.
+         eL = sai số nhỏ nhất với n trong chóp TT.CHOP độ quanh hướng "trên"; eR = nhỏ nhất với n lệch hướng "trên" từ TT.DUNG độ.
+         Chắc nằm (2): eL nhỏ và eR lớn hơn hẳn. Chắc dựng (0): ngược lại, hoặc độ dẹt không thể là của thẻ nằm. Còn lại: chưa rõ (1).
+       - Đo: 2 ảnh lớp thầy gửi 13/11 (2 thẻ nằm đều ra 2, thẻ đang giơ ra 0, kể cả khi cảm biến lệch 10°) và khung giả đúng phép
+         chiếu (ban-the-moi/test/thu-tu-the.js).
+     Không có hướng "trên" (máy không có cảm biến, trang chưa được phép đọc) thì bỏ qua phần này, còn luật det như cũ. */
+  var TT = { CHOP: 25, DUNG: 42, NGUONG: 3, TILE: 4, TOT: 0.012, DET: 0.3 };
+  var ttR = new Float64Array(8), ttM = new Float64Array(20), ttX = new Float64Array(4), ttN = new Float64Array(3);
+  var ttU = new Float64Array(3), ttV = new Float64Array(3), ttCx = 0, ttCy = 0, ttCChop = 0, ttCDung = 0;
+  var TT_S = [-1, -1, 1, 1], TT_T = [-1, 1, 1, -1];   // khuôn 4 góc theo chiều kim đồng hồ nhìn từ camera, trong hệ (e1, e2) của mặt thẻ (e1 × e2 = n)
+  var ttKq = { eL: -1, eR: -1, uv: 0 };               // số đo của lần quyết định gần nhất (cho bài thử)
+  // tổng bình phương sai số (đơn vị: điểm ảnh chia tiêu cự) khi khớp hình vuông trên mặt phẳng có pháp tuyến (nx, ny, nz) với 4 tia ttR
+  function ttSai(nx, ny, nz) {
+    var ax, ay, az, l, bx, by, bz, i, j, d, s, t, r, c, A1, A2, k, v0, v1, v2, v3, p, f, e, sse = 0;
+    if (Math.abs(nx) < 0.6) { ax = 0; ay = -nz; az = ny; } else { ax = nz; ay = 0; az = -nx; }
+    l = Math.sqrt(ax * ax + ay * ay + az * az); ax /= l; ay /= l; az /= l;                   // e1 vuông góc n
+    bx = ny * az - nz * ay; by = nz * ax - nx * az; bz = nx * ay - ny * ax;                   // e2 = n × e1
+    for (i = 0; i < 20; i++) ttM[i] = 0;
+    for (i = 0; i < 4; i++) {
+      s = TT_S[i]; t = TT_T[i];
+      for (d = 0; d < 2; d++) {
+        r = ttR[i * 2 + d]; c = d ? ttCy : ttCx;
+        A1 = (d ? ay : ax) - r * az; A2 = (d ? by : bx) - r * bz; k = r - c;
+        v0 = A1; v1 = A2; v2 = A1 * s + A2 * t; v3 = A2 * s - A1 * t;
+        ttM[0] += v0 * v0; ttM[1] += v0 * v1; ttM[2] += v0 * v2; ttM[3] += v0 * v3; ttM[4] += v0 * k;
+        ttM[6] += v1 * v1; ttM[7] += v1 * v2; ttM[8] += v1 * v3; ttM[9] += v1 * k;
+        ttM[12] += v2 * v2; ttM[13] += v2 * v3; ttM[14] += v2 * k;
+        ttM[18] += v3 * v3; ttM[19] += v3 * k;
+      }
+    }
+    ttM[5] = ttM[1]; ttM[10] = ttM[2]; ttM[11] = ttM[7]; ttM[15] = ttM[3]; ttM[16] = ttM[8]; ttM[17] = ttM[13];
+    for (i = 0; i < 4; i++) {
+      p = ttM[i * 5 + i];
+      if (!(p > 1e-18)) return Infinity;
+      for (j = i + 1; j < 4; j++) {
+        f = ttM[j * 5 + i] / p;
+        if (f) for (c = i; c < 5; c++) ttM[j * 5 + c] -= f * ttM[i * 5 + c];
+      }
+    }
+    for (i = 3; i >= 0; i--) { s = ttM[i * 5 + 4]; for (j = i + 1; j < 4; j++) s -= ttM[i * 5 + j] * ttX[j]; ttX[i] = s / ttM[i * 5 + i]; }
+    for (i = 0; i < 4; i++) {
+      s = TT_S[i]; t = TT_T[i];
+      for (d = 0; d < 2; d++) {
+        r = ttR[i * 2 + d]; c = d ? ttCy : ttCx;
+        A1 = (d ? ay : ax) - r * az; A2 = (d ? by : bx) - r * bz;
+        e = A1 * ttX[0] + A2 * ttX[1] + (A1 * s + A2 * t) * ttX[2] + (A2 * s - A1 * t) * ttX[3] + (c - r);
+        sse += e * e;
+      }
+    }
+    return sse;
+  }
+  // pháp tuyến (nx, ny, nz) lệch đi góc g (rad) theo phương vị p quanh nó; kết quả ghi vào ttN
+  function ttLech(nx, ny, nz, g, p) {
+    var ax, ay, az, l, bx, by, bz, sg = Math.sin(g), cg = Math.cos(g), cp = Math.cos(p) * sg, sp = Math.sin(p) * sg;
+    if (Math.abs(nx) < 0.6) { ax = 0; ay = -nz; az = ny; } else { ax = nz; ay = 0; az = -nx; }
+    l = Math.sqrt(ax * ax + ay * ay + az * az); ax /= l; ay /= l; az /= l;
+    bx = ny * az - nz * ay; by = nz * ax - nx * az; bz = nx * ay - ny * ax;
+    ttN[0] = nx * cg + ax * cp + bx * sp; ttN[1] = ny * cg + ay * cp + by * sp; ttN[2] = nz * cg + az * cp + bz * sp;
+  }
+  // vung 1: trong chóp quanh hướng "trên"; vung 2: "đang dựng" (lệch hướng "trên" từ TT.DUNG độ). Luôn phải quay mặt về camera.
+  function ttDuoc(x, y, z, vung) {
+    var cu = x * ttU[0] + y * ttU[1] + z * ttU[2];
+    if (vung === 1 ? cu < ttCChop : cu > ttCDung) return false;
+    return x * ttV[0] + y * ttV[1] + z * ttV[2] > 0.12;
+  }
+  // dò cực tiểu của ttSai từ (nx, ny, nz), bước giảm dần, không ra khỏi vùng; trả về sai số nhỏ nhất
+  function ttDo(nx, ny, nz, vung) {
+    var e = ttSai(nx, ny, nz), buoc = 0.1, k, em, tx = 0, ty = 0, tz = 0, et, co;
+    while (buoc > 0.006) {
+      et = e; co = false;
+      for (k = 0; k < 8; k++) {
+        ttLech(nx, ny, nz, buoc, k * 0.7853981633974483);
+        if (!ttDuoc(ttN[0], ttN[1], ttN[2], vung)) continue;
+        em = ttSai(ttN[0], ttN[1], ttN[2]);
+        if (em < et) { et = em; tx = ttN[0]; ty = ttN[1]; tz = ttN[2]; co = true; }
+      }
+      if (co) { nx = tx; ny = ty; nz = tz; e = et; } else buoc /= 2;
+    }
+    return e;
+  }
+  // c: 4 góc của khung mã (điểm ảnh của khung đang đọc), w × h: cỡ khung, f: tiêu cự tính bằng điểm ảnh của khung đó,
+  // u: hướng "trên" trong hệ ảnh (x sang phải, y xuống dưới, z từ camera đi tới), det: độ dẹt, size: cạnh mã (điểm ảnh).
+  // Trả về 2: chắc là thẻ nằm ngửa trên mặt ngang; 1: chưa rõ; 0: không phải thẻ nằm.
+  // Kiểm nhanh bằng 4 góc thô: thẻ này có thể đang nằm ngang không? Không thì khỏi tinh chỉnh góc, khỏi tính tư thế (phần lớn thẻ đang giơ
+  // dừng ở đây, nên phép lọc gần như không làm chậm bộ đọc). Nới 0,02 so với hai phép thử đầu của tuThe: ca sát ngưỡng vẫn được tính đủ.
+  function ttSom(c, w, h, f, u, det) {
+    var cx = 0, cy = 0, i, l, lu, uv;
+    for (i = 0; i < 4; i++) { cx += (c[i].x - w / 2) / f / 4; cy += (c[i].y - h / 2) / f / 4; }
+    l = Math.sqrt(cx * cx + cy * cy + 1); lu = Math.sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]) || 1;
+    uv = (-cx * u[0] - cy * u[1] - u[2]) / (l * lu);
+    return uv >= 0.13 && !(det != null && Math.abs(det - uv) > TT.DET + 0.02);
+  }
+  function tuThe(c, w, h, f, u, det, size) {
+    var i, l, uv, eL, eR, k, e, g0, g1, g2, ds = [], tran;
+    ttCx = 0; ttCy = 0;
+    for (i = 0; i < 4; i++) { ttR[i * 2] = (c[i].x - w / 2) / f; ttR[i * 2 + 1] = (c[i].y - h / 2) / f; ttCx += ttR[i * 2] / 4; ttCy += ttR[i * 2 + 1] / 4; }
+    l = Math.sqrt(ttCx * ttCx + ttCy * ttCy + 1);
+    ttV[0] = -ttCx / l; ttV[1] = -ttCy / l; ttV[2] = -1 / l;                 // từ thẻ về camera
+    l = Math.sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]) || 1;
+    ttU[0] = u[0] / l; ttU[1] = u[1] / l; ttU[2] = u[2] / l;
+    uv = ttU[0] * ttV[0] + ttU[1] * ttV[1] + ttU[2] * ttV[2];
+    ttKq.eL = -1; ttKq.eR = -1; ttKq.uv = uv;
+    if (uv < 0.15) return 0;                                                  // camera không ở phía trên mặt bàn tại chỗ thẻ này
+    if (det != null && Math.abs(det - uv) > TT.DET) return 0;                 // độ dẹt không thể là của thẻ nằm ngang
+    ttCChop = Math.cos(TT.CHOP * Math.PI / 180); ttCDung = Math.cos(TT.DUNG * Math.PI / 180);
+    eL = ttDo(ttU[0], ttU[1], ttU[2], 1) * f * f;
+    // ứng viên "đang dựng": nghiệm gương của hướng "trên" qua tia nhìn, nhìn thẳng mặt thẻ, và vòng 50° quanh hướng "trên"
+    g0 = 2 * uv * ttV[0] - ttU[0]; g1 = 2 * uv * ttV[1] - ttU[1]; g2 = 2 * uv * ttV[2] - ttU[2];
+    if (ttDuoc(g0, g1, g2, 2)) ds.push([ttSai(g0, g1, g2), g0, g1, g2]);
+    if (ttDuoc(ttV[0], ttV[1], ttV[2], 2)) ds.push([ttSai(ttV[0], ttV[1], ttV[2]), ttV[0], ttV[1], ttV[2]]);
+    for (k = 0; k < 8; k++) {
+      ttLech(ttU[0], ttU[1], ttU[2], 0.8726646259971648, k * 0.7853981633974483);
+      if (ttDuoc(ttN[0], ttN[1], ttN[2], 2)) ds.push([ttSai(ttN[0], ttN[1], ttN[2]), ttN[0], ttN[1], ttN[2]]);
+    }
+    ds.sort(function (a, b) { return a[0] - b[0]; });
+    eR = Infinity;
+    for (k = 0; k < ds.length && k < 3; k++) { e = ttDo(ds[k][1], ds[k][2], ds[k][3], 2); if (e < eR) eR = e; }
+    eR *= f * f;
+    ttKq.eL = eL; ttKq.eR = eR;
+    tran = Math.max(TT.NGUONG, TT.TOT * size * TT.TOT * size * 8);            // sai số còn chấp nhận được của nghiệm "nằm"
+    if (eL <= tran && eR - eL >= TT.NGUONG && eR >= TT.TILE * eL) return 2;
+    if (eL - eR >= TT.NGUONG && eL >= TT.TILE * eR) return 0;
+    return 1;
+  }
+  /* ---------- 13/11 tối: tiêu cự tự đo (số đo FMWQ) ----------
+     Thầy thử ở nhà bằng Chrome: camera trong Chrome nhìn rộng hơn ảnh chụp của máy, tiêu cự chỉ bằng 0,72 lần số giả định (0,48 thay
+     cho 0,667 cạnh dài). Sai tiêu cự thì thẻ nằm khớp kém, bị xếp "chưa rõ". Một hình vuông nhìn nghiêng tự cho biết tiêu cự: tìm phép
+     chiếu H từ hình vuông đơn vị sang 4 góc (tâm ảnh ở giữa khung), rồi hai cạnh của hình vuông vuông góc nhau và dài bằng nhau cho
+     2 phương trình bậc nhất của f². Không cần cảm biến. Trả về { m: tiêu cự thật / f0, luc: độ rõ của phối cảnh, du: phần dư của
+     2 phương trình } hoặc null. Một thẻ thì nhiễu; trang lấy trung vị của nhiều thẻ (nhanh.js). Mô phỏng: phối cảnh rõ (luc 0,25 đến
+     1,6) và du dưới 0,15 thì trung vị 8 mẫu lệch dưới 5 đến 10%; trên 181 mẫu của số đo FMWQ ra 0,72 đến 0,75. */
+  var ufA = new Float64Array(72), ufX = new Float64Array(8);
+  function uocF(c, w, h, f0) {
+    var i, j, k, p, q, x, y, s, t, r, A = ufA;
+    for (i = 0; i < 4; i++) {
+      x = (c[i].x - w / 2) / f0; y = (c[i].y - h / 2) / f0; s = TT_S[i]; t = TT_T[i]; r = i * 18;
+      A[r] = s; A[r + 1] = t; A[r + 2] = 1; A[r + 3] = 0; A[r + 4] = 0; A[r + 5] = 0; A[r + 6] = -s * x; A[r + 7] = -t * x; A[r + 8] = x;
+      A[r + 9] = 0; A[r + 10] = 0; A[r + 11] = 0; A[r + 12] = s; A[r + 13] = t; A[r + 14] = 1; A[r + 15] = -s * y; A[r + 16] = -t * y; A[r + 17] = y;
+    }
+    for (i = 0; i < 8; i++) {   // khử Gauss, chọn phần tử trụ lớn nhất
+      p = i; for (j = i + 1; j < 8; j++) if (Math.abs(A[j * 9 + i]) > Math.abs(A[p * 9 + i])) p = j;
+      if (!(Math.abs(A[p * 9 + i]) > 1e-12)) return null;
+      if (p !== i) for (k = 0; k < 9; k++) { q = A[i * 9 + k]; A[i * 9 + k] = A[p * 9 + k]; A[p * 9 + k] = q; }
+      for (j = i + 1; j < 8; j++) { q = A[j * 9 + i] / A[i * 9 + i]; if (q) for (k = i; k < 9; k++) A[j * 9 + k] -= q * A[i * 9 + k]; }
+    }
+    for (i = 7; i >= 0; i--) { s = A[i * 9 + 8]; for (j = i + 1; j < 8; j++) s -= A[i * 9 + j] * ufX[j]; ufX[i] = s / A[i * 9 + i]; }
+    // cột 1 và cột 2 của H (theo toạ độ đã chia f0): h1 = (X0, X3, X6), h2 = (X1, X4, X7); ω = diag(1, 1, m²)
+    var h1x = ufX[0], h1y = ufX[3], h1w = ufX[6], h2x = ufX[1], h2y = ufX[4], h2w = ufX[7];
+    var a1 = h1x * h2x + h1y * h2y, b1 = h1w * h2w, a2 = h1x * h1x + h1y * h1y - h2x * h2x - h2y * h2y, b2 = h1w * h1w - h2w * h2w;
+    var nb = b1 * b1 + b2 * b2, cO = h1x * h1x + h1y * h1y + h2x * h2x + h2y * h2y, m2;
+    if (!(nb > 0) || !(cO > 0)) return null;
+    m2 = -(a1 * b1 + a2 * b2) / nb;
+    if (!(m2 > 0) || !isFinite(m2)) return null;
+    return { m: Math.sqrt(m2), luc: Math.sqrt(nb) / cO, du: Math.sqrt((a1 + m2 * b1) * (a1 + m2 * b1) + (a2 + m2 * b2) * (a2 + m2 * b2)) / cO };
+  }
+  // nội suy song tuyến trên ảnh xám; (X, Y) theo toạ độ góc thẻ (tâm điểm ảnh ở +0,5)
+  function layDiem(g, w, h, X, Y) {
+    var x = X - 0.5, y = Y - 0.5, x0, y0, fx, fy, i;
+    if (x < 0) x = 0; else if (x > w - 1.001) x = w - 1.001;
+    if (y < 0) y = 0; else if (y > h - 1.001) y = h - 1.001;
+    x0 = x | 0; y0 = y | 0; fx = x - x0; fy = y - y0; i = y0 * w + x0;
+    return (g[i] * (1 - fx) + g[i + 1] * fx) * (1 - fy) + (g[i + w] * (1 - fx) + g[i + w + 1] * fx) * fy;
+  }
+  // Tinh chỉnh 4 góc khung mã tới mức dưới 1 điểm ảnh: dò mép đen/trắng dọc từng cạnh (điểm cắt mức giữa), khớp đường thẳng,
+  // lấy giao điểm. Trả về 4 góc mới, hoặc null nếu mép không đủ rõ (khi đó dùng góc cũ).
+  var tgPr = new Float64Array(40);
+  function tinhGoc(g, w, h, c) {
+    var size = 0, i, a, b, dx, dy, l, ux, uy, nx, ny, k, j, t, bx, by, s, lo, hi, mid, tot, px, py, K, R, nb, dg = [], out = [];
+    for (i = 0; i < 4; i++) { a = c[i]; b = c[(i + 1) % 4]; size += Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)) / 4; }
+    R = Math.max(3, Math.min(7, size * 0.05)); K = Math.max(8, Math.min(24, Math.round(size / 5)));
+    nb = Math.round(R * 2) * 2 + 1;   // bước 0,5 điểm ảnh
+    for (i = 0; i < 4; i++) {
+      a = c[i]; b = c[(i + 1) % 4];
+      dx = b.x - a.x; dy = b.y - a.y; l = Math.sqrt(dx * dx + dy * dy);
+      if (l < 6) return null;
+      ux = dx / l; uy = dy / l; nx = uy; ny = -ux;   // (nx, ny) hướng ra ngoài khung (4 góc theo chiều kim đồng hồ, y xuống)
+      px = []; py = [];
+      for (k = 0; k < K; k++) {
+        t = 0.14 + 0.72 * (k + 0.5) / K; bx = a.x + dx * t; by = a.y + dy * t;
+        for (j = 0; j < nb; j++) { s = (j - (nb - 1) / 2) * 0.5; tgPr[j] = layDiem(g, w, h, bx + nx * s, by + ny * s); }
+        lo = (tgPr[0] + tgPr[1] + tgPr[2]) / 3; hi = (tgPr[nb - 1] + tgPr[nb - 2] + tgPr[nb - 3]) / 3;
+        if (hi - lo < 18) continue;
+        mid = (lo + hi) / 2; tot = null;
+        for (j = 0; j < nb - 1; j++) if (tgPr[j] < mid && tgPr[j + 1] >= mid) {
+          s = (j - (nb - 1) / 2 + (mid - tgPr[j]) / (tgPr[j + 1] - tgPr[j])) * 0.5;
+          if (tot === null || Math.abs(s) < Math.abs(tot)) tot = s;
+        }
+        if (tot === null) continue;
+        px.push(bx + nx * tot); py.push(by + ny * tot);
+      }
+      if (px.length < Math.max(4, K * 0.4)) return null;
+      // khớp đường thẳng (bình phương tối thiểu toàn phần), bỏ điểm lệch quá 1 điểm ảnh rồi khớp lại
+      var dgT = null, vong, mx, my, n, sxx, sxy, syy, ex, ey, th;
+      for (vong = 0; vong < 2; vong++) {
+        mx = 0; my = 0; n = 0;
+        for (k = 0; k < px.length; k++) { if (dgT && Math.abs((px[k] - dgT.x) * dgT.dy - (py[k] - dgT.y) * dgT.dx) > 1) continue; mx += px[k]; my += py[k]; n++; }
+        if (n < 4) return null;
+        mx /= n; my /= n; sxx = 0; sxy = 0; syy = 0;
+        for (k = 0; k < px.length; k++) { if (dgT && Math.abs((px[k] - dgT.x) * dgT.dy - (py[k] - dgT.y) * dgT.dx) > 1) continue; ex = px[k] - mx; ey = py[k] - my; sxx += ex * ex; sxy += ex * ey; syy += ey * ey; }
+        th = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+        dgT = { x: mx, y: my, dx: Math.cos(th), dy: Math.sin(th) };
+      }
+      dg.push(dgT);
+    }
+    for (i = 0; i < 4; i++) {
+      var p = dg[(i + 3) % 4], q = dg[i], den = p.dx * q.dy - p.dy * q.dx;   // góc i = giao của cạnh (i − 1) và cạnh i
+      if (Math.abs(den) < 1e-6) return null;
+      t = ((q.x - p.x) * q.dy - (q.y - p.y) * q.dx) / den;
+      var X = p.x + p.dx * t, Y = p.y + p.dy * t;
+      if (Math.sqrt((X - c[i].x) * (X - c[i].x) + (Y - c[i].y) * (Y - c[i].y)) > Math.max(3, size * 0.08)) return null;   // dời nhiều quá: không tin
+      out.push({ x: X, y: Y });
+    }
+    return out;
+  }
+
+  /* ---------- 13/11/2026: đọc thẳng khung hình của camera (VideoFrame), không qua canvas ----------
+     Số đo của thầy 13/11: riêng việc lấy hình qua canvas mất 0,1 giây mỗi khung, bằng thời gian đọc thẻ. Trang chính gửi sang
+     đây nguyên vùng nhớ của khung hình; phần này rút lớp sáng (Y) ra ảnh xám ở đúng cỡ của làn rồi đọc, khỏi đổi sang màu rồi đổi lại. */
+  // độ sáng trung bình (lấy mẫu thưa) của ảnh xám: cho phần giữ phơi sáng ngắn
+  function doSang(g, w, h) {
+    var s = 0, n = 0, x, y, r, bx = Math.max(1, w >> 6), by = Math.max(1, h >> 6);
+    for (y = by >> 1; y < h; y += by) { r = y * w; for (x = bx >> 1; x < w; x += bx) { s += g[r + x]; n++; } }
+    return n ? s / n : 0;
+  }
+  // ảnh nhỏ N × N ô (trung bình từng ô) của một mặt phẳng điểm ảnh: để so đường mới với đường canvas lúc vừa bật camera
+  function anhNho(d, off, stride, w, h, buocByte, N) {
+    var o = new Uint8Array(N * N), i, j, x, y, x0, x1, y0, y1, s, n, r, bx, by;
+    for (j = 0; j < N; j++) {
+      y0 = Math.floor(j * h / N); y1 = Math.max(y0 + 1, Math.floor((j + 1) * h / N)); by = Math.max(1, (y1 - y0) >> 3);
+      for (i = 0; i < N; i++) {
+        x0 = Math.floor(i * w / N); x1 = Math.max(x0 + 1, Math.floor((i + 1) * w / N)); bx = Math.max(1, (x1 - x0) >> 3);
+        s = 0; n = 0;
+        for (y = y0; y < y1; y += by) { r = off + y * stride; for (x = x0; x < x1; x += bx) { s += d[r + x * buocByte]; n++; } }
+        o[j * N + i] = n ? Math.round(s / n) : 0;
+      }
+    }
+    return o;
+  }
+  var LUT_CU = null, LUT_A = 0, LUT_B = 0;
+  function bangSang(a, b) {
+    if (LUT_CU && LUT_A === a && LUT_B === b) return LUT_CU;
+    var t = new Uint8Array(256), i, v;
+    for (i = 0; i < 256; i++) { v = Math.round(a * i + b); t[i] = v < 0 ? 0 : v > 255 ? 255 : v; }
+    LUT_CU = t; LUT_A = a; LUT_B = b;
+    return t;
+  }
+  var YUV8 = { I420: 1, I420A: 1, I422: 1, I444: 1, NV12: 1, NV21: 1 }, RGB4 = { RGBA: 0, RGBX: 0, BGRA: 2, BGRX: 2 };
+  // kh: {buf: ArrayBuffer, dd: định dạng điểm ảnh, lay: [{offset, stride}…], w0, h0: cỡ khung, sc: tỉ lệ thu (≤ 1), lut: [a, b] hoặc null}
+  // Trả về {g, w, h} ảnh xám ở cỡ làn, hoặc null nếu định dạng không đọc được.
+  function xamTuKhung(kh) {
+    var d = new Uint8Array(kh.buf), w0 = kh.w0, h0 = kh.h0, off, stride, g0, x, y, r, i, lut = kh.lut ? bangSang(kh.lut[0], kh.lut[1]) : null;
+    var sc = kh.sc > 0 && kh.sc < 1 ? kh.sc : 1, w, h, g, src, sw, sh, sst, soff;
+    if (!kh.lay || !kh.lay.length || !(w0 > 0 && h0 > 0)) return null;
+    off = kh.lay[0].offset | 0; stride = kh.lay[0].stride | 0;
+    if (YUV8[kh.dd]) {
+      if (stride < w0 || off + stride * (h0 - 1) + w0 > d.length) return null;
+      src = d; soff = off; sst = stride;
+    } else if (RGB4[kh.dd] != null) {
+      if (stride < w0 * 4 || off + stride * (h0 - 1) + w0 * 4 > d.length) return null;
+      var ri = RGB4[kh.dd], bi = 2 - ri;   // RGBA: đỏ ở byte 0; BGRA: đỏ ở byte 2
+      g0 = new Uint8Array(w0 * h0);
+      for (y = 0; y < h0; y++) { r = off + y * stride; i = y * w0; for (x = 0; x < w0; x++, r += 4) g0[i + x] = (d[r + ri] * 77 + d[r + 1] * 150 + d[r + bi] * 29) >> 8; }
+      src = g0; soff = 0; sst = w0;
+    } else return null;
+    sw = w0; sh = h0;
+    // thu quá nửa: lấy trung bình 2 × 2 trước (đúng bằng lượt "nửa cỡ" của bộ đọc), phần còn lại nội suy
+    while (sc <= 0.5 + 1e-9) {
+      var w2 = sw >> 1, h2 = sh >> 1, o2 = new Uint8Array(w2 * h2), a, b2;
+      for (y = 0; y < h2; y++) { a = soff + 2 * y * sst; b2 = a + sst; i = y * w2; for (x = 0; x < w2; x++, a += 2, b2 += 2) o2[i + x] = (src[a] + src[a + 1] + src[b2] + src[b2 + 1] + 2) >> 2; }
+      src = o2; soff = 0; sst = w2; sw = w2; sh = h2; sc *= 2;
+    }
+    if (sc >= 0.999) {
+      w = sw; h = sh;
+      if (soff === 0 && sst === w && !lut && src !== d) g = src;
+      else {
+        g = new Uint8Array(w * h);
+        if (lut) for (y = 0; y < h; y++) { r = soff + y * sst; i = y * w; for (x = 0; x < w; x++) g[i + x] = lut[src[r + x]]; }
+        else for (y = 0; y < h; y++) g.set(src.subarray(soff + y * sst, soff + y * sst + w), y * w);
+      }
+      return { g: g, w: w, h: h };
+    }
+    // nội suy song tuyến về cỡ làn (tỉ lệ giữa 0,5 và 1: mỗi điểm lấy từ 4 điểm quanh nó)
+    w = Math.max(1, Math.round(sw * sc)); h = Math.max(1, Math.round(sh * sc));
+    g = new Uint8Array(w * h);
+    var kx = sw / w, ky = sh / h, X0 = new Int32Array(w), FX = new Int32Array(w), fx, fy, y0, r0, r1, p0, v, f1;
+    for (x = 0; x < w; x++) { v = (x + 0.5) * kx - 0.5; if (v < 0) v = 0; if (v > sw - 1.001) v = sw - 1.001; X0[x] = v | 0; FX[x] = Math.round((v - (v | 0)) * 256); }
+    for (y = 0; y < h; y++) {
+      v = (y + 0.5) * ky - 0.5; if (v < 0) v = 0; if (v > sh - 1.001) v = sh - 1.001;
+      y0 = v | 0; fy = Math.round((v - y0) * 256); f1 = 256 - fy; r0 = soff + y0 * sst; r1 = r0 + sst; i = y * w;
+      for (x = 0; x < w; x++) {
+        p0 = X0[x]; fx = FX[x];
+        v = ((src[r0 + p0] * (256 - fx) + src[r0 + p0 + 1] * fx) * f1 + (src[r1 + p0] * (256 - fx) + src[r1 + p0 + 1] * fx) * fy + 32768) >> 16;
+        g[i + x] = lut ? lut[v] : v;
+      }
+    }
+    return { g: g, w: w, h: h };
+  }
+
   // image: {data: RGBA, width, height}; maxId: số thẻ của lớp
   // tuy.chiDu: chỉ đọc ở cỡ đủ, bỏ lượt nửa cỡ (camera có làn đọc khung nhỏ riêng cho thẻ ở gần)
+  // tuy.len = [x, y, z]: hướng "trên" trong hệ ảnh; tuy.f: tiêu cự tính bằng điểm ảnh của khung này. Có đủ hai thứ thì bỏ thẻ nằm ngửa trên bàn.
   function scan(image, maxId, tuy) {
-    var w = image.width, h = image.height, raw = [];
-    var g = toGrey(image.data, w * h);
+    return scanXam(toGrey(image.data, image.width * image.height), image.width, image.height, maxId, tuy);
+  }
+  // kh: khung hình camera gửi thẳng sang (xem xamTuKhung). Toạ độ thẻ trả về theo cỡ ảnh xám đã thu (w × h trong kết quả).
+  function scanKhung(kh, maxId, tuy) {
+    var t0 = performance.now(), x = xamTuKhung(kh);
+    if (!x) throw new Error("không đọc được khung " + kh.dd);
+    var t1 = performance.now(), r = scanXam(x.g, x.w, x.h, maxId, tuy);
+    r.w = x.w; r.h = x.h; r.tgDoi = t1 - t0;
+    return r;
+  }
+  function scanXam(g, w, h, maxId, tuy) {
+    var raw = [];
     var info = { full: pass(g, w, h, 1, raw, "F") };
     if (!(tuy && tuy.chiDu)) {
       var hf = halve(g, w, h);
       info.half = pass(hf.g, hf.w, hf.h, 2, raw, "H");
     }
-    var best = {};
+    var best = {}, nam = {};
     raw.forEach(function (m) {
       if (m.id > maxId) return;
-      var cur = best[m.id];
-      if (!cur) { best[m.id] = m; return; }
+      // thẻ nghiêng quá 60° (det dưới DET_MIN): coi là thẻ nằm trên bàn, không tính; để riêng ra cho phần ghi số đo của bản thử
+      if (m.det < DET_MIN) { var cn = nam[m.ma]; if (!cn || m.size > cn.size) nam[m.ma] = m; return; }
+      var cur = best[m.ma];
+      if (!cur) { best[m.ma] = m; return; }
       var far = Math.hypot(cur.cx - m.cx, cur.cy - m.cy) > Math.max(cur.size, m.size);
       var better = m.dist < cur.dist || (m.dist === cur.dist && m.size > cur.size);
-      if (better) { m.dup = cur.dup || far; best[m.id] = m; } else if (far) cur.dup = true;
+      if (better) { m.dup = cur.dup || far; best[m.ma] = m; } else if (far) cur.dup = true;
     });
     var all = Object.keys(best).map(function (k) { return best[k]; });
     // Bỏ "thẻ" nhỏ nằm trong vùng của một thẻ lớn hơn (chữ cái, số in trên thẻ)
@@ -1425,10 +1758,52 @@ var THE = (function () {
       return !all.some(function (M) {
         return M !== m && M.size >= 1.8 * m.size && Math.hypot(M.cx - m.cx, M.cy - m.cy) < 0.9 * M.size;
       });
-    }).sort(function (a, b) { return a.id - b.id; });
-    return { cards: list, info: info };
+    });
+    // 13/11: thẻ nằm ngửa trên bàn (xem tuThe). Cần hướng "trên" của cảm biến nghiêng (tuy.len) và tiêu cự (tuy.f, điểm ảnh của khung này).
+    //   Chắc nằm: bỏ khỏi danh sách, để vào nam kèm vi = 1 (trang vẽ viền xám, không ghi). Chưa rõ: giữ, kèm ngo = true để trang chờ
+    //   thêm vài lần đọc rồi mới ghi. Làm TRƯỚC luật "một em 2 thẻ": thẻ em đang giơ không bị thẻ nằm trên bàn của chính em làm kẹt.
+    //   13/11 tối (số đo FMWQ): mỗi thẻ đã tinh chỉnh được góc cho thêm một ước lượng tiêu cự (fr, theo tỉ lệ cạnh dài, trang lấy trung vị);
+    //   thẻ "chưa rõ" mà hình dạng nghiêng về thẻ nằm (eR > eL) thì gắn ngoN: trang không ghi thẻ đó.
+    var len = tuy && tuy.len, tieuCu = tuy && tuy.f, fRel = (tuy && tuy.fRel) || 0, fr = [];
+    if (len && tieuCu > 0) {
+      list = list.filter(function (m) {
+        if (!ttSom(m.corners, w, h, tieuCu, len, m.det)) { m.tt = 0; return true; }   // chắc chắn không nằm ngang: khỏi tính tiếp
+        var gt0 = tinhGoc(g, w, h, m.corners), gt = gt0 || m.corners;
+        var tt = tuThe(gt, w, h, tieuCu, len, m.det, m.size);
+        m.tt = tt;
+        if (gt0 && fRel > 0 && fr.length < 4 && m.size >= 40) {
+          var uf = uocF(gt0, w, h, tieuCu);
+          if (uf && uf.luc >= 0.25 && uf.luc <= 1.6 && uf.du < 0.15) fr.push(Math.round(uf.m * fRel * 1000) / 1000);
+        }
+        if (ttKq.eL >= 0) {   // đã tính đủ hai nghiệm: kèm sai số (điểm ảnh bình phương) và 4 góc đã tinh chỉnh, để trang ghi vào số đo
+          m.e = [Math.round(Math.min(1e5, ttKq.eL) * 100) / 100, Math.round(Math.min(1e5, ttKq.eR) * 100) / 100, Math.round(ttKq.uv * 1000) / 1000];
+          m.gt = [];
+          for (var gi = 0; gi < 4; gi++) m.gt.push(Math.round(gt[gi].x * 100) / 100, Math.round(gt[gi].y * 100) / 100);
+        }
+        if (tt === 2) { m.vi = 1; nam[m.ma] = m; return false; }
+        if (tt === 1) { m.ngo = true; if (ttKq.eR > ttKq.eL) m.ngoN = true; }
+        return true;
+      });
+    }
+    info.sang = doSang(g, w, h);
+    // Thẻ mới: một em hiện 2 thẻ khác chữ trong cùng một khung thì không biết em chọn thẻ nào:
+    // trả về một thẻ (thẻ to hơn) kèm hai = true để trang báo lên, không ghi.
+    // 13/11 tối: một thẻ đọc rõ là đang giơ, thẻ kia "chưa rõ" (thường là thẻ nằm trên bàn mà phép tính chưa chắc): giữ thẻ đọc rõ,
+    //   không coi là 2 thẻ, thẻ chưa rõ để riêng trong phu cho số đo (FMWQ: thẻ C trên tay số 41 bị kẹt "2 thẻ" 682 lần vì A, D trên bàn).
+    var theoSo = {}, phu = [];
+    list.forEach(function (m) {
+      var cu = theoSo[m.id];
+      if (!cu) { theoSo[m.id] = m; return; }
+      if (!cu.ngo !== !m.ngo) { var bo = m.ngo ? m : cu; phu.push(bo); theoSo[m.id] = m.ngo ? cu : m; return; }
+      var giu = m.size > cu.size ? m : cu;
+      giu.hai = true;
+      theoSo[m.id] = giu;
+    });
+    list = Object.keys(theoSo).map(function (k) { return theoSo[k]; }).sort(function (a, b) { return a.id - b.id; });
+    return { cards: list, nam: Object.keys(nam).map(function (k) { return nam[k]; }), phu: phu, fr: fr, info: info };
   }
 
-  return { scan: scan, CODES: CODES, LETTERS: LETTERS, letterOf: letterOf };
+  return { scan: scan, scanXam: scanXam, scanKhung: scanKhung, xamTuKhung: xamTuKhung, anhNho: anhNho, tuThe: tuThe, tinhGoc: tinhGoc, uocF: uocF, ttKq: ttKq, TT: TT, doDet: doDet,
+    CODES: CODES, LETTERS: LETTERS, letterOf: letterOf };
 })();
 
