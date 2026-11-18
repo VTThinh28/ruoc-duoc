@@ -801,7 +801,14 @@
   }
   function noiFirebase(phong, bao) {
     var V = "10.12.5", goc = "https://www.gstatic.com/firebasejs/" + V + "/";
-    return napScript(goc + "firebase-app-compat.js").then(function () { return napScript(goc + "firebase-database-compat.js"); }).then(function () {
+    /* 18/11 12:22 (thầy: "hơi bị lag mạng lúc mở"): index.html đã tải sẵn hai file thư viện ngay từ đầu, cùng lúc, và mở sẵn đường nối (window.XT_FB).
+       Ở đây chỉ đợi việc đó xong. Không có XT_FB, hay tải hỏng, thì tải ở đây như trước, file nào đã có thì thôi (chạy lại một file thư viện là hỏng). */
+    function napThuVien() {
+      return (window.firebase ? Promise.resolve() : napScript(goc + "firebase-app-compat.js")).then(function () {
+        return window.firebase && window.firebase.database ? null : napScript(goc + "firebase-database-compat.js");
+      });
+    }
+    return (window.XT_FB ? window.XT_FB.then(null, napThuVien) : napThuVien()).then(function () {
       var app = window.firebase.apps && window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(FB);
       var db = app.database(), base = db.ref(NHANH + "/" + phong), coMat = [], lechGio = 0;
       db.ref(".info/serverTimeOffset").on("value", function (sv) { lechGio = +sv.val() || 0; });     // đồng hồ của máy này lệch giờ máy chủ bao nhiêu: tivi và máy giáo viên đếm ngược theo cùng một giờ
@@ -2191,11 +2198,19 @@
         o.style.backgroundImage = "url(" + c.toDataURL("image/png") + ")";
       } catch (e) { o.style.backgroundImage = ""; }
     }
+    /* 18/11 12:22 (thầy: "hơi bị lag mạng lúc mở"): ảnh báo tường chọn ở trang Rước đuốc là file gốc 4494 × 3179. Vẽ thẳng nó vào khung 120 × 85 làm nền mờ
+       thì trình duyệt phải mở cả tấm ảnh ngay trên luồng chính: đo trên máy chậm (bằng 1/4 máy thử) trang đứng hơn nửa giây lúc mở, chữ "Đã nối" cũng chậm theo.
+       createImageBitmap thu nhỏ ảnh ngay lúc mở ảnh, ở luồng riêng, trang không đứng. Trình duyệt không có thì làm như cũ. */
+    function anhNen(blob, cb) {
+      function cu() { docAnh(blob, function (im, u) { cb(im); if (u) URL.revokeObjectURL(u); }); }
+      if (!window.createImageBitmap) { cu(); return; }
+      try { window.createImageBitmap(blob, { resizeWidth: 132, resizeHeight: 97, resizeQuality: "medium" }).then(cb, cu); } catch (e) { cu(); }
+    }
     function datAnh(blob, nguon, loi) {
       var o = $("baoTuong"), lan = ++soNen;
       if (anhUrl) { URL.revokeObjectURL(anhUrl); anhUrl = null; }
       if (blob) { anhUrl = URL.createObjectURL(blob); o.style.backgroundImage = "url(\"" + anhUrl + "\")"; } else o.style.backgroundImage = "";
-      if (blob) docAnh(blob, function (im, u) { if (lan === soNen) veNen(im); if (u) URL.revokeObjectURL(u); }); else veNen(null);
+      if (blob) anhNen(blob, function (im) { if (lan === soNen) veNen(im); }); else veNen(null);
       o.classList.toggle("co-anh", !!blob);
       o.setAttribute("data-nguon", blob ? nguon : "");
       $("btTinh").textContent = loi || (blob ? (nguon === "rieng" ? "Đang dùng ảnh thầy đã chọn ở trang này." : "Đang dùng ảnh báo tường thầy đã chọn ở trang Rước đuốc.") : "Chưa có ảnh: tivi đang hiện hình vẽ thay cho báo tường.");
@@ -2381,7 +2396,16 @@
       if (!ac) return;
       viec.forEach(function (v) { window.addEventListener(v, cham, true); });
     })();
-    amTai();
+    /* 18/11 12:22, thầy: "trò tấm thiệp hơi bị lag mạng lúc mở". Hai tiếng trống (175 KB) trước đây tải ngay lúc mở trang, giành đường mạng với thư viện nối máy chủ.
+       Trống chỉ cần khi thầy bấm Bắt đầu, nên giờ đợi tivi nối xong (hay chạy thử trên một máy) 1,5 giây rồi mới tải (trangThai gọi amTaiSau);
+       nối mãi chưa được thì 12 giây sau vẫn tải. Lỡ bấm Bắt đầu trước khi tải xong thì trống dùng tiếng tự tạo như trước. */
+    var amDaTai = false, amHen = 0;
+    function amTaiSau(ms) {
+      if (amDaTai) return;
+      clearTimeout(amHen);
+      amHen = setTimeout(function () { if (amDaTai) return; amDaTai = true; amTai(); }, ms);
+    }
+    amTaiSau(12000);
     function nhacDat(tt) { N.tt = tt; veNhac(); bao3d(); }
     function nhacTo() { return Math.min(1, Math.pow(N.am / NHAC_MUC, 1.7) * (NHAC_BAI[N.nguon] ? NHAC_BAI[N.nguon].bu : 1) * N.mo); }      // mức 1..10 → độ to; mức 5 ≈ 0,31
     function nhacDatTo() { var v = nhacTo(); if (N.g) { try { N.g.gain.value = v; } catch (e) { /* bỏ qua */ } } if (N.au) { try { N.au.volume = v; } catch (e2) { /* bỏ qua */ } } }
@@ -2751,6 +2775,7 @@
       var e = $("tvNoi");
       e.className = "noi " + kieu;
       e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử trên một máy" : kieu === "loi" ? "Mất kết nối" : "Đang nối…";
+      if (kieu === "ok" || kieu === "cungmay") amTaiSau(1500);      // 18/11: nối xong mới tải tiếng trống
       clearTimeout(henNoi);
       if (kieu === "loi") e.classList.add("hien");
       else if (kieu !== "ok" && kieu !== "cungmay") henNoi = setTimeout(function () { e.classList.add("hien"); }, 8000);

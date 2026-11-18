@@ -6,6 +6,35 @@
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#f6efe2">
 <title>Tấm thiệp của nhóm em · Xếp thiệp</title>
+<link rel="dns-prefetch" href="https://my-project-1473334284611-default-rtdb.asia-southeast1.firebasedatabase.app">
+<script>
+/* 18/11 12:22, thầy: "trò tấm thiệp hơi bị lag mạng lúc mở, kiểm tra lí do".
+   Đo trên trang thật: hai file thư viện nối máy chủ (Firebase, ở www.gstatic.com) trước đây chỉ bắt đầu tải SAU khi tải và chạy xong js/xep-thiep.js,
+   lại tải lần lượt từng file, nên chữ "Đã nối" đến muộn nhất. Đoạn này tải cả hai file ngay từ đầu, cùng một lúc (async = false: vẫn chạy đúng thứ tự),
+   rồi mở luôn đường nối tới máy chủ trong lúc trang còn tải phần còn lại. js/xep-thiep.js dùng lại đúng đường nối này (window.XT_FB).
+   Đoạn này phải nằm TRƯỚC thẻ link phông chữ: mã nằm sau một tệp css thì phải đợi tệp css tải xong mới chạy.
+   Chạy thử trên một máy (?thu=1, hoặc mở file trên máy) thì không nối máy chủ nên không tải.
+   databaseURL, projectId phải giống FB trong js/xep-thiep.js. */
+(function () {
+  if (location.protocol === "file:" || /[?&]thu=1(&|$)/.test(location.search) || !window.Promise) return;
+  var goc = "https://www.gstatic.com/firebasejs/10.12.5/";
+  function nap(ten) {
+    return new Promise(function (ok, bad) {
+      var s = document.createElement("script");
+      s.src = goc + ten; s.async = false;
+      s.onload = function () { ok(); };
+      s.onerror = function () { bad(new Error("Không tải được " + goc + ten)); };
+      document.head.appendChild(s);
+    });
+  }
+  window.XT_FB = Promise.all([nap("firebase-app-compat.js"), nap("firebase-database-compat.js")]).then(function () {
+    var fb = window.firebase;
+    if (!fb.apps.length) fb.initializeApp({ databaseURL: "https://my-project-1473334284611-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "my-project-1473334284611" });
+    fb.app().database().ref(".info/connected");
+  });
+  window.XT_FB.catch(function () { /* js/xep-thiep.js tự tải lại */ });
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -991,6 +1020,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=4e76cc2a"></script>
-<script src="js/xep-thiep.js?v=90c1adc6"></script>
+<script src="js/xep-thiep.js?v=3ea43469"></script>
 </body>
 </html>
