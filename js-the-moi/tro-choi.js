@@ -1455,11 +1455,10 @@
     Q.docAnh(file).then(function (r) {
       $("#dtChupNhan").removeAttribute("aria-disabled");
       if (!PQ || PQ.key !== key) return;
-      var lop = RD.lop(cfg()), moi = 0, trong = 0, ngoai = [], haiThe = [];
+      var lop = RD.lop(cfg()), moi = 0, trong = 0, ngoai = [];
       r.cards.forEach(function (c) {
         if (!lop.toCua[c.id]) { ngoai.push(c.id); return; }
         if (lop.vang[c.id]) return;
-        if (c.hai && !PQ.obs["t" + c.id]) { haiThe.push(c.id); return; }   // thẻ mới: em giơ 2 thẻ trong ảnh, chưa ghi
         trong++;
         var k = "t" + c.id;
         // 9/11 thầy Thịnh: "em nào đã quét rồi nhưng đổi đáp án thì đáp án đó bị quét lại cần cố định": thẻ đã ghi thì giữ nguyên
@@ -1471,7 +1470,6 @@
       var giay = r.giay.toFixed(1).replace(".", ",");
       var msg = trong ? "Ảnh " + soAnh + ": đọc được " + trong + " thẻ (" + moi + " thẻ mới) trong " + giay + " giây." : "Ảnh " + soAnh + ": chưa thấy thẻ nào. Đứng gần hơn, giữ máy chắc tay, nhờ các em giơ thẻ cao và thẳng.";
       if (ngoai.length) msg += " Bỏ qua thẻ " + ngoai.join(", ") + " vì không có trong danh sách nhóm.";
-      if (haiThe.length) msg += " Số " + haiThe.join(", ") + " giơ 2 thẻ nên chưa ghi.";
       trangThai(trong ? "ok" : "loi", msg);
       if (moi) { A.tich(); try { navigator.vibrate && navigator.vibrate(30); } catch (e) { /* bỏ qua */ } }
       ghiQuet(true);
@@ -1496,7 +1494,7 @@
       x.lineWidth = 3; x.strokeStyle = ok ? "#3ddc84" : "#bbbbbb"; x.stroke();
       var cx = (p[0][0] + p[2][0]) / 2, cy = (p[0][1] + p[2][1]) / 2;
       var oDa = ok && PQ && PQ.obs["t" + c.id];   // thẻ đã ghi: hiện đáp án đã giữ
-      var chu = c.id + " " + (oDa ? chuCua(oDa) : c.hai ? "2 thẻ" : RD.CHU[(c.k + (ROT[r.dang] || 0)) % 4]);
+      var chu = c.id + " " + (oDa ? chuCua(oDa) : RD.CHU[(c.k + (ROT[r.dang] || 0)) % 4]);
       x.font = "700 15px system-ui, sans-serif";
       var w = x.measureText(chu).width + 10;
       x.fillStyle = "rgba(20,14,8,.8)"; x.fillRect(cx - w / 2, cy - 11, w, 22);
@@ -1607,7 +1605,6 @@
     if (dangDem()) return { mau: "rgba(190,190,190,.85)", chu: c.id + " chờ" };   // 9/11: đang đếm ngược, chưa ghi
     var o = PQ && PQ.obs[k];
     if (o) return { mau: "#3ddc84", chu: c.id + " " + chuCua(o) };              // đã ghi: đáp án đã giữ, quét lại không đổi
-    if (c.hai || (HAI[k] && performance.now() - HAI[k] < 1200)) return { mau: "#ff7043", chu: c.id + ": 2 thẻ" };   // thẻ mới: em giơ 2 thẻ, chưa ghi
     return { mau: "#ffd54a", chu: String(c.id) };
   }
   // mỗi khung camera đọc xong: thẻ phải giữ cùng một chữ một lúc mới ghi (xem GIU_CHU bên dưới).
@@ -1620,35 +1617,21 @@
   var GIU_CHU = 150;
   // bản thử 12/11 (thầy Thịnh: "tối ưu lại web"): "Ghi ngay" = ghi ở lần đọc rõ đầu tiên, không chờ giữ chữ 0,15 giây.
   //   Mặc định BẬT: mã phải khớp đủ 16 ô, đo trên 5.460 khung ảnh thật không ra thẻ ma nào (the-4-mat/nguon/thu-ma-12-11/e7).
-  //   Tắt bằng ô trên màn quét, máy nhớ (rd-ghi-ngay = "0"). Luật "một em hiện 2 thẻ" vẫn giữ.
+  //   Tắt bằng ô trên màn quét, máy nhớ (rd-ghi-ngay = "0"). Luật "một em hiện 2 thẻ" đã bỏ 18/11.
   var GHI_NGAY = lsGet("rd-ghi-ngay", "1") !== "0";
   RD.ghiNgay = function (b) { if (b != null) { GHI_NGAY = !!b; lsSet("rd-ghi-ngay", GHI_NGAY ? "1" : "0"); } return GHI_NGAY; };
   // bản thử: phần ghi số đo (js-the-moi/do.js) hỏi trạng thái quét và danh sách lớp
   RD.trangThaiQuet = function () { return { key: PQ ? PQ.key : "", q: PQ ? PQ.q : 0, dem: dangDem(), n: PQ ? Object.keys(PQ.obs).length : 0, ghiNgay: GHI_NGAY }; };
   RD.lopHienTai = function () { return RD.lop(cfg()); };
   function nhanKhung(cards, tc) {
-    // bản thử 13/11: mã vừa bị coi là thẻ nằm trên bàn: nhớ cả lúc đang đếm ngược hay chưa vào câu (để hết đếm là biết ngay thẻ nào nằm)
-    (cards.nam || []).forEach(function (m) { if (m.vi) NAM["t" + m.id + "." + m.k] = tc || performance.now(); });
     if (!PQ || NGHIENG || dangDem()) return;
     var lop = RD.lop(cfg()), t = tc || performance.now(), doi = false, moi = 0;
     cards.forEach(function (c) {
       if (!lop.toCua[c.id] || lop.vang[c.id]) return;
       var k = "t" + c.id, l = RD.CHU[c.k], ch = CHO[k];
-      // bản thử 13/11: thẻ "chưa rõ nằm hay dựng" (c.ngo). Mã đó vừa bị coi là thẻ nằm trong 3 giây qua thì bỏ; không thì phải
-      //   chưa rõ 3 lần đọc liền (cách nhau dưới 1,2 giây) mới coi như thẻ đang giơ. Thẻ nằm lọt một khung không bị ghi nhầm.
-      //   Lần đọc rõ là đang giơ mà chính mã đó vừa bị coi là nằm chưa tới 1 giây trước thì cũng bỏ qua lần này (em vừa nhặt thẻ lên thì 1 giây sau ghi).
-      var kn = k + "." + c.k, ng = NGO[kn], namCach = NAM[kn] != null ? Math.abs(t - NAM[kn]) : 1e9;
-      //   13/11 tối (số đo FMWQ): thẻ chưa rõ mà hình dạng nghiêng về thẻ nằm (c.ngoN) thì không bao giờ ghi; thẻ thật trên tay sẽ có lần đọc rõ.
-      if (c.ngo) {
-        if (namCach < NAM_NHO || c.ngoN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, namCach < NAM_NHO ? 1 : 3); return; }
-        if (ng && t > ng.moi && t - ng.moi < NGO_CACH) { ng.n++; ng.moi = t; } else if (!ng || t > ng.moi) NGO[kn] = ng = { n: 1, moi: t };
-        if (ng.n < NGO_CAN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 0); return; }
-      } else if (namCach < NAM_GAN) { if (RD.Do && RD.Do.ngo) RD.Do.ngo(c, t, PQ, 2); return; }
-      // thẻ mới 12/11: một em hiện 2 thẻ khác chữ (cùng khung, hoặc hai lần đọc cách nhau dưới 0,7 giây) thì chưa ghi và
-      //   tính lại thời gian giữ chữ; em cất bớt một thẻ, giữ yên thẻ còn lại thì ghi như thường. Thẻ đã ghi vẫn giữ nguyên.
-      var th = THAY[k] || (THAY[k] = {}), hai = !!c.hai;
-      if (!hai) { th[l] = t; for (var x in th) if (x !== l && Math.abs(t - th[x]) < HAI_THE) hai = true; }
-      if (hai) { HAI[k] = performance.now(); delete CHO[k]; if (RD.Do) RD.Do.hai(c, t, PQ); return; }
+      // 18/11 (thầy Thịnh: "chỉ cần quét trúng mã là nhận không cần phải đo góc thẻ nằm trên bàn hay đang cầm"): bỏ luật thẻ nằm
+      //   (13/11), thẻ "chưa rõ" và luật "một em 2 thẻ" (12/11). Đọc trúng mã của em nào là ghi cho em đó, đáp án đầu tiên vẫn giữ.
+      //   Cùng một khung có 2 thẻ của một em thì bộ đọc đã chọn thẻ to hơn (thường là thẻ đang giơ, ở gần máy hơn).
       if (ch && t < ch.moi) return;
       if (ch && ch.l === l && t - ch.moi < 1600) ch.moi = t;
       else CHO[k] = ch = { l: l, dau: t, moi: t };

@@ -19,6 +19,7 @@
       bình của khung (bộ đọc trả về). Hết cỡ ISO mới kéo dài phơi (tới 10 ms). Lệnh bị từ chối, hoặc hình tối đen/cháy trắng
       kéo dài, thì trả camera về tự động.
    Ba ô bật tắt trên màn quét của điện thoại (mặc định bật, máy nhớ): rd-loc-nam, rd-khung, rd-phoi-ngan = "0" là tắt.
+   18/11: bỏ ô rd-loc-nam (bỏ thẻ nằm trên bàn); phép lọc đó tắt hẳn, còn 2 ô.
 
    13/11 tối, sau số đo FMWQ (thầy thử ở nhà bằng Chrome): lấy hình nhanh chạy tốt (2,8 ms thay cho 108 ms, 32 lần đọc/giây). Sửa 2 chỗ:
    4. TIÊU CỰ TỰ ĐO. Camera trong Chrome nhìn rộng hơn ảnh chụp của máy: tiêu cự 0,48 cạnh dài, không phải 0,667, nên thẻ nằm trên bàn
@@ -59,7 +60,9 @@
     if (Math.abs(FD.f - cu) >= 0.005) bao("f", FD.f, FD.n, lan);
   };
   var KHOA = { nam: "rd-loc-nam", khung: "rd-khung", phoi: "rd-phoi-ngan" };
-  N.bat = { nam: lsGet(KHOA.nam, "1") !== "0", khung: lsGet(KHOA.khung, "1") !== "0", phoi: lsGet(KHOA.phoi, "1") !== "0" };
+  // 18/11 (thầy Thịnh: "chỉ cần quét trúng mã là nhận không cần phải đo góc thẻ nằm trên bàn hay đang cầm"): phép lọc thẻ nằm tắt hẳn,
+  //   không đọc khóa rd-loc-nam, không có ô bật lại. Cảm biến vẫn nghe để ghi số đo (hướng máy), nhưng bộ đọc không nhận hướng "trên".
+  N.bat = { nam: false, khung: lsGet(KHOA.khung, "1") !== "0", phoi: lsGet(KHOA.phoi, "1") !== "0" };
   var LIVE = null;   // RD.Quet.Live lúc camera đang bật
 
   /* =====================================================================
@@ -390,6 +393,7 @@
   // bật, tắt từng chỗ (máy nhớ); đổi lúc camera đang chạy thì có tác dụng ngay
   N.dat = function (ten, b) {
     if (!(ten in KHOA)) return;
+    if (ten === "nam") return;   // 18/11: phép lọc thẻ nằm đã bỏ
     b = !!b; N.bat[ten] = b; lsSet(KHOA[ten], b ? "1" : "0");
     bao("dat", ten, b ? 1 : 0);
     if (ten === "khung" && LIVE) { if (!b) { KH.tt = "khong"; KH.ly = "đang tắt"; } else if (KH.tt === "khong" && typeof window.VideoFrame === "function") { KH.tt = "chua"; KH.ly = ""; KH.soThu = 0; KH.dangThu = false; } }
@@ -400,7 +404,7 @@
   N.chu = function () {
     var coLen = !!lenMay();
     var tc = (Math.round(N.fRel() * 1000) / 1000 + "").replace(".", ",") + " (" + FD.nguon + (FD.nguon === "tự đo" ? " từ " + FD.n + " thẻ" : "") + ")";
-    var cb = !N.bat.nam ? "đang tắt" : coLen ? "đang dùng cảm biến nghiêng · tiêu cự " + tc : CB.nguon === "lech" ? "cảm biến nghiêng báo không khớp nhau, tạm chỉ loại thẻ nghiêng quá 60°"
+    var cb = !N.bat.nam ? "đã bỏ (18/11: quét trúng mã là nhận)" : coLen ? "đang dùng cảm biến nghiêng · tiêu cự " + tc : CB.nguon === "lech" ? "cảm biến nghiêng báo không khớp nhau, tạm chỉ loại thẻ nghiêng quá 60°"
       : "máy chưa báo độ nghiêng, tạm chỉ loại thẻ nghiêng quá 60°";
     var kh = !N.bat.khung ? "đang tắt" : KH.tt === "duoc" ? "đang dùng (" + KH.dd + ", " + ms1(KH.tK * 10) + " ms so với " + ms1(KH.tC * 10) + " ms cách cũ)"
       : KH.tt === "chua" ? "đang so với cách cũ…" : !LIVE ? "chờ bật camera" : "không dùng được: " + KH.ly;

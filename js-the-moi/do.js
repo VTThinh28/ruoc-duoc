@@ -381,7 +381,7 @@
     var N = RD.Nhanh, dong4 = "";
     if (N) {
       try {
-        dong4 = "<br>bỏ thẻ nằm " + (N.len() ? "✓" : "✗") + " · hình nhanh " + (N.kh.tt === "duoc" ? "✓" : N.kh.tt === "chua" ? "…" : "✗") +
+        dong4 = "<br>quét trúng là ghi · hình nhanh " + (N.kh.tt === "duoc" ? "✓" : N.kh.tt === "chua" ? "…" : "✗") +
           " · phơi " + (N.ph.che === "tay" ? so1(N.ph.T / 10) + " ms" + (N.ph.xn === 0 ? "?" : "") : "tự động") + (N.fd && N.fd.nguon !== "mặc định" ? " · f " + so3(N.fRel()) : "");
       } catch (e) { dong4 = ""; }
     }

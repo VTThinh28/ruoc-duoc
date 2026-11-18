@@ -1381,7 +1381,9 @@ var THE = (function () {
 
   // Thẻ mới 12/11: độ "dẹt" của tứ giác = cos góc nghiêng của thẻ so với hướng nhìn (1: nhìn thẳng mặt thẻ).
   // Thẻ đang giơ lệch tới 45° vẫn trên 0,7; thẻ nằm ngửa trên bàn nhìn từ chỗ thầy đứng thường dưới 0,45.
-  var DET_MIN = 0.5;   // nghiêng quá 60°: coi là thẻ nằm trên bàn, bỏ
+  // 18/11 (thầy Thịnh: "chỉ cần quét trúng mã là nhận"): không loại thẻ theo độ nghiêng nữa (trước là 0,5: nghiêng quá 60° thì bỏ).
+  //   doDet vẫn tính để ghi số đo.
+  var DET_MIN = 0;
   function doDet(c) {
     var ax = ((c[1].x - c[0].x) + (c[2].x - c[3].x)) / 2, ay = ((c[1].y - c[0].y) + (c[2].y - c[3].y)) / 2;
     var bx = ((c[3].x - c[0].x) + (c[2].x - c[1].x)) / 2, by = ((c[3].y - c[0].y) + (c[2].y - c[1].y)) / 2;
