@@ -325,7 +325,13 @@
     var dan = RD.xepHang(sau).nhat;
     if (!vang.length) return { chu: "Ở câu hỏi này, chưa có thẻ nào được quét.", dau: "", cuoi: "", danChu: "" };
     var maxDung = Math.max.apply(null, [0, 1, 2, 3].map(function (t) { return (sau[t].cau[q] && sau[t].cau[q].dung) || 0; }));
-    var nhieuNhat = vang.every(function (t) { return sau[t].cau[q].dung === maxDung; });
+    // 18/11: chỉ nói "số bạn trả lời đúng nhiều nhất" khi đúng là chỉ các nhóm được nêu có nhiều bạn đúng nhất. Nhóm 12 bạn có
+    //   cùng số bạn đúng với nhóm 11 bạn thì ít điểm hơn, không được nêu: lúc đó trước đây lời bình vẫn nói "nhiều nhất", trái với
+    //   dòng "Nhóm 4: 3/12 HS đúng" cả lớp vừa thấy. Nay ghi "có tỉ lệ bạn trả lời đúng cao nhất".
+    var nhieuNhat = [0, 1, 2, 3].every(function (t) {
+      var d = (sau[t].cau[q] && sau[t].cau[q].dung) || 0;
+      return vang.indexOf(t) >= 0 ? d === maxDung : d < maxDung;
+    });
     var cau1 = "Ở câu hỏi này, " + (vang.length === 4 ? "cả bốn nhóm có tỉ lệ bạn trả lời đúng ngang nhau" :
       dsTo(vang) + (nhieuNhat ? " có số bạn trả lời đúng nhiều nhất" : " có tỉ lệ bạn trả lời đúng cao nhất"));
     var trung = vang.filter(function (t) { return dan.indexOf(t) >= 0; });

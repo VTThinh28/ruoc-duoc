@@ -427,7 +427,7 @@
       '<p class="cb-ghi">Bấm một lần trên laptop nối TV trước giờ học: nếu Claude cần xin phép thì hộp xin phép hiện lúc này, không hiện giữa tiết.</p></div>' +
       '<div class="cb-khoi" data-cb="khoiAnh" hidden><h3>5. Ảnh báo tường</h3>' +
       '<div class="cb-hang"><label class="nut"><input type="file" accept="image/*" data-cb="anh" hidden>Chọn ảnh báo tường từ máy</label><span class="chip" data-cb="anhTT"></span></div>' +
-      '<p class="cb-ghi">Ảnh có hình thầy cô nên không đưa lên mạng: ảnh chỉ nằm trong trình duyệt của máy này. Chưa chọn thì trang dùng tấm báo tường vẽ tạm. Báo tường đổi mẫu ngày 14/11 (số 51 màu đỏ): thầy chọn lại ảnh mới một lần.</p></div>' +
+      '<p class="cb-ghi">Ảnh có hình thầy cô nên không đưa lên mạng: ảnh chỉ nằm trong trình duyệt của máy này. Chưa chọn thì trang dùng tấm báo tường vẽ tạm. Ảnh mới nhất là file <b>bao-tuong-A0-4-o-A3-xem-truoc.jpg</b> (bản 15/11, số 51 màu đỏ): máy nào chọn ảnh trước ngày đó thì chọn lại một lần.</p></div>' +
       '<div class="cb-khoi"><h3>Chơi thử và ván mới</h3>' +
       '<div class="cb-hang"><label><input type="checkbox" data-cb="thu"> Chơi thử không cần điện thoại: TV tự điền kết quả ngẫu nhiên cho mỗi câu</label></div>' +
       '<div class="cb-hang" style="margin-top:10px"><button type="button" class="nut" data-cb="vanMoi">Ván mới (xóa kết quả, giữ danh sách lớp)</button>' +
@@ -1335,7 +1335,10 @@
     // hướng dẫn ngắn theo bước
     var ghi = $("#dtGhi"), html = "";
     if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề cơ bản</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, danh sách 4 nhóm, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
-    else if (step === "intro") html = "Bấm <b>Hiện luật chơi trên TV</b> ở trên để cả lớp cùng xem, đọc luật cho các em nghe, rồi bấm <b>Ẩn luật chơi trên TV</b> để các em xem lại màn chơi (trên TV cũng có nút Ẩn, Hiện luật chơi ở góc phải). Xong thì bấm <b>Hiện câu 1</b>.";
+    else if (step === "intro") html = "Bấm <b>Hiện luật chơi trên TV</b> ở trên để cả lớp cùng xem, đọc luật cho các em nghe, rồi bấm <b>Ẩn luật chơi trên TV</b> để các em xem lại màn chơi (trên TV cũng có nút Ẩn, Hiện luật chơi ở góc phải)." +
+      // 18/11: bản 4 thẻ đọc trúng mã là ghi, thẻ ngửa mặt mã trên bàn cũng được ghi, nên dặn các em trước câu 1
+      (RD.BO_THE === "moi" ? " Dặn các em: mỗi câu chỉ giơ <b>1 thẻ</b>, mặt mã quay về phía thầy; <b>3 thẻ còn lại úp mặt mã xuống bàn</b>." : "") +
+      " Xong thì bấm <b>Hiện câu 1</b>.";
     else if (loai === "q") html = Q.coCamera() ? "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>: TV đếm từ 5 về 1, camera tự mở nhưng chỉ ghi thẻ khi TV báo <b>Giơ đáp án</b>. Lia chậm qua từng cụm nhóm, nhìn số thẻ còn thiếu của mỗi nhóm trên khung camera, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, quét lại không đổi." : "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>. Khi TV báo <b>Giơ đáp án</b>, đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, chụp lại không đổi.";
     else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>.";
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của từng nhóm. Mời một em nêu cách làm, rồi bấm <b>Di chuyển</b>.";
@@ -1343,10 +1346,10 @@
     else if (loai === "r") html = "Miếng ghép đang bay vào cầu, 4 bạn cùng qua khúc cầu. Chờ Claude bình luận xong rồi bấm tiếp.";
     else if (step === "finish") html = "Nhóm về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Tổng kết</b> để các nhóm còn lại lần lượt thắp đuốc.";
     else if (step === "rank") html = "Các nhóm còn lại lần lượt thắp đuốc theo thứ hạng, rồi Claude bình luận thứ hạng. Khi nút trên TV đổi thành <b>Tiếp theo</b>, chúc mừng các nhóm rồi bấm <b>Tiếp theo</b>.";
-    else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (tấm vải xanh lá còn che dải băng chúc mừng). Hỏi cả lớp: <b>Sắp tới trường chúng ta có ngày gì?</b> Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo tấm vải xanh lá bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
+    else if (step === "tuong") html = "4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường hiện ra (tấm vải xanh lá còn che dải băng chúc mừng). Hỏi cả lớp: <b>Số 51 trên báo tường có ý nghĩa gì?</b> (Kỷ niệm 51 năm ngày truyền thống trường.) Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo tấm vải xanh lá bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
     else if (step === "bao") {
       var hang = RD.xepHang(tinh());
-      html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ". Pháo giấy rơi hết thì trên TV hiện nút <b>Tấm thiệp của nhóm em</b>: bấm nút đó trên TV để sang hoạt động tiếp theo.";
+      html = "Xong phần khởi động. Thứ hạng: " + hang.thuTu.map(function (t) { return hang.hang[t] + ". " + RD.TO[t].ten; }).join(", ") + ". Báo tường còn 4 ô trống để dán 4 tấm thiệp: mời các nhóm giúp thầy hoàn thiện. Pháo giấy rơi hết thì trên TV hiện nút <b>Tấm thiệp của nhóm em</b>: bấm nút đó trên TV để sang hoạt động tiếp theo.";
     }
     $("#dtGhi").hidden = !html;
     if (ghi.dataset.html !== html) { ghi.innerHTML = html; ghi.dataset.html = html; }
