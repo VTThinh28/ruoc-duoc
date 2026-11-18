@@ -77,6 +77,10 @@
   var DEM = { id: "", q: 0, bd: 0, hen: 0, so: null }, demThay = {}, demNap = false;
   var ICON_DEM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.6"/><path d="M9.5 2.5h5"/><path d="M12 2.5V6"/><path d="M18.4 6.6l1.5-1.5"/></svg>';
   function dangDem() { return !!DEM.id && performance.now() - DEM.bd < DEM_GIAY * 1000; }
+  // 18/11 (thầy Thịnh: "chỉ quét một hiệp thôi, cho dù các em có dơ 2-3 lần thì cũng chỉ quét một lần"): mỗi câu, mỗi em chỉ được
+  //   ghi một lần (đáp án đầu tiên, xem PQ.obs). TV đã hiện đáp án (bước "a") thì máy thôi ghi thẻ của câu đó: camera tắt, nút
+  //   camera và chụp ảnh ẩn, để em chưa được ghi không giơ thẻ đúng sau khi đã thấy đáp án. Thầy vẫn chạm số thẻ để ghi tay.
+  function daHienDapAn() { return RD.loaiBuoc(nowHopLe().step) === "a"; }
   function batDemNguoc() {
     var n = nowHopLe();
     if (!DB || RD.loaiBuoc(n.step) !== "q" || DEM.id) return false;
@@ -238,12 +242,14 @@
       var lop = RD.lop(cfg());
       if (!lop.coMat) { thongBao("Chưa có bạn nào có mặt: kiểm tra sĩ số và danh sách nhóm."); return; }
     }
-    if (loai === "a" && !daDongY) {
+    // 18/11: hỏi lúc bấm Đáp án (bước "k"), không đợi tới lúc bấm Di chuyển: TV đã hiện đáp án thì máy thôi ghi thẻ (daHienDapAn),
+    //   nên "Quét thêm" chỉ còn công bằng trước khi các em thấy đáp án.
+    if (loai === "k" && !daDongY) {
       var kq = RD.ketQuaCau(q, RD.lop(cfg()), scanHopLe(q));
       var trong = [];
       kq.forEach(function (r, t) { if (r.coMat > 0 && r.thay === 0) trong.push(RD.TO[t].ten); });
       if (trong.length) {
-        hoi((trong.length === 4 ? "Chưa đọc được thẻ nào ở câu " + q + "." : "Chưa đọc được thẻ nào của " + trong.join(", ") + " ở câu " + q + ".") + " Vẫn di chuyển?", "Vẫn di chuyển", "Quét thêm").then(function (ok) { if (ok) tiep(true); });
+        hoi((trong.length === 4 ? "Chưa đọc được thẻ nào ở câu " + q + "." : "Chưa đọc được thẻ nào của " + trong.join(", ") + " ở câu " + q + ".") + " Vẫn hiện đáp án?", "Vẫn hiện đáp án", "Quét thêm").then(function (ok) { if (ok) tiep(true); });
         return;
       }
     }
@@ -1292,6 +1298,7 @@
     // bấm Quét xong (hay sang bước khác): camera đang toàn màn hình thì thu nhỏ để thấy bảng thẻ còn thiếu
     if (step !== dtBuocCu) {
       if (dtBuocCu !== null && loai !== "q" && $("#dtCam").classList.contains("lon")) datCamLon(false);
+      if (dtBuocCu !== null && (loai === "a" || RD.loaiBuoc(dtBuocCu) === "a")) trangThai("", loai === "a" ? "TV đã hiện đáp án: máy thôi ghi thẻ câu này." : "");
       dtBuocCu = step;
     }
     $("#dtBuoc").textContent = tenBuoc(step);
@@ -1322,6 +1329,10 @@
     capNhatChuanBi($("#cbDT"));
     if (coQuet) { datCauQuet(q); veBangTo(); }
     else if (Q.Live.chay) dungCam();
+    // 18/11: TV đã hiện đáp án thì thôi ghi thẻ: tắt camera, ẩn nút camera, nút chụp ảnh và các ô chỉnh cách đọc (lùi về Kết quả thì hiện lại)
+    var choGhi = loai === "q" || loai === "k";
+    if (loai === "a" && Q.Live.chay) dungCam();
+    [".dt-quet-nut", "#dtGhiNgayKhung", "#dtBaMoi"].forEach(function (s) { var e = $(s); if (e && e.hidden === choGhi) e.hidden = !choGhi; });
     $("#dtNc").hidden = true;
     // 9/11: màn giới thiệu: nút hiện / ẩn luật chơi trên TV; bước đọc đề: nút Đếm ngược 5 giây
     var luatHien = !!now.luat, ln = $("#dtLuatNut");
@@ -1345,8 +1356,8 @@
       (RD.BO_THE === "moi" ? " Dặn các em: mỗi câu chỉ giơ <b>1 thẻ</b>, mặt mã quay về phía thầy; <b>3 thẻ còn lại úp mặt mã xuống bàn</b>." : "") +
       " Xong thì bấm <b>Hiện câu 1</b>.";
     else if (loai === "q") html = Q.coCamera() ? "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>: TV đếm từ 5 về 1, camera tự mở nhưng chỉ ghi thẻ khi TV báo <b>Giơ đáp án</b>. Lia chậm qua từng cụm nhóm, nhìn số thẻ còn thiếu của mỗi nhóm trên khung camera, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, quét lại không đổi." : "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>. Khi TV báo <b>Giơ đáp án</b>, đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, chụp lại không đổi.";
-    else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>.";
-    else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của từng nhóm. Mời một em nêu cách làm, rồi bấm <b>Di chuyển</b>.";
+    else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>: từ lúc đó máy thôi ghi thẻ câu này.";
+    else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của từng nhóm. Máy đã thôi ghi thẻ câu này (em nào chưa có thì chạm số thẻ để ghi tay). Mời một em nêu cách làm, rồi bấm <b>Di chuyển</b>.";
     else if (loai === "r" && q === 5) html = "Miếng ghép cuối cùng bay vào cầu, các bạn qua khúc cầu cuối. Nhóm về nhất tự bước lên thảm VỀ ĐÍCH, cả lớp vỗ tay. Chờ Claude bình luận xong rồi bấm <b>Đốt đuốc</b> để nhóm về nhất thắp ngọn đuốc đầu tiên.";
     else if (loai === "r") html = "Miếng ghép đang bay vào cầu, 4 bạn cùng qua khúc cầu. Chờ Claude bình luận xong rồi bấm tiếp.";
     else if (step === "finish") html = "Nhóm về nhất đã thắp ngọn đuốc đầu tiên. Chúc mừng nhóm, rồi bấm <b>Tổng kết</b> để các nhóm còn lại lần lượt thắp đuốc.";
@@ -1451,6 +1462,7 @@
 
   function xuLyAnh(file) {
     if (!PQ) return;
+    if (daHienDapAn()) { trangThai("loi", "TV đã hiện đáp án: máy thôi ghi thẻ câu này. Em nào chưa có thì chạm số thẻ để ghi tay."); return; }
     if (dangDem()) { trangThai("loi", "Đang đếm ngược: chờ TV báo Giơ đáp án rồi hãy chụp."); return; }
     var q = PQ.q, key = PQ.key;
     trangThai("", "Đang đọc thẻ trong ảnh, chờ vài giây…");
@@ -1627,7 +1639,7 @@
   RD.trangThaiQuet = function () { return { key: PQ ? PQ.key : "", q: PQ ? PQ.q : 0, dem: dangDem(), n: PQ ? Object.keys(PQ.obs).length : 0, ghiNgay: GHI_NGAY }; };
   RD.lopHienTai = function () { return RD.lop(cfg()); };
   function nhanKhung(cards, tc) {
-    if (!PQ || NGHIENG || dangDem()) return;
+    if (!PQ || NGHIENG || dangDem() || daHienDapAn()) return;
     var lop = RD.lop(cfg()), t = tc || performance.now(), doi = false, moi = 0;
     cards.forEach(function (c) {
       if (!lop.toCua[c.id] || lop.vang[c.id]) return;
