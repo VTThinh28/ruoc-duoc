@@ -37,14 +37,26 @@
     { loai: "cn", w: 10, h: 3 }, { loai: "cn", w: 4, h: 4 }, { loai: "cn", w: 4, h: 4 },
     { loai: "bh", b: 6, h: 3, s: 2 }, { loai: "bh", b: 6, h: 3, s: 2 }
   ];
+  /* ---------- nhóm nào xếp hình mẫu nào (19/11) ----------
+     19/11 14:47, thầy: "đổi lại cho tôi vị trí nhóm 2 và 4 thành 1 và 2; nhóm 1 và 3 thành 3 và 4."
+     4 tấm thiệp (khổ, hình mẫu) vẫn nằm yên ở 4 ô dán trên báo tường; chỉ đổi số nhóm của từng ô:
+       cột phải: Nhóm 1 ở trên (thiệp đứng, bánh sinh nhật; trước là nhóm 2), Nhóm 2 ở dưới (thiệp ngang, trống trường và ngọn đuốc; trước là nhóm 4);
+       cột trái: Nhóm 3 ở trên (thiệp đứng, bó hoa tặng cô; trước là nhóm 1), Nhóm 4 ở dưới (thiệp ngang, hải đăng và con thuyền; trước là nhóm 3).
+     HINH[k] = số hình mẫu của nhóm k. Số hình mẫu giữ như trước 19/11: 1 bó hoa, 2 bánh sinh nhật, 3 hải đăng và con thuyền, 4 trống trường và ngọn đuốc.
+     Các bảng MAU, MAU_DAU, GOC_MAU, HINH_CON dưới đây vẫn VIẾT theo số hình mẫu (lời dặn cũ của thầy "nhóm 1 …" trong ghi chú là hình mẫu 1),
+     theoNhom() đổi chúng sang số nhóm ngay lúc tải. js/tranh-3d.js (TEN, MAU_HINH, HX, khop) dùng số hình mẫu: gọi bằng HINH[k].
+     Bản trước 19/11 (nhóm k xếp hình mẫu k): ban-cu/site-19-11-14h47. */
+  var HINH = { 1: 2, 2: 4, 3: 1, 4: 3 };
+  function theoNhom(t) { var m = {}; Object.keys(HINH).forEach(function (k) { if (t[HINH[k]] !== undefined) m[k] = t[HINH[k]]; }); return m; }
+
   /* màu trơn máy in pha được (bản in 13/11, sau 17:29: có lại nâu, đỏ sẫm, xám), theo thiệp của từng nhóm */
   var PAL = { "do": "#ef4d44", do_sam: "#b33638", hong: "#f493af", hong_nhat: "#faccd6", cam: "#f9a03b", cam_dat: "#f47e36", nau: "#8b5b36", xam: "#aab2bb", vang: "#ffd035", vang_nhat: "#ffec90", kem: "#ffe5bb", la: "#68bd51", duong: "#499fd8" };
-  var MAU = {
+  var MAU = theoNhom({
     1: ["do", "hong", "hong", "hong_nhat", "hong_nhat", "do", "vang_nhat", "vang_nhat", "la", "la"],
     2: ["cam", "cam", "cam", "duong", "duong", "hong_nhat", "kem", "kem", "vang", "vang"],
     3: ["kem", "do", "vang", "nau", "do_sam", "xam", "vang_nhat", "do", "duong", "duong"],
     4: ["do", "do_sam", "do_sam", "nau", "vang", "vang_nhat", "do", "do", "cam", "cam"]
-  };
+  });
   Object.keys(MAU).forEach(function (k) { MAU[k] = MAU[k].map(function (t) { return PAL[t]; }); });
   var MAU_XAM = "#e6e1d8";
   /* bố cục thiệp đã cắt 29 × 42 cm, cm thật: khung = khung tiêu đề, dan = chỗ dán hình, ngan = vạch ngăn chuỗi hạt, viet = chỗ ghi lời chúc.
@@ -64,7 +76,7 @@
   var TL_MANH = 1;
   var BOCUC = {};
   Object.keys(THIEP).forEach(function (h) { var t = THIEP[h]; BOCUC[h] = { W: t.W, H: t.H, dan: t.dan.slice(), ban: [0, 0, t.W, t.H] }; });
-  var NHOM = { 1: "dung", 2: "dung", 3: "ngang", 4: "ngang" };
+  var NHOM = { 1: "dung", 2: "ngang", 3: "dung", 4: "ngang" };      // khổ thiệp của từng nhóm (19/11: nhóm 1, 3 thiệp đứng; nhóm 2, 4 thiệp ngang; xem HINH)
   var DONG1 = "CHÚC MỪNG 51 NĂM NGÀY TRUYỀN THỐNG";
   var DONG2 = "TRƯỜNG THCS PHAN TÂY HỒ (14/12/1976 – 14/12/2026)";
 
@@ -502,12 +514,12 @@
      Nhóm 1, 3, 4: lấy đúng số trong bài thầy vừa xếp trên máy thật (phòng của thầy, chép lúc 10:10, trùng với 3 ảnh). Nhóm 2: thầy đã bấm Làm lại từ đầu
      nên đọc từ ảnh (sai số khoảng 0,1 cm), góc lấy nấc xoay gần nhất; mảnh số 1 thầy không dời. Số liệu gốc: test/anh-thay-16-11.json.
      Bảng trước đó (theo 4 ảnh 15/11 18:31, dời theo hình mẫu): ban-cu/site-16-11-07h11. */
-  var MAU_DAU = {
+  var MAU_DAU = theoNhom({
     1: [[15.817, 12.042, 63.43, 0], [6.493, 13.862, 50, 0], [24.696, 16.009, 130, 0], [20.5, 30.478, 195, 0], [15.286, 38.212, 195, 0], [10.175, 34.182, 345, 0], [8.956, 22.292, 333.44, 0], [18.377, 22.662, 116.56, 0], [23.552, 23.761, 115, 0], [4.55, 25.038, 65, 1]],
     2: [[16.816, 12.066, 116.57, 0], [5.111, 9.625, 75, 0], [24.32, 10.95, 105, 0], [18.617, 31.453, 210, 0], [13.766, 36.523, 333.43, 0], [7.25, 26.64, 195, 0], [10.997, 20.363, 60, 0], [18.49, 20.534, 45, 0], [25.132, 19.244, 304, 1], [4.331, 17.541, 56, 0]],
     3: [[28.502, 12.603, 75, 0], [33.75, 8.5, 165, 0], [8.908, 9.671, 63.43, 0], [29.25, 20.778, 195, 0], [14.25, 13.067, 15, 0], [9.373, 24.561, 195, 0], [8.25, 17, 105, 0], [14.25, 19, 255, 0], [24.654, 25.222, 195, 1], [36.248, 25.5, 165, 0]],
     4: [[10.003, 13.079, 243.43, 0], [26.636, 9.35, 225, 0], [38.379, 8.524, 135, 0], [33.456, 23.872, 15, 0], [11.307, 25.276, 195, 0], [33.686, 13.237, 345, 0], [28.686, 18.737, 75, 0], [37.686, 17.737, 15, 0], [6.825, 20.241, 225, 1], [17.841, 18.442, 315, 0]]
-  };
+  });
   var dauNho = {};
   function viTriDau(k) {
     if (!dauNho[k]) {
@@ -530,12 +542,12 @@
        (b) góc của mảnh đó, và của mảnh sinh đôi với nó, trong hình mẫu của nhóm (GOC_MAU; ví dụ nhóm 1: hình vuông 26,56°, hình bình hành 65°).
      Góc thêm vào mà cách một bội của 15° dưới 4° thì THAY cho bội đó (trừ 0°, 90°, 180°, 270°), để không có hai nấc sát nhau.
      Vậy mỗi lần bấm mảnh xoay khoảng 5° tới 19°, và cạnh nào của mảnh cũng có nấc nằm đúng theo đường ô ly. */
-  var GOC_MAU = {      // [góc, lật] của 10 mảnh trong hình mẫu từng nhóm (bảng MAU_DAU bản 14/11 16:32)
+  var GOC_MAU = theoNhom({      // [góc, lật] của 10 mảnh trong từng hình mẫu (bảng MAU_DAU bản 14/11 16:32); viết theo số hình mẫu, xem HINH
     1: [[90, 0], [50, 0], [310, 0], [180, 0], [180, 0], [0, 0], [333.44, 0], [26.56, 0], [65, 1], [295, 0]],
     2: [[90, 0], [90, 0], [90, 0], [180, 0], [0, 0], [0, 0], [0, 0], [0, 0], [304, 1], [56, 0]],
     3: [[90, 0], [0, 0], [90, 0], [180, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 1], [0, 0]],
     4: [[90, 0], [56, 0], [304, 0], [0, 0], [180, 0], [0, 0], [0, 0], [0, 0], [85, 1], [275, 0]]
-  };
+  });
   var SINH_DOI = { 1: 2, 2: 1, 6: 7, 7: 6, 8: 9, 9: 8 }, nacNho = {};      // chỉ số mảnh (từ 0): 2–3, 7–8, 9–10 là các cặp cùng hình
   function lechVong(d) { d = ((d % 360) + 360) % 360; return d > 180 ? d - 360 : d; }      // về (−180, 180]
 
@@ -546,7 +558,7 @@
   var mauNho = {}, luoiNho = {};
   function mauXep(k) {
     if (mauNho[k] === undefined) {
-      var Hm = window.Tranh3D && window.Tranh3D.MAU_HINH && window.Tranh3D.MAU_HINH[k], ra = null;
+      var Hm = window.Tranh3D && window.Tranh3D.MAU_HINH && window.Tranh3D.MAU_HINH[HINH[k]], ra = null;
       if (Hm && Hm.manh) {
         ra = BO.map(function (b, i) {
           var Q = Hm.manh[i + 1], c = trongTam(Q), g = daGiac(b), tot = null, f, a, j, st;
@@ -622,7 +634,7 @@
      Lý do: theo 4 hình thầy gửi 16/11 thì 5 mảnh con thuyền của nhóm 3 nằm sẵn đã giống mẫu 68 %; không có điều kiện này thì nhóm chỉ xếp hải đăng rồi bấm Hoàn thành
      là máy xếp hộ luôn con thuyền. (Lựa chọn của Claude, đã báo thầy 16/11; thầy chưa trả lời.) */
   var MOC_GIONG = 0.7, MOC_GIONG_CON = 0.6, CUNG_HINH = [[0], [1, 2], [3], [4], [5], [6, 7], [8, 9]];
-  var HINH_CON = { 3: [[2, 4, 5, 6, 7], [0, 1, 3, 8, 9]], 4: [[0, 4, 8, 9], [1, 2, 3, 5, 6, 7]] };
+  var HINH_CON = theoNhom({ 3: [[2, 4, 5, 6, 7], [0, 1, 3, 8, 9]], 4: [[0, 4, 8, 9], [1, 2, 3, 5, 6, 7]] });      // viết theo số hình mẫu (3 hải đăng và con thuyền, 4 trống và đuốc); từ 19/11 là nhóm 4 và nhóm 2
   function giongMau(k, ps) {
     var M = mauXep(k);
     if (!M || !ps || ps.length !== M.length) return null;
@@ -1500,7 +1512,7 @@
     /* --- Hình AI gợi ý (chỉ máy giáo viên): bảng có hình mẫu của nhóm; "Xếp giúp nhóm theo hình này" thì 10 mảnh trượt về đúng hình mẫu trên mọi máy của nhóm --- */
     var goiYDaVe = false;
     function moGoiY() {
-      var Mx = mauXep(k), sv = $("goiYHinh"), lop, ten = window.Tranh3D && window.Tranh3D.TEN ? window.Tranh3D.TEN[k] : "";
+      var Mx = mauXep(k), sv = $("goiYHinh"), lop, ten = window.Tranh3D && window.Tranh3D.TEN ? window.Tranh3D.TEN[HINH[k]] : "";
       if (!gvDung || !Mx) return;
       if (!goiYDaVe) {
         goiYDaVe = true;
@@ -1914,7 +1926,7 @@
     function chuan3d(k) {                          // so hình của nhóm với hình mẫu của nhóm đó (hình đổi thì so lại)
       var X = hx[k], h = daGiacNhom(k), r, i;
       if (X.ky === h.ky) return X;
-      r = T3.khop(k, h.ps);
+      r = T3.khop(HINH[k], h.ps);      // tranh-3d.js đánh số theo hình mẫu (xem HINH)
       X.ky = h.ky; X.M = {};
       for (i = 1; i <= 10; i++) X.M[i] = MAU[k][i - 1];
       if (r.ok) { X.kieu = k; X.P0 = r.P0; X.Q = r.Q; X.dx = r.dx; X.dy = r.dy; X.e = 0; }
@@ -1958,7 +1970,7 @@
       c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h);
       c.setTransform(u, 0, 0, u, X.dx * u, X.dy * u);
       P = T3.tron(X.P0, X.Q, T3.muot(X.e));
-      T3.ve(c, X.kieu, Math.max(0, t), X.a, P, X.M, [bc.W, bc.H], u);
+      T3.ve(c, X.kieu === "td" ? "td" : HINH[X.kieu], Math.max(0, t), X.a, P, X.M, [bc.W, bc.H], u);
       if (!X.chay && X.a <= 0) { X.tinh = true; return false; }
       return true;
     }
@@ -2975,7 +2987,7 @@
   }
 
   /* cho bài thử gọi các hàm hình học */
-  window.XT = { BO: BO, MUC: MUC, THU_TU: THU_TU, TONG: TONG, CON: CON, kiemMuc: kiemMuc, daGiac: daGiac, toaDo: toaDo, doLun: doLun, dayVec: dayVec, kcDaGiac: kcDaGiac, cachChinh: cachChinh, canChinh: canChinh, vaoGiua: vaoGiua, giuTrong: giuTrong, vaoLuoi: vaoLuoi, trongTam: trongTam, BOCUC: BOCUC, NHOM: NHOM, NHE: NHE, viTriDau: viTriDau, duChung: duChung, nacXoay: nacXoay, nacKe: nacKe, nacGan: nacGan, MAU_DAU: MAU_DAU, GOC_MAU: GOC_MAU, THIEP: THIEP, TL_MANH: TL_MANH, cuaSo: cuaSo, mauXep: mauXep, luoiGoc: luoiGoc, giongMau: giongMau, dtGiao: dtGiao, MOC_GIONG: MOC_GIONG, MOC_GIONG_CON: MOC_GIONG_CON, HINH_CON: HINH_CON, kcDaGiacDiem: kcDiem, mo: mo, goi: goi, dat: function (o) { if (o.de !== undefined) NHE.de = o.de; if (o.xaTach !== undefined) XA_TACH = o.xaTach; } };
+  window.XT = { BO: BO, MUC: MUC, THU_TU: THU_TU, TONG: TONG, CON: CON, kiemMuc: kiemMuc, daGiac: daGiac, toaDo: toaDo, doLun: doLun, dayVec: dayVec, kcDaGiac: kcDaGiac, cachChinh: cachChinh, canChinh: canChinh, vaoGiua: vaoGiua, giuTrong: giuTrong, vaoLuoi: vaoLuoi, trongTam: trongTam, BOCUC: BOCUC, NHOM: NHOM, NHE: NHE, viTriDau: viTriDau, duChung: duChung, nacXoay: nacXoay, nacKe: nacKe, nacGan: nacGan, MAU_DAU: MAU_DAU, GOC_MAU: GOC_MAU, THIEP: THIEP, TL_MANH: TL_MANH, cuaSo: cuaSo, mauXep: mauXep, luoiGoc: luoiGoc, giongMau: giongMau, dtGiao: dtGiao, MOC_GIONG: MOC_GIONG, MOC_GIONG_CON: MOC_GIONG_CON, HINH_CON: HINH_CON, HINH: HINH, kcDaGiacDiem: kcDiem, mo: mo, goi: goi, dat: function (o) { if (o.de !== undefined) NHE.de = o.de; if (o.xaTach !== undefined) XA_TACH = o.xaTach; } };
 
   function batDau() {
     var ts = thamSo();

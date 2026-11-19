@@ -452,6 +452,7 @@ HX.td = function (c, t, a, P, M, d) {
 };
 
 // ---------------------------------------------------------------- hình mẫu của 4 nhóm (file in 4-thiep-a3, toa-do-manh-a3-bo-198.json): đa giác từng mảnh, cm trên thiệp
+// Số ở đây (TEN, MAU_HINH, DOI_HINH, HX) là số HÌNH MẪU, không phải số nhóm. Từ 19/11 nhóm k xếp hình mẫu HINH[k] (js/xep-thiep.js): nhóm 1 bánh, 2 trống, 3 bó hoa, 4 hải đăng.
 const TEN = { 1: 'Bó hoa tặng cô', 2: 'Bánh sinh nhật', 3: 'Hải đăng và con thuyền', 4: 'Trống trường và ngọn đuốc' };
 /* 15/11 22:33 thầy bỏ chỗ ghi lời chúc trên 4 tấm thiệp và bảo đưa hình ra giữa. Hình mẫu chỉ dời cả khối, từng mảnh giữ nguyên.
    MAU_HINH = chỗ MỚI của hình mẫu trên thiệp (toa-do-manh-a3-bo-198.json bản 15/11 17:29 UTC).
