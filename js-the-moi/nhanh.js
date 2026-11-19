@@ -143,7 +143,7 @@
   /* =====================================================================
      2. LẤY THẲNG KHUNG HÌNH CỦA CAMERA (VideoFrame), không qua canvas
      ===================================================================== */
-  var KH = N.kh = { tt: "khong", ly: "chưa bật camera", dd: "", opt: null, lut: null, tq: 0, a: 0, b: 0, tC: 0, tK: 0, soThu: 0, dangThu: false, hong: 0, bo: [], so: 0 };
+  var KH = N.kh = { tt: "khong", ly: "chưa bật camera", dd: "", opt: null, lut: null, tq: 0, a: 0, b: 0, tC: 0, tK: 0, soThu: 0, dangThu: false, hong: 0, bo: [], so: 0, frCho: null, choDen: 0 };
   var DOC_DUOC = { I420: 1, I420A: 1, I422: 1, I444: 1, NV12: 1, RGBA: 1, RGBX: 1, BGRA: 1, BGRX: 1 };
   N.traBo = function (buf) { if (buf && buf.byteLength > 0 && KH.bo.length < 4) KH.bo.push(buf); };
   function layBo(kich) {
@@ -182,14 +182,24 @@
   }
   N._soSanh = soSanh; N._anhNhoRGBA = anhNhoRGBA;
   function thoi(ly) { KH.tt = "khong"; KH.ly = ly; KH.dangThu = false; bao("khung", "khong", ly); }
-  // Gọi trong đường canvas, ngay sau khi lấy được ảnh `im` của làn n (cùng khoảnh khắc với khung hình sắp lấy).
-  // Lần đầu sau khi bật camera: lấy thêm một khung theo đường mới, nhờ worker rút ảnh nhỏ, so với ảnh nhỏ của `im`.
+  // Gọi trong đường canvas, ngay sau khi lấy được ảnh `im` của làn n.
+  // Lần đầu sau khi bật camera: so khung hình theo đường mới (lấy ở truocCanvas, cùng lúc vẽ canvas) với ảnh nhỏ của `im`, nhờ worker rút ảnh nhỏ.
+  // 19/11 (số đo FMGN, thầy chơi 2 ván ở lớp): trước đây khung hình để so lấy SAU getImageData (máy thầy 140 ms). Thầy đang lia máy thì
+  //   hai hình lệch nhau (tương quan 0,62 đến 0,87), 3 lần không khớp là tắt "lấy hình nhanh" cả lần bật camera đó: câu 4, câu 5 ván sau
+  //   đọc 8 lần/giây thay vì 30. Nay quet.js gọi truocCanvas ngay trước drawImage: khung hình và ảnh canvas là cùng một hình.
+  //   Thử tối đa 5 lần (trước 3), hai lần thử cách nhau ít nhất 0,4 giây (trước liền nhau, cả 3 lần rơi vào cùng một cái lia máy).
+  N.truocCanvas = function (v, z) {
+    if (KH.frCho) { dong(KH.frCho.fr); KH.frCho = null; }
+    if (KH.tt !== "chua" || KH.dangThu || !N.bat.khung || z !== 1 || typeof window.VideoFrame !== "function" || bay() < KH.choDen) return;
+    try { KH.frCho = { fr: new VideoFrame(v), so: KH.so }; } catch (e) { KH.frCho = null; }
+  };
   N.sauCanvas = function (im, v, n, z, tCanvas) {
-    if (KH.tt !== "chua" || KH.dangThu || !N.bat.khung || z !== 1 || !RD.Quet || !RD.Quet.quetKhung) return;
+    var cho = KH.frCho; KH.frCho = null;
+    if (KH.tt !== "chua" || KH.dangThu || !N.bat.khung || z !== 1 || !RD.Quet || !RD.Quet.quetKhung || bay() < KH.choDen) { if (cho) dong(cho.fr); return; }
     KH.dangThu = true; KH.soThu++;
     var fr = null, t0 = bay(), phien = KH.so;
     try {
-      fr = new VideoFrame(v);
+      if (cho && cho.so === phien) fr = cho.fr; else { if (cho) dong(cho.fr); fr = new VideoFrame(v); }
       var c = coKhung(fr, v), dd = fr.format, opt = DOC_DUOC[dd] ? null : { format: "RGBA" };
       if (c.lech) { dong(fr); thoi("khung " + c.w0 + "×" + c.h0 + (fr.rotation ? " xoay " + fr.rotation : "") + " khác video " + v.videoWidth + "×" + v.videoHeight); return; }
       var nhoC = anhNhoRGBA(im.data, im.width, im.height, 32);
@@ -212,7 +222,7 @@
             if (KH.soThu >= 6) thoi("hình quá đều, không so được với cách cũ"); else bao("khung", "cho", "hình đều");
             return;
           }
-          if (s.r < 0.92) { if (KH.soThu >= 3) thoi("hình hai đường khác nhau (tương quan " + KH.tq + ")"); else bao("khung", "cho", "tương quan " + KH.tq); return; }
+          if (s.r < 0.92) { if (KH.soThu >= 5) thoi("hình hai đường khác nhau (tương quan " + KH.tq + ")"); else { KH.choDen = bay() + 400; bao("khung", "cho", "tương quan " + KH.tq); } return; }
           if (tK > tCanvas * 1.3 + 5) { thoi("chậm hơn cách cũ (" + KH.tK + " ms so với " + KH.tC + " ms)"); return; }
           // khung hình dải hẹp (16 đến 235) thì kéo về dải đủ cho giống ảnh lấy qua canvas
           KH.lut = s.ka > 1.08 && s.ka < 1.3 ? [255 / 219, -16 * 255 / 219] : null;
@@ -379,7 +389,7 @@
   /* ---------- quet.js báo lúc bật, tắt camera ---------- */
   N.camBat = function (L) {
     LIVE = L;
-    KH.so++; KH.soThu = 0; KH.dangThu = false; KH.lut = null;
+    KH.so++; KH.soThu = 0; KH.dangThu = false; KH.lut = null; KH.choDen = 0;
     if (typeof window.VideoFrame !== "function") { KH.tt = "khong"; KH.ly = "trình duyệt không có VideoFrame"; }
     else if (!N.bat.khung) { KH.tt = "khong"; KH.ly = "đang tắt"; }
     else if (KH.hong >= 2) { KH.tt = "khong"; KH.ly = "đã lỗi 2 lần, thôi không thử nữa"; }
@@ -389,7 +399,7 @@
     khoiPhoi();
     bao("cam", KH.tt, PH.che, N.coCamBien() ? CB.nguon || "co" : "");
   };
-  N.camTat = function () { LIVE = null; PH.so++; PH.track = null; if (PH.che === "tay" || PH.che === "cho") PH.che = "tat"; if (KH.tt !== "khong") { KH.tt = "khong"; KH.ly = "camera đã tắt"; } };
+  N.camTat = function () { if (KH.frCho) { dong(KH.frCho.fr); KH.frCho = null; } LIVE = null; PH.so++; PH.track = null; if (PH.che === "tay" || PH.che === "cho") PH.che = "tat"; if (KH.tt !== "khong") { KH.tt = "khong"; KH.ly = "camera đã tắt"; } };
   // bật, tắt từng chỗ (máy nhớ); đổi lúc camera đang chạy thì có tác dụng ngay
   N.dat = function (ten, b) {
     if (!(ten in KHOA)) return;

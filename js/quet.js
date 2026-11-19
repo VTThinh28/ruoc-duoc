@@ -355,6 +355,7 @@
       if (!n.cv) { n.cv = document.createElement("canvas"); n.ctx = n.cv.getContext("2d", { willReadFrequently: true }); }
       if (n.cv.width !== w || n.cv.height !== h) { n.cv.width = w; n.cv.height = h; }
       tc = performance.now();
+      if (ng && ng.truocCanvas) { try { ng.truocCanvas(v, z); } catch (e) { console.error(e); } }   // 19/11: khung hình để so lấy cùng lúc với canvas
       n.ctx.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, w, h);
       var im = n.ctx.getImageData(0, 0, w, h), t0 = performance.now();
       n.chupMs = t0 - tc; n.choMs = 0; n.kieu = "c"; n.kw = w; n.kh = h;   // bản thử: số đo
