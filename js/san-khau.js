@@ -76,6 +76,10 @@
   const C51 = [K.x + 731, K.y + 44];
   // chỗ bạn cầm đuốc đứng trong ô thiệp (chân): bạn và thẻ tên nhóm nằm giữa ô
   const choO = i => { const o = O[i]; return [o.x + o.w / 2, o.y + o.h * (i < 2 ? .62 : .66)]; };
+  // ô của từng nhóm (chỉ số nhóm 0..3 → chỉ số ô 0..3 ở trên). 21/11: theo trang Xếp thiệp đổi số nhóm ngày 19/11 (thầy Thịnh:
+  //   "đổi lại cho tôi vị trí nhóm 2 và 4 thành 1 và 2; nhóm 1 và 3 thành 3 và 4"): cột phải Nhóm 1 (trên, bánh sinh nhật), Nhóm 2
+  //   (dưới, trống trường và ngọn đuốc); cột trái Nhóm 3 (trên, bó hoa), Nhóm 4 (dưới, hải đăng). Trước 21/11 là [0, 1, 2, 3].
+  const O_NHOM = [1, 3, 0, 2];
   // không có ảnh báo tường (bản GitHub chưa chọn ảnh): vẽ một tấm giả cùng bố cục
   // màu dải băng đỏ của báo tường vẽ tạm (toạ độ ảnh K.w × K.h): dùng cho cả baoGia và tấm xoá chữ của nó
   const mauBangGia = g => { const gr = g.createLinearGradient(0, 88, 0, 176); gr.addColorStop(0, "#e2574a"); gr.addColorStop(1, "#b5362c"); return gr; };
@@ -1008,10 +1012,10 @@
     const KK = S.K;
     return [0, 1, 2, 3].map(i => {
       const p = lin(t, KK.S0 + i * .12, KK.S0 + i * .12 + 2.0);
-      const [x0, y0] = choDuoc(i), [x1, y1] = choO(i);
+      const oi = O_NHOM[i], [x0, y0] = choDuoc(i), [x1, y1] = choO(oi);
       const o = CC.diChuyen(i, x0, y0, x1, y1, p, 6);
       o.h = 172 * CC.KS + (180 - 172 * CC.KS) * p;
-      if (p >= 1) o.lat = i % 2 === 1;      // đứng yên: quay mặt vào giữa báo tường
+      if (p >= 1) o.lat = oi % 2 === 1;     // đứng yên: quay mặt vào giữa báo tường (ô cột phải quay sang trái)
       o.hang = KK.hang[i];
       return o;
     });
@@ -1021,7 +1025,7 @@
     CC.veNguoi(c, A, ds, t);
     ds.forEach((o, i) => {
       const p = lin(t, KK.S0 + i * .12 + 1.6, KK.S0 + i * .12 + 2.0); if (p <= 0) return;
-      const [x, y] = choO(i), T = RD.TO[i];
+      const [x, y] = choO(O_NHOM[i]), T = RD.TO[i];
       const the = CC.veSan("theNhom" + T.ten + T.mau, 164, 48, 14, (g, pad) => {
         g.translate(pad + 82, pad + 24);
         g.font = "800 36px 'Baloo 2'"; g.textAlign = "center"; g.textBaseline = "middle";
