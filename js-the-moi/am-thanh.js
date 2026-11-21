@@ -138,6 +138,25 @@
     ra(o2, 0.018 * m, t, 0.06);
     o2.start(t); o2.stop(t + 0.09);
   };
+  // 21/11 (thầy Thịnh: "lúc mà tôi bấm 5 giây, đếm ngược, thì sẽ có tiếng đếm ngược. Và lúc đó không có nhạc nền luôn"): tiếng đồng hồ
+  //   đếm ngược. Mỗi giây một tiếng "tích" mõ gỗ rõ kèm nốt mộc cầm cao dần (bac 0..4), nửa giây sau một tiếng "tắc" trầm và nhỏ hơn.
+  //   Nhạc nền do tro-choi.js tắt trong lúc đếm (datNhac). Trước 21/11 chỉ có nốt mộc cầm êm (A.go mạnh 0,5), lẫn vào nhạc nền.
+  function moGo(t, f, gain) {
+    var o = ac.createOscillator();
+    o.type = "triangle";
+    o.frequency.setValueAtTime(f * 1.3, t);
+    o.frequency.exponentialRampToValueAtTime(f, t + 0.025);
+    ra(o, gain, t, 0.1);
+    o.start(t); o.stop(t + 0.12);
+    tiengNhieu(t, 0.02, "bandpass", f * 2.4, 0, 2.5, gain * 0.45);    // tiếng dùi chạm gỗ
+  }
+  A.demNguoc = function (bac) {
+    if (!san()) return;
+    var t = ac.currentTime;
+    moGo(t, 1180, 0.21);          // đỉnh ra loa ngang tiếng vỗ tay (khoảng -10 dBFS), to hơn nhạc nền khoảng 8 dB
+    moGo(t + 0.5, 800, 0.09);
+    A.go(bac, 1, t);
+  };
   // chuông nhỏ trong trẻo, ngân nhẹ (như hộp nhạc)
   A.chuong = function (manh, luc) {
     if (!san()) return;

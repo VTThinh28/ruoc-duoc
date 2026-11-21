@@ -131,10 +131,14 @@
     if (con > 0) so.textContent = String(con);
     veODem(true);
     if (con < 0) return;
+    // 21/11 (thầy Thịnh: "lúc mà tôi bấm 5 giây, đếm ngược, thì sẽ có tiếng đếm ngược. Và lúc đó không có nhạc nền luôn"): bắt đầu đếm thì
+    //   nhạc nền tắt (datNhac thấy dangDem()), mỗi giây một tiếng đồng hồ "tích tắc" kèm nốt mộc cầm cao dần (A.demNguoc; trước là
+    //   A.go mạnh 0,5, lẫn vào nhạc); hết giờ: khúc vui ngắn, nhạc nền có lại dần trong 2 giây.
+    if (dau || con === 0) { var st = nowHopLe().step; datNhac(st, RD.loaiBuoc(st)); }
     if (con > 0) {
       so.textContent = String(con);
       hoat(so, [{ opacity: 0.2 }, { opacity: 1 }], 260, DE, function () { huyHoat(so); });
-      A.go(DEM_GIAY - con, 0.5);      // mỗi giây một tiếng gõ êm, cao dần
+      A.demNguoc(DEM_GIAY - con);
     } else A.ken();                    // hết giờ: khúc vui ngắn
   }
   // TV, ô dưới chữ đề ở bước đọc đề: "dem" đang đếm (vòng tròn và số), "gio" đã đếm xong ở câu này (chữ "Giơ đáp án", ở lại tới
@@ -867,6 +871,8 @@
     clearTimeout(henNhac); henNhac = null;
     var muc = NHAC_VUA, giay = 1;
     if (step === "setup") muc = 0;
+    else if (loai === "q" && dangDem()) { muc = 0; giay = 0.25; }       // 21/11: đang đếm ngược 5 giây thì không có nhạc nền
+    else if (loai === "q" && DEM.id) giay = 2;                          //   vừa đếm xong ("Giơ đáp án"): nhạc có lại từ từ
     else if (loai === "a") { muc = NHAC_NHO; giay = 1.5; }
     else if (step === "tuong") {
       var k = SK.mocKet && SK.mocKet(), con = k ? k.S0 - performance.now() / 1000 : 0;
