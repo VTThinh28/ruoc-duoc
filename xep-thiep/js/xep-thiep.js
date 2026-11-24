@@ -1903,16 +1903,17 @@
     }
     /* Tivi báo cho máy giáo viên trong <phòng>/tv3d: l = thiệp đang hiện to (0 = báo tường), c = "0100" nhóm đang chạy Tranh 3D, b = "1100" nhóm đã được bấm,
        q = 1 khi mã QR đang hiện trên thiệp nào đó, d = 1 khi bảng Đáp số đang mở, n = 1 khi bảng Nhiệm vụ đang mở,
-       m = nhạc nền: 0 thầy đang tắt, 1 đang phát, 2 trình duyệt chưa cho phát (phải chạm một lần vào màn hình tivi), 3 đang chọn "Không dùng nhạc", 4 không mở được bài hát. */
+       m = nhạc nền: 0 thầy đang tắt, 1 đang phát, 2 trình duyệt chưa cho phát (phải chạm một lần vào màn hình tivi), 3 đang chọn "Không dùng nhạc", 4 không mở được bài hát,
+       p = 1 khi pháo hoa đang bắn (25/11). */
     var tt3dCu = null;
     function bao3d() {
-      var c = "", b = "", ky, q, d, n;
+      var c = "", b = "", ky, q, d, n, p = phaoLuc ? 1 : 0;
       if (!T) return;
       [1, 2, 3, 4].forEach(function (k) { c += hx[k].chay ? "1" : "0"; b += hx[k].bam ? "1" : "0"; });
       q = [1, 2, 3, 4].some(hienMa) ? 1 : 0; d = $("dapSo").hidden ? 0 : 1; n = $("nhiemVu").hidden ? 0 : 1;
-      ky = lon + "|" + c + "|" + b + "|" + q + d + n + nhacTT() + amTT();
+      ky = lon + "|" + c + "|" + b + "|" + q + d + n + nhacTT() + amTT() + p;
       if (ky === tt3dCu) return;
-      tt3dCu = ky; T.set("tv3d", { l: lon, c: c, b: b, q: q, d: d, n: n, m: nhacTT(), a: amTT() });
+      tt3dCu = ky; T.set("tv3d", { l: lon, c: c, b: b, q: q, d: d, n: n, m: nhacTT(), a: amTT(), p: p });
     }
     /* Các bảng che báo tường: Cài đặt, Mã cho máy giáo viên (chỉ mở trên tivi), Đáp số, Nhiệm vụ (mở được từ máy giáo viên). Mỗi lúc chỉ một bảng. Hiện ngay, không phóng to thu nhỏ. */
     function dongBang() { $("caiDat").hidden = true; $("gvMa").hidden = true; }
@@ -1920,7 +1921,8 @@
     function hienNhiemVu(b) { if (b && !NHIEM_VU) return; if (b) { dongBang(); $("dapSo").hidden = true; } $("nhiemVu").hidden = !b; if (b) vuaNhiemVu(); bao3d(); }
     function veBaoTuong() { dongBang(); $("dapSo").hidden = true; $("nhiemVu").hidden = true; if (lon) phong_to(lon); bao3d(); }
     /* Lệnh từ máy giáo viên, trong <phòng>/lenh = { i: mã lệnh, v, k }: v = "3d" hiện to thiệp nhóm k và chạy Tranh 3D; "dung" dừng Tranh 3D nhóm k;
-       "ve" về báo tường (đóng mọi bảng, thôi hiện to); "ma" hiện (k = 1) hay ẩn (k = 0) mã QR; "dap" hiện / ẩn bảng Đáp số; "nv" hiện / ẩn bảng Nhiệm vụ.
+       "ve" về báo tường (đóng mọi bảng, thôi hiện to); "ma" hiện (k = 1) hay ẩn (k = 0) mã QR; "dap" hiện / ẩn bảng Đáp số; "nv" hiện / ẩn bảng Nhiệm vụ;
+       "phao" bắn pháo hoa (25/11: thầy chọn Có ở câu hỏi "Hiện pháo hoa?" trên máy giáo viên).
        Lệnh đang nằm sẵn lúc tivi mở trang là lệnh cũ: không làm. */
     var lenhCu;
     function nhanLenh(L) {
@@ -1932,6 +1934,7 @@
       if (L.v === "ma") { if (k) veBaoTuong(); doiXem(k ? "ma" : "xep"); return; }
       if (L.v === "dap") { hienDapSo(!!k); return; }
       if (L.v === "nv") { hienNhiemVu(!!k); return; }
+      if (L.v === "phao") { batPhao(); return; }
       if (!(k >= 1 && k <= 4)) return;
       if (L.v === "3d") {
         if (!T3 || !(duLieu[k] || {}).xong) return;
@@ -1945,12 +1948,13 @@
     /* ---------- Tranh 3D (15/11; phần vẽ ở js/tranh-3d.js) ----------
        Thầy dặn 14/11 16:27: nhóm bấm Hoàn thành thì thiệp đứng yên, hoạt ảnh do thầy bấm. 15/11 13:19: tên là "Tranh 3D", thầy bấm cho từng nhóm;
        đủ 4 nhóm được bấm thì hiện pháo bông, không có chữ 51 năm, không làm tối màu.
+       25/11 01:31, thầy: "pháo hoa là phím do tôi chọn" → bấm Tranh 3D đủ 4 nhóm KHÔNG còn tự bắn pháo; pháo chỉ bắn khi thầy chọn Có trên máy giáo viên (batPhao).
        Cách dùng: chạm thiệp của nhóm đã hoàn thành → thiệp hiện to → nút "Tranh 3D" (đang chạy thì thành "Dừng"), "Đóng". Thiệp đã bấm vẫn chạy khi về báo tường.
        hx[k]: cv, c = canvas đè lên thiệp; ky = chữ ký chỗ 10 mảnh lúc so hình; kieu = k (khớp hình mẫu của nhóm) hay "td" (hình tự nghĩ);
               P0, Q = đa giác lúc các em đặt và đa giác mẫu (trong hệ của mẫu), dx, dy = độ dời của cả hình so với mẫu; e = 0..1 mảnh trượt từ P0 về Q;
               chay = thầy đang cho chạy; a = 0..1 độ đậm của hoạt ảnh; t0 = lúc bấm; bam = nhóm đã được bấm ít nhất một lần; tinh = đã vẽ xong hình đứng yên.
        Tranh 3D chỉ nằm trên tivi này (không ghi lên máy chủ): tải lại trang thì thầy bấm lại. Hình của nhóm đổi (Sửa lại hình, Xóa hình) thì tranh 3D của nhóm đó bị bỏ. */
-    var T3 = window.Tranh3D || null, hx = { 1: {}, 2: {}, 3: {}, 4: {} }, daNo = false, phaoLuc = 0, vong = 0, lucTruoc = 0, boQua = false;
+    var T3 = window.Tranh3D || null, hx = { 1: {}, 2: {}, 3: {}, 4: {} }, phaoLuc = 0, vong = 0, lucTruoc = 0, boQua = false;
     function daGiacNhom(k) {                       // đa giác 10 mảnh nhóm k đang hiện trên thiệp (cm) và chữ ký để biết hình có đổi không
       var d = duLieu[k] || {}, m = d.m || {}, ps = {}, ky = [], so, st, dau = viTriDau(k);
       for (so = 1; so <= goc.length; so++) { st = mo(m["p" + so]) || dau[so - 1]; ps[so] = toaDo(goc[so - 1], st); ky.push([f2(st.x), f2(st.y), f2(st.r), st.f ? 1 : 0].join(",")); }
@@ -1974,7 +1978,6 @@
       X.chay = true; X.bam = true; X.tinh = false; X.t0 = performance.now();
       K.o.classList.add("co-3d");
       K.o.setAttribute("data-3d", String(X.kieu));      // 1..4 = hình khớp mẫu của nhóm đó, "td" = hình nhóm tự nghĩ (bài thử đọc)
-      if (!daNo && [1, 2, 3, 4].every(function (i) { return hx[i].bam; })) { daNo = true; phaoLuc = performance.now() + 400; phaoBatDau(); }   // đủ 4 nhóm: pháo bông bắt đầu sau lần bấm thứ tư 0,4 giây
       capNhat3d(); chayVong();
     }
     function dung3d(k) { var X = hx[k]; if (X.cv) { X.chay = false; X.tinh = false; } capNhat3d(); chayVong(); }
@@ -1982,7 +1985,6 @@
       var X = hx[k];
       if (X.cv && X.cv.parentNode) X.cv.parentNode.removeChild(X.cv);
       khungNhom[k].o.classList.remove("co-3d"); khungNhom[k].o.removeAttribute("data-3d");
-      if (X.bam) daNo = false;                     // nhóm này phải được bấm lại; khi đủ 4 nhóm lần nữa thì pháo bông nổ lần nữa
       hx[k] = {};
       capNhat3d();
     }
@@ -2010,13 +2012,15 @@
     /* ---------- pháo bông: trời đêm, tiếng pháo thật, nhạc tắt (25/11) ----------
        Thầy, 25/11 00:10: "khi cả 4 nhóm xếp xong hình trên điện thoại xong thì sẽ có pháo bông bắn lên. bạn hãy tìm kiếm để làm pháo bông giống năm mới hoặc các dịp lễ á
        và lúc pháo bông bắn lên thì tiếng nhạc tắt và có tiếng pháo bông, nhớ sử dụng tiếng pháo giống pháo thật nhé."
-       Lúc bắn vẫn như trước: thầy bấm Tranh 3D đủ 4 nhóm thì 0,4 giây sau pháo bông bắt đầu (lời thầy 15/11). Phần vẽ ở js/tranh-3d.js (vePhaoBong, phaoToi, phaoSang).
-       Trời đêm: lớp #phaoNen, tối nhất PHAO_TOI. Nhạc nền: nhỏ dần trong 0,9 giây rồi TẮT hẳn (ghi <phòng>/nhac b = 0, máy giáo viên thấy nút nhạc về "tắt"); hết pháo nhạc không tự bật lại.
+       25/11 01:31, thầy: "pháo hoa ok rồi đó nhưng đừng có làm tôi màn hình cứ bắn bình thường thôi là được, với lại pháo hoa là phím do tôi chọn. nó sẽ bị ẩn trên đt,
+       khi nào xong hết 4 bức thì hiện ra để tôi bấm. khi nào cả 4 nhóm hoàn thành, thì màn hình điện thoại sẽ hiện ra câu hỏi Hiện pháo hoa rồi cho chọn có hoặc không."
+       → không còn lớp trời đêm; lúc bắn: máy giáo viên gửi lệnh "phao" (thầy chọn Có), 0,4 giây sau pháo bắt đầu (batPhao). Phần vẽ ở js/tranh-3d.js (vePhaoBong).
+       Nhạc nền: nhỏ dần trong 0,9 giây rồi TẮT hẳn (ghi <phòng>/nhac b = 0, máy giáo viên thấy nút nhạc về "tắt"); hết pháo nhạc không tự bật lại.
        Tiếng pháo: nhac/phao-bong.mp3, 19 giây cắt từ một bản thu thật (BigSoundBank số 2672 của Joseph Sardin, CC0, xem test/lam-phao.py), phát lúc tf = T3.PHAO_AM;
        các quả pháo trên màn hình nổ đúng lúc các tiếng nổ trong bản thu. Tiếng ra thẳng loa, không theo nút âm lượng của nhạc nền (như tiếng trống).
        Tivi tải tệp này 2,5 giây sau hai tiếng trống. Lúc pháo bắt đầu mà tệp chưa tải xong, hay trình duyệt chưa cho phát tiếng (tivi chưa được chạm lần nào): cứ 0,25 giây thử lại,
        được lúc nào thì phát tiếp từ đúng chỗ của lúc đó (không phát lại từ đầu), để tiếng nổ vẫn khớp hình. #phao[data-am] = "số lần đã phát,giây bỏ qua ở lần gần nhất" cho bài thử đọc. */
-    var PHAO_TOI = 0.9, PHAO_TEP = "nhac/phao-bong.mp3", PHAO_TO = 0.9;
+    var PHAO_TEP = "nhac/phao-bong.mp3", PHAO_TO = 0.9;
     var phaoMau = null, phaoDangTai = false, phaoSrc = null, phaoHen = 0, phaoLan = 0, phaoDem = 0;
     function phaoTai() {                            // tải và giải mã tiếng pháo, một lần
       var ac = amAC();
@@ -2060,8 +2064,13 @@
       }, 50);
     }
     function phaoBatDau() { nhacPhaoBong(); phaoTieng(); }
+    function batPhao() {                            // lệnh "phao" từ máy giáo viên. Đang bắn mà nhận lệnh nữa thì bắn lại từ đầu
+      if (!T3) return;
+      veBaoTuong();                                 // dẹp các bảng, thôi hiện to: pháo hoa bắn trên báo tường có 4 tấm thiệp
+      phaoLuc = performance.now() + 400; phaoBatDau(); bao3d(); chayVong();
+    }
     function khungHinh(luc) {
-      var con = false, dt = lucTruoc ? Math.min(0.1, (luc - lucTruoc) / 1000) : 0.016, bd = performance.now(), cv = $("phao"), nen = $("phaoNen"), c, tf;
+      var con = false, dt = lucTruoc ? Math.min(0.1, (luc - lucTruoc) / 1000) : 0.016, bd = performance.now(), cv = $("phao"), c, tf;
       vong = 0;
       if (boQua) { boQua = false; chayVong(); return; }      // khung trước vẽ lâu quá: bỏ một khung cho máy kịp thở (lucTruoc giữ nguyên nên chuyển động vẫn đúng giờ)
       lucTruoc = luc;
@@ -2071,10 +2080,9 @@
         c = cv.getContext("2d");
         c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height);
         if (tf < 0) con = true;
-        else if (tf > T3.DAI_PHAO) { phaoLuc = 0; cv.hidden = true; nen.hidden = true; nen.style.opacity = "0"; }
+        else if (tf > T3.DAI_PHAO) { phaoLuc = 0; cv.hidden = true; bao3d(); }
         else {
           cv.hidden = false; con = true;
-          nen.hidden = false; nen.style.opacity = (PHAO_TOI * T3.phaoToi(tf) * (1 - 0.1 * T3.phaoSang(tf))).toFixed(3);      // trời đêm; mỗi quả nổ làm trời sáng lên một chút
           c.setTransform(cv.width / T3.PHAO_W, 0, 0, cv.height / T3.PHAO_H, 0, 0);
           T3.vePhaoBong(c, tf);
           c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
@@ -2901,7 +2909,7 @@
   /* ---------- máy giáo viên ----------
      Thầy dặn 15/11 19:18: "app của giáo viên sẽ hiện ra các nhóm sai từ 4 lần trở lên và nút mở khóa, phím Bước 2 bàn xếp cho từng nhóm. Phím tranh 3d."
      Link: ?p=<phòng>&gv=<mã giáo viên>, lấy ở tivi: Cài đặt → "Mã cho máy giáo viên". Trang này đọc n1..n4, gv, tv, tv3d và chỉ ghi:
-       n<k>/khoa = null (Mở khóa);  n<k>/mo = 1 (Mở bước 2);  lenh = { i, v, k } (Tranh 3D, Dừng, Về báo tường: xem nhanLenh ở phần tivi).
+       n<k>/khoa = null (Mở khóa);  n<k>/mo = 1 (Mở bước 2);  lenh = { i, v, k } (Tranh 3D, Dừng, Về báo tường, Pháo hoa: xem nhanLenh ở phần tivi).
      Khóa: máy học sinh khóa một mục sau mỗi 3 lần nhập sai (SAI_KHOA). Trang này hiện mục đang khóa kèm số lần đã sai. */
   function chayGiaoVien(ts) {
     document.body.className = "gv";
@@ -3017,6 +3025,32 @@
       if (Date.now() - dnHoi > 3000) { dnHoi = Date.now(); veDn(); setTimeout(veDn, 3050); return; }     // lúc nào cũng bấm hai lần mới tắt (16/11 22:08)
       dnHoi = 0; dnLenh(T, dn, "tat");
     };
+    /* 25/11 01:31, thầy: "pháo hoa là phím do tôi chọn. nó sẽ bị ẩn trên đt, khi nào xong hết 4 bức thì hiện ra để tôi bấm. khi nào cả 4 nhóm hoàn thành, thì màn hình điện thoại
+       sẽ hiện ra câu hỏi Hiện pháo hoa rồi cho chọn có hoặc không." Đủ 4 nhóm bấm Hoàn thành: hàng "Cả 4 nhóm đã hoàn thành" (#gvPhao) hiện ra và câu hỏi "Hiện pháo hoa?"
+       (#gvPhaoHoi) tự hiện. Có → gửi lệnh "phao" cho tivi; Không → không bắn. Trả lời rồi thì câu hỏi cất đi; nút "Pháo hoa" trên hàng đó gọi lại câu hỏi (bắn sau, hay bắn lần nữa).
+       Có nhóm được cho sửa lại hình (không còn đủ 4): hàng và câu hỏi ẩn; đủ 4 nhóm lần nữa thì câu hỏi tự hiện lại.
+       phaoTL = thầy đã trả lời cho lần đủ 4 nhóm này; nhớ trong sessionStorage (sang "Xem ĐT nhóm" rồi quay về không bị hỏi lại). phaoCo[k] = đã nhận dữ liệu nhóm k
+       (chưa nhận đủ 4 nhóm thì chưa biết gì, không ẩn không hiện). Tivi báo tv3d.p = 1 khi pháo đang bắn. */
+    var phaoCo = {}, phaoHoi = false, phaoKhoa = "xt-phao-" + phong, phaoTL = false;
+    try { phaoTL = sessionStorage.getItem(phaoKhoa) === "1"; } catch (e0) { /* bỏ qua */ }
+    function phaoNho(b) { phaoTL = b; try { if (b) sessionStorage.setItem(phaoKhoa, "1"); else sessionStorage.removeItem(phaoKhoa); } catch (e) { /* bỏ qua */ } }
+    function vePhaoGV() {
+      var du, ban = tt("p") === 1;
+      if (![1, 2, 3, 4].every(function (k) { return phaoCo[k]; })) return;
+      du = [1, 2, 3, 4].every(function (k) { return !!(D[k] || {}).xong; });
+      if (!du) { phaoHoi = false; if (phaoTL) phaoNho(false); }
+      else if (!phaoTL) phaoHoi = true;
+      $("gvPhao").hidden = !du;
+      $("gvPhaoHoi").hidden = !(du && phaoHoi);
+      $("gvPhaoNut").textContent = ban ? "Đang bắn…" : "Pháo hoa";
+      $("gvPhaoNut").classList.toggle("bat", ban);
+      $("gvPhaoNut").disabled = !coTv || ban;
+      $("gvPhaoCo").disabled = !T || !coTv;
+      $("gvPhaoPhu").textContent = coTv ? "Cả 4 nhóm đã hoàn thành." : "Tivi chưa mở trang Xếp thiệp nên chưa bắn được.";
+    }
+    $("gvPhaoNut").onclick = function () { phaoHoi = true; vePhaoGV(); };
+    $("gvPhaoCo").onclick = function () { if (!T || !coTv) return; phaoHoi = false; phaoNho(true); lenh("phao", 1); vePhaoGV(); };
+    $("gvPhaoKhong").onclick = function () { phaoHoi = false; phaoNho(true); vePhaoGV(); };
     function ve(k) {
       var d = D[k] || {}, nhap = d.d || {}, s = d.s || {}, kh3 = d.khoa || {}, X = O[k];
       var pha = d.xong ? "xong" : d.mo ? "xep" : "nhap", nd = demDung(nhap), may = d.co ? Object.keys(d.co).length : 0;
@@ -3055,7 +3089,7 @@
       hai($("gvDap"), d ? "Ẩn" : "Hiện"); $("gvDap").classList.toggle("dang-hien", !!d); $("gvDap").classList.toggle("bat", !!d);
       $("gvVe").disabled = !(l || d || nv);
       if (!$("gvMoHet").classList.contains("hoi")) $("gvMoHet").disabled = !conNhap;
-      veDn(); veNhacGV();
+      veDn(); veNhacGV(); vePhaoGV();
     }
     veHet();
     noi(phong, thu, function (kieu) {
@@ -3068,7 +3102,7 @@
       /* 21/11: máy giáo viên không hiện vị trí mảnh (chỉ hiện số mục đúng, số máy, khóa, đã mở, đã xong). Trước đây mỗi lần một mảnh của bất kì nhóm nào nhích,
          máy này vẽ lại hết cả trang (cả lớp cùng kéo: hơn 400 lần một giây). Bây giờ chỉ vẽ lại khi phần dữ liệu ngoài vị trí mảnh đổi. */
       var kyNhom = {};
-      [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { var ky; D[k] = d || {}; ky = kyNgoaiManh(D[k]); if (ky === kyNhom[k]) return; kyNhom[k] = ky; veHet(); }); });
+      [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { var ky; D[k] = d || {}; phaoCo[k] = true; ky = kyNgoaiManh(D[k]); if (ky === kyNhom[k]) return; kyNhom[k] = ky; veHet(); }); });
       T.on("tv3d", function (v) { tv = v && typeof v === "object" ? v : null; veHet(); });
       T.on("tv", function (v) { coTv = !!v && typeof v === "object" && Object.keys(v).length > 0; veHet(); });
       T.on("dn", function (v) { dn = v && typeof v === "object" ? v : null; veDn(); });

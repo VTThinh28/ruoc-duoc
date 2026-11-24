@@ -532,33 +532,33 @@ function ve(c, kieu, t, a, P, M, cm, upx) {
    rải đều trên mặt cầu; hạt sao văng nhanh rồi chậm dần vì sức cản không khí (quãng đường = R × (1 − e^(−k·t))), rũ xuống vì sức nặng, kéo vệt sáng,
    nhấp nháy rồi tàn. Các kiểu (KIEU): "mau" quả cầu tròn (mẫu đơn), "cuc" hoa cúc vệt dài, "lieu" liễu rũ vàng kim, "co" cây cọ, "vong" vòng tròn nghiêng,
    "no" nổ xong thì lách tách, "sao" sao bạc nhấp nháy, "haimau" quả cầu đổi màu giữa chừng. Màu là màu của thuốc pháo thật (đỏ, lục, lam, tím, vàng kim, bạc, hồng, cam).
-   Hạt sáng cộng vào nhau (globalCompositeOperation "lighter"): chỗ nhiều hạt chồng nhau thì sáng trắng, như ảnh chụp pháo bông.
-   Pháo bông thật chỉ đẹp trên trời tối, nên lúc bắn trang phủ một lớp trời đêm lên báo tường (#phaoNen trong index.html, độ tối = phaoToi(tf), mỗi quả nổ làm trời sáng lên
-   một chút = phaoSang(tf)); hết pháo thì lớp này tan, báo tường sáng lại. Lời thầy 15/11 "không cần làm tối màu" là cho pháo bông kiểu vẽ tay của bản trước.
+   Thầy, 25/11 01:31: "pháo hoa ok rồi đó nhưng đừng có làm tôi màn hình cứ bắn bình thường thôi là được" → KHÔNG còn lớp trời đêm: pháo bắn ngay trên báo tường sáng.
+   Trên nền sáng (giấy thiệp trắng) thì hạt trắng, quầng sáng cộng màu không còn thấy, nên mỗi hạt sao vẽ ba lớp chồng lên nhau theo cách vẽ thường (source-over):
+   viền sẫm cùng màu, thân màu đậm, tâm màu nhạt. Sao "bạc" có tâm trắng, viền xanh thép. Chớp lúc nổ màu vàng nhạt.
    Tiếng: nhac/phao-bong.mp3 là 19 giây của một bản thu THẬT (xem test/lam-phao.py): 8 quả nổ lẻ, loạt pháo cuối 10 tiếng nổ, rồi tiếng vỗ tay reo hò ở xa.
    NO = lúc bắt đầu 18 tiếng nổ trong tệp đó; tệp bắt đầu phát lúc tf = PHAO_AM. Mỗi tiếng nổ có đúng một quả pháo nổ trên màn hình vào lúc ấy; trong loạt cuối có thêm
    7 quả nhỏ xen giữa cho dày. Mọi thứ là hàm của tf (giây từ lúc pháo bông bắt đầu), không nhớ gì giữa hai khung hình: máy chậm bỏ khung hình vẫn đúng giờ với tiếng.
    Khung vẽ PHAO_W × PHAO_H; trang phóng khung này ra cả màn hình tivi. */
 const PHAO_W = 1152, PHAO_H = 648;
-const PHAO_AM = 1.2;                               // giây: tiếng pháo bắt đầu phát lúc này (trước đó trời tối dần, nhạc nhỏ dần, quả đầu tiên bay lên)
+const PHAO_AM = 1.2;                               // giây: tiếng pháo bắt đầu phát lúc này (trước đó nhạc nhỏ dần, quả đầu tiên bay lên)
 const PHAO_AM_DAI = 19.1;                          // giây: độ dài tệp tiếng
 const NO = [0.442, 1.195, 2.111, 2.944, 5.179, 5.552, 7.189, 7.639, 9.988, 10.556, 10.892, 11.312, 11.642, 11.821, 12.235, 12.385, 12.597, 13.398];
-const MAU_PHAO = {                                 // [màu lõi sáng, màu quầng, quầng dạng "r,g,b"]
-  do: ['#ff7a66', '#ff2a18', '255,42,24'], la: ['#9dff92', '#22e03c', '34,224,60'], duong: ['#93c4ff', '#2f6dff', '47,109,255'], tim: ['#dfaaff', '#a148ff', '161,72,255'],
-  vang: ['#ffe6ab', '#ffad36', '255,173,54'], bac: ['#ffffff', '#c6daff', '198,218,255'], hong: ['#ffb0dc', '#ff42a8', '255,66,168'], cam: ['#ffc288', '#ff7c1c', '255,124,28'],
-  ngoc: ['#a2fff2', '#18d8c4', '24,216,196']
+const MAU_PHAO = {                                 // [tâm nhạt, thân màu đậm, màu đậm dạng "r,g,b" (khói hắt màu), viền sẫm]
+  do: ['#ffc2b5', '#f0281c', '240,40,28', '#98130f'], la: ['#c4f7bc', '#1fb83a', '31,184,58', '#0d6e21'], duong: ['#c3dcff', '#2a66f0', '42,102,240', '#143a9c'],
+  tim: ['#e7ccff', '#9440f0', '148,64,240', '#581ea0'], vang: ['#fff1bd', '#f2a200', '242,162,0', '#a56700'], bac: ['#ffffff', '#86a3e8', '134,163,232', '#4a62ab'],
+  hong: ['#ffcdea', '#f03a9e', '240,58,158', '#9d1664'], cam: ['#ffd8ad', '#f57612', '245,118,18', '#a74800'], ngoc: ['#c2fff5', '#12bfae', '18,191,174', '#097a70']
 };
 // n: số hạt sao; k: sức cản (càng lớn càng mau chậm lại); g: sức nặng; doi: giây cho tới khi tàn hẳn; duoi: vệt sáng dài bằng quãng hạt đi trong ngần này giây;
 // J: số khúc của vệt; day: bề dày hạt; chet: hạt bắt đầu tắt từ phần này của đời quả pháo; nhay: phần hạt tắt bật ngay từ đầu (sao nhấp nháy); lom: vệt lốm đốm (kim tuyến)
 const KIEU = {
-  mau:  { n: 190, k: 2.7,  g: 60,  doi: 1.95, duoi: 0.17, J: 3, day: 2.9, chet: 0.74 },
+  mau:  { n: 190, k: 2.7,  g: 60,  doi: 1.95, duoi: 0.27, J: 4, day: 2.9, chet: 0.74 },
   cuc:  { n: 170, k: 2.4,  g: 64,  doi: 2.35, duoi: 0.42, J: 4, day: 2.3, chet: 0.70 },
   lieu: { n: 150, k: 1.75, g: 118, doi: 4.0,  duoi: 1.05, J: 6, day: 1.9, chet: 0.64, lom: 0.3 },
   co:   { n: 16,  k: 1.9,  g: 100, doi: 2.8,  duoi: 1.5,  J: 7, day: 5.4, chet: 0.9 },
-  vong: { n: 84,  k: 2.7,  g: 52,  doi: 2.0,  duoi: 0.15, J: 3, day: 3.2, chet: 0.78 },
-  no:   { n: 140, k: 3.1,  g: 60,  doi: 1.2,  duoi: 0.16, J: 3, day: 2.3, chet: 0.66 },
+  vong: { n: 84,  k: 2.7,  g: 52,  doi: 2.0,  duoi: 0.23, J: 4, day: 3.2, chet: 0.78 },
+  no:   { n: 140, k: 3.1,  g: 60,  doi: 1.2,  duoi: 0.24, J: 4, day: 2.3, chet: 0.66 },
   sao:  { n: 110, k: 3.3,  g: 34,  doi: 2.7,  duoi: 0.03, J: 1, day: 3.2, chet: 0.66, nhay: 0.45 },
-  nhuy: { n: 64,  k: 2.9,  g: 60,  doi: 1.6,  duoi: 0.12, J: 2, day: 2.6, chet: 0.74 }
+  nhuy: { n: 64,  k: 2.9,  g: 60,  doi: 1.6,  duoi: 0.18, J: 3, day: 2.6, chet: 0.74 }
 };
 KIEU.haimau = KIEU.mau;
 // [lúc nổ theo giây của tệp tiếng, x, y (phần của khung), kiểu, màu, R (bán kính lúc xoè hết), màu thứ hai: nhuỵ ở giữa, hay màu sau khi đổi]
@@ -591,8 +591,7 @@ const BAN_PHAO = [
   // quả cuối: liễu rũ vàng kim thật to giữa trời, có sao bạc nhấp nháy ở trong, tàn trong tiếng vỗ tay
   [NO[17], 0.50, 0.42, 'lieu', 'vang', 330, 'bac']
 ];
-const DAI_PHAO = PHAO_AM + PHAO_AM_DAI;            // giây: sau ngần này pháo bông hết, trời sáng lại
-const TOI_VAO = 0.9, TOI_RA_TU = DAI_PHAO - 2.4, TOI_RA = 2.2;      // trời tối dần trong 0,9 giây đầu, sáng dần lại trong 2,2 giây cuối
+const DAI_PHAO = PHAO_AM + PHAO_AM_DAI;            // giây: sau ngần này pháo bông hết
 let DS_PHAO = null;
 const EX = new Float32Array(8), GY = new Float32Array(8), SONG = new Uint16Array(400);
 function bam(i, fr) { let h = (Math.imul(i + 1, 73856093) ^ Math.imul(fr + 7, 19349663)) >>> 0; h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; return (h & 1023) / 1024; }      // số ngẫu nhiên 0..1 theo (hạt, khung hình)
@@ -626,8 +625,8 @@ function taoDS() {
     return S;
   });
 }
-// một quả cầu sao lúc t giây sau khi nổ. sang: nhân thêm độ sáng
-function veCau(c, x, y, R, K, hat, loi, quangMau, t, tf, so, sang) {
+// một quả cầu sao lúc t giây sau khi nổ. M = màu (một dòng của MAU_PHAO); sang: nhân thêm độ đậm
+function veCau(c, x, y, R, K, hat, M, t, tf, so, sang) {
   const u = t / K.doi;
   if (u <= 0 || u >= 1) return;
   const J = K.J, n = hat.n, ux = hat.ux, uy = hat.uy, ch = hat.ch;
@@ -637,10 +636,10 @@ function veCau(c, x, y, R, K, hat, loi, quangMau, t, tf, so, sang) {
   const nhay = Math.max(K.nhay || 0, u > 0.4 ? (u - 0.4) * 1.3 : 0), fr = Math.floor(tf * 20) + so * 131;
   for (i = 0; i < n; i++) { if (u > ch[i]) continue; if (nhay > 0 && bam(i, fr) < nhay) continue; SONG[m++] = i; }
   if (!m) return;
-  // vệt sáng phía sau, vẽ từ đuôi lên: đuôi mảnh và mờ, màu đậm
+  // vệt phía sau, vẽ từ đuôi lên: đuôi mảnh và mờ, màu đậm
   for (j = J - 1; j >= 1; j--) {
     const f = 1 - j / J;
-    c.strokeStyle = quangMau; c.globalAlpha = mo * 0.85 * Math.pow(f, 1.3); c.lineWidth = K.day * (0.3 + 0.5 * f); c.beginPath();
+    c.strokeStyle = M[1]; c.globalAlpha = mo * 0.85 * Math.pow(f, 1.2); c.lineWidth = K.day * (0.4 + 0.65 * f); c.beginPath();
     for (q = 0; q < m; q++) {
       i = SONG[q];
       if (K.lom && bam(i * 7 + j, fr) < K.lom) continue;
@@ -648,13 +647,12 @@ function veCau(c, x, y, R, K, hat, loi, quangMau, t, tf, so, sang) {
     }
     c.stroke();
   }
-  // đầu hạt: một đường vẽ bốn lần, từ quầng rộng và nhạt tới lõi trắng mảnh; các lớp cộng vào nhau thành đốm lửa có quầng mềm
+  // đầu hạt: một đường vẽ ba lần, viền sẫm, thân màu đậm, tâm nhạt: nổi rõ cả trên giấy trắng lẫn trên ảnh
   c.beginPath();
   for (q = 0; q < m; q++) { i = SONG[q]; c.moveTo(x + ux[i] * EX[1], y + uy[i] * EX[1] + GY[1]); c.lineTo(x + ux[i] * EX[0], y + uy[i] * EX[0] + GY[0]); }
-  c.strokeStyle = quangMau; c.globalAlpha = 0.09 * mo; c.lineWidth = K.day * 4.8; c.stroke();
-  c.globalAlpha = 0.2 * mo; c.lineWidth = K.day * 2.7; c.stroke();
-  c.strokeStyle = loi; c.globalAlpha = 0.9 * mo; c.lineWidth = K.day * 1.15; c.stroke();
-  c.strokeStyle = '#ffffff'; c.globalAlpha = 0.85 * mo; c.lineWidth = K.day * 0.45; c.stroke();
+  c.strokeStyle = M[3]; c.globalAlpha = 0.55 * mo; c.lineWidth = K.day * 1.9; c.stroke();
+  c.strokeStyle = M[1]; c.globalAlpha = 0.97 * mo; c.lineWidth = K.day * 1.4; c.stroke();
+  c.strokeStyle = M[0]; c.globalAlpha = 0.92 * mo; c.lineWidth = K.day * 0.55; c.stroke();
 }
 function veLachTach(c, S, t, tf) {                 // sau khi quả "no" tàn: hàng trăm đốm lửa nhỏ nổ lách tách trong vùng quả pháo vừa xoè
   const M = 420, b = S.so * 17 + 40;
@@ -669,9 +667,9 @@ function veLachTach(c, S, t, tf) {                 // sau khi quả "no" tàn: h
     co = true;
   }
   if (!co) return;
-  c.globalAlpha = 1; c.fillStyle = '#fff6d6'; c.fill();
-  c.strokeStyle = '#ffd98c'; c.lineWidth = 1.1; c.stroke();
-  c.globalAlpha = 0.3; c.lineWidth = 5; c.stroke();
+  c.globalAlpha = 0.28; c.strokeStyle = '#ff9d1e'; c.lineWidth = 5; c.stroke();
+  c.globalAlpha = 1; c.fillStyle = '#ffe98f'; c.fill();
+  c.strokeStyle = '#cf7200'; c.lineWidth = 1.3; c.stroke();
 }
 function veTanLua(c, S, t, tf) {                   // cây cọ: tàn lửa rơi lả tả dọc theo từng cành
   const K = S.K, hat = S.hat, b = S.so * 17 + 60;
@@ -684,20 +682,20 @@ function veTanLua(c, S, t, tf) {                   // cây cọ: tàn lửa rơi
     const e = 1 - Math.exp(-K.k * te), px = S.x + hat.ux[i] * S.R * e + (rnd(i * 16 + s, b + 2) - 0.5) * 10, py = S.y + hat.uy[i] * S.R * e + K.g / K.k * (te - e / K.k) + 46 * d * d + 10 * d;
     c.moveTo(px + 1.7, py); c.arc(px, py, 1.7, 0, PI2);
   }
-  c.globalAlpha = 0.95; c.fillStyle = '#ffdc9a'; c.fill();
+  c.globalAlpha = 0.95; c.fillStyle = '#ef8a12'; c.fill();
 }
-function veBayLen(c, S, tr) {                      // quả pháo đang bay lên (tr giây sau khi rời mặt đất): đầu sáng, vệt lửa vàng, tàn lửa rơi lại phía sau
+function veBayLen(c, S, tr) {                      // quả pháo đang bay lên (tr giây sau khi rời mặt đất): đầu vàng, vệt lửa cam, tàn lửa rơi lại phía sau
   const k0 = tr / S.len, mo = k0 > 0.9 ? (1 - k0) / 0.1 : Math.min(1, k0 / 0.08);
   const cho = function (kk) { kk = clamp(kk); const e = 1 - Math.pow(1 - kk, 2.1); return [S.x0 + (S.x - S.x0) * kk + 2.4 * Math.sin(kk * 11 + S.so), PHAO_H + 16 + (S.y - PHAO_H - 16) * e]; };
   let j, p = cho(k0), q;
   for (j = 0; j < 6; j++) {
     q = cho(k0 - (j + 1) * 0.028);
-    c.globalAlpha = mo * 0.9 * Math.pow(1 - j / 6, 1.6); c.lineWidth = 3 - j * 0.38; c.strokeStyle = j < 2 ? '#fff0c4' : '#ffa53c';
+    c.globalAlpha = mo * 0.95 * Math.pow(1 - j / 6, 1.4); c.lineWidth = 3.6 - j * 0.42; c.strokeStyle = j < 2 ? '#ffb72a' : '#e86a0a';
     c.beginPath(); c.moveTo(q[0], q[1]); c.lineTo(p[0], p[1]); c.stroke();
     p = q;
   }
   p = cho(k0);
-  c.globalAlpha = mo * 0.25; c.lineWidth = 9; c.strokeStyle = '#ffb04a'; c.beginPath(); c.moveTo(p[0], p[1] + 9); c.lineTo(p[0], p[1]); c.stroke();
+  c.globalAlpha = mo * 0.3; c.lineWidth = 9; c.strokeStyle = '#ff9a2a'; c.beginPath(); c.moveTo(p[0], p[1] + 9); c.lineTo(p[0], p[1]); c.stroke();
   c.beginPath();
   for (j = 0; j < 14; j++) {                       // tàn lửa
     const lui = 0.03 + 0.32 * rnd(j, S.so + 80), kk = k0 - lui * (0.6 + 0.4 * Math.sin(tr * 31 + j * 2.4));
@@ -706,22 +704,22 @@ function veBayLen(c, S, tr) {                      // quả pháo đang bay lên
     const px = q[0] + (rnd(j, S.so + 81) - 0.5) * 9, py = q[1] + 60 * lui * lui * S.len * S.len * 3;
     c.moveTo(px + 1.1, py); c.arc(px, py, 1.1, 0, PI2);
   }
-  c.globalAlpha = mo * 0.85; c.fillStyle = '#ffd08a'; c.fill();
+  c.globalAlpha = mo * 0.9; c.fillStyle = '#ee8a14'; c.fill();
 }
 function veQua(c, S, t, tf) {                      // một quả pháo lúc t giây sau khi nổ
   const K = S.K, m1 = S.m1, m2 = S.m2;
-  if (t < 0.14) quang(c, S.x, S.y, S.R * (0.22 + 0.5 * t / 0.14), '255,250,236', 0.9 * Math.pow(1 - t / 0.14, 1.5));      // chớp sáng lúc nổ
-  if (t < 0.9) quang(c, S.x, S.y, S.R * 1.9, m1[2], 0.14 * (1 - t / 0.9));                                                     // khói quanh quả pháo hắt màu
+  if (t < 0.14) quang(c, S.x, S.y, S.R * (0.22 + 0.5 * t / 0.14), '255,236,160', 0.9 * Math.pow(1 - t / 0.14, 1.5));      // chớp vàng nhạt lúc nổ
+  if (t < 0.9) quang(c, S.x, S.y, S.R * 1.9, m1[2], 0.16 * (1 - t / 0.9));                                                     // khói quanh quả pháo hắt màu
   if (S.kieu === 'haimau') {                          // đổi màu giữa chừng: màu thứ nhất tắt dần, màu thứ hai sáng lên
     const u = t / K.doi, a = clamp((u - 0.34) / 0.1);
-    if (a < 1) veCau(c, S.x, S.y, S.R, K, S.hat, m1[0], m1[1], t, tf, S.so, 1 - a);
-    if (a > 0) veCau(c, S.x, S.y, S.R, K, S.hat, m2[0], m2[1], t, tf, S.so, a);
+    if (a < 1) veCau(c, S.x, S.y, S.R, K, S.hat, m1, t, tf, S.so, 1 - a);
+    if (a > 0) veCau(c, S.x, S.y, S.R, K, S.hat, m2, t, tf, S.so, a);
     return;
   }
-  veCau(c, S.x, S.y, S.R, K, S.hat, m1[0], m1[1], t, tf, S.so, 1);
+  veCau(c, S.x, S.y, S.R, K, S.hat, m1, t, tf, S.so, 1);
   if (S.hat2) {
-    if (S.kieu === 'lieu') veCau(c, S.x, S.y, S.R * 0.62, KIEU.sao, S.hat2, m2[0], m2[1], t, tf, S.so + 50, 1);      // sao bạc nhấp nháy trong lòng quả liễu
-    else veCau(c, S.x, S.y, S.R * 0.42, KIEU.nhuy, S.hat2, m2[0], m2[1], t, tf, S.so + 50, 1);                       // nhuỵ: quả cầu nhỏ khác màu ở giữa
+    if (S.kieu === 'lieu') veCau(c, S.x, S.y, S.R * 0.62, KIEU.sao, S.hat2, m2, t, tf, S.so + 50, 1);      // sao bạc nhấp nháy trong lòng quả liễu
+    else veCau(c, S.x, S.y, S.R * 0.42, KIEU.nhuy, S.hat2, m2, t, tf, S.so + 50, 1);                       // nhuỵ: quả cầu nhỏ khác màu ở giữa
   }
   if (S.kieu === 'no') veLachTach(c, S, t, tf);
   if (S.kieu === 'co') veTanLua(c, S, t, tf);
@@ -729,7 +727,7 @@ function veQua(c, S, t, tf) {                      // một quả pháo lúc t g
 function vePhaoBong(c, tf) {
   if (tf < 0 || tf > DAI_PHAO) return;
   if (!DS_PHAO) taoDS();
-  c.save(); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.save(); c.globalCompositeOperation = 'source-over'; c.lineCap = 'round'; c.lineJoin = 'round';
   for (let i = 0; i < DS_PHAO.length; i++) {
     const S = DS_PHAO[i], t = tf - S.t;
     if (t < -S.len || t > S.dai) continue;
@@ -737,15 +735,8 @@ function vePhaoBong(c, tf) {
   }
   c.restore();
 }
-function phaoToi(tf) { return tf <= 0 || tf >= DAI_PHAO ? 0 : muot(tf / TOI_VAO) * (1 - muot((tf - TOI_RA_TU) / TOI_RA)); }      // 0..1: trời tối tới đâu
-function phaoSang(tf) {                            // 0..1: trời đang được các quả vừa nổ chiếu sáng tới đâu
-  let s = 0;
-  if (!DS_PHAO) taoDS();
-  for (let i = 0; i < DS_PHAO.length; i++) { const t = tf - DS_PHAO[i].t; if (t >= 0 && t < 1.2) s += DS_PHAO[i].R / 170 * Math.exp(-t / 0.22); }
-  return Math.min(1, s);
-}
 
 window.Tranh3D = { TEN: TEN, MAU_HINH: MAU_HINH, DOI_HINH: DOI_HINH, khop: khop, tron: tron, ve: ve, muot: muot, vePhaoBong: vePhaoBong, PHAO_W: PHAO_W, PHAO_H: PHAO_H, DAI_PHAO: DAI_PHAO, TRE_PHAO: 0.5,
-  phaoToi: phaoToi, phaoSang: phaoSang, PHAO_AM: PHAO_AM, PHAO_NO: NO, PHAO_SO_QUA: BAN_PHAO.length,
+  PHAO_AM: PHAO_AM, PHAO_NO: NO, PHAO_SO_QUA: BAN_PHAO.length,
   PHAO_QUA: BAN_PHAO.map(function (p) { return [p[0], p[1] * PHAO_W, p[2] * PHAO_H, p[5]]; }) };      // [lúc nổ theo tệp tiếng, x, y, R] cho bài thử
 })();

@@ -389,6 +389,18 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
 .gv-dn-chu b.het { color: #b3261e; }
 .gv-dn .nut { flex: none; min-height: 46px; padding: 4px 13px; font-size: 15px; border-radius: 12px; white-space: nowrap; }
 .gv-dn .nut.hoi { background: #fde9c4; border-color: #e0a63a; }
+/* 25/11 01:31, thầy: "pháo hoa là phím do tôi chọn. nó sẽ bị ẩn trên đt, khi nào xong hết 4 bức thì hiện ra để tôi bấm. khi nào cả 4 nhóm hoàn thành, thì màn hình điện thoại
+   sẽ hiện ra câu hỏi Hiện pháo hoa rồi cho chọn có hoặc không." Hàng .gv-phao chỉ hiện khi đủ 4 nhóm hoàn thành; .gv-hoi là câu hỏi che cả màn hình máy giáo viên. */
+.gv-phao { margin: 0 0 7px; background: #eef7ee; border-color: #8cc59a; }
+.gv-phao .gv-dn-chu { font-weight: 700; }
+.gv-hoi { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(46, 33, 18, .6); }
+.gv-hoi-hop { width: 100%; max-width: 360px; padding: 24px 18px 18px; background: #fffdf6; border: 2px solid var(--vien); border-radius: 20px; text-align: center; box-shadow: 0 14px 44px rgba(0, 0, 0, .35); }
+.gv-hoi-cau { margin: 0; font-size: 27px; font-weight: 800; font-family: var(--chu-dam); line-height: 1.2; }
+.gv-hoi-phu { margin: 8px 0 18px; font-size: 15px; line-height: 1.35; color: var(--chu-nhat); }
+.gv-hoi-nut { display: flex; gap: 12px; }
+.gv-hoi-nut .nut { flex: 1 1 0; min-height: 62px; font-size: 23px; font-weight: 800; border-radius: 14px; }
+#gv .gv-hoi-nut .gv-hoi-co { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
+#gv .gv-hoi-nut .gv-hoi-co:active:not(:disabled) { background: #357a45; }
 .gv-cd-mo { justify-content: space-between; padding: 0 16px; color: var(--chu-nhat); font-weight: 500; }
 .gv-cd-mo::after { content: "▾"; font-size: 16px; }
 .gv-cd-mo.dang-mo::after { content: "▴"; }
@@ -555,9 +567,6 @@ body.tv { background: #130c06; }
 .dem-3d p { margin: 0; font-size: 17px; line-height: 1.4; color: var(--chu-nhat); }
 #tv.dang-lon .dem-3d { visibility: hidden; }
 .phao { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 30; }
-/* 25/11, thầy: "làm pháo bông giống năm mới hoặc các dịp lễ". Pháo bông thật chỉ đẹp trên trời tối: lúc bắn, lớp trời đêm này phủ lên báo tường (js đặt opacity từng khung hình,
-   tối dần trong 0,9 giây, sáng lại trong 2,2 giây cuối). Rộng hơn sân 1920 × 1080 để màn hình không phải 16:9 vẫn tối hết. Không chặn chạm. */
-.phao-nen { position: absolute; inset: -700px; z-index: 29; pointer-events: none; opacity: 0; background: linear-gradient(180deg, #02041a 0%, #060926 55%, #15123a 100%); }
 /* dòng báo nối máy chủ: ẩn (16/11 06:30). Chỉ hiện khi mất kết nối hoặc nối mãi chưa được (lớp "hien", xem trangThai), ở lề phải phía dưới */
 #tv.xem-xep #tvNoi { display: none; left: auto; right: 16px; top: auto; bottom: 14px; max-width: 176px; font-size: 16px; line-height: 1.25; padding: 4px 12px; white-space: normal; text-align: center; border-radius: 14px; }
 #tv.xem-xep #tvNoi.hien { display: block; }
@@ -815,6 +824,10 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
   <p id="gvLoi" class="gv-loi" hidden></p>
   <div id="gvThan" hidden>
     <p id="gvTom" class="gv-tom"></p>
+    <div id="gvPhao" class="gv-dn gv-phao" hidden>
+      <span class="gv-dn-chu">Cả 4 nhóm đã hoàn thành</span>
+      <button id="gvPhaoNut" class="nut">Pháo hoa</button>
+    </div>
     <div class="gv-tivi">
       <p id="gvTv" class="gv-tv"></p>
       <p id="gvAm" class="gv-tv xau" hidden>Tivi chưa phát được tiếng (âm báo đồng hồ, nhạc). Thầy chạm một lần vào màn hình tivi.</p>
@@ -846,7 +859,14 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
         <p>Xóa cả số đo đã nhập và hình của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Cả 4 nhóm hoàn thành thì máy này hỏi “Hiện pháo hoa?”. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+    </div>
+    <div id="gvPhaoHoi" class="gv-hoi" hidden>
+      <div class="gv-hoi-hop">
+        <p class="gv-hoi-cau">Hiện pháo hoa?</p>
+        <p id="gvPhaoPhu" class="gv-hoi-phu">Cả 4 nhóm đã hoàn thành.</p>
+        <div class="gv-hoi-nut"><button id="gvPhaoCo" class="nut gv-hoi-co">Có</button><button id="gvPhaoKhong" class="nut">Không</button></div>
+      </div>
     </div>
   </div>
 </div>
@@ -893,7 +913,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 
 
   <div id="mungGiay"></div>
-  <div id="phaoNen" class="phao-nen" hidden></div>
   <canvas id="phao" class="phao" width="1920" height="1080" hidden></canvas>
 
   <div id="dapSo" hidden>
@@ -1026,7 +1045,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/tranh-3d.js?v=c9291722"></script>
-<script src="js/xep-thiep.js?v=046d4d0c"></script>
+<script src="js/tranh-3d.js?v=788efe79"></script>
+<script src="js/xep-thiep.js?v=648f1b56"></script>
 </body>
 </html>
