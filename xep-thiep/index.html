@@ -401,6 +401,33 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
 .gv-hoi-nut .nut { flex: 1 1 0; min-height: 62px; font-size: 23px; font-weight: 800; border-radius: 14px; }
 #gv .gv-hoi-nut .gv-hoi-co { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
 #gv .gv-hoi-nut .gv-hoi-co:active:not(:disabled) { background: #357a45; }
+/* 25/11: màn Chấm điểm trên máy giáo viên. Thầy 01:42 (luồng "Giáo án docx"): "ở trên điện thoại thì có thêm nút các nhóm đạt điểm tối đa để nếu tôi thấy tốt hết thì bấm nút đó,
+   với lại cho chấm trên điện thoại nữa nếu chẳng may tivi bị hư không bấm được. có thêm dẫu x để tôi tắt màn hình chấm điểm quay về báo tường."
+   Hàng .gv-cham nằm dưới hàng nhạc nền; .gv-cm là màn chấm che cả máy (nằm dưới câu hỏi pháo hoa .gv-hoi). */
+.gv-cham .gv-dn-chu { font-weight: 600; }
+.gv-cm { position: fixed; inset: 0; z-index: 50; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--nen); padding: calc(8px + env(safe-area-inset-top)) 10px calc(16px + env(safe-area-inset-bottom)); }
+.gv-cm > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+.gv-cm-dau { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.gv-cm-dau b { font-family: var(--chu-dam); font-weight: 700; font-size: 24px; color: #6b3d1e; line-height: 1.1; }
+#gv .nut.gv-cm-x { flex: none; width: 50px; min-height: 50px; padding: 0; border-radius: 50%; color: #4a3524; }
+.gv-cm-x svg { display: block; width: 21px; height: 21px; }
+.gv-cm-tom { margin-top: 0; margin-bottom: 8px; padding: 6px 12px; border-radius: 12px; background: #e6f4e3; color: #1f5b31; font-size: 14px; line-height: 1.35; }
+.gv-cm-tom.xau { background: #efe7d6; color: #6f5a41; }
+#gv .nut.gv-cm-max { display: flex; width: 100%; min-height: 54px; border-radius: 14px; background: #3f8f52; border-color: #2c6b3b; color: #fff; font-family: var(--chu-dam); font-weight: 700; font-size: 20px; padding-top: 3px; }
+#gv .nut.gv-cm-max:active:not(:disabled) { background: #357a45; }
+.gv-cm-nho { font-size: 13px; line-height: 1.35; color: var(--chu-nhat); margin-top: 5px; margin-bottom: 9px; padding: 0 4px; }
+.gv-cm-nhom { background: var(--giay); border: 2px solid var(--nut-vien); border-left: 9px solid var(--m); border-radius: 14px; padding: 6px 8px 5px 9px; margin-bottom: 8px; }
+.gv-cm-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.gv-cm-h b, .gv-cm-h i { font-family: var(--chu-dam); font-weight: 800; font-size: 21px; font-style: normal; color: var(--m); line-height: 1.1; }
+.gv-cm-h small { font-size: 14px; color: var(--chu-nhat); }
+.gv-cm-hang { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 50px; border-top: 1.5px solid #eadfc8; }
+.gv-cm-ten { min-width: 0; font-size: 15px; font-weight: 600; line-height: 1.25; }
+.gv-cm-ten em { font-style: normal; font-weight: 600; font-size: 11.5px; color: #fff; background: #8a7458; border-radius: 999px; padding: 1px 7px 2px; margin-left: 5px; vertical-align: 1px; white-space: nowrap; }
+.gv-cm-so { flex: none; display: flex; gap: 9px; }
+.gv-cm-so button { -webkit-appearance: none; appearance: none; margin: 0; padding: 3px 0 0; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--chu-dam); font-weight: 700; font-size: 21px; line-height: 1; border: 2px solid #d9c7a6; color: #b6a183; background: #fff; }
+.gv-cm-so button.chon { background: var(--m); border-color: var(--m); color: #fff; }
+#gv .nut.gv-cm-xoa { display: flex; width: 100%; min-height: 46px; margin-top: 4px; font-size: 15px; font-weight: 500; color: var(--chu-nhat); }
+#gv .nut.gv-cm-xoa.hoi { color: var(--chu); font-weight: 600; }
 .gv-cd-mo { justify-content: space-between; padding: 0 16px; color: var(--chu-nhat); font-weight: 500; }
 .gv-cd-mo::after { content: "▾"; font-size: 16px; }
 .gv-cd-mo.dang-mo::after { content: "▴"; }
@@ -719,6 +746,56 @@ body.tv { background: #130c06; }
 .gvma-hop .cd-duoi { gap: 14px; }
 
 /* --- đáp số (chỉ hiện khi thầy bấm) --- */
+/* --- màn Chấm điểm trên tivi (25/11) ---
+   Thầy 25/11 01:26 (luồng "Giáo án docx"): "khi tôi bấm chấm điểm thì chỗ hình thiệp của 4 nhóm sẽ hiện ra bảng để chấm, còn giữa màn hình là các tiêu chí của rubric".
+   01:42: "chỗ này là hiện nguyên bảng rubric, tiêu chí 1 là máy tự chấm nhé. hiện to lên, che luôn mấy cái dòng 51 năm cũng được nhé ... có thêm dẫu x để tôi tắt màn hình chấm điểm quay về báo tường."
+   .bc = bảng chấm của một nhóm, nằm trong .khung của nhóm đó nên đúng chỗ và đúng cỡ tấm thiệp (trùm thêm 5 px mỗi phía để che viền xanh "đã hoàn thành").
+   .rb = bảng rubric giữa màn hình: vẽ ở cỡ 656 × 641 rồi phóng 1/0,96398 để trên tivi 16:9 nó nằm đúng 632,14 và rộng 656 như hình xem thử bản 3 (cả .xep thu lại theo --bt). */
+.bc { position: absolute; left: -5px; top: -5px; width: calc(100% + 10px); height: calc(100% + 10px); z-index: 3; background: #fffdf8; border: 5px solid var(--mau); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 6px 18px rgba(60, 40, 20, .28); color: #4a3524; }
+.bc-dau { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 14px 0 18px; background: var(--mau); color: #fff; }
+.bc-dau b { font-family: var(--chu-dam); font-weight: 800; font-size: 40px; line-height: 1; padding-top: 6px; }
+.bc-tong { font-family: var(--chu-dam); font-weight: 800; color: var(--mau); background: #fff; border-radius: 999px; font-size: 38px; line-height: 1; padding: 8px 18px 2px; white-space: nowrap; }
+.bc-tong small { font-size: 24px; color: #8a7458; }
+.bc-hang { flex: 1; min-height: 0; display: flex; border-top: 2px solid #e6d8bd; }
+.bc-dau + .bc-hang { border-top: 0; }
+.bc-hang.may { background: #f6f0e2; }
+.bc-ten { font-weight: 700; white-space: nowrap; }
+.bc-ten em { font-style: normal; font-weight: 600; font-size: 15.5px; color: #fff; background: #8a7458; border-radius: 999px; padding: 2px 9px 3px; margin-left: 8px; vertical-align: 3px; }
+.bc-so { flex: none; display: flex; }
+.bc-so button { -webkit-appearance: none; appearance: none; margin: 0; padding: 5px 0 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--chu-dam); font-weight: 700; line-height: 1; border: 3px solid #d9c7a6; color: #b6a183; background: #fff; }
+.bc-so button:active { transform: scale(.93); }
+.bc-so button.chon { background: var(--mau); border-color: var(--mau); color: #fff; box-shadow: 0 4px 10px rgba(74, 53, 36, .25); }
+.khung.dung .bc-dau { height: 66px; }
+.khung.dung .bc-hang { flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.khung.dung .bc-ten { font-size: 25px; line-height: 1.1; }
+.khung.dung .bc-so { gap: 22px; }
+.khung.dung .bc-so button { width: 68px; height: 68px; font-size: 38px; }
+.khung.ngang .bc-dau { height: 60px; }
+.khung.ngang .bc-hang { align-items: center; justify-content: space-between; padding: 0 16px 0 18px; }
+.khung.ngang .bc-ten { font-size: 24.5px; }
+.khung.ngang .bc-so { gap: 13px; }
+.khung.ngang .bc-so button { width: 62px; height: 62px; font-size: 35px; }
+.rb { position: absolute; left: 619.74px; top: -5.65px; width: 656px; height: 641px; transform: scale(1.03737); transform-origin: 0 0; z-index: 7; background: #fffdf8; border: 5px solid #b89a74; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 22px rgba(60, 40, 20, .34); color: #4a3524; }
+.rb-dau { height: 56px; flex: none; background: #f1e4cc; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 18px; }
+.rb-dau b { font-family: var(--chu-dam); font-weight: 800; font-size: 33px; line-height: 1; padding-top: 6px; flex: 1; white-space: nowrap; }
+.rb-chip { font-family: var(--chu-dam); font-weight: 700; font-size: 20px; background: #fff; border: 3px solid #b89a74; border-radius: 999px; padding: 3px 14px 0; white-space: nowrap; }
+.rb-x { -webkit-appearance: none; appearance: none; position: relative; flex: none; width: 48px; height: 48px; margin: 0; padding: 0; border-radius: 50%; background: #fff; border: 3px solid #b89a74; display: flex; align-items: center; justify-content: center; }
+.rb-x::after { content: ""; position: absolute; inset: -9px; }      /* chỗ chạm rộng hơn hình */
+.rb-x:active { background: #f3e6cb; }
+.rb-x svg { display: block; width: 24px; height: 24px; }
+.rb-cot { flex: none; height: 40px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; justify-items: center; border-top: 2px solid #e6d8bd; background: #fbf5ea; }
+.rb-l { color: #fff; border-radius: 999px; font-family: var(--chu-dam); font-weight: 700; font-size: 22px; line-height: 1; padding: 6px 16px 1px; white-space: nowrap; }
+.rb-l.t { background: #3f8f52; } .rb-l.d { background: #c98a17; } .rb-l.c { background: #b3322b; }
+.rb-tc { flex: 1; min-height: 0; display: flex; flex-direction: column; border-top: 3px solid #b89a74; }
+.rb-ten { flex: none; height: 35px; display: flex; align-items: center; gap: 10px; padding: 0 12px 0 14px; background: #efe2c8; }
+.rb-ten b { font-family: var(--chu-dam); font-weight: 800; font-size: 27px; line-height: 1; padding-top: 5px; white-space: nowrap; }
+.rb-ten span { font-size: 17px; color: #6f5a41; font-weight: 600; white-space: nowrap; }
+.rb-ten em { font-style: normal; font-weight: 600; font-size: 16px; color: #fff; background: #8a7458; border-radius: 999px; padding: 2px 10px 3px; margin-left: auto; white-space: nowrap; }
+.rb-muc { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+.rb-muc p { margin: 0; font-size: 20.5px; line-height: 1.24; padding: 8px 8px 0 11px; border-left: 2px solid #e6d8bd; }
+.rb-muc p:first-child { border-left: 0; }
+.rb-muc i { font-style: normal; display: inline-flex; align-items: center; justify-content: center; width: 27px; height: 27px; border-radius: 50%; color: #fff; font-family: var(--chu-dam); font-weight: 800; font-size: 20px; line-height: 1; padding-top: 3px; margin-right: 6px; vertical-align: 1px; }
+.rb-muc p:nth-child(1) i { background: #3f8f52; } .rb-muc p:nth-child(2) i { background: #c98a17; } .rb-muc p:nth-child(3) i { background: #b3322b; }
 #dapSo { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .4); display: flex; align-items: center; justify-content: center; }
 /* 16/11 13:11, thầy: "Đáp số tạo bảng cho dễ nhìn đi. Không ghi kiểu ngang vậy khó nhìn. Với lại cho màu nền khác": bảng 4 cột, nền xanh nhạt */
 /* 16/11 22:08, thầy: "bỏ cột số mảnh đi nhé. Đáp số viết hoa in đậm và cho ra giữa. bảng đáp số cho to lên nhé": bảng 3 cột, rộng 1800, chữ 39; nút đóng là dấu ✕ ở góc trên phải (dành chỗ cho bảng) */
@@ -848,6 +925,10 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <button id="gvNhacTo" class="nut gv-am" aria-label="Tăng âm lượng">+</button>
         <button id="gvNhacNut" class="nut">▶ Bật nhạc</button>
       </div>
+      <div id="gvCham" class="gv-dn gv-cham">
+        <span id="gvChamChu" class="gv-dn-chu">Bảng chấm điểm 4 nhóm</span>
+        <button id="gvChamNut" class="nut">Chấm điểm</button>
+      </div>
     </div>
     <div id="gvDs" class="gv-ds"></div>
     <div class="gv-duoi">
@@ -857,9 +938,18 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <button id="gvXoaHinh" class="nut">Xóa hình cả 4 nhóm</button>
         <p>Các nhóm giữ số đo đã nhập. 10 mảnh về lại chỗ nằm sẵn.</p>
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
-        <p>Xóa cả số đo đã nhập và hình của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
+        <p>Xóa cả số đo đã nhập, hình và điểm đã chấm của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Cả 4 nhóm hoàn thành thì máy này hỏi “Hiện pháo hoa?”. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Cả 4 nhóm hoàn thành thì máy này hỏi “Hiện pháo hoa?”. Chấm điểm: tivi hiện bảng chấm của 4 nhóm và bảng rubric, chấm trên tivi hay trên máy này đều được. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+    </div>
+    <div id="gvChamMan" class="gv-cm" hidden>
+      <div class="gv-cm-dau"><b>Chấm điểm 4 nhóm</b><button id="gvChamX" class="nut gv-cm-x" aria-label="Tắt màn chấm điểm, tivi về báo tường"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>
+      <p id="gvChamTom" class="gv-cm-tom"></p>
+      <button id="gvChamMax" class="nut gv-cm-max">Các nhóm đạt điểm tối đa</button>
+      <p class="gv-cm-nho">Chấm mức Tốt cho tiêu chí 2, 3, 4 của cả bốn nhóm. Tiêu chí 1 do máy chấm.</p>
+      <div id="gvChamDs"></div>
+      <button id="gvChamXoa" class="nut gv-cm-xoa">Xóa điểm đã chấm</button>
+      <p class="gv-cm-nho">Chạm vào số để chấm, chạm số khác để đổi. Chấm ở đây hay trên tivi đều được, hai nơi là một bảng điểm.</p>
     </div>
     <div id="gvPhaoHoi" class="gv-hoi" hidden>
       <div class="gv-hoi-hop">
@@ -899,6 +989,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
     <div class="khung dung pha-nhap" id="khung3"><div class="the"><span class="ten">Nhóm 3</span><span class="tt"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao3"><div class="ma" id="ma3"></div><div class="ma-chu"><b>Nhóm 3</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
     <div class="khung ngang pha-nhap" id="khung4"><div class="the"><span class="ten">Nhóm 4</span><span class="tt"></span></div><svg class="thiep" xmlns="http://www.w3.org/2000/svg"></svg><div class="ma-phu" id="vao4"><div class="ma" id="ma4"></div><div class="ma-chu"><b>Nhóm 4</b><span>Quét mã<br>rồi chọn nhóm</span><span class="vao-tt">Chưa có máy nào</span></div></div></div>
     <div id="mungTo" hidden><b id="mungTo1"></b><b id="mungTo2"></b><b id="mungTo3"></b></div>
+    <div id="rubric" class="rb" hidden></div>
     <div id="dem3d" class="dem-3d"><b>Tranh 3D</b><div class="dem-o"><span>1</span><span>2</span><span>3</span><span>4</span></div><p id="dem3dChu">Đã bấm 0/4 nhóm</p></div>
     <!-- 15/11 21:29, thầy: "mấy nút này chuyển hết vào app cho tôi đi." 16/11 06:30: "ẩn hết luôn, chỉ có chọn trên điện thoại của giáo viên". Tivi chỉ còn nút bánh răng mở bảng Cài đặt:
          việc phải làm ngay trên tivi (toàn màn hình, chọn ảnh báo tường, mã cho máy giáo viên, tạo phòng mới) và các nút dự phòng. Chỗ nằm: giữa mép dưới báo tường (thầy khoanh đỏ 16/11 06:39). -->
@@ -1005,7 +1096,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <div>
           <h3>Nút dự phòng</h3>
           <p class="cd-truoc">Các nút dưới đây đã có trên máy giáo viên. Bấm ở đây khi điện thoại không dùng được.</p>
-          <div class="cd-hang"><button id="nutNhiemVu" class="nut">Nhiệm vụ</button><button id="nutMa" class="nut">Ẩn mã QR</button><button id="nutDapSo" class="nut">Đáp số</button></div>
+          <div class="cd-hang"><button id="nutNhiemVu" class="nut">Nhiệm vụ</button><button id="nutMa" class="nut">Ẩn mã QR</button><button id="nutDapSo" class="nut">Đáp số</button><button id="nutCham" class="nut">Chấm điểm</button></div>
           <div class="cd-hang cd-cach"><button id="nutDn" class="nut">▶ Đếm ngược 15 phút</button><button id="nutDnTat" class="nut" disabled>Tắt đồng hồ</button></div>
           <h4>Mở nhiệm vụ 2 (bàn xếp)</h4>
           <div class="cd-hang"><button id="cdMo1" class="nut nho">Nhóm 1</button><button id="cdMo2" class="nut nho">Nhóm 2</button><button id="cdMo3" class="nut nho">Nhóm 3</button><button id="cdMo4" class="nut nho">Nhóm 4</button><button id="nutMoHet" class="nut nho">Cả 4 nhóm</button></div>
@@ -1015,7 +1106,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
           <div class="cd-hang"><button id="cd3d1" class="nut nho" disabled>Nhóm 1</button><button id="cd3d2" class="nut nho" disabled>Nhóm 2</button><button id="cd3d3" class="nut nho" disabled>Nhóm 3</button><button id="cd3d4" class="nut nho" disabled>Nhóm 4</button></div>
           <h3>Xóa bài</h3>
           <div class="cd-hang"><button id="nutXoaHinh" class="nut">Xóa hình cả 4 nhóm</button><button id="nutLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button></div>
-          <p>Xóa hình: các nhóm giữ số đo đã nhập, 10 mảnh về lại chỗ nằm sẵn. Xóa hết: xóa cả số đo đã nhập, dùng khi dạy lớp khác hoặc thử lại.</p>
+          <p>Xóa hình: các nhóm giữ số đo đã nhập, 10 mảnh về lại chỗ nằm sẵn. Xóa hết: xóa cả số đo đã nhập và điểm đã chấm, dùng khi dạy lớp khác hoặc thử lại.</p>
         </div>
       </div>
       <div class="cd-duoi"><button id="dongCaiDat" class="nut chinh">Đóng</button></div>
@@ -1031,7 +1122,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
           <ul>
             <li>nhóm đang bị khóa và nút Mở khóa;</li>
             <li>nút Mở nhiệm vụ 2 (bàn xếp), Tranh 3D, Xem ĐT nhóm và Cho sửa lại hình của từng nhóm;</li>
-            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc.</li>
+            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc, nút Chấm điểm.</li>
           </ul>
           <p class="gvma-nhac">Mã này chỉ dành cho giáo viên. Thầy quét trước giờ học, lúc học sinh chưa nhìn màn hình.</p>
           <p>Quét một lần là đủ: link dùng được tới khi thầy bấm Tạo phòng mới.</p>
@@ -1046,6 +1137,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=788efe79"></script>
-<script src="js/xep-thiep.js?v=648f1b56"></script>
+<script src="js/xep-thiep.js?v=c111a3d4"></script>
 </body>
 </html>

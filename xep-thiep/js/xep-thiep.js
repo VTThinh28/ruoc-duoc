@@ -1837,6 +1837,47 @@
     return { nv1: dungBangNv1(svg, k), mung: dungMung(svg, k), hang: 0, lop: lop, lopLuoi: lopLuoi, g: g, khoaCua: khoaCua, dan: dan, W: bc.W, H: bc.H, cua: "" };
   }
 
+  /* ---------- chấm điểm 4 nhóm theo rubric (25/11) ----------
+     Thầy 25/11 01:26 (luồng "Giáo án docx"): "khi tôi bấm chấm điểm thì chỗ hình thiệp của 4 nhóm sẽ hiện ra bảng để chấm, còn giữa màn hình là các tiêu chí của rubric".
+     01:42: "chỗ này là hiện nguyên bảng rubric, tiêu chí 1 là máy tự chấm nhé. hiện to lên, che luôn mấy cái dòng 51 năm cũng được nhé. ở trên điện thoại thì có thêm nút
+     các nhóm đạt điểm tối đa để nếu tôi thấy tốt hết thì bấm nút đó, với lại cho chấm trên điện thoại nữa nếu chẳng may tivi bị hư không bấm được. có thêm dẫu x để tôi tắt
+     màn hình chấm điểm quay về báo tường."
+     Thang 10 điểm, 4 tiêu chí (3 + 3 + 2 + 2), 3 mức Tốt / Đạt / Cần cố gắng. so = điểm của 3 mức; muc = chữ trong bảng rubric trên tivi (bản rút gọn cho đủ to;
+     bản đầy đủ nằm trong giáo án). Điểm thầy chấm nằm trên máy chủ ở <phòng>/diem/n<k>/t<1..4> (tải lại trang vẫn còn; "Xóa hết, về nhiệm vụ 1" xóa cả điểm).
+     Tiêu chí 1 do máy chấm (diemMay): mục từng bị khóa = mục có số lần nhập sai n<k>/s/<mục> từ 3 trở lên (số này vẫn còn sau khi thầy mở khóa).
+     Nhóm đã đúng đủ 10 mục: không mục nào từng bị khóa = 3 điểm, 1 mục = 2 điểm, từ 2 mục = 1 điểm; chưa đúng đủ 10 mục = 1 điểm.
+     Thầy vẫn chạm đổi được tiêu chí 1: số thầy chọn ghi vào t1; chạm lại đúng số máy chấm thì bỏ t1, về lại máy chấm. */
+  var TIEU_CHI = [
+    { ten: "Đo và tính", so: [3, 2, 1], may: true, muc: ["Đúng hết, không mục nào bị khóa", "Đúng hết, có 1 mục bị khóa", "Từ 2 mục bị khóa, hoặc chưa tính xong"] },
+    { ten: "Ghép và dán tranh", so: [3, 2, 1], muc: ["Đủ 10 mảnh, đúng hình, không chồng, dán phẳng", "Đủ mảnh, đúng hình; vài mảnh lệch, chưa phẳng", "Thiếu mảnh, sai hình, hoặc chồng, lấn mép"] },
+    { ten: "Trình bày", so: [2, 1, 0], muc: ["Nói to, rõ; đủ 3 ý: hình, ý nghĩa, lời chúc", "Được 2 trong 3 ý, hoặc nói còn nhỏ", "Chỉ được 1 ý, hoặc chưa trình bày được"] },
+    { ten: "Hợp tác nhóm", so: [2, 1, 0], muc: ["Bạn nào cũng có việc; xong trong 15 phút", "Còn 1–2 bạn chưa làm, hoặc phải nhắc giờ", "Vài bạn làm thay cả nhóm, hoặc chưa xong"] }
+  ];
+  var DIEM_TOI_DA = 0;
+  TIEU_CHI.forEach(function (tc) { DIEM_TOI_DA += tc.so[0]; });
+  function diemMay(d) {                           // điểm tiêu chí 1 của một nhóm, tính từ dữ liệu nhiệm vụ 1 của nhóm đó
+    var s, n = 0;
+    d = d || {}; s = d.s || {};
+    if (demDung(d.d) < THU_TU.length) return 1;
+    THU_TU.forEach(function (kh) { if ((+s[kh] || 0) >= SAI_KHOA) n++; });
+    return n === 0 ? 3 : n === 1 ? 2 : 1;
+  }
+  function diemNhom(DIEM, k, d) {                 // → { v: [điểm 4 tiêu chí, null = chưa chấm], may: điểm máy chấm, tay: thầy đã sửa tiêu chí 1, tong }
+    var o = DIEM && typeof DIEM["n" + k] === "object" && DIEM["n" + k] || {}, v = [], tong = 0, may = diemMay(d), tay = false;
+    TIEU_CHI.forEach(function (tc, i) {
+      var x = o["t" + (i + 1)];
+      x = typeof x === "number" && tc.so.indexOf(x) >= 0 ? x : null;
+      if (tc.may) { if (x === null || x === may) x = may; else tay = true; }
+      v.push(x); if (x !== null) tong += x;
+    });
+    return { v: v, may: may, tay: tay, tong: tong };
+  }
+  function chamGhi(T, k, i, x, d) {               // thầy chạm số x ở tiêu chí thứ i (từ 0) của nhóm k
+    var p = "diem/n" + k + "/t" + (i + 1);
+    if (!T) return;
+    if (TIEU_CHI[i].may && x === diemMay(d)) T.remove(p); else T.set(p, x);
+  }
+
   function chayTivi(ts) {
     document.body.className = "tv";
     $("tvNen").hidden = false;
@@ -1904,25 +1945,25 @@
     /* Tivi báo cho máy giáo viên trong <phòng>/tv3d: l = thiệp đang hiện to (0 = báo tường), c = "0100" nhóm đang chạy Tranh 3D, b = "1100" nhóm đã được bấm,
        q = 1 khi mã QR đang hiện trên thiệp nào đó, d = 1 khi bảng Đáp số đang mở, n = 1 khi bảng Nhiệm vụ đang mở,
        m = nhạc nền: 0 thầy đang tắt, 1 đang phát, 2 trình duyệt chưa cho phát (phải chạm một lần vào màn hình tivi), 3 đang chọn "Không dùng nhạc", 4 không mở được bài hát,
-       p = 1 khi pháo hoa đang bắn (25/11). */
+       p = 1 khi pháo hoa đang bắn (25/11), g = 1 khi màn Chấm điểm đang hiện (25/11). */
     var tt3dCu = null;
     function bao3d() {
       var c = "", b = "", ky, q, d, n, p = phaoLuc ? 1 : 0;
       if (!T) return;
       [1, 2, 3, 4].forEach(function (k) { c += hx[k].chay ? "1" : "0"; b += hx[k].bam ? "1" : "0"; });
       q = [1, 2, 3, 4].some(hienMa) ? 1 : 0; d = $("dapSo").hidden ? 0 : 1; n = $("nhiemVu").hidden ? 0 : 1;
-      ky = lon + "|" + c + "|" + b + "|" + q + d + n + nhacTT() + amTT() + p;
+      ky = lon + "|" + c + "|" + b + "|" + q + d + n + nhacTT() + amTT() + p + (chamHien ? 1 : 0);
       if (ky === tt3dCu) return;
-      tt3dCu = ky; T.set("tv3d", { l: lon, c: c, b: b, q: q, d: d, n: n, m: nhacTT(), a: amTT(), p: p });
+      tt3dCu = ky; T.set("tv3d", { l: lon, c: c, b: b, q: q, d: d, n: n, m: nhacTT(), a: amTT(), p: p, g: chamHien ? 1 : 0 });
     }
     /* Các bảng che báo tường: Cài đặt, Mã cho máy giáo viên (chỉ mở trên tivi), Đáp số, Nhiệm vụ (mở được từ máy giáo viên). Mỗi lúc chỉ một bảng. Hiện ngay, không phóng to thu nhỏ. */
     function dongBang() { $("caiDat").hidden = true; $("gvMa").hidden = true; }
     function hienDapSo(b) { if (b) { dongBang(); $("nhiemVu").hidden = true; } $("dapSo").hidden = !b; bao3d(); }
     function hienNhiemVu(b) { if (b && !NHIEM_VU) return; if (b) { dongBang(); $("dapSo").hidden = true; } $("nhiemVu").hidden = !b; if (b) vuaNhiemVu(); bao3d(); }
-    function veBaoTuong() { dongBang(); $("dapSo").hidden = true; $("nhiemVu").hidden = true; if (lon) phong_to(lon); bao3d(); }
+    function veBaoTuong() { dongBang(); $("dapSo").hidden = true; $("nhiemVu").hidden = true; if (lon) phong_to(lon); chamAn(); bao3d(); }
     /* Lệnh từ máy giáo viên, trong <phòng>/lenh = { i: mã lệnh, v, k }: v = "3d" hiện to thiệp nhóm k và chạy Tranh 3D; "dung" dừng Tranh 3D nhóm k;
        "ve" về báo tường (đóng mọi bảng, thôi hiện to); "ma" hiện (k = 1) hay ẩn (k = 0) mã QR; "dap" hiện / ẩn bảng Đáp số; "nv" hiện / ẩn bảng Nhiệm vụ;
-       "phao" bắn pháo hoa (25/11: thầy chọn Có ở câu hỏi "Hiện pháo hoa?" trên máy giáo viên).
+       "phao" bắn pháo hoa (25/11: thầy chọn Có ở câu hỏi "Hiện pháo hoa?" trên máy giáo viên); "cham" hiện (k = 1) hay tắt (k = 0) màn Chấm điểm (25/11).
        Lệnh đang nằm sẵn lúc tivi mở trang là lệnh cũ: không làm. */
     var lenhCu;
     function nhanLenh(L) {
@@ -1935,6 +1976,7 @@
       if (L.v === "dap") { hienDapSo(!!k); return; }
       if (L.v === "nv") { hienNhiemVu(!!k); return; }
       if (L.v === "phao") { batPhao(); return; }
+      if (L.v === "cham") { hienCham(!!k); return; }
       if (!(k >= 1 && k <= 4)) return;
       if (L.v === "3d") {
         if (!T3 || !(duLieu[k] || {}).xong) return;
@@ -2188,6 +2230,7 @@
         if (hx[k].ky !== undefined && (!d.xong || daGiacNhom(k).ky !== hx[k].ky)) bo3d(k);      // hình của nhóm đổi: bỏ tranh 3D của nhóm đó
       }
       veNut3d();
+      if (chamHien) veCham();                      // số mục từng bị khóa đổi thì điểm máy chấm (tiêu chí 1) đổi theo
     }
     /* 16/11 22:08, thầy: "khi học sinh quét qr thì trên màn hình tivi sẽ hiện ra phần nhiệm vụ 1 khi học sinh làm luôn nhé, không cần chờ tôi bấm."
        Từ đó mã QR trên thiệp của một nhóm ẩn ngay khi nhóm đó có máy vào (daVao; trước đây phải chờ nhóm nhập đúng mục đầu tiên hoặc thầy bấm Ẩn mã QR).
@@ -2239,7 +2282,7 @@
     }
     function doiXem(x) { xem = x; if (lon) phong_to(lon); capNhatMa(); }
     function xoaHinh() { if (!T) return; var o = {}; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/m"] = null; o["n" + k + "/xong"] = null; }); T.update(o); }
-    function lamLaiHet() { if (!T) return; var o = { dn: null }; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa", "h1"].forEach(function (p) { o["n" + k + "/" + p] = null; }); }); T.update(o); }      // xóa hết thì tắt luôn đồng hồ đếm ngược
+    function lamLaiHet() { if (!T) return; var o = { dn: null, diem: null }; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa", "h1"].forEach(function (p) { o["n" + k + "/" + p] = null; }); }); T.update(o); }      // xóa hết thì tắt luôn đồng hồ đếm ngược
     function hoiHaiLan(b, chuHoi, lam) {           // nút nguy hiểm: bấm hai lần trong 3 giây mới làm
       var goc2 = b.textContent, luc = 0;
       b.onclick = function () {
@@ -2875,6 +2918,67 @@
     })();
     $("nutDapSo").onclick = function () { hienDapSo(true); };
     $("dongDapSo").onclick = function () { hienDapSo(false); };
+    /* --- Chấm điểm (25/11; lời thầy, thang điểm và cách máy chấm tiêu chí 1: xem TIEU_CHI) ---
+       Mỗi tấm thiệp đổi thành bảng chấm của nhóm đó (.bc, nằm trong .khung nên đúng chỗ, đúng cỡ tấm thiệp): tên nhóm, tổng điểm n/10, 4 hàng tiêu chí, mỗi hàng 3 số tròn để chạm.
+       Giữa màn hình là nguyên bảng rubric (#rubric), che cả số 51 và băng rôn (thầy cho phép); dấu X ở góc phải đầu bảng tắt màn chấm, về báo tường.
+       Mở bằng nút Chấm điểm trên máy giáo viên (lệnh "cham"); nút dự phòng nằm trong Cài đặt. Chạm một số là chấm, chạm số khác để đổi; điểm ghi lên máy chủ
+       (<phòng>/diem) nên máy giáo viên đổi theo ngay, tải lại trang vẫn còn. Về báo tường và pháo hoa cũng tắt màn chấm. */
+    var DIEM = {}, chamHien = false, chamO = {};
+    (function dungCham() {
+      var rb = $("rubric"), dau = H("div", "rb-dau", null, rb), x, cot;
+      H("b", null, "Bảng rubric chấm điểm", dau); H("span", "rb-chip", "Thang " + DIEM_TOI_DA + " điểm", dau);
+      x = H("button", "rb-x", null, dau); x.id = "dongCham"; x.type = "button"; x.setAttribute("aria-label", "Tắt bảng chấm điểm, về báo tường");
+      x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#4a3524" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+      x.onclick = function () { hienCham(false); };
+      cot = H("div", "rb-cot", null, rb);
+      [["t", "Tốt"], ["d", "Đạt"], ["c", "Cần cố gắng"]].forEach(function (m) { H("span", "rb-l " + m[0], m[1], cot); });
+      TIEU_CHI.forEach(function (tc, i) {
+        var o = H("div", "rb-tc", null, rb), t = H("div", "rb-ten", null, o), m = H("div", "rb-muc", null, o);
+        H("b", null, (i + 1) + ". " + tc.ten, t); H("span", null, "tối đa " + tc.so[0] + " điểm", t);
+        if (tc.may) H("em", null, "Máy tự chấm", t);
+        tc.muc.forEach(function (c, j) { var p = H("p", null, null, m); H("i", null, tc.so[j], p); p.appendChild(document.createTextNode(c)); });
+      });
+      [1, 2, 3, 4].forEach(function (k) {
+        var bc = H("div", "bc", null, khungNhom[k].o), d2 = H("div", "bc-dau", null, bc), tg, X = { o: bc, so: [] };
+        bc.id = "bc" + k; bc.hidden = true;
+        H("b", null, "Nhóm " + k, d2); tg = H("span", "bc-tong", null, d2); X.tong = H("span", null, "0", tg); H("small", null, "/" + DIEM_TOI_DA, tg);
+        TIEU_CHI.forEach(function (tc, i) {
+          var h = H("div", "bc-hang" + (tc.may ? " may" : ""), null, bc), t = H("span", "bc-ten", (i + 1) + ". " + tc.ten, h), s = H("div", "bc-so", null, h);
+          if (tc.may) X.em = H("em", null, "máy chấm", t);
+          X.so.push(tc.so.map(function (v) {
+            var b = H("button", null, v, s);
+            b.type = "button"; b.setAttribute("aria-label", "Nhóm " + k + ", " + tc.ten + ": " + v + " điểm");
+            b.onclick = function () { chamGhi(T, k, i, v, duLieu[k]); };
+            return b;
+          }));
+        });
+        chamO[k] = X;
+      });
+    })();
+    function veCham() {
+      [1, 2, 3, 4].forEach(function (k) {
+        var X = chamO[k], r = diemNhom(DIEM, k, duLieu[k]);
+        chu(X.tong, r.tong); chu(X.em, r.tay ? "chấm tay" : "máy chấm");
+        TIEU_CHI.forEach(function (tc, i) { tc.so.forEach(function (v, j) { X.so[i][j].classList.toggle("chon", r.v[i] === v); }); });
+        datTT(X.o, "data-diem", r.v.map(function (v) { return v === null ? "-" : v; }).join(""));      // bài thử đọc
+      });
+    }
+    function chamAn() {                             // cất màn chấm (hàm gọi tự báo cho máy giáo viên)
+      if (!chamHien) return;
+      chamHien = false;
+      $("rubric").hidden = true; [1, 2, 3, 4].forEach(function (k) { chamO[k].o.hidden = true; });
+      $("tv").classList.remove("dang-cham");
+    }
+    function hienCham(b) {
+      if (!b) { chamAn(); bao3d(); return; }
+      dongBang(); $("dapSo").hidden = true; $("nhiemVu").hidden = true;      // mỗi lúc chỉ một bảng
+      if (lon) phong_to(lon);
+      chamHien = true; veCham();
+      $("rubric").hidden = false; [1, 2, 3, 4].forEach(function (k) { chamO[k].o.hidden = false; });
+      $("tv").classList.add("dang-cham");
+      bao3d();
+    }
+    $("nutCham").onclick = function () { hienCham(true); };
 
     /* 16/11 06:30: dòng này ẩn theo lời thầy. Chỉ hiện khi mất kết nối, hoặc nối quá 8 giây chưa được, để thầy biết tivi đang không nhận bài của các nhóm. */
     var henNoi = 0;
@@ -2903,13 +3007,15 @@
       T.on("lenh", nhanLenh);
       T.on("dn", dnNhan);
       T.on("nhac", nhacNhan);
+      T.on("diem", function (v) { DIEM = v && typeof v === "object" ? v : {}; veCham(); });
     });
   }
 
   /* ---------- máy giáo viên ----------
      Thầy dặn 15/11 19:18: "app của giáo viên sẽ hiện ra các nhóm sai từ 4 lần trở lên và nút mở khóa, phím Bước 2 bàn xếp cho từng nhóm. Phím tranh 3d."
      Link: ?p=<phòng>&gv=<mã giáo viên>, lấy ở tivi: Cài đặt → "Mã cho máy giáo viên". Trang này đọc n1..n4, gv, tv, tv3d và chỉ ghi:
-       n<k>/khoa = null (Mở khóa);  n<k>/mo = 1 (Mở bước 2);  lenh = { i, v, k } (Tranh 3D, Dừng, Về báo tường, Pháo hoa: xem nhanLenh ở phần tivi).
+       n<k>/khoa = null (Mở khóa);  n<k>/mo = 1 (Mở bước 2);  lenh = { i, v, k } (Tranh 3D, Dừng, Về báo tường, Pháo hoa, Chấm điểm: xem nhanLenh ở phần tivi);
+       diem/n<k>/t<1..4> = điểm thầy chấm (25/11, xem TIEU_CHI).
      Khóa: máy học sinh khóa một mục sau mỗi 3 lần nhập sai (SAI_KHOA). Trang này hiện mục đang khóa kèm số lần đã sai. */
   function chayGiaoVien(ts) {
     document.body.className = "gv";
@@ -2973,7 +3079,7 @@
     $("gvVe").onclick = function () { lenh("ve", 0); };
     bamHaiLan($("gvMoHet"), "Bấm lần nữa để mở cho cả 4 nhóm", function () { var o = {}; if (!T) return; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/mo"] = 1; }); T.update(o); });
     bamHaiLan($("gvXoaHinh"), "Bấm lần nữa để xóa cả 4 hình", function () { var o = {}; if (!T) return; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/m"] = null; o["n" + k + "/xong"] = null; }); T.update(o); });
-    bamHaiLan($("gvLamLai"), "Bấm lần nữa để xóa hết", function () { var o = { dn: null }; if (!T) return; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa", "h1"].forEach(function (d) { o["n" + k + "/" + d] = null; }); }); T.update(o); });
+    bamHaiLan($("gvLamLai"), "Bấm lần nữa để xóa hết", function () { var o = { dn: null, diem: null }; if (!T) return; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa", "h1"].forEach(function (d) { o["n" + k + "/" + d] = null; }); }); T.update(o); });
     $("gvCdMo").onclick = function () { $("gvCd").hidden = !$("gvCd").hidden; $("gvCdMo").classList.toggle("dang-mo", !$("gvCd").hidden); };
     /* 16/11 10:02: "có nút tắt nhạc hiện trên app của giáo viên". 16/11 10:44: "có nút bật tắt nhạc ... tăng giảm âm lượng nữa ... trong cả điện thoại của giáo viên.
        tôi bấm bật mới bật nhạc". Máy này ghi <phòng>/nhac = { b: 1 là bật, a: mức âm lượng 1..10 }; tivi báo nhạc đang thế nào trong tv3d.m (xem phần nhạc của tivi). */
@@ -3051,6 +3157,55 @@
     $("gvPhaoNut").onclick = function () { phaoHoi = true; vePhaoGV(); };
     $("gvPhaoCo").onclick = function () { if (!T || !coTv) return; phaoHoi = false; phaoNho(true); lenh("phao", 1); vePhaoGV(); };
     $("gvPhaoKhong").onclick = function () { phaoHoi = false; phaoNho(true); vePhaoGV(); };
+    /* 25/11: màn Chấm điểm trên máy giáo viên (lời thầy, thang điểm, cách máy chấm tiêu chí 1: xem TIEU_CHI).
+       Hàng "Bảng chấm điểm 4 nhóm" có nút Chấm điểm: mở màn chấm trên máy này (#gvChamMan, che cả máy) và gửi lệnh "cham" cho tivi hiện bảng chấm.
+       Dấu X: tắt màn chấm ở cả hai nơi, tivi về báo tường. Tivi tắt bảng chấm (dấu X trên tivi, Về báo tường, pháo hoa) thì máy này tắt theo:
+       chamG = tv3d.g lần trước (−1: chưa biết); thấy g từ 1 về 0 là tivi vừa tắt. 1,5 giây đầu sau khi bấm Chấm điểm thì không xét (lệnh tắt cũ có thể về muộn).
+       Tivi không mở trang, hay tivi không chạm được, thì vẫn chấm được ở đây: điểm ghi thẳng lên máy chủ (<phòng>/diem).
+       "Các nhóm đạt điểm tối đa": mức Tốt cho tiêu chí 2, 3, 4 của cả 4 nhóm; tiêu chí 1 vẫn do máy chấm (thầy chạm đổi được). */
+    var DIEM = {}, chamMo = false, chamG = -1, chamLuc = 0, chamGV = {};
+    [1, 2, 3, 4].forEach(function (k) {
+      var o = H("section", "gv-cm-nhom", null, $("gvChamDs")), h = H("div", "gv-cm-h", null, o), tg, X = { o: o, so: [] };
+      o.id = "gvChamNhom" + k; o.style.setProperty("--m", MAU_NHOM[k]);
+      H("b", null, "Nhóm " + k, h); tg = H("span", null, null, h); X.tong = H("i", null, "0", tg); H("small", null, "/" + DIEM_TOI_DA + " điểm", tg);
+      TIEU_CHI.forEach(function (tc, i) {
+        var hg = H("div", "gv-cm-hang", null, o), t = H("span", "gv-cm-ten", (i + 1) + ". " + tc.ten, hg), s = H("div", "gv-cm-so", null, hg);
+        if (tc.may) X.em = H("em", null, "máy chấm", t);
+        X.so.push(tc.so.map(function (v) {
+          var b = H("button", null, v, s);
+          b.type = "button"; b.setAttribute("aria-label", "Nhóm " + k + ", " + tc.ten + ": " + v + " điểm");
+          b.onclick = function () { chamGhi(T, k, i, v, D[k]); };
+          return b;
+        }));
+      });
+      chamGV[k] = X;
+    });
+    function veChamGV() {
+      var g = coTv && tv ? +tv.g || 0 : -1;
+      if (chamMo && chamG === 1 && g === 0 && Date.now() - chamLuc > 1500) chamMo = false;
+      chamG = g;
+      $("gvChamMan").hidden = !chamMo;
+      $("gvChamNut").classList.toggle("bat", g === 1);
+      $("gvChamChu").textContent = g === 1 ? "Tivi đang hiện bảng chấm điểm" : "Bảng chấm điểm 4 nhóm";
+      $("gvChamTom").textContent = g === 1 ? "Tivi đang hiện bảng chấm điểm. Bấm dấu X để tắt, tivi về báo tường."
+        : coTv ? "Tivi chưa hiện bảng chấm điểm. Thầy vẫn chấm được ở đây." : "Tivi chưa mở trang Xếp thiệp. Thầy vẫn chấm được ở đây, điểm được lưu lại.";
+      $("gvChamTom").classList.toggle("xau", g !== 1);
+      [1, 2, 3, 4].forEach(function (k) {
+        var X = chamGV[k], r = diemNhom(DIEM, k, D[k]);
+        X.tong.textContent = r.tong; X.em.textContent = r.tay ? "chấm tay" : "máy chấm";
+        TIEU_CHI.forEach(function (tc, i) { tc.so.forEach(function (v, j) { X.so[i][j].classList.toggle("chon", r.v[i] === v); }); });
+        X.o.setAttribute("data-diem", r.v.map(function (v) { return v === null ? "-" : v; }).join(""));      // bài thử đọc
+      });
+    }
+    $("gvChamNut").onclick = function () { chamMo = true; chamLuc = Date.now(); lenh("cham", 1); veChamGV(); $("gvChamMan").scrollTop = 0; };
+    $("gvChamX").onclick = function () { chamMo = false; lenh("cham", 0); veChamGV(); };
+    $("gvChamMax").onclick = function () {
+      var o = {};
+      if (!T) return;
+      [1, 2, 3, 4].forEach(function (k) { TIEU_CHI.forEach(function (tc, i) { if (!tc.may) o["diem/n" + k + "/t" + (i + 1)] = tc.so[0]; }); });
+      T.update(o);
+    };
+    bamHaiLan($("gvChamXoa"), "Bấm lần nữa để xóa điểm đã chấm", function () { if (T) T.remove("diem"); });
     function ve(k) {
       var d = D[k] || {}, nhap = d.d || {}, s = d.s || {}, kh3 = d.khoa || {}, X = O[k];
       var pha = d.xong ? "xong" : d.mo ? "xep" : "nhap", nd = demDung(nhap), may = d.co ? Object.keys(d.co).length : 0;
@@ -3074,22 +3229,22 @@
       var chu = ma === "dung" ? "" : ma === "cho" ? "Đang nối với tivi…"
         : ma === "chua" ? "Chưa thấy tivi của phòng này. Thầy mở trang Xếp thiệp trên tivi trước, rồi quét lại mã ở Cài đặt, nút “Mã cho máy giáo viên”."
         : "Mã này không còn dùng được. Thầy quét lại mã ở tivi: Cài đặt, nút “Mã cho máy giáo viên”.";
-      var dsK = [], l, n = 0, q = tt("q"), d = tt("d"), nv = tt("n"), conNhap = false;
+      var dsK = [], l, n = 0, q = tt("q"), d = tt("d"), nv = tt("n"), g = tt("g"), conNhap = false;
       baoLoi(chu, ma === "cho");
       if (chu) return;
       [1, 2, 3, 4].forEach(function (k) { if (ve(k)) dsK.push(k); if (daBam(k)) n++; if (!(D[k] || {}).mo && !(D[k] || {}).xong) conNhap = true; });
       $("gvTom").textContent = dsK.length ? "Đang bị khóa: nhóm " + dsK.join(", nhóm ") : "Chưa có nhóm nào bị khóa";
       $("gvTom").classList.toggle("xau", dsK.length > 0);
       l = tt("l");
-      $("gvTv").textContent = !coTv ? "Tivi chưa mở trang Xếp thiệp nên các nút cho tivi chưa có tác dụng." : "Tivi đang hiện " + (nv ? "bảng nhiệm vụ" : d ? "bảng đáp số" : l ? "to thiệp nhóm " + l : "báo tường") + ". Tranh 3D: đã bấm " + n + "/4 nhóm.";
+      $("gvTv").textContent = !coTv ? "Tivi chưa mở trang Xếp thiệp nên các nút cho tivi chưa có tác dụng." : "Tivi đang hiện " + (nv ? "bảng nhiệm vụ" : d ? "bảng đáp số" : g ? "bảng chấm điểm" : l ? "to thiệp nhóm " + l : "báo tường") + ". Tranh 3D: đã bấm " + n + "/4 nhóm.";
       $("gvTv").classList.toggle("xau", !coTv);
       $("gvAm").hidden = !(coTv && tv && tv.a === 0);      // 16/11 13:11: tivi chưa được chạm lần nào thì trình duyệt chưa cho phát tiếng (âm báo đồng hồ, nhạc)
       hai($("gvNv"), nv ? "Ẩn" : "Hiện"); $("gvNv").classList.toggle("dang-hien", !!nv); $("gvNv").classList.toggle("bat", !!nv);
       hai($("gvQr"), q ? "Ẩn" : "Hiện"); $("gvQr").classList.toggle("dang-hien", !!q); $("gvQr").classList.toggle("bat", !!q);
       hai($("gvDap"), d ? "Ẩn" : "Hiện"); $("gvDap").classList.toggle("dang-hien", !!d); $("gvDap").classList.toggle("bat", !!d);
-      $("gvVe").disabled = !(l || d || nv);
+      $("gvVe").disabled = !(l || d || nv || g);
       if (!$("gvMoHet").classList.contains("hoi")) $("gvMoHet").disabled = !conNhap;
-      veDn(); veNhacGV(); vePhaoGV();
+      veDn(); veNhacGV(); vePhaoGV(); veChamGV();
     }
     veHet();
     noi(phong, thu, function (kieu) {
@@ -3106,12 +3261,13 @@
       T.on("tv3d", function (v) { tv = v && typeof v === "object" ? v : null; veHet(); });
       T.on("tv", function (v) { coTv = !!v && typeof v === "object" && Object.keys(v).length > 0; veHet(); });
       T.on("dn", function (v) { dn = v && typeof v === "object" ? v : null; veDn(); });
+      T.on("diem", function (v) { DIEM = v && typeof v === "object" ? v : {}; veChamGV(); });
       T.on("nhac", function (v) { nhacBat = !!v && typeof v === "object" && v.b === 1; nhacAm = v && typeof v === "object" && v.a >= 1 && v.a <= 10 ? Math.round(v.a) : 5; veNhacGV(); });
     });
   }
 
   /* cho bài thử gọi các hàm hình học */
-  window.XT = { BO: BO, MUC: MUC, THU_TU: THU_TU, TONG: TONG, CON: CON, kiemMuc: kiemMuc, daGiac: daGiac, toaDo: toaDo, doLun: doLun, dayVec: dayVec, kcDaGiac: kcDaGiac, cachChinh: cachChinh, canChinh: canChinh, vaoGiua: vaoGiua, giuTrong: giuTrong, vaoLuoi: vaoLuoi, trongTam: trongTam, BOCUC: BOCUC, NHOM: NHOM, NHE: NHE, viTriDau: viTriDau, duChung: duChung, nacXoay: nacXoay, nacKe: nacKe, nacGan: nacGan, MAU_DAU: MAU_DAU, GOC_MAU: GOC_MAU, THIEP: THIEP, TL_MANH: TL_MANH, cuaSo: cuaSo, mauXep: mauXep, luoiGoc: luoiGoc, giongMau: giongMau, dtGiao: dtGiao, MOC_GIONG: MOC_GIONG, MOC_GIONG_CON: MOC_GIONG_CON, HINH_CON: HINH_CON, HINH: HINH, kcDaGiacDiem: kcDiem, mo: mo, goi: goi, dat: function (o) { if (o.de !== undefined) NHE.de = o.de; if (o.xaTach !== undefined) XA_TACH = o.xaTach; } };
+  window.XT = { BO: BO, MUC: MUC, THU_TU: THU_TU, TONG: TONG, CON: CON, kiemMuc: kiemMuc, daGiac: daGiac, toaDo: toaDo, doLun: doLun, dayVec: dayVec, kcDaGiac: kcDaGiac, cachChinh: cachChinh, canChinh: canChinh, vaoGiua: vaoGiua, giuTrong: giuTrong, vaoLuoi: vaoLuoi, trongTam: trongTam, BOCUC: BOCUC, NHOM: NHOM, NHE: NHE, viTriDau: viTriDau, duChung: duChung, nacXoay: nacXoay, nacKe: nacKe, nacGan: nacGan, MAU_DAU: MAU_DAU, GOC_MAU: GOC_MAU, THIEP: THIEP, TL_MANH: TL_MANH, cuaSo: cuaSo, mauXep: mauXep, luoiGoc: luoiGoc, giongMau: giongMau, dtGiao: dtGiao, MOC_GIONG: MOC_GIONG, MOC_GIONG_CON: MOC_GIONG_CON, HINH_CON: HINH_CON, HINH: HINH, kcDaGiacDiem: kcDiem, mo: mo, goi: goi, TIEU_CHI: TIEU_CHI, diemMay: diemMay, diemNhom: diemNhom, dat: function (o) { if (o.de !== undefined) NHE.de = o.de; if (o.xaTach !== undefined) XA_TACH = o.xaTach; } };
 
   function batDau() {
     var ts = thamSo();
