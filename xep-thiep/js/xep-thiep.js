@@ -1974,7 +1974,7 @@
       X.chay = true; X.bam = true; X.tinh = false; X.t0 = performance.now();
       K.o.classList.add("co-3d");
       K.o.setAttribute("data-3d", String(X.kieu));      // 1..4 = hình khớp mẫu của nhóm đó, "td" = hình nhóm tự nghĩ (bài thử đọc)
-      if (!daNo && [1, 2, 3, 4].every(function (i) { return hx[i].bam; })) { daNo = true; phaoLuc = performance.now() + 400; }   // đủ 4 nhóm: pháo bông nổ sau lần bấm thứ tư 0,4 giây
+      if (!daNo && [1, 2, 3, 4].every(function (i) { return hx[i].bam; })) { daNo = true; phaoLuc = performance.now() + 400; phaoBatDau(); }   // đủ 4 nhóm: pháo bông bắt đầu sau lần bấm thứ tư 0,4 giây
       capNhat3d(); chayVong();
     }
     function dung3d(k) { var X = hx[k]; if (X.cv) { X.chay = false; X.tinh = false; } capNhat3d(); chayVong(); }
@@ -2007,8 +2007,61 @@
       if (!X.chay && X.a <= 0) { X.tinh = true; return false; }
       return true;
     }
+    /* ---------- pháo bông: trời đêm, tiếng pháo thật, nhạc tắt (25/11) ----------
+       Thầy, 25/11 00:10: "khi cả 4 nhóm xếp xong hình trên điện thoại xong thì sẽ có pháo bông bắn lên. bạn hãy tìm kiếm để làm pháo bông giống năm mới hoặc các dịp lễ á
+       và lúc pháo bông bắn lên thì tiếng nhạc tắt và có tiếng pháo bông, nhớ sử dụng tiếng pháo giống pháo thật nhé."
+       Lúc bắn vẫn như trước: thầy bấm Tranh 3D đủ 4 nhóm thì 0,4 giây sau pháo bông bắt đầu (lời thầy 15/11). Phần vẽ ở js/tranh-3d.js (vePhaoBong, phaoToi, phaoSang).
+       Trời đêm: lớp #phaoNen, tối nhất PHAO_TOI. Nhạc nền: nhỏ dần trong 0,9 giây rồi TẮT hẳn (ghi <phòng>/nhac b = 0, máy giáo viên thấy nút nhạc về "tắt"); hết pháo nhạc không tự bật lại.
+       Tiếng pháo: nhac/phao-bong.mp3, 19 giây cắt từ một bản thu thật (BigSoundBank số 2672 của Joseph Sardin, CC0, xem test/lam-phao.py), phát lúc tf = T3.PHAO_AM;
+       các quả pháo trên màn hình nổ đúng lúc các tiếng nổ trong bản thu. Tiếng ra thẳng loa, không theo nút âm lượng của nhạc nền (như tiếng trống).
+       Tivi tải tệp này 2,5 giây sau hai tiếng trống. Lúc pháo bắt đầu mà tệp chưa tải xong, hay trình duyệt chưa cho phát tiếng (tivi chưa được chạm lần nào): cứ 0,25 giây thử lại,
+       được lúc nào thì phát tiếp từ đúng chỗ của lúc đó (không phát lại từ đầu), để tiếng nổ vẫn khớp hình. #phao[data-am] = "số lần đã phát,giây bỏ qua ở lần gần nhất" cho bài thử đọc. */
+    var PHAO_TOI = 0.9, PHAO_TEP = "nhac/phao-bong.mp3", PHAO_TO = 0.9;
+    var phaoMau = null, phaoDangTai = false, phaoSrc = null, phaoHen = 0, phaoLan = 0, phaoDem = 0;
+    function phaoTai() {                            // tải và giải mã tiếng pháo, một lần
+      var ac = amAC();
+      if (phaoMau || phaoDangTai || !ac || !window.fetch) return;
+      phaoDangTai = true;
+      fetch(PHAO_TEP).then(function (r) { if (!r.ok) throw new Error("tải " + r.status); return r.arrayBuffer(); }).then(function (b) {
+        ac.decodeAudioData(b, function (buf) { phaoMau = buf; phaoDangTai = false; $("phao").setAttribute("data-mau", "1"); }, function () { phaoDangTai = false; });
+      }).catch(function () { phaoDangTai = false; });
+    }
+    function phaoDungTieng() {
+      clearTimeout(phaoHen);
+      if (phaoSrc) { try { phaoSrc.stop(); } catch (e) { /* bỏ qua */ } try { phaoSrc.disconnect(); } catch (e2) { /* bỏ qua */ } phaoSrc = null; }
+    }
+    function phaoTieng() {                          // phát tiếng pháo cho khớp với phaoLuc; chưa phát được thì thử lại
+      var ac = amAC(), lan = ++phaoLan;
+      phaoDungTieng();
+      if (!ac) return;
+      (function thu() {
+        var tf, tre, g, src;
+        if (lan !== phaoLan || !phaoLuc) return;
+        tf = (performance.now() - phaoLuc) / 1000; tre = T3.PHAO_AM - tf;
+        if (tf > T3.DAI_PHAO - 1.5) return;         // sắp hết pháo: thôi
+        if (!phaoMau || ac.state !== "running") {
+          if (!phaoMau) phaoTai(); else { try { ac.resume(); } catch (e) { /* bỏ qua */ } }
+          phaoHen = setTimeout(thu, 250); return;
+        }
+        src = ac.createBufferSource(); g = ac.createGain(); src.buffer = phaoMau; g.gain.value = PHAO_TO; src.connect(g); g.connect(ac.destination);
+        if (tre >= 0) src.start(ac.currentTime + tre); else src.start(ac.currentTime, -tre);
+        src.onended = function () { try { g.disconnect(); } catch (e) { /* bỏ qua */ } if (phaoSrc === src) phaoSrc = null; };
+        phaoSrc = src; phaoDem++;
+        $("phao").setAttribute("data-am", phaoDem + "," + Math.max(0, -tre).toFixed(2));
+      })();
+    }
+    function nhacPhaoBong() {                       // pháo bông bắt đầu: nhạc nền nhỏ dần trong 0,9 giây rồi tắt hẳn
+      var buoc = 0;
+      if (!N.bat) return;
+      clearInterval(N.henMo);
+      N.henMo = setInterval(function () {
+        buoc++; N.mo = Math.max(0, 1 - buoc / 18); nhacDatTo();
+        if (buoc >= 18) { clearInterval(N.henMo); nhacGhi(false, N.am); }
+      }, 50);
+    }
+    function phaoBatDau() { nhacPhaoBong(); phaoTieng(); }
     function khungHinh(luc) {
-      var con = false, dt = lucTruoc ? Math.min(0.1, (luc - lucTruoc) / 1000) : 0.016, bd = performance.now(), cv = $("phao"), c, tf;
+      var con = false, dt = lucTruoc ? Math.min(0.1, (luc - lucTruoc) / 1000) : 0.016, bd = performance.now(), cv = $("phao"), nen = $("phaoNen"), c, tf;
       vong = 0;
       if (boQua) { boQua = false; chayVong(); return; }      // khung trước vẽ lâu quá: bỏ một khung cho máy kịp thở (lucTruoc giữ nguyên nên chuyển động vẫn đúng giờ)
       lucTruoc = luc;
@@ -2018,12 +2071,13 @@
         c = cv.getContext("2d");
         c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height);
         if (tf < 0) con = true;
-        else if (tf > T3.DAI_PHAO) { phaoLuc = 0; cv.hidden = true; }
+        else if (tf > T3.DAI_PHAO) { phaoLuc = 0; cv.hidden = true; nen.hidden = true; nen.style.opacity = "0"; }
         else {
           cv.hidden = false; con = true;
+          nen.hidden = false; nen.style.opacity = (PHAO_TOI * T3.phaoToi(tf) * (1 - 0.1 * T3.phaoSang(tf))).toFixed(3);      // trời đêm; mỗi quả nổ làm trời sáng lên một chút
           c.setTransform(cv.width / T3.PHAO_W, 0, 0, cv.height / T3.PHAO_H, 0, 0);
           T3.vePhaoBong(c, tf);
-          c.globalAlpha = 1;
+          c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
         }
       }
       if (con) { boQua = performance.now() - bd > 24; chayVong(); } else lucTruoc = 0;
@@ -2448,7 +2502,7 @@
     function amTaiSau(ms) {
       if (amDaTai) return;
       clearTimeout(amHen);
-      amHen = setTimeout(function () { if (amDaTai) return; amDaTai = true; amTai(); }, ms);
+      amHen = setTimeout(function () { if (amDaTai) return; amDaTai = true; amTai(); setTimeout(phaoTai, 2500); }, ms);      // 25/11: tiếng pháo bông (300 KB) tải sau hai tiếng trống 2,5 giây
     }
     amTaiSau(12000);
     function nhacDat(tt) { N.tt = tt; veNhac(); bao3d(); }

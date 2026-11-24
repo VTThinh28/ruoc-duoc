@@ -555,6 +555,9 @@ body.tv { background: #130c06; }
 .dem-3d p { margin: 0; font-size: 17px; line-height: 1.4; color: var(--chu-nhat); }
 #tv.dang-lon .dem-3d { visibility: hidden; }
 .phao { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 30; }
+/* 25/11, thầy: "làm pháo bông giống năm mới hoặc các dịp lễ". Pháo bông thật chỉ đẹp trên trời tối: lúc bắn, lớp trời đêm này phủ lên báo tường (js đặt opacity từng khung hình,
+   tối dần trong 0,9 giây, sáng lại trong 2,2 giây cuối). Rộng hơn sân 1920 × 1080 để màn hình không phải 16:9 vẫn tối hết. Không chặn chạm. */
+.phao-nen { position: absolute; inset: -700px; z-index: 29; pointer-events: none; opacity: 0; background: linear-gradient(180deg, #02041a 0%, #060926 55%, #15123a 100%); }
 /* dòng báo nối máy chủ: ẩn (16/11 06:30). Chỉ hiện khi mất kết nối hoặc nối mãi chưa được (lớp "hien", xem trangThai), ở lề phải phía dưới */
 #tv.xem-xep #tvNoi { display: none; left: auto; right: 16px; top: auto; bottom: 14px; max-width: 176px; font-size: 16px; line-height: 1.25; padding: 4px 12px; white-space: normal; text-align: center; border-radius: 14px; }
 #tv.xem-xep #tvNoi.hien { display: block; }
@@ -890,6 +893,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 
 
   <div id="mungGiay"></div>
+  <div id="phaoNen" class="phao-nen" hidden></div>
   <canvas id="phao" class="phao" width="1920" height="1080" hidden></canvas>
 
   <div id="dapSo" hidden>
@@ -1022,7 +1026,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
-<script src="js/tranh-3d.js?v=335a5ddd"></script>
-<script src="js/xep-thiep.js?v=7cb3cbc3"></script>
+<script src="js/tranh-3d.js?v=c9291722"></script>
+<script src="js/xep-thiep.js?v=046d4d0c"></script>
 </body>
 </html>
