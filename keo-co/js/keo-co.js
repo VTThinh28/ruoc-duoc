@@ -379,10 +379,11 @@
     h += '<div class="kc-thang" id="kcThang"><div class="th-trong"><span class="th-dong th-nho"><span class="th-v"></span><span class="th-m"></span></span><span class="th-dong"><span class="th-v">CHIẾN THẮNG</span><span class="th-m">CHIẾN THẮNG</span></span>' +
       lsO.map((o, k) => '<i class="th-ls" style="left:' + o[0] + "%;top:" + o[1] + "%;animation-delay:-" + (k * .37 % 1.4).toFixed(2) + "s" + (k % 3 === 1 ? ";width:24px;height:24px;margin:-12px 0 0 -12px" : "") + '"></i>').join("") + "</div></div>";
     h += '<div class="kc-no" id="kcNo"></div></div>';
-    // nhãn câu, sức mạnh, 5 bước
+    // nhãn câu, dải hiệu ứng
     h += '<div class="kc-cau" id="kcCau"></div>';
     h += '<div class="kc-sm" id="kcSm"><div class="bieu">' + SET + '</div><div class="ten-khoi"><div class="ten" id="kcSmTen"></div><div class="sm-luat" id="kcSmLuat"></div></div></div>';
-    h += '<div class="kc-duong kc-the" id="kcDuong"><div class="day-noi"></div>' + SM.map((s, i) => '<div class="buoc" style="left:' + (72 + 124 * i) + 'px"><div class="tron">' + (i + 1) + '</div><div class="tb">' + s.ten + '</div><div class="kq"></div></div>').join("") + "</div>";
+    // 26/11 00:42 thầy Thịnh: "cái thanh đó bỏ luôn đi": không còn thanh 5 bước (5 vòng tròn số 1 tới 5 kèm tên Khai cuộc … Về đích và kết quả từng câu)
+    //   ở góc trên bên phải màn kéo co; dải hiệu ứng dùng luôn chỗ đó nên chữ to thêm
     const sao = () => '<span class="kc-sao">' + [0, 1, 2, 3, 4].map(() => "<span>" + SAO + "</span>").join("") + "</span>";
     const tenNhom = D => "";                   // 25/11 20:14: không còn "Nhóm 1 + Nhóm 2"; số thẻ của từng đội do KC.datThe ghi theo Cài đặt
     RD.DOI.forEach((D, i) => {
@@ -419,7 +420,6 @@
       dat: $("#kcDat", g), nutDat: tat(".kc-nut"), vetDat: tat(".kc-vet"), vongDat: $(".kc-vong-dat", g), soi: tat(".kc-soi"), khoi: [tat(".kc-khoi.b0"), tat(".kc-khoi.b1")],
       bui: [tat(".kc-bui.b0"), tat(".kc-bui.b1")], mui: [$(".kc-mui.m1", g), $(".kc-mui.m2", g)], soNac: $("#kcSoNac", g),
       cau: $("#kcCau", g), sm: $("#kcSm", g), smTen: $("#kcSmTen", g), smLuat: $("#kcSmLuat", g),
-      duong: $("#kcDuong", g), buoc: tat(".kc-duong .buoc").map(b => ({ el: b, kq: $(".kq", b) })),
       bang: [bang(1), bang(2)], chip: [chip(1), chip(2)], bao: $("#kcBao", g), lon: $("#kcLon", g), vi: $("#kcVi", g), x2: $("#kcX2", g),
       thuoc: $("#kcThuoc", g), nang: $(".kc-thuoc .nang", g), moc: $(".kc-thuoc .moc", g), bong: $(".kc-thuoc .bong", g), muiTen: $(".kc-thuoc .mui-ten", g), dan: $(".kc-thuoc .dan", g), thBen: tat(".kc-thuoc .ben"), cauTh: tat(".kc-thuoc .cau > i"),
       saoBay: $("#kcSaoBay", g), ket: $("#kcKet", g), ketLon: $("#kcKetLon", g), ketVi: $("#kcKetVi", g),
@@ -525,7 +525,6 @@
     if (q === 5 && K.goc) { o.vi += "<br><b>Về đích</b>: nhân đôi thành " + K.nac + " nấc."; o.dau = "×2"; }      // 25/11 16:18 thầy: "câu vàng đổi thành về đích"
     return o;
   }
-  const kqCau = K => { const d = K.sau - K.truoc; return d > 0 ? "Đội 1 +" + d : d < 0 ? "Đội 2 +" + (-d) : "Hòa"; };
   // lịch một lượt kéo: mốc từng nấc, lúc xong
   function lichKeo(K) {
     const n = K.buoc.length, gap = n > 4 ? .5 : .62, tb = K.q === 5 && n && K.thang ? T_TB : null, tre = tb != null ? TB_TRE : 0;
@@ -1030,24 +1029,17 @@
       kieu(E.soNac, "transform", "translateY(" + px(-khLuc * 26) + ")");
     } else kieu(E.soNac, "opacity", "0");
 
-    /* --- nhãn câu, sức mạnh, 5 bước, bảng 2 đội --- */
+    /* --- nhãn câu, dải hiệu ứng, bảng 2 đội --- */
     const hud = tran ? 1 - an : 0;
-    mo(E.cau, hud); mo(E.duong, hud);
+    mo(E.cau, hud);
     if (tran) chu(E.cau, RD.nhanCau(q));
     const K = che === "keo" ? trong(q).cau[q] : null, L = S.L;
     if (che === "keo" && K) {
       const b = lin(u, T_SM, T_SM + .65), sm = RD.SUC_MANH[q - 1];
       mo(E.sm, b > 0 ? 1 - an : 0);
-      chu(E.smTen, RD.tenHieuUng(q).toUpperCase()); chu(E.smLuat, sm.luat); lop(E.sm, "khong", !!sm.khong);          // 26/11 00:01: "Hiệu ứng <tên>", câu 1 "Không có hiệu ứng"
+      chu(E.smTen, RD.tenHieuUng(q).toUpperCase()); chu(E.smLuat, sm.luat);          // 26/11 00:01: "Hiệu ứng <tên>"; 00:45: câu 1 là "Hiệu ứng Khai cuộc"
       kieu(E.sm, "transform", b < 1 ? "perspective(900px) rotateX(" + ((1 - ob(b)) * -90).toFixed(2) + "deg)" : "");
     } else mo(E.sm, 0);
-    if (tran) {
-      E.buoc.forEach((B, i) => {
-        const j = i + 1, xong = j < q || (j === q && che === "keo" && !!L && u >= L.het), Kj = trong(j).cau[j];
-        lop(B.el, "xong", xong); lop(B.el, "nay", j === q && !xong); lop(B.el, "vang", j === 5 && !xong && j !== q);
-        chu(B.kq, xong && Kj ? kqCau(Kj) : j === q && che === "keo" ? "…" : "");
-      });
-    }
     for (let d = 0; d < 2; d++) {
       const B = E.bang[d], C = E.chip[d];
       mo(B.el, hud); mo(C.el, tran ? an : moHUD);

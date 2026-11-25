@@ -1124,11 +1124,10 @@
       pill.textContent = RD.nhanCau(q);
       pill.classList.toggle("vang", q === 5);
       // Kéo co: dải hiệu ứng của câu nằm thành một hàng riêng dưới nhãn câu (26/11 00:01 thầy: "đổi tên thành hiệu ứng tăng tốc. và cho
-      //   dòng này to lên … còn câu 1 thì ghi rõ là không có hiệu ứng")
+      //   dòng này to lên"; 00:45: câu 1 vẫn là "Hiệu ứng Khai cuộc" như lúc đầu)
       var sm = RD.SUC_MANH[q - 1];
       $("#mcSmTen").textContent = RD.tenHieuUng(q);
       $("#mcSmLuat").textContent = sm.luat;
-      $("#mcSm").classList.toggle("khong", !!sm.khong);
       datCot(q);
       $("#mcBoiCanh").innerHTML = chuDe(c.boiCanh);
       $("#mcHoi").innerHTML = chuDe(c.hoi);
@@ -1438,7 +1437,7 @@
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của 2 đội. Máy đã thôi ghi thẻ câu này (em nào chưa có thì chạm số thẻ để ghi tay). Mời một em nêu cách làm, rồi bấm <b>Kéo co</b>.";
     else if (loai === "r") {
       var kcr = lichSuKC()[q], Kr = kcr && kcr.cau[q];
-      html = "TV đang cho hai đội kéo co theo kết quả câu " + q + " (" + (RD.SUC_MANH[q - 1].khong ? "câu này không có hiệu ứng" : "hiệu ứng: <b>" + RD.SUC_MANH[q - 1].ten + "</b>") + ")." + (Kr ? " Câu này: Đội 1 đúng " + Kr.doi[0].tram + "%, Đội 2 đúng " + Kr.doi[1].tram + "%. Sau câu " + q + ": <b>" + RD.vietVT(kcr.vt) + "</b>." : "") +
+      html = "TV đang cho hai đội kéo co theo kết quả câu " + q + " (hiệu ứng: <b>" + RD.SUC_MANH[q - 1].ten + "</b>)." + (Kr ? " Câu này: Đội 1 đúng " + Kr.doi[0].tram + "%, Đội 2 đúng " + Kr.doi[1].tram + "%. Sau câu " + q + ": <b>" + RD.vietVT(kcr.vt) + "</b>." : "") +
         (q < 5 ? " Dây đứng yên rồi thì bấm <b>Hiện câu " + (q + 1) + "</b>." : " Kéo xong, TV tự sang bước thắp đuốc: đuốc của đội thắng tự sáng, thầy không cần bấm.");
     }
     else if (step === "finish") {
