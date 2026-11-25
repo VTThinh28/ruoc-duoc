@@ -827,12 +827,37 @@
       else thongBao("Bấm F11 để chiếu toàn màn hình.");
     } catch (e) { thongBao("Bấm F11 để chiếu toàn màn hình."); }
   }
-  var khoaMH = null;
+  // 25/11/2026 thầy Thịnh (08:01): "... sẽ có một cái chế độ cài đặt mặc định là khi đã mở ứng dụng thì màn hình điện thoại sẽ không tắt."
+  //   Trước đây điện thoại chỉ xin giữ màn hình sáng lúc mở camera (TV thì xin ngay từ đầu). Nay điện thoại xin ngay khi mở trang
+  //   (khoiDT), xin lại mỗi lần trang hiện trở lại (trình duyệt tự nhả khóa khi trang bị che) và mỗi lần thầy chạm màn hình mà khóa
+  //   đang mất. Không cần bật gì, không có nút tắt. Máy không cho, hoặc trình duyệt không có chức năng này, thì báo MỘT lần bằng một
+  //   dòng nổi phía trên hàng nút dưới cùng (không chắn nút nào, tự ẩn sau 8 giây); TV không báo gì.
+  var khoaMH = null, mhDangXin = false, mhDaBao = false, mhHen = null;
+  function mhBao(chu) {
+    if (VAI !== "dt" || mhDaBao) return;
+    mhDaBao = true;
+    var el = $("#dtBaoMH");
+    if (!el) return;
+    el.textContent = chu; el.hidden = false;
+    mhHen = setTimeout(function () { el.hidden = true; }, 8000);
+  }
   function giuManHinh() {
-    if (!navigator.wakeLock || khoaMH) return;
-    navigator.wakeLock.request("screen").then(function (l) { khoaMH = l; l.addEventListener("release", function () { khoaMH = null; }); }).catch(function () { /* bỏ qua */ });
+    if (khoaMH || mhDangXin) return;
+    if (!navigator.wakeLock) { mhBao("Trình duyệt này không giữ được màn hình sáng. Thầy mở trang bằng Chrome nhé."); return; }
+    if (document.visibilityState !== "visible") return;
+    mhDangXin = true;
+    navigator.wakeLock.request("screen").then(function (l) {
+      mhDangXin = false; khoaMH = l;
+      l.addEventListener("release", function () { if (khoaMH === l) khoaMH = null; });
+      var el = $("#dtBaoMH");
+      if (el) { clearTimeout(mhHen); el.hidden = true; }
+    }, function () {
+      mhDangXin = false;
+      if (document.visibilityState === "visible") mhBao("Điện thoại chưa cho giữ màn hình sáng. Nếu máy đang bật tiết kiệm pin thì thầy tắt đi rồi chạm vào trang.");
+    });
   }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") giuManHinh(); });
+  document.addEventListener("pointerdown", function () { if (VAI === "dt") giuManHinh(); }, true);
 
   function veTV() {
     var now = nowHopLe(), step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -1206,6 +1231,7 @@
   function nlDung() { clearTimeout(nlHen); nlHen = null; $("#dtNoiLai").classList.remove("quay"); }
   function khoiDT() {
     $("#dt").hidden = false;
+    giuManHinh();   // 25/11: giữ màn hình điện thoại sáng ngay từ lúc mở trang
     dungChuanBi($("#cbDT"));
     $("#dtTiep").addEventListener("click", function () { A.mo(); tiep(); });
     // 9/11: nút Đếm ngược 5 giây (camera tự mở trong chayDem) và nút hiện / ẩn luật chơi trên TV

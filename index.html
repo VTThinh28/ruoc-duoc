@@ -329,6 +329,8 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .nut-noi-lai.quay{background:#4a86e4}
 .nut-noi-lai.quay svg{animation:noiLaiQuay .8s linear infinite}
 @keyframes noiLaiQuay{to{transform:rotate(360deg)}}
+.dt-bao-mh{position:fixed;left:16px;right:16px;bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:40;max-width:560px;margin:0 auto;padding:10px 14px;border-radius:12px;background:rgba(27,19,12,.93);color:#fff;font-weight:600;font-size:14px;line-height:1.35;text-align:center;pointer-events:none}
+.dt-bao-mh[hidden]{display:none}
 .dt-the{background:var(--trang);border:2px solid var(--vien);border-radius:18px;padding:14px;min-width:0}
 .dt-the h3{margin:0 0 8px;font:800 20px/1.2 var(--f-tieu)}
 .dt-cau-dau{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -591,6 +593,8 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <button type="button" id="sdXoa" style="margin-top:8px;padding:6px 0;border:0;background:none;color:inherit;font:inherit;font-size:14px;text-decoration:underline;opacity:.75;cursor:pointer">Xóa số đo, đo lại từ đầu</button>
   </section>
   <div id="dtMenu" hidden><div><h3 id="dtMenuTen"></h3><div class="luoi"><button type="button" class="nut D" data-m="D">Đúng</button><button type="button" class="nut S" data-m="S">Sai</button><button type="button" class="nut" data-m="V">Vắng ở câu này</button><button type="button" class="nut" data-m="">Bỏ đánh dấu</button></div><button type="button" class="nut" id="dtMenuDong" style="width:100%;margin-top:10px">Đóng</button></div></div>
+  <!-- 25/11/2026: dòng báo khi điện thoại không giữ được màn hình sáng (xem giuManHinh trong tro-choi.js); bình thường luôn ẩn -->
+  <p id="dtBaoMH" class="dt-bao-mh" role="status" hidden></p>
   <footer class="dt-chan">
     <button type="button" class="nut phu" id="dtLui" aria-label="Lùi lại một bước"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button type="button" class="nut chinh" id="dtTiep">Bắt đầu trò chơi</button>
@@ -599,17 +603,17 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="31e7543c";</script>
-<script src="js/cau-hinh.js?v=31e7543c"></script>
-<script src="js/scanlib.js?v=31e7543c"></script>
-<script src="js/du-lieu.js?v=31e7543c"></script>
-<script src="js/dong-bo.js?v=31e7543c"></script>
-<script src="js/am-thanh.js?v=31e7543c"></script>
-<script src="js/quet.js?v=31e7543c"></script>
-<script src="js/cay-cau.js?v=31e7543c"></script>
-<script src="js/san-khau.js?v=31e7543c"></script>
-<script src="js/tro-choi.js?v=31e7543c"></script>
-<script src="js/nhanh.js?v=31e7543c"></script>
-<script src="js/do.js?v=31e7543c"></script>
+<script>window.RD_V="0b488a12";</script>
+<script src="js/cau-hinh.js?v=0b488a12"></script>
+<script src="js/scanlib.js?v=0b488a12"></script>
+<script src="js/du-lieu.js?v=0b488a12"></script>
+<script src="js/dong-bo.js?v=0b488a12"></script>
+<script src="js/am-thanh.js?v=0b488a12"></script>
+<script src="js/quet.js?v=0b488a12"></script>
+<script src="js/cay-cau.js?v=0b488a12"></script>
+<script src="js/san-khau.js?v=0b488a12"></script>
+<script src="js/tro-choi.js?v=0b488a12"></script>
+<script src="js/nhanh.js?v=0b488a12"></script>
+<script src="js/do.js?v=0b488a12"></script>
 </body>
 </html>
