@@ -100,8 +100,35 @@
       var db = app.database();
       var base = db.ref("ruoc-duoc/lop-6-3");
       var nn = taoNguoiNghe();
+      // 25/11/2026 thầy Thịnh: "nếu trong lúc chơi lỡ rớt mạng thì có nối lại ngay được không ???"
+      //   Thư viện Firebase tự nối lại và tự gửi nốt những gì ghi lúc mất mạng. Nhưng mỗi lần thử hỏng nó chờ lâu thêm 30% (tối đa
+      //   5 phút), chỉ thử ngay khi trình duyệt báo "có mạng lại" (wifi của máy tắt rồi bật). Wifi còn bắt mà đường ra mạng mất thì
+      //   không có tin báo ấy, mạng có lại rồi máy vẫn ngồi chờ hết nhịp (đo: bài thử ban-the-moi/test/rot-mang-25-11.js).
+      //   Nên khi đang mất nối (sau khi đã nối được ít nhất một lần), cứ 2 giây hỏi thử máy chủ dữ liệu một câu rất nhẹ; có trả
+      //   lời (kể cả trả lời từ chối) là mạng đã có lại, lúc đó bảo thư viện nối ngay: goOffline rồi goOnline đặt nhịp chờ về 1 giây
+      //   và thử liền. Lần "đá" sau cách lần trước ít nhất 8, 12 rồi 20 giây để lượt nối đang dở trên mạng chậm kịp xong.
+      var dangNoi = false, daTungNoi = false, vong = 0, tDa = 0, lanDa = 0, nhip = null;
+      try { var dc = new URL(cfg.databaseURL); dc.pathname = "/ruoc-duoc/nhip.json"; dc.searchParams.set("shallow", "true"); nhip = dc.href; } catch (e) { nhip = null; }
+      function thuMang(v) {
+        if (v !== vong || dangNoi || !nhip || typeof fetch !== "function") return;
+        var ac = typeof AbortController === "function" ? new AbortController() : null;
+        var het = setTimeout(function () { if (ac) ac.abort(); }, 4000);
+        fetch(nhip, { mode: "no-cors", cache: "no-store", signal: ac ? ac.signal : undefined }).then(function () { return true; }, function () { return false; }).then(function (coMang) {
+          clearTimeout(het);
+          if (v !== vong || dangNoi) return;
+          if (coMang && Date.now() - tDa >= [0, 8000, 12000, 20000][Math.min(lanDa, 3)]) {
+            tDa = Date.now(); lanDa++;
+            try { db.goOffline(); db.goOnline(); } catch (e) { console.error(e); }
+          }
+          setTimeout(function () { thuMang(v); }, 2000);
+        });
+      }
       db.ref(".info/connected").on("value", function (s) {
-        baoTrangThai(s.val() ? "ok" : "cho", s.val() ? "Đã nối qua Firebase" : "Đang nối Firebase…");
+        dangNoi = !!s.val();
+        vong++;
+        if (dangNoi) { daTungNoi = true; tDa = 0; lanDa = 0; }
+        else if (daTungNoi) { var v = vong; setTimeout(function () { thuMang(v); }, 3000); }
+        baoTrangThai(dangNoi ? "ok" : "cho", dangNoi ? "Đã nối qua Firebase" : daTungNoi ? "Mất mạng, đang nối lại…" : "Đang nối Firebase…");
       });
       var ghi = taoHangDoi(function (key, v) { return base.child(key).set(dongGoi(v)); }, function (e) {
         baoTrangThai("loi", "Firebase không cho ghi (" + ((e && (e.code || e.message)) || e) + "). Kiểm tra mục Rules.");
