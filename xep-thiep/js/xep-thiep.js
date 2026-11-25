@@ -849,15 +849,21 @@
              máy ngủ dậy (màn hình tắt rồi mở) không bị coi nhầm là đường chết. */
       var NHIP_MS = 2000, DO_NHIP = 3, DO_CHO = 5, DO_NGHI = 8;
       var daNoi = false, tungNoi = false, doRef = db.ref(NHANH + "/_do"), doSo = 0, doNhip = 0, doCho = 0, nghi = 0, soLamMoi = 0;
+      var tuTay = 0, tayLuc = 0, TAY_CHO = 4;                // nút "Nối lại" (25/11 07:25): tuTay > 0 là vừa bấm nút, chữ báo là "Đang nối lại…"; quá TAY_CHO nhịp chưa nối được thì về "Mất mạng, đang nối lại…"
       db.ref(".info/connected").on("value", function (s) {
-        daNoi = !!s.val(); if (daNoi) tungNoi = true;
+        daNoi = !!s.val(); if (daNoi) { tungNoi = true; tuTay = 0; }
         doSo++; doNhip = 0; doCho = 0;                     // đường nối vừa đổi: câu dò đang chờ (nếu có) không tính nữa
-        bao(daNoi ? "ok" : tungNoi ? "mat" : "cho");        // "mat": đang chơi thì rớt mạng; "cho": lần nối đầu lúc mở trang
+        bao(daNoi ? "ok" : tuTay ? "lai" : tungNoi ? "mat" : "cho");      // "mat": đang chơi thì rớt mạng; "cho": lần nối đầu lúc mở trang; "lai": vừa bấm nút Nối lại
         if (daNoi) coMat.forEach(function (c) { c.r.onDisconnect().remove(); c.r.set(c.v); });
       });
       setInterval(function () {
         if (document.hidden) return;
-        if (!daNoi) { try { db.goOnline(); } catch (e) { /* bỏ qua */ } return; }
+        if (!daNoi) {
+          if (tuTay && ++tuTay > TAY_CHO) { tuTay = 0; bao(tungNoi ? "mat" : "cho"); }
+          try { db.goOnline(); } catch (e) { /* bỏ qua */ }
+          return;
+        }
+        tuTay = 0;
         if (nghi > 0) { nghi--; return; }
         if (doCho) {
           if (++doCho > DO_CHO) {
@@ -881,6 +887,17 @@
         remove: function (p) { base.child(p).remove(loi); },
         on: function (p, cb) { (p ? base.child(p) : base).on("value", function (s) { cb(s.val()); }, loi); },
         mot: function (p, cb) { (p ? base.child(p) : base).once("value", function (s) { cb(s.val()); }, loi); },      // đọc một lần rồi thôi, không nghe tiếp
+        /* Nút "Nối lại" (25/11 07:25, thầy: "nếu mất mạng thì bấm refresh để nhận tín hiệu lại"): đóng đường đang có, mở ngay một đường mới.
+           KHÔNG tải lại trang: mọi thứ trên màn hình giữ nguyên, việc đang chờ ghi thư viện tự gửi lại, dữ liệu mới của máy chủ tự về.
+           Đang mất nối mà bấm liên tiếp: chỉ 3 giây mới bỏ lần thử đang chạy một lần (mạng chậm không bị bấm hỏng), các lần khác chỉ giục thử ngay. */
+        noiLai: function () {
+          var gio = Date.now();
+          tuTay = 1; doCho = 0; doSo++; nghi = DO_NGHI;
+          try {
+            if (daNoi || gio - tayLuc > 3000) { tayLuc = gio; db.goOffline(); db.goOnline(); } else db.goOnline();
+          } catch (e) { /* bỏ qua */ }
+          if (!daNoi) bao("lai");
+        },
         coMat: function (p, v) {                  // báo máy này đang có mặt (mất nối thì máy chủ tự xóa). v = giá trị ghi, bỏ trống là true; gọi lại cùng đường dẫn để đổi giá trị
           var c = null;
           coMat.forEach(function (x) { if (x.p === p) c = x; });
@@ -921,8 +938,22 @@
       remove: function (p) { ghi(p, null); },
       on: function (p, cb) { nghe.push({ p: p, cb: cb }); cb(lay(p)); },
       mot: function (p, cb) { cb(lay(p)); },
+      noiLai: function () { cay = doc(); phat(""); },       // chạy thử trên một máy: đọc lại kho, vẽ lại
       coMat: function (p, v) { ghi(p, v === undefined ? true : v); if (!daCoMat[p]) { daCoMat[p] = 1; window.addEventListener("pagehide", function () { ghi(p, null); }); } }
     });
+  }
+  /* Nút "Nối lại" (25/11 07:25): nút tròn mũi tên vòng như nút tải lại của trình duyệt, cạnh dòng trạng thái nối; có trên điện thoại các nhóm, máy giáo viên, tivi.
+     Bấm: mũi tên quay một lúc, máy nối lại ngay (T.noiLai), trang không tải lại. Riêng lúc thư viện nối máy chủ không tải được từ đầu (chữ "Mất kết nối")
+     thì không còn gì để nối lại: nút tải lại trang. */
+  function nutNoiLai(nut, layT, layKieu) {
+    var hen = 0;
+    nut.onclick = function () {
+      var t = layT();
+      nut.classList.add("quay"); clearTimeout(hen); hen = setTimeout(function () { nut.classList.remove("quay"); }, 1250);
+      datTT(document.documentElement, "data-noi-bam", (+document.documentElement.getAttribute("data-noi-bam") || 0) + 1);
+      if (layKieu() === "loi") { location.reload(); return; }
+      if (t && t.noiLai) t.noiLai();
+    };
   }
   function noi(phong, thu, bao) {
     if (thu || location.protocol === "file:") return noiCungMay(phong, bao);
@@ -1709,8 +1740,11 @@
     function trangThai(kieu) {
       var e = $("dtNoi");
       e.className = "noi " + kieu;
-      e.textContent = kieu === "ok" ? "Đã nối với tivi" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : "Đang nối…";
+      kieuNoi = kieu;
+      e.textContent = kieu === "ok" ? "Đã nối với tivi" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : kieu === "lai" ? "Đang nối lại…" : "Đang nối…";
     }
+    var kieuNoi = "cho";
+    nutNoiLai($("dtNoiLai"), function () { return T; }, function () { return kieuNoi; });
     veGV(); veNhap(); doiMan(); capNhat();
     noi(phong, ts.thu, trangThai).then(function (t) {
       T = t;
@@ -2962,14 +2996,19 @@
     /* 16/11 06:30: dòng này ẩn theo lời thầy. Chỉ hiện khi mất kết nối, hoặc nối quá 8 giây chưa được, để thầy biết tivi đang không nhận bài của các nhóm. */
     var henNoi = 0;
     function trangThai(kieu) {
-      var e = $("tvNoi");
+      var e = $("tvNoi"), dangHien = e.classList.contains("hien");
+      kieuNoi = kieu;
       e.className = "noi " + kieu;
-      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử trên một máy" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : "Đang nối…";
+      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử trên một máy" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : kieu === "lai" ? "Đang nối lại…" : "Đang nối…";
       if (kieu === "ok" || kieu === "cungmay") amTaiSau(1500);      // 18/11: nối xong mới tải tiếng trống
       clearTimeout(henNoi);
-      if (kieu === "loi") e.classList.add("hien");
+      if (kieu === "loi" || kieu === "lai") e.classList.add("hien");      // 25/11 07:25: bấm nút Nối lại thì dòng chữ hiện ngay
+      else if (kieu === "mat" && dangHien) e.classList.add("hien");        // đang hiện chữ mà đổi sang "Mất mạng…": giữ, không chớp tắt
+      else if (kieu === "ok" && dangHien) { e.classList.add("hien"); henNoi = setTimeout(function () { e.classList.remove("hien"); }, 2500); }      // nối lại được: hiện "Đã nối" 2,5 giây rồi cất
       else if (kieu !== "ok" && kieu !== "cungmay") henNoi = setTimeout(function () { e.classList.add("hien"); }, 8000);
     }
+    var kieuNoi = "cho";
+    nutNoiLai($("nutNoiLai"), function () { return T; }, function () { return kieuNoi; });
     $("tv").classList.add("xem-xep");
     veMa(); doiXem("vao");
     [1, 2, 3, 4].forEach(function (k) { veNhom(k, null); });
@@ -3205,10 +3244,13 @@
       veDn(); veNhacGV(); veChamGV();
     }
     veHet();
+    var kieuNoiGV = "cho";
+    nutNoiLai($("gvNoiLai"), function () { return T; }, function () { return kieuNoiGV; });
     noi(phong, thu, function (kieu) {
       var e = $("gvNoi");
+      kieuNoiGV = kieu;
       e.className = "noi " + kieu;
-      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : "Đang nối…";
+      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : kieu === "lai" ? "Đang nối lại…" : "Đang nối…";
     }).then(function (t) {
       T = t;
       T.on("gv", function (v) { ma = v === null || v === undefined ? "chua" : String(v) === String(ts.gv) ? "dung" : "sai"; veHet(); });

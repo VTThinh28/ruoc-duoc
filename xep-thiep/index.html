@@ -63,6 +63,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .noi { font-size: 13.5px; padding: 4px 11px; border-radius: 999px; background: #efe4cf; color: var(--chu-nhat); white-space: nowrap; }
 .noi.ok { background: #dff0dd; color: #2f6b3c; }
 .noi.loi, .noi.mat { background: #f8dcd8; color: #9c2a22; }      /* mat (25/11): đang chơi thì rớt mạng, trang đang tự nối lại */
+/* 25/11 07:25, thầy: "có nên thêm nút refresh không??? mọi thứ đã làm trước đó vẫn giữ nguyên, nếu mất mạng thì bấm refresh để nhận tín hiệu lại".
+   Nút tròn mũi tên vòng như nút tải lại của trình duyệt, nằm cạnh dòng trạng thái nối (điện thoại các nhóm, máy giáo viên) và cuối hàng nút tròn của tivi.
+   Bấm là máy nối lại ngay, KHÔNG tải lại trang.
+   Chỗ chạm rộng 44 px (bằng các nút khác), hình tròn nhìn thấy 34 px; lề âm để hàng đầu trang KHÔNG cao thêm: bố cục bên dưới giữ nguyên từng px. */
+.nut-noi-lai { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; margin: -8px -5px -8px auto; border: 0; background: none; color: #7a5a2a; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.nut-noi-lai::before { content: ""; position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px; border-radius: 50%; border: 1.5px solid #c9b48a; background: #fffaf0; box-shadow: 0 1px 3px rgba(60, 40, 20, .18); }
+.nut-noi-lai:active::before { background: #f3e3c0; }
+.nut-noi-lai svg { position: relative; display: block; width: 21px; height: 21px; }
+.nut-noi-lai.quay svg, #nutNoiLai.quay svg { animation: noi-lai-quay .62s linear 2; }
+@keyframes noi-lai-quay { to { transform: rotate(360deg); } }
+.gv-noi-nhom { display: inline-flex; align-items: center; gap: 2px; min-width: 0; }
+.gv-noi-nhom .nut-noi-lai { margin: -9px -5px -9px 0; }
+#gvNoi.mat { white-space: normal; max-width: 128px; margin: -7px 0; line-height: 1.2; text-align: center; border-radius: 13px; }      /* máy giáo viên: dòng "Mất mạng, đang nối lại…" xuống 2 dòng cho vừa cạnh tên trang và nút; lề âm để đầu trang không cao thêm */
+@media (max-width: 350px) { #dtNoi.mat { white-space: normal; max-width: 122px; line-height: 1.2; text-align: center; border-radius: 13px; } }
 
 /* ---------- mảnh ghép (dùng chung) ---------- */
 .manh .than { stroke: #4d4541; stroke-width: 0.9; stroke-linejoin: round; }
@@ -622,7 +636,7 @@ body.tv { background: #130c06; }
 /* nút bánh răng (Cài đặt): nút duy nhất còn trên màn hình tivi.
    16/11 06:39, thầy (kèm ảnh khoanh đỏ ở giữa mép dưới báo tường): "NÚT CÀI ĐẶT CHO NẰM Ở PHẦN MÀU ĐỎ NÈ" → nút nằm giữa mép dưới báo tường, cưỡi lên viền khung,
    màu kem viền gỗ như chính cái khung. Nút nằm trong .xep nên to nhỏ theo báo tường. */
-.tv-nut { position: absolute; left: 960px; top: 1074px; width: 268px; height: 44px; margin: -22px 0 0 -134px; display: flex; gap: 12px; }      /* 16/11 10:02: nút Toàn màn hình kế nút Cài đặt; 10:44: thêm 3 nút nhạc (bật / tắt, nhỏ, to) kế nút Toàn màn hình. Cả hàng nằm giữa mép dưới báo tường */
+.tv-nut { position: absolute; left: 960px; top: 1074px; width: 324px; height: 44px; margin: -22px 0 0 -162px; display: flex; gap: 12px; }      /* 16/11 10:02: nút Toàn màn hình kế nút Cài đặt; 10:44: thêm 3 nút nhạc (bật / tắt, nhỏ, to) kế nút Toàn màn hình. Cả hàng nằm giữa mép dưới báo tường */
 .nut-nhac { position: relative; }
 .nut-nhac .bat, .nut-nhac.dang .tat { display: none; }
 .nut-nhac.dang .bat { display: block; }
@@ -826,7 +840,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
   <div id="dtChon" class="dt-thong-bao" hidden><h1>Tấm thiệp của nhóm em</h1><p class="chon-hoi">Em ở nhóm nào?</p><p id="dtChonChu" class="chon-chu"></p><div id="dtChonNut"></div><button id="dtChonXong" class="nut chinh" disabled>Xác nhận</button></div>
   <div id="dtChinh" hidden>
     <div id="dtGV" class="dt-gv" hidden><button id="dtGVVe" class="nut">‹ Trang giáo viên</button><span id="dtGVChu"></span></div>
-    <div class="dt-dau"><span id="dtNhom"></span><span id="dtNoi" class="noi">Đang nối…</span><span class="dt-ten" id="dtTen">Nhiệm vụ 1: Đo đạc và tính toán</span></div>
+    <div class="dt-dau"><span id="dtNhom"></span><span id="dtNoi" class="noi">Đang nối…</span><button id="dtNoiLai" class="nut-noi-lai" type="button" aria-label="Nối lại" title="Nối lại"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button><span class="dt-ten" id="dtTen">Nhiệm vụ 1: Đo đạc và tính toán</span></div>
 
     <section id="manNhap" class="man">
       <p id="nhapLoi" class="nhap-loi"></p>
@@ -889,7 +903,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 
 <!-- ============ TIVI ============ -->
 <div id="gv" hidden>
-  <div class="gv-dau"><span class="gv-ten">Máy giáo viên</span><span id="gvNoi" class="noi">Đang nối…</span></div>
+  <div class="gv-dau"><span class="gv-ten">Máy giáo viên</span><span class="gv-noi-nhom"><span id="gvNoi" class="noi">Đang nối…</span><button id="gvNoiLai" class="nut-noi-lai" type="button" aria-label="Nối lại" title="Nối lại"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button></span></div>
   <p id="gvLoi" class="gv-loi" hidden></p>
   <div id="gvThan" hidden>
     <p id="gvTom" class="gv-tom"></p>
@@ -980,6 +994,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
       <button id="nutNhac" class="nut nut-rang nut-nhac" aria-label="Bật nhạc" title="Bật nhạc"><svg class="tat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.27 3L3 4.27l9 9v.28c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-1.73L19.73 21 21 19.73 4.27 3zM14 7h4V3h-6v5.18l2 2z"/></svg><svg class="bat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><span id="nhacMuc" class="muc">5</span></button>
       <button id="nutNhacNho" class="nut nut-rang" aria-label="Giảm âm lượng" title="Giảm âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg></button>
       <button id="nutNhacTo" class="nut nut-rang" aria-label="Tăng âm lượng" title="Tăng âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+      <button id="nutNoiLai" class="nut nut-rang" aria-label="Nối lại" title="Nối lại (không tải lại trang)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
     </div>
   </section>
 
@@ -1117,6 +1132,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=a6142860"></script>
-<script src="js/xep-thiep.js?v=bb506252"></script>
+<script src="js/xep-thiep.js?v=a0749ccb"></script>
 </body>
 </html>
