@@ -1123,10 +1123,12 @@
       var pill = $("#mcPill");
       pill.textContent = RD.nhanCau(q);
       pill.classList.toggle("vang", q === 5);
-      // Kéo co: sức mạnh của câu nằm cạnh nhãn câu
+      // Kéo co: dải hiệu ứng của câu nằm thành một hàng riêng dưới nhãn câu (26/11 00:01 thầy: "đổi tên thành hiệu ứng tăng tốc. và cho
+      //   dòng này to lên … còn câu 1 thì ghi rõ là không có hiệu ứng")
       var sm = RD.SUC_MANH[q - 1];
-      $("#mcSmTen").textContent = sm.ten;
-      $("#mcSmLuat").textContent = sm.ngan;
+      $("#mcSmTen").textContent = RD.tenHieuUng(q);
+      $("#mcSmLuat").textContent = sm.luat;
+      $("#mcSm").classList.toggle("khong", !!sm.khong);
       datCot(q);
       $("#mcBoiCanh").innerHTML = chuDe(c.boiCanh);
       $("#mcHoi").innerHTML = chuDe(c.hoi);
@@ -1145,23 +1147,11 @@
       hoat(m, [{ opacity: 0 }, { opacity: 1 }], 450, DE, function () { huyHoat(m); if (mcHien) phuSan(true); });
       hoat(the, [{ transform: "translateY(40px)" }, { transform: "none" }], 450, DE, function () { huyHoat(the); });
     } else phuSan(true);
-    var nt = $("#mcNuocTo");
     // 6/11 thầy Thịnh: chỉ kêu ở chỗ quan trọng. Màn câu hỏi chỉ còn một tiếng lúc câu hỏi mới hiện ra
     //   (bỏ trống dồn, tiếng ting lúc quét, tiếng kèn câu 5 và tiếng chuông lúc hiện đáp án)
-    if (cauMoi && moi) {
-      A.baoCau();
-      if (q === 5 && loai === "q") {
-        nt.hidden = false;
-        hoat(nt, [
-          { offset: 0, opacity: 0, transform: "scale(.4)" },
-          { offset: 0.1, opacity: 0, transform: "scale(.4)", easing: NAY },
-          { offset: 0.3, opacity: 1, transform: "scale(1)" },
-          { offset: 0.833, opacity: 1, transform: "scale(1)", easing: "ease-in" },
-          { offset: 1, opacity: 0, transform: "scale(.9)" }
-        ], 3000, "linear", function () { nt.hidden = true; huyHoat(nt); });
-      }
-    }
-    if (loai !== "q") { huyHoat(nt); nt.hidden = true; }
+    // 26/11 00:01 thầy Thịnh: "câu 5 cũng ghi giống mấy câu kia nhé": câu 5 không còn tấm bảng vàng "Về đích: số nấc nhân đôi" bật giữa
+    //   màn hình 3 giây lúc câu hỏi hiện ra (chỉ câu 5 có, các câu kia không có); hiệu ứng của cả 5 câu đều ghi ở dải dưới nhãn câu
+    if (cauMoi && moi) A.baoCau();
     var moDapAn = loai === "a" && cu === "k" + q;
     if (moDapAn) {
       var o2 = m.querySelector('.mc-o[data-l="' + c.dung + '"]');
@@ -1174,8 +1164,7 @@
     if (!mcHien) return;
     mcHien = false;
     phuSan(false);
-    var m = $("#manCau"), the = $("#mcThe"), nt = $("#mcNuocTo");
-    huyHoat(nt); nt.hidden = true;
+    var m = $("#manCau"), the = $("#mcThe");
     hoat(m, [{ opacity: 1 }, { opacity: 0 }], 550, DE, function () { if (!mcHien) { m.hidden = true; dungVideo(); } huyHoat(m); });
     hoat(the, [{ transform: "none" }, { transform: "scale(.92)" }], 550, DE, function () { huyHoat(the); });
   }
@@ -1224,11 +1213,6 @@
     var el = $("#mcTien");
     if (el.dataset.html !== html) {
       el.innerHTML = html; el.dataset.html = html;
-      // 25/11 22:12: dòng "Đội n: x/y HS đúng" to lên nên dải sức mạnh bên cạnh hẹp lại; lời luật không còn vừa một dòng thì xuống hai dòng
-      //   chữ nhỏ hơn (lớp hai-dong) thay vì bị cắt bằng dấu ba chấm
-      var sm = $("#mcSm"), lu = $("#mcSmLuat");
-      sm.classList.remove("hai-dong");
-      if (lu.scrollWidth > lu.clientWidth + 1) sm.classList.add("hai-dong");
     }
   }
 
@@ -1454,7 +1438,7 @@
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của 2 đội. Máy đã thôi ghi thẻ câu này (em nào chưa có thì chạm số thẻ để ghi tay). Mời một em nêu cách làm, rồi bấm <b>Kéo co</b>.";
     else if (loai === "r") {
       var kcr = lichSuKC()[q], Kr = kcr && kcr.cau[q];
-      html = "TV đang cho hai đội kéo co theo kết quả câu " + q + " (sức mạnh: <b>" + RD.SUC_MANH[q - 1].ten + "</b>)." + (Kr ? " Câu này: Đội 1 đúng " + Kr.doi[0].tram + "%, Đội 2 đúng " + Kr.doi[1].tram + "%. Sau câu " + q + ": <b>" + RD.vietVT(kcr.vt) + "</b>." : "") +
+      html = "TV đang cho hai đội kéo co theo kết quả câu " + q + " (" + (RD.SUC_MANH[q - 1].khong ? "câu này không có hiệu ứng" : "hiệu ứng: <b>" + RD.SUC_MANH[q - 1].ten + "</b>") + ")." + (Kr ? " Câu này: Đội 1 đúng " + Kr.doi[0].tram + "%, Đội 2 đúng " + Kr.doi[1].tram + "%. Sau câu " + q + ": <b>" + RD.vietVT(kcr.vt) + "</b>." : "") +
         (q < 5 ? " Dây đứng yên rồi thì bấm <b>Hiện câu " + (q + 1) + "</b>." : " Kéo xong, TV tự sang bước thắp đuốc: đuốc của đội thắng tự sáng, thầy không cần bấm.");
     }
     else if (step === "finish") {

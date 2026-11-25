@@ -197,12 +197,16 @@
     { n: 2, ten: "Đội 2", mau: "#e9861c", dam: "#a8560a", nhat: "#fdead3", to: [2, 3] }
   ];
   RD.SUC_MANH = [
-    { ten: "Khai cuộc", luat: "Đội nào đúng nhiều hơn thì kéo dây về phía đội mình", ngan: "Đội đúng nhiều hơn thì kéo được dây" },
-    { ten: "Đồng lòng", luat: "Đội nào đúng từ 90% trở lên được thưởng thêm 1 nấc", ngan: "Đội nào đúng từ 90% trở lên được thưởng thêm 1 nấc" },
-    { ten: "Tăng tốc", luat: "Đội thắng câu này được kéo thêm 1 nấc", ngan: "Đội thắng câu này được kéo thêm 1 nấc" },
-    { ten: "Tiếp sức", luat: "Đội đang bị dẫn mà thắng câu này thì được kéo gấp đôi", ngan: "Đội đang bị dẫn mà thắng câu này thì được kéo gấp đôi" },
-    { ten: "Về đích", luat: "Số nấc của câu này được nhân đôi", ngan: "Số nấc của câu này được nhân đôi" }
+    { ten: "Khai cuộc", luat: "Đội nào đúng nhiều hơn thì kéo dây về phía đội mình", khong: true },
+    { ten: "Đồng lòng", luat: "Đội nào đúng từ 90% trở lên được thưởng thêm 1 nấc" },
+    { ten: "Tăng tốc", luat: "Đội thắng câu này được kéo thêm 1 nấc" },
+    { ten: "Tiếp sức", luat: "Đội đang bị dẫn mà thắng câu này thì được kéo gấp đôi" },
+    { ten: "Về đích", luat: "Số nấc của câu này được nhân đôi" }
   ];
+  // 26/11 00:01 thầy Thịnh (gửi hình dải "TĂNG TỐC Đội thắng câu này được kéo thêm 1 nấc"): "đổi tên thành hiệu ứng tăng tốc. và cho dòng này
+  //   to lên. câu 5 cũng ghi giống mấy câu kia nhé. còn câu 1 thì ghi rõ là không có hiệu ứng." Nên dải trên TV ghi "Hiệu ứng <tên>" ở câu 2
+  //   tới câu 5 và "Không có hiệu ứng" ở câu 1 (câu 1 chỉ có luật kéo thường, không thêm gì).
+  RD.tenHieuUng = function (q) { var s = RD.SUC_MANH[q - 1]; return s.khong ? "Không có hiệu ứng" : "Hiệu ứng " + s.ten; };
   RD.DONG_LONG = 90;         // ngưỡng Đồng lòng (phần trăm). Ván thật 19/11 cao nhất 87%: thầy chưa chốt giữ 90 hay hạ
   RD.NAC_HIEN = 10;          // dây và thước trên TV chỉ lệch tối đa bấy nhiêu nấc; chữ vẫn ghi số nấc thật
   RD.nac = function (d) { d = Math.abs(d); return d < 5 ? 0 : d < 10 ? 1 : d < 25 ? 2 : 3; };

@@ -381,8 +381,8 @@
     h += '<div class="kc-no" id="kcNo"></div></div>';
     // nhãn câu, sức mạnh, 5 bước
     h += '<div class="kc-cau" id="kcCau"></div>';
-    h += '<div class="kc-sm" id="kcSm"><div class="bieu">' + SET + '</div><div class="ten-khoi"><div class="nho" id="kcSmNho"></div><div class="ten" id="kcSmTen"></div></div><div class="sm-luat" id="kcSmLuat"></div></div>';
-    h += '<div class="kc-duong kc-the" id="kcDuong"><div class="day-noi"></div>' + SM.map((s, i) => '<div class="buoc" style="left:' + (92 + 165 * i) + 'px"><div class="tron">' + (i + 1) + '</div><div class="tb">' + s.ten + '</div><div class="kq"></div></div>').join("") + "</div>";
+    h += '<div class="kc-sm" id="kcSm"><div class="bieu">' + SET + '</div><div class="ten-khoi"><div class="ten" id="kcSmTen"></div><div class="sm-luat" id="kcSmLuat"></div></div></div>';
+    h += '<div class="kc-duong kc-the" id="kcDuong"><div class="day-noi"></div>' + SM.map((s, i) => '<div class="buoc" style="left:' + (72 + 124 * i) + 'px"><div class="tron">' + (i + 1) + '</div><div class="tb">' + s.ten + '</div><div class="kq"></div></div>').join("") + "</div>";
     const sao = () => '<span class="kc-sao">' + [0, 1, 2, 3, 4].map(() => "<span>" + SAO + "</span>").join("") + "</span>";
     const tenNhom = D => "";                   // 25/11 20:14: không còn "Nhóm 1 + Nhóm 2"; số thẻ của từng đội do KC.datThe ghi theo Cài đặt
     RD.DOI.forEach((D, i) => {
@@ -418,7 +418,7 @@
       lua: tat(".kc-lua"), quang: tat(".kc-quang"), duoc: tat(".kc-duoc"), tri: [tat(".kc-tri.x0"), tat(".kc-tri.x1")], bongDoi: tat(".kc-bong-doi"),
       dat: $("#kcDat", g), nutDat: tat(".kc-nut"), vetDat: tat(".kc-vet"), vongDat: $(".kc-vong-dat", g), soi: tat(".kc-soi"), khoi: [tat(".kc-khoi.b0"), tat(".kc-khoi.b1")],
       bui: [tat(".kc-bui.b0"), tat(".kc-bui.b1")], mui: [$(".kc-mui.m1", g), $(".kc-mui.m2", g)], soNac: $("#kcSoNac", g),
-      cau: $("#kcCau", g), sm: $("#kcSm", g), smNho: $("#kcSmNho", g), smTen: $("#kcSmTen", g), smLuat: $("#kcSmLuat", g),
+      cau: $("#kcCau", g), sm: $("#kcSm", g), smTen: $("#kcSmTen", g), smLuat: $("#kcSmLuat", g),
       duong: $("#kcDuong", g), buoc: tat(".kc-duong .buoc").map(b => ({ el: b, kq: $(".kq", b) })),
       bang: [bang(1), bang(2)], chip: [chip(1), chip(2)], bao: $("#kcBao", g), lon: $("#kcLon", g), vi: $("#kcVi", g), x2: $("#kcX2", g),
       thuoc: $("#kcThuoc", g), nang: $(".kc-thuoc .nang", g), moc: $(".kc-thuoc .moc", g), bong: $(".kc-thuoc .bong", g), muiTen: $(".kc-thuoc .mui-ten", g), dan: $(".kc-thuoc .dan", g), thBen: tat(".kc-thuoc .ben"), cauTh: tat(".kc-thuoc .cau > i"),
@@ -1038,7 +1038,7 @@
     if (che === "keo" && K) {
       const b = lin(u, T_SM, T_SM + .65), sm = RD.SUC_MANH[q - 1];
       mo(E.sm, b > 0 ? 1 - an : 0);
-      chu(E.smNho, "Sức mạnh câu " + q); chu(E.smTen, sm.ten.toUpperCase()); chu(E.smLuat, sm.luat);
+      chu(E.smTen, RD.tenHieuUng(q).toUpperCase()); chu(E.smLuat, sm.luat); lop(E.sm, "khong", !!sm.khong);          // 26/11 00:01: "Hiệu ứng <tên>", câu 1 "Không có hiệu ứng"
       kieu(E.sm, "transform", b < 1 ? "perspective(900px) rotateX(" + ((1 - ob(b)) * -90).toFixed(2) + "deg)" : "");
     } else mo(E.sm, 0);
     if (tran) {

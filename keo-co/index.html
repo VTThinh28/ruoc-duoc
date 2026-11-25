@@ -137,11 +137,10 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 /* ---------- màn câu hỏi ---------- */
 #manCau{position:absolute;inset:0;z-index:6000;--ac:#2a5fb8;--fs:72px;--fo:54px;--wh:560px}
 .mc-nen{filter:blur(10px) brightness(.6)}
-.mc-the{position:absolute;left:14px;top:14px;width:1892px;height:calc(var(--dayThe,1066px) - 14px);padding:16px 30px 22px;border-radius:30px;background:linear-gradient(#fffaf0,#fff3dc);border:5px solid var(--ac);box-shadow:0 20px 60px rgba(0,0,0,.45);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:64px minmax(0,1fr) 124px;gap:14px}
+.mc-the{position:absolute;left:14px;top:14px;width:1892px;height:calc(var(--dayThe,1066px) - 14px);padding:16px 30px 22px;border-radius:30px;background:linear-gradient(#fffaf0,#fff3dc);border:5px solid var(--ac);box-shadow:0 20px 60px rgba(0,0,0,.45);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:64px 62px minmax(0,1fr) 124px;gap:14px}
 .mc-dau{display:flex;align-items:center;gap:16px;min-width:0}
 .mc-pill{padding:6px 26px;border-radius:999px;background:var(--ac);color:#fff;font:800 40px/1.1 var(--f-tieu);white-space:nowrap}
 .mc-pill.vang{background:linear-gradient(#f7d25d,#e3a51c);color:#5a3a00;font-size:32px}
-#mcNuocTo{position:absolute;left:50%;top:50%;z-index:3;margin:-90px 0 0 -700px;width:1400px;height:180px;display:grid;place-items:center;border-radius:28px;background:linear-gradient(#f7d25d,#e3a51c);border:6px solid #fff3c4;box-shadow:0 12px 0 #9c6a07,0 30px 80px rgba(0,0,0,.5);font:800 86px/1 var(--f-tieu);color:#5a3a00;white-space:nowrap}
 .mc-tien{margin-left:auto;display:flex;gap:10px;min-width:0}
 .mc-tien span{padding:6px 14px;border-radius:999px;border:3px solid var(--m);font:800 30px/1 var(--f-tieu);color:var(--m);background:#fff;white-space:nowrap}
 .mc-tien span.quet{--m:#3a2a1e}
@@ -586,15 +585,17 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 /* bảng, nhãn */
 .kc-the{background:var(--giay);border:3px solid var(--vien);border-radius:22px;box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .kc-cau{position:absolute;left:36px;top:30px;height:60px;padding:0 26px;border-radius:999px;background:#2d63c8;color:#fff;font:800 32px/60px var(--f-tieu);box-shadow:0 4px 12px rgba(0,0,0,.35);white-space:nowrap}
-.kc-sm{position:absolute;left:214px;top:20px;width:806px;height:100px;border-radius:22px;background:linear-gradient(100deg,#2a1f5c 0,#3c2a7a 55%,#5a2f86 100%);border:3px solid var(--vang2);box-shadow:0 0 0 4px rgba(255,213,110,.25),0 0 30px rgba(255,200,90,.45),0 8px 20px rgba(0,0,0,.4);display:flex;align-items:center;gap:18px;padding:0 22px 0 14px;color:#fff;transform-origin:50% 0}
+.kc-sm{position:absolute;left:214px;top:20px;width:1010px;height:100px;border-radius:22px;background:linear-gradient(100deg,#2a1f5c 0,#3c2a7a 55%,#5a2f86 100%);border:3px solid var(--vang2);box-shadow:0 0 0 4px rgba(255,213,110,.25),0 0 30px rgba(255,200,90,.45),0 8px 20px rgba(0,0,0,.4);display:flex;align-items:center;gap:18px;padding:0 22px 0 14px;color:#fff;transform-origin:50% 0}
 .kc-sm .bieu{flex:none;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 60%,#c4850d);display:grid;place-items:center;box-shadow:0 0 16px rgba(255,210,110,.8)}
-.kc-sm .ten-khoi{flex:none}
-.kc-sm .nho{font:700 17px/1 var(--f-chu);color:#ffe3a0;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
-.kc-sm .ten{font:800 42px/1.05 var(--f-tieu);color:var(--vang2);letter-spacing:1px;white-space:nowrap;padding-top:4px}
-.kc-sm .sm-luat{font:600 23px/1.2 var(--f-chu);color:#fff}
-.kc-duong{position:absolute;left:1040px;top:20px;width:844px;height:100px;padding:10px 18px 0}
-.kc-duong .day-noi{position:absolute;left:92px;right:92px;top:31px;height:5px;background:#e2c896;border-radius:3px}
-.kc-duong .buoc{position:absolute;top:8px;width:160px;margin-left:-80px;text-align:center}
+/* 26/11 00:01 thầy Thịnh: "đổi tên thành hiệu ứng tăng tốc. và cho dòng này to lên": tên ghi liền một dòng "HIỆU ỨNG TĂNG TỐC" (không
+   còn dòng nhỏ "Sức mạnh câu 3"), lời luật nằm dưới tên, to từ 23 lên 31 px và luôn một dòng; để đủ chỗ, dải rộng từ 806 lên 1010 px
+   và thanh 5 bước bên phải hẹp từ 844 xuống 640 px (các bước cách nhau 124 px thay cho 165 px) */
+.kc-sm .ten-khoi{flex:1 1 auto;min-width:0}
+.kc-sm .ten{font:800 40px/1.05 var(--f-tieu);color:var(--vang2);letter-spacing:1px;white-space:nowrap;padding-top:4px}
+.kc-sm .sm-luat{font:600 31px/1.2 var(--f-chu);color:#fff;white-space:nowrap}
+.kc-duong{position:absolute;left:1244px;top:20px;width:640px;height:100px;padding:10px 18px 0}
+.kc-duong .day-noi{position:absolute;left:72px;right:72px;top:31px;height:5px;background:#e2c896;border-radius:3px}
+.kc-duong .buoc{position:absolute;top:8px;width:124px;margin-left:-62px;text-align:center}
 .kc-duong .tron{margin:0 auto;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font:800 26px/1 var(--f-tieu);color:#fff;background:#8f7a62;border:3px solid #fff6e4;box-shadow:0 2px 5px rgba(0,0,0,.25)}
 .kc-duong .tb{font:800 19px/1.1 var(--f-tieu);color:var(--muc);margin-top:3px;white-space:nowrap}
 .kc-duong .kq{font:700 15px/1.1 var(--f-chu);color:var(--muc2);white-space:nowrap;min-height:16px}
@@ -713,12 +714,17 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 #kc.kc-lo{background:none}
 #kc.kc-lo .kc-trong{display:none}
 #world.kc-che-nut #nutHienBao{visibility:hidden}
-/* màn câu hỏi: dải sức mạnh của câu cạnh nhãn "Câu n/5" */
-.mc-sm{flex:0 1 auto;min-width:0;height:54px;display:flex;align-items:center;gap:12px;padding:0 22px 0 6px;border-radius:999px;background:linear-gradient(100deg,#2a1f5c 0,#3c2a7a 55%,#5a2f86 100%);border:3px solid #ffd56e;box-shadow:0 0 0 3px rgba(255,213,110,.25),0 0 16px rgba(255,200,90,.4);color:#fff;white-space:nowrap;overflow:hidden}
-.mc-sm .bieu{flex:none;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 60%,#c4850d);display:grid;place-items:center}
-.mc-sm .ten{flex:none;font:800 30px/1 var(--f-tieu);color:#ffd56e;letter-spacing:.6px;padding-top:4px;text-transform:uppercase}
-.mc-sm .sm-luat{font:600 23px/1 var(--f-chu);overflow:hidden;text-overflow:ellipsis}
-.mc-sm.hai-dong .sm-luat{white-space:normal;font-size:19px;line-height:1.14;text-overflow:clip;max-height:44px}
+/* màn câu hỏi: dải hiệu ứng của câu. 26/11 00:01 thầy Thịnh: "đổi tên thành hiệu ứng tăng tốc. và cho dòng này to lên": dải rời khỏi
+   hàng nhãn "Câu n/5" (ở đó hai ô "Đội n: x/y HS đúng" chiếm gần hết chỗ) xuống một hàng riêng, chữ to gấp rưỡi, luôn một dòng */
+.mc-sm-hang{display:flex;align-items:center;min-width:0}
+.mc-sm{flex:0 1 auto;min-width:0;height:62px;display:flex;align-items:center;gap:16px;padding:0 32px 0 7px;border-radius:999px;background:linear-gradient(100deg,#2a1f5c 0,#3c2a7a 55%,#5a2f86 100%);border:3px solid #ffd56e;box-shadow:0 0 0 3px rgba(255,213,110,.25),0 0 16px rgba(255,200,90,.4);color:#fff;white-space:nowrap}
+.mc-sm .bieu{flex:none;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 60%,#c4850d);display:grid;place-items:center}
+.mc-sm .ten{flex:none;font:800 38px/1 var(--f-tieu);color:#ffd56e;letter-spacing:.6px;padding-top:5px;text-transform:uppercase}
+.mc-sm .sm-luat{font:600 34px/1.2 var(--f-chu);overflow:hidden;text-overflow:ellipsis}
+/* câu 1 "Không có hiệu ứng" (26/11 00:01): tia sét và tên ngả màu bạc cho khác bốn câu có hiệu ứng */
+.mc-sm.khong .bieu,.kc-sm.khong .bieu{background:radial-gradient(circle at 40% 35%,#f4f1f9,#bdb6cd 60%,#8f88a3);box-shadow:none}
+.mc-sm.khong .bieu path,.kc-sm.khong .bieu path{fill:#4f4963}
+.mc-sm.khong .ten,.kc-sm.khong .ten{color:#e6e0f3}
 .mc-tien{flex:none}
 </style>
 </head>
@@ -748,6 +754,8 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
            LỜI THẦY (25/11 16:18, chép đúng từng chữ, chỉ thêm dấu câu): dòng "Mỗi câu hỏi sẽ cho đội chiến thắng nhận được sức mạnh riêng: Khai cuộc,
            Đồng lòng, Tăng tốc, Tiếp sức, Về đích." và dòng "Sau 5 câu, đội kéo được dây về phía mình sẽ được thắp đuốc trước và nhận một phần quà
            của thầy." (thầy: "cái này đúng rồi"). Hai dòng đầu của "Cách chơi" là lời thầy ở bản Rước đuốc.
+           26/11 00:02 thầy: "trong mục hướng dẫn mục sức mạnh riêng bỏ khai cuộc đi nhé": dòng đó chỉ còn 4 tên Đồng lòng, Tăng tốc, Tiếp sức,
+           Về đích (câu 1 không có hiệu ứng); chữ "sức mạnh riêng" là lời thầy nên giữ nguyên.
            CÒN LÀ BẢN NHÁP CỦA TÔI, thầy chưa duyệt: đoạn "Nhiệm vụ" và dòng thứ ba của "Cách chơi". Thầy gửi lời của thầy thì chép đúng từng
            chữ vào đây, chỉ chia dòng. 25/11 16:18 chỉ còn 2 cây đuốc (của Đội 1 và Đội 2) nên "ngọn đuốc của nhóm" sửa thành "ngọn đuốc của đội mình". -->
       <h2>Nhiệm vụ</h2>
@@ -757,7 +765,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
         <li>Khi câu hỏi hiện lên, mỗi bạn tự suy nghĩ và tính đáp án.</li>
         <li>Khi màn hình báo "Giơ đáp án", mỗi bạn giơ thẻ có chữ cái của đáp án mình chọn, mặt có mã hướng về phía thầy, giữ yên cho đến khi thầy quét xong.</li>
         <li>Mỗi câu, đội nào có tỉ lệ bạn trả lời đúng cao hơn thì kéo được dây về phía đội mình; hơn càng nhiều thì kéo được càng nhiều nấc.</li>
-        <li>Mỗi câu hỏi sẽ cho đội chiến thắng nhận được sức mạnh riêng: Khai cuộc, Đồng lòng, Tăng tốc, Tiếp sức, Về đích.</li>
+        <li>Mỗi câu hỏi sẽ cho đội chiến thắng nhận được sức mạnh riêng: Đồng lòng, Tăng tốc, Tiếp sức, Về đích.</li>
         <li>Sau 5 câu, đội kéo được dây về phía mình sẽ được thắp đuốc trước và nhận một phần quà của thầy.</li>
       </ul>
     </div>
@@ -772,14 +780,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <div id="manCau" hidden>
       <div class="mc-nen"><i class="nn-giua"></i><i class="nn-tren"></i><i class="nn-duoi"></i><i class="nn-trai"></i><i class="nn-phai"></i></div>
       <div class="mc-the" id="mcThe">
-        <div class="mc-dau"><span class="mc-pill" id="mcPill">Câu 1/5</span><span class="mc-sm" id="mcSm"><span class="bieu"><svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true"><path d="M27 4 L12 27 h10 l-3 17 L36 20 H25 Z" fill="#6b2a00"/></svg></span><span class="ten" id="mcSmTen"></span><span class="sm-luat" id="mcSmLuat"></span></span><div class="mc-tien" id="mcTien"></div></div>
+        <div class="mc-dau"><span class="mc-pill" id="mcPill">Câu 1/5</span><div class="mc-tien" id="mcTien"></div></div>
+        <div class="mc-sm-hang"><span class="mc-sm" id="mcSm"><span class="bieu"><svg width="30" height="30" viewBox="0 0 48 48" aria-hidden="true"><path d="M27 4 L12 27 h10 l-3 17 L36 20 H25 Z" fill="#6b2a00"/></svg></span><span class="ten" id="mcSmTen"></span><span class="sm-luat" id="mcSmLuat"></span></span></div>
         <div class="mc-than">
           <div class="mc-hinh" id="mcHop"><div class="mc-khung" id="mcKhung" role="img" hidden><img id="mcNhan" alt=""><div class="mc-so" id="mcSo"></div></div><img id="mcAnh" alt="" hidden></div>
           <div class="mc-chu" id="mcChu"><p id="mcBoiCanh"></p><p id="mcHoi" class="mc-hoi"></p><div id="mcDem" role="status" aria-live="assertive" hidden><div class="vong"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="nen" cx="100" cy="100" r="88"/><circle class="chay" id="mcDemVong" cx="100" cy="100" r="88"/></svg><b id="mcDemSo">5</b></div><strong>Giơ đáp án</strong><p id="mcDemChu">Chuẩn bị giơ thẻ</p></div></div>
         </div>
         <div class="mc-chon" id="mcChon"></div>
       </div>
-      <div id="mcNuocTo" hidden>Về đích: số nấc nhân đôi</div>
     </div>
     <div id="goiY" hidden></div>
     <div id="canhBao" hidden><div><p id="cbChu"></p><div class="cb-nut"><button type="button" id="cbVan">Vẫn công bố</button><button type="button" id="cbThem">Quét thêm</button></div></div></div>
@@ -894,18 +902,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="b49ec3ba";</script>
-<script src="js/cau-hinh.js?v=b49ec3ba"></script>
-<script src="js/scanlib.js?v=b49ec3ba"></script>
-<script src="js/du-lieu.js?v=b49ec3ba"></script>
-<script src="js/dong-bo.js?v=b49ec3ba"></script>
-<script src="js/am-thanh.js?v=b49ec3ba"></script>
-<script src="js/quet.js?v=b49ec3ba"></script>
-<script src="js/cay-cau.js?v=b49ec3ba"></script>
-<script src="js/san-khau.js?v=b49ec3ba"></script>
-<script src="js/keo-co.js?v=b49ec3ba"></script>
-<script src="js/tro-choi.js?v=b49ec3ba"></script>
-<script src="js/nhanh.js?v=b49ec3ba"></script>
-<script src="js/do.js?v=b49ec3ba"></script>
+<script>window.RD_V="68ec9a12";</script>
+<script src="js/cau-hinh.js?v=68ec9a12"></script>
+<script src="js/scanlib.js?v=68ec9a12"></script>
+<script src="js/du-lieu.js?v=68ec9a12"></script>
+<script src="js/dong-bo.js?v=68ec9a12"></script>
+<script src="js/am-thanh.js?v=68ec9a12"></script>
+<script src="js/quet.js?v=68ec9a12"></script>
+<script src="js/cay-cau.js?v=68ec9a12"></script>
+<script src="js/san-khau.js?v=68ec9a12"></script>
+<script src="js/keo-co.js?v=68ec9a12"></script>
+<script src="js/tro-choi.js?v=68ec9a12"></script>
+<script src="js/nhanh.js?v=68ec9a12"></script>
+<script src="js/do.js?v=68ec9a12"></script>
 </body>
 </html>
