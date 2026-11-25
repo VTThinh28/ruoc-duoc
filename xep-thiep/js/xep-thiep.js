@@ -837,10 +837,41 @@
       var app = window.firebase.apps && window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(FB);
       var db = app.database(), base = db.ref(NHANH + "/" + phong), coMat = [], lechGio = 0;
       db.ref(".info/serverTimeOffset").on("value", function (sv) { lechGio = +sv.val() || 0; });     // đồng hồ của máy này lệch giờ máy chủ bao nhiêu: tivi và máy giáo viên đếm ngược theo cùng một giờ
+      /* 25/11 06:46, thầy: "nếu trong lúc chơi lỡ rớt mạng thì có nối lại ngay được không". Thư viện tự nối lại và tự gửi nốt việc làm lúc mất mạng,
+         nhưng đo trên trang thật (test/thu32.js, cắt mạng thật) còn 2 chỗ chậm:
+         (1) mỗi lần thử hỏng thư viện chờ lâu hơn (tới 30 giây): mất mạng 75 giây, có mạng lại tivi chờ 31 giây mới nối;
+         (2) đường nối chết lặng (wifi còn vạch, internet mất, không ai báo) thì thư viện không biết: trang vẫn ghi "Đã nối", tivi đứng hơn 60 giây.
+         Sửa, một nhịp NHIP_MS chạy suốt (tab đang ẩn thì thôi, hiện lại là thư viện tự thử ngay):
+         (1) đang mất nối: mỗi nhịp gọi goOnline. Lệnh này chỉ xóa thời gian chờ và thử ngay nếu chưa có lần thử nào đang chạy; lần thử đang chạy không bị ngắt.
+         (2) đang nối: cứ DO_NHIP nhịp hỏi máy chủ một câu ở nút _do (ngoài mọi nhánh đang nghe nên get phải đi một vòng tới máy chủ; chỉ đọc, nút không có gì).
+             Quá DO_CHO nhịp không có trả lời: coi như đường đã chết, đóng lại và mở đường mới (goOffline rồi goOnline); việc đang chờ ghi thư viện tự gửi lại
+             trên đường mới. Sau đó nghỉ DO_NGHI nhịp rồi mới dò tiếp, để mạng rất chậm không bị đóng mở liên tục. Đếm theo nhịp chứ không theo đồng hồ:
+             máy ngủ dậy (màn hình tắt rồi mở) không bị coi nhầm là đường chết. */
+      var NHIP_MS = 2000, DO_NHIP = 3, DO_CHO = 5, DO_NGHI = 8;
+      var daNoi = false, tungNoi = false, doRef = db.ref(NHANH + "/_do"), doSo = 0, doNhip = 0, doCho = 0, nghi = 0, soLamMoi = 0;
       db.ref(".info/connected").on("value", function (s) {
-        bao(s.val() ? "ok" : "cho");
-        if (s.val()) coMat.forEach(function (c) { c.r.onDisconnect().remove(); c.r.set(c.v); });
+        daNoi = !!s.val(); if (daNoi) tungNoi = true;
+        doSo++; doNhip = 0; doCho = 0;                     // đường nối vừa đổi: câu dò đang chờ (nếu có) không tính nữa
+        bao(daNoi ? "ok" : tungNoi ? "mat" : "cho");        // "mat": đang chơi thì rớt mạng; "cho": lần nối đầu lúc mở trang
+        if (daNoi) coMat.forEach(function (c) { c.r.onDisconnect().remove(); c.r.set(c.v); });
       });
+      setInterval(function () {
+        if (document.hidden) return;
+        if (!daNoi) { try { db.goOnline(); } catch (e) { /* bỏ qua */ } return; }
+        if (nghi > 0) { nghi--; return; }
+        if (doCho) {
+          if (++doCho > DO_CHO) {
+            doCho = 0; doSo++; nghi = DO_NGHI; soLamMoi++;
+            try { document.documentElement.setAttribute("data-noi-lam-moi", soLamMoi); db.goOffline(); db.goOnline(); } catch (e) { /* bỏ qua */ }
+          }
+          return;
+        }
+        if (++doNhip >= DO_NHIP) {
+          doNhip = 0; doCho = 1;
+          var so = ++doSo, xong = function () { if (so === doSo) doCho = 0; };
+          try { doRef.get().then(xong, xong); } catch (e) { doCho = 0; }
+        }
+      }, NHIP_MS);
       function loi(e) { if (e) { console.error(e); bao("loi", (e.code || e.message || e) + ""); } }
       return {
         kieu: "firebase",
@@ -1678,7 +1709,7 @@
     function trangThai(kieu) {
       var e = $("dtNoi");
       e.className = "noi " + kieu;
-      e.textContent = kieu === "ok" ? "Đã nối với tivi" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : "Đang nối…";
+      e.textContent = kieu === "ok" ? "Đã nối với tivi" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : "Đang nối…";
     }
     veGV(); veNhap(); doiMan(); capNhat();
     noi(phong, ts.thu, trangThai).then(function (t) {
@@ -2933,7 +2964,7 @@
     function trangThai(kieu) {
       var e = $("tvNoi");
       e.className = "noi " + kieu;
-      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử trên một máy" : kieu === "loi" ? "Mất kết nối" : "Đang nối…";
+      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử trên một máy" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : "Đang nối…";
       if (kieu === "ok" || kieu === "cungmay") amTaiSau(1500);      // 18/11: nối xong mới tải tiếng trống
       clearTimeout(henNoi);
       if (kieu === "loi") e.classList.add("hien");
@@ -3177,7 +3208,7 @@
     noi(phong, thu, function (kieu) {
       var e = $("gvNoi");
       e.className = "noi " + kieu;
-      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : "Đang nối…";
+      e.textContent = kieu === "ok" ? "Đã nối" : kieu === "cungmay" ? "Chạy thử" : kieu === "loi" ? "Mất kết nối" : kieu === "mat" ? "Mất mạng, đang nối lại…" : "Đang nối…";
     }).then(function (t) {
       T = t;
       T.on("gv", function (v) { ma = v === null || v === undefined ? "chua" : String(v) === String(ts.gv) ? "dung" : "sai"; veHet(); });
