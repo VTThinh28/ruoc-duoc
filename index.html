@@ -315,10 +315,20 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 
 /* ---------- điện thoại ---------- */
 #dt{min-height:100%;background:var(--giay);padding:10px max(16px,env(safe-area-inset-right,0px)) 112px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px;max-width:720px;margin:0 auto}
-.dt-dau{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dt-dau{display:flex;flex-direction:column;gap:6px}
 .dt-dau>div{display:flex;flex-direction:column;min-width:0}
 .dt-dau b{font:800 24px/1.1 var(--f-tieu);color:var(--do)}
 .dt-dau #dtBuoc{font-weight:700;color:var(--muc2);font-size:15px}
+.dt-dau-2{display:flex;align-items:center;gap:6px;min-height:46px;min-width:0}
+.dt-dau-2 #dtNoi{flex:0 1 auto;min-width:0}
+.dt-dau-2 #dtNhac{flex:none;margin-left:auto}
+.nut-noi-lai{flex:none;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border-radius:50%;border:2px solid var(--vien);background:var(--trang);color:var(--muc);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nut-noi-lai[hidden]{display:none}
+.nut-noi-lai svg{width:24px;height:24px;display:block}
+.nut-noi-lai:active{border-color:var(--vang);background:#fff2cf}
+.nut-noi-lai.quay{border-color:var(--vang);color:var(--vangdam)}
+.nut-noi-lai.quay svg{animation:noiLaiQuay .8s linear infinite}
+@keyframes noiLaiQuay{to{transform:rotate(360deg)}}
 .dt-the{background:var(--trang);border:2px solid var(--vien);border-radius:18px;padding:14px;min-width:0}
 .dt-the h3{margin:0 0 8px;font:800 20px/1.2 var(--f-tieu)}
 .dt-cau-dau{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -515,8 +525,15 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 <div id="dt" hidden>
   <header class="dt-dau">
     <div><b>Rước đuốc</b><span id="dtBuoc">Chuẩn bị</span></div>
-    <span id="dtNoi" class="chip">Đang nối…</span>
-    <button type="button" id="dtNhac" class="chip nut-nhac" aria-pressed="true">Nhạc: bật</button>
+    <!-- 25/11/2026 thầy Thịnh: "ok thêm nút refresh hình vòng tròn giống mấy trình duyệt hay có". Nút tròn cạnh ô trạng thái: nối lại
+         ngay với TV, KHÔNG tải lại trang (tải lại lúc chưa có mạng thì trang không mở lên được, bước đã bấm và thẻ đã quét chưa gửi đi
+         sẽ mất). Ô trạng thái, nút tròn và nút Nhạc nằm chung một hàng cao cố định: lúc mất mạng ô trạng thái dài ra thì chữ xuống
+         dòng ngay trong ô, các nút bên dưới không bị xô lệch. -->
+    <span class="dt-dau-2">
+      <span id="dtNoi" class="chip">Đang nối…</span>
+      <button type="button" id="dtNoiLai" class="nut-noi-lai" aria-label="Nối lại với TV, không tải lại trang" title="Nối lại với TV" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M19.4 15a8 8 0 1 1-1.9-8.3L21 10"/></svg></button>
+      <button type="button" id="dtNhac" class="chip nut-nhac" aria-pressed="true">Nhạc: bật</button>
+    </span>
   </header>
   <section id="dtCau" class="dt-the" hidden>
     <div class="dt-cau-dau"><b id="dtCauSo">Câu 1</b><span id="dtDapAn"></span></div>
@@ -581,17 +598,17 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="1ca874cb";</script>
-<script src="js/cau-hinh.js?v=1ca874cb"></script>
-<script src="js/scanlib.js?v=1ca874cb"></script>
-<script src="js/du-lieu.js?v=1ca874cb"></script>
-<script src="js/dong-bo.js?v=1ca874cb"></script>
-<script src="js/am-thanh.js?v=1ca874cb"></script>
-<script src="js/quet.js?v=1ca874cb"></script>
-<script src="js/cay-cau.js?v=1ca874cb"></script>
-<script src="js/san-khau.js?v=1ca874cb"></script>
-<script src="js/tro-choi.js?v=1ca874cb"></script>
-<script src="js/nhanh.js?v=1ca874cb"></script>
-<script src="js/do.js?v=1ca874cb"></script>
+<script>window.RD_V="31e7543c";</script>
+<script src="js/cau-hinh.js?v=31e7543c"></script>
+<script src="js/scanlib.js?v=31e7543c"></script>
+<script src="js/du-lieu.js?v=31e7543c"></script>
+<script src="js/dong-bo.js?v=31e7543c"></script>
+<script src="js/am-thanh.js?v=31e7543c"></script>
+<script src="js/quet.js?v=31e7543c"></script>
+<script src="js/cay-cau.js?v=31e7543c"></script>
+<script src="js/san-khau.js?v=31e7543c"></script>
+<script src="js/tro-choi.js?v=31e7543c"></script>
+<script src="js/nhanh.js?v=31e7543c"></script>
+<script src="js/do.js?v=31e7543c"></script>
 </body>
 </html>

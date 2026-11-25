@@ -107,7 +107,7 @@
       //   Nên khi đang mất nối (sau khi đã nối được ít nhất một lần), cứ 2 giây hỏi thử máy chủ dữ liệu một câu rất nhẹ; có trả
       //   lời (kể cả trả lời từ chối) là mạng đã có lại, lúc đó bảo thư viện nối ngay: goOffline rồi goOnline đặt nhịp chờ về 1 giây
       //   và thử liền. Lần "đá" sau cách lần trước ít nhất 8, 12 rồi 20 giây để lượt nối đang dở trên mạng chậm kịp xong.
-      var dangNoi = false, daTungNoi = false, vong = 0, tDa = 0, lanDa = 0, nhip = null;
+      var dangNoi = false, daTungNoi = false, vong = 0, tDa = 0, lanDa = 0, nhip = null, tuBam = false, henBam = null;
       try { var dc = new URL(cfg.databaseURL); dc.pathname = "/ruoc-duoc/nhip.json"; dc.searchParams.set("shallow", "true"); nhip = dc.href; } catch (e) { nhip = null; }
       function thuMang(v) {
         if (v !== vong || dangNoi || !nhip || typeof fetch !== "function") return;
@@ -126,9 +126,9 @@
       db.ref(".info/connected").on("value", function (s) {
         dangNoi = !!s.val();
         vong++;
-        if (dangNoi) { daTungNoi = true; tDa = 0; lanDa = 0; }
+        if (dangNoi) { daTungNoi = true; tDa = 0; lanDa = 0; tuBam = false; clearTimeout(henBam); }
         else if (daTungNoi) { var v = vong; setTimeout(function () { thuMang(v); }, 3000); }
-        baoTrangThai(dangNoi ? "ok" : "cho", dangNoi ? "Đã nối qua Firebase" : daTungNoi ? "Mất mạng, đang nối lại…" : "Đang nối Firebase…");
+        baoTrangThai(dangNoi ? "ok" : "cho", dangNoi ? "Đã nối qua Firebase" : tuBam ? "Đang nối lại…" : daTungNoi ? "Mất mạng, đang nối lại…" : "Đang nối Firebase…");
       });
       var ghi = taoHangDoi(function (key, v) { return base.child(key).set(dongGoi(v)); }, function (e) {
         baoTrangThai("loi", "Firebase không cho ghi (" + ((e && (e.code || e.message)) || e) + "). Kiểm tra mục Rules.");
@@ -141,7 +141,23 @@
       return {
         kieu: "firebase",
         set: function (key, v) { v = sach(v); nn.phat(key, v); ghi(key, v); },
-        on: nn.on
+        on: nn.on,
+        // 25/11/2026 thầy Thịnh: "ok thêm nút refresh hình vòng tròn giống mấy trình duyệt hay có" (nút cạnh ô trạng thái trên điện thoại).
+        //   Bỏ đường nối đang có rồi nối đường mới ngay, KHÔNG tải lại trang: những gì đã ghi mà chưa gửi được thư viện vẫn giữ và gửi
+        //   nốt khi nối xong, nối xong máy chủ gửi lại bản mới nhất nên hai màn hình khớp nhau. Dùng được cả khi máy tưởng mình còn nối
+        //   mà đường truyền đã đơ (thư viện không tự nhận ra kiểu này). Lần "đá" tự động kế tiếp chờ ít nhất 8 giây cho lượt nối này kịp xong.
+        noiLai: function () {
+          tuBam = true;
+          tDa = Date.now(); lanDa = Math.max(lanDa, 1);
+          clearTimeout(henBam);
+          henBam = setTimeout(function () {
+            if (!tuBam) return;
+            tuBam = false;
+            if (!dangNoi) baoTrangThai("cho", daTungNoi ? "Mất mạng, đang nối lại…" : "Đang nối Firebase…");
+          }, 8000);
+          baoTrangThai("cho", "Đang nối lại…");
+          try { db.goOffline(); db.goOnline(); } catch (e) { console.error(e); }
+        }
       };
     });
   }

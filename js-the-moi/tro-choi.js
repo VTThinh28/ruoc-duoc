@@ -1202,6 +1202,8 @@
   var NGHIENG = false;
   var ZOOM_MAY = false, dtBuocCu = null;   // ZOOM_MAY: camera tự chỉnh zoom được; không thì thu phóng bằng phần mềm
 
+  var nlLuc = 0, nlHen = null;
+  function nlDung() { clearTimeout(nlHen); nlHen = null; $("#dtNoiLai").classList.remove("quay"); }
   function khoiDT() {
     $("#dt").hidden = false;
     dungChuanBi($("#cbDT"));
@@ -1212,6 +1214,16 @@
     var luatNoi = $("#dtLuatNoi"), luatGoc = $("#luat");
     if (luatNoi && luatGoc) luatNoi.innerHTML = $$("h2, p, ul", luatGoc).map(function (el) { return el.tagName === "H2" ? "<h4>" + esc(el.textContent) + "</h4>" : el.outerHTML; }).join("");
     $("#dtLui").addEventListener("click", function () { lui(); });
+    // 25/11/2026 thầy Thịnh: "ok thêm nút refresh hình vòng tròn giống mấy trình duyệt hay có". Bấm là nối lại ngay với TV, không tải
+    //   lại trang (DB.noiLai trong dong-bo.js, chỉ có khi nối qua Firebase). Mũi tên quay tới khi nối xong (ít nhất 0,7 giây cho thầy
+    //   kịp thấy), quá 8 giây chưa nối được thì thôi quay để thầy bấm lại được.
+    $("#dtNoiLai").addEventListener("click", function () {
+      if (!DB || !DB.noiLai || nlHen) return;
+      nlLuc = Date.now();
+      this.classList.add("quay");
+      nlHen = setTimeout(nlDung, 8000);
+      DB.noiLai();
+    });
     $("#dtNhac").addEventListener("click", function () { var on = cfg().nhac === false; ghiCfg(function (c) { c.nhac = on; }); });
     $("#dtCaiDat").addEventListener("click", function () { moCD = !moCD; this.setAttribute("aria-pressed", moCD ? "true" : "false"); ve(); if (moCD) $("#dtChuanBi").scrollIntoView({ behavior: "smooth", block: "start" }); });
     $("#dtChup").addEventListener("change", function () {
@@ -1315,6 +1327,8 @@
     chip.className = "chip " + NOI.kieu;
     chip.textContent = NOI.kieu === "ok" ? "Đã nối với TV" : NOI.kieu === "motmay" ? "Chưa nối với TV" : NOI.chu;
     chip.title = NOI.chu;
+    $("#dtNoiLai").hidden = !(DB && DB.noiLai);
+    if (nlHen && NOI.kieu === "ok") { clearTimeout(nlHen); nlHen = setTimeout(nlDung, Math.max(0, 700 - (Date.now() - nlLuc))); }
     var t = $("#dtTiep");
     t.textContent = nhanTiep(step);
     t.classList.toggle("lua", step === "r5");
