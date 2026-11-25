@@ -147,6 +147,8 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .mc-tien span.quet{--m:#3a2a1e}
 .mc-tien span.thieu{--m:#b23a2a}
 .mc-tien span.du{--m:#2b8550}
+/* 25/11 22:12 thầy: "cho dòng đội 1 đội 2 số hs đúng to lên" */
+.mc-tien span.doi{padding:6px 22px;border-width:4px;font-size:44px}
 .mc-than{display:grid;grid-template-columns:var(--wh) minmax(0,1fr);gap:34px;min-height:0}
 .mc-hinh{background:#fcfcfc;border-radius:22px;border:3px solid #c9d6ee;display:flex;align-items:center;justify-content:center;padding:10px;min-height:0;overflow:hidden}
 .mc-hinh img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
@@ -470,7 +472,9 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 @keyframes kcLuoi{0%{transform:translateY(8px) scale(.9);opacity:0}25%{opacity:.95}100%{transform:translateY(-58px) scale(.5,.8);opacity:0}}
 .kc-lua .tl{position:absolute;left:50%;top:42%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:radial-gradient(circle,#fff 0,#ffe98a 40%,#ffa424 100%);box-shadow:0 0 8px 2px rgba(255,205,90,.95);opacity:0;animation:kcTanLua var(--t,2s) linear var(--d,0s) infinite}
 @keyframes kcTanLua{0%{transform:translate(var(--x0,0),0) scale(1);opacity:0}10%{opacity:1}70%{opacity:.85}100%{transform:translate(var(--x1,20px),-250px) scale(.25);opacity:0}}
-.kc-lua .ls{position:absolute;background:radial-gradient(circle,#fff 0,#fff6c2 45%,#ffd95a 100%);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);animation:kcLs 1.5s ease-in-out infinite}
+/* 25/11 22:12 (thầy: "tối ưu toàn bộ trò chơi"): ngôi sao bốn cánh là một hình svg làm nền (trước là ô tô chuyển màu cắt bằng clip-path: mỗi ngôi sao
+   một lượt ghép lớp riêng và bị tô lại từng khung hình; 14 ngôi sao quanh hai ngọn lửa chiếm gần hết công vẽ của cảnh thắp đuốc) */
+.kc-lua .ls{position:absolute;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='70.7%25'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.45' stop-color='%23fff6c2'/%3E%3Cstop offset='1' stop-color='%23ffd95a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpolygon fill='url(%23g)' points='50,0 61,39 100,50 61,61 50,100 39,61 0,50 39,39'/%3E%3C/svg%3E") center/100% 100% no-repeat;animation:kcLs 1.5s ease-in-out infinite}
 .kc-quang{position:absolute;width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;background:radial-gradient(circle,rgba(255,206,110,.5) 0,rgba(255,165,65,.2) 40%,rgba(255,150,60,0) 70%);opacity:0}
 .kc-quang::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,232,160,.5) 0deg 5deg,rgba(255,232,160,0) 5deg 30deg);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.9) 0,rgba(0,0,0,.55) 28%,rgba(0,0,0,0) 62%);mask-image:radial-gradient(circle,rgba(0,0,0,.9) 0,rgba(0,0,0,.55) 28%,rgba(0,0,0,0) 62%);animation:kcQuangXoay 26s linear infinite}
 .kc-quang::after{content:"";position:absolute;inset:24%;border-radius:50%;background:radial-gradient(circle,rgba(255,244,196,.6) 0,rgba(255,205,105,.24) 45%,rgba(255,180,80,0) 70%);animation:kcQuangNhip 1.1s ease-in-out infinite alternate}
@@ -498,13 +502,13 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 /* 25/11 17:34 thầy Thịnh: "hiện ra cái dòng chữ là đội 1 chiến thắng [...] ở phía bên đội đó dòng chữ đó hiện lên màu vàng lấp lánh nhá, mà có cái
    hiệu ứng nào nó đẹp đẹp một chút". Hai lớp chữ chồng nhau: .th-v là viền nâu và quầng sáng, .th-m là mặt chữ vàng có vệt sáng chạy ngang;
    .th-ls là các ngôi sao nhấp nháy quanh chữ; cả khối phập phồng nhẹ. js/keo-co.js (veThang) cho hiện, đặt bên trái hay bên phải. */
-.kc-thang{position:absolute;left:0;top:366px;text-align:center;white-space:nowrap;opacity:0;visibility:hidden;transform-origin:50% 60%;will-change:transform,opacity}
+.kc-thang{position:absolute;left:0;top:236px;text-align:center;white-space:nowrap;opacity:0;visibility:hidden;transform-origin:50% 60%;will-change:transform,opacity}
 .kc-thang .th-trong{position:relative;display:inline-block;animation:kcThangNhip 1.5s ease-in-out infinite alternate}
-.kc-thang .th-dong{position:relative;display:block;font:800 74px/1.04 var(--f-tieu);letter-spacing:1px}
-.kc-thang .th-dong.th-nho{font-size:74px}   /* 19:25: hai dòng cùng một cỡ chữ */
-.kc-thang .th-v{display:block;color:#7a2c00;-webkit-text-stroke:14px #7a2c00;text-shadow:0 7px 0 rgba(70,25,0,.5),0 0 26px rgba(255,214,110,1),0 0 60px rgba(255,180,50,.85)}
-.kc-thang .th-m{position:absolute;left:0;top:0;width:100%;background:linear-gradient(100deg,#ffb400 0,#ffe45c 12%,#fffbe2 22%,#ffd23a 34%,#ffb400 50%,#ffe45c 62%,#fffbe2 72%,#ffd23a 84%,#ffb400 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:kcThangLap 1.7s linear infinite}
-.kc-thang .th-ls{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;background:radial-gradient(circle,#fff 0,#fff6c2 45%,#ffd95a 100%);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);animation:kcLs 1.4s ease-in-out infinite}
+.kc-thang .th-dong{position:relative;display:block;font:800 104px/1.04 var(--f-tieu);letter-spacing:1px}   /* 22:12: "hiện cái mục đội .... chiến thắng to lên" (trước 74 px) */
+.kc-thang .th-dong.th-nho{font-size:104px}   /* 19:25: hai dòng cùng một cỡ chữ */
+.kc-thang .th-v{display:block;color:#7a2c00;-webkit-text-stroke:19px #7a2c00;text-shadow:0 9px 0 rgba(70,25,0,.5),0 0 30px rgba(255,214,110,1),0 0 70px rgba(255,180,50,.85)}
+.kc-thang .th-m{position:absolute;left:0;top:0;width:100%;background:linear-gradient(100deg,#ffb400 0,#ffe45c 12%,#fffbe2 22%,#ffd23a 34%,#ffb400 50%,#ffe45c 62%,#fffbe2 72%,#ffd23a 84%,#ffb400 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:kcThangLap 1.7s linear infinite;will-change:transform}   /* lớp riêng: vệt sáng chạy chỉ tô lại mặt chữ, không tô lại viền và quầng sáng của .th-v */
+.kc-thang .th-ls{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='70.7%25'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.45' stop-color='%23fff6c2'/%3E%3Cstop offset='1' stop-color='%23ffd95a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpolygon fill='url(%23g)' points='50,0 61,39 100,50 61,61 50,100 39,61 0,50 39,39'/%3E%3C/svg%3E") center/100% 100% no-repeat;animation:kcLs 1.4s ease-in-out infinite}
 @keyframes kcThangLap{from{background-position:100% 0}to{background-position:0 0}}
 @keyframes kcThangNhip{from{transform:scale(1)}to{transform:scale(1.045)}}
 @keyframes kcLs{0%,100%{transform:scale(0) rotate(0)}50%{transform:scale(1.25) rotate(45deg)}}
@@ -568,7 +572,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-no.d2{-webkit-text-stroke-color:var(--camdam)}
 .kc-no.nho{font-size:74px;-webkit-text-stroke-width:11px}
 /* 25/11 17:19 thầy Thịnh: câu 5 "hiện lên dòng chữ vàng là sức mạnh tình bạn sau đó kéo" */
-.kc-no.tb{top:440px;font-size:118px;letter-spacing:3px;color:#ffd83a;-webkit-text-stroke:15px #8a3d00;text-shadow:0 9px 0 rgba(90,35,0,.6),0 0 30px rgba(255,226,120,1),0 0 70px rgba(255,190,60,.9)}
+.kc-no.tb{top:336px;font-size:94px;line-height:1.04;white-space:pre;text-align:center;letter-spacing:3px;color:#ffd83a;-webkit-text-stroke:15px #8a3d00;text-shadow:0 9px 0 rgba(90,35,0,.6),0 0 30px rgba(255,226,120,1),0 0 70px rgba(255,190,60,.9)}
 .kc-la{position:absolute;left:0;top:0;width:20px;height:12px;border-radius:85% 0 85% 0;background:linear-gradient(135deg,#a6d95a,#5fa62e);box-shadow:inset -1px -1px 0 rgba(40,90,20,.35);opacity:0;will-change:transform,opacity}
 .kc-la:nth-child(3n){background:linear-gradient(135deg,#d6e36a,#93bd2f);width:17px;height:10px}
 .kc-la:nth-child(4n){background:linear-gradient(135deg,#8ccf52,#3f8f2a);width:23px;height:13px}
@@ -700,14 +704,21 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-qua i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:#ffe6a3;box-shadow:0 0 12px 4px rgba(255,190,90,.85)}
 #world #kcNut{right:auto;left:960px;top:calc(var(--dayThe,1066px) - 92px);height:76px;padding:0 40px;border-radius:999px;font-size:34px;gap:14px;pointer-events:auto;transform-origin:50% 50%;margin-left:0;white-space:nowrap}
 /* lửa mở ra báo tường: vành lửa quanh lỗ thủng (lỗ thủng là mặt nạ của #kc) */
-.kc-vong{position:absolute;inset:0;pointer-events:none;opacity:0}
-.kc-chop{position:absolute;inset:0;background:radial-gradient(circle at var(--cx,1915px) var(--cy,1146px),rgba(255,236,170,.95) 0,rgba(255,170,60,.55) 12%,rgba(255,120,30,0) 32%);opacity:0;pointer-events:none}
+/* 25/11 22:12 (thầy: chuyển cảnh "bị lag với giật"): vành lửa là một đĩa sáng 800 px chỉ phóng to bằng transform (js), ánh chớp là một ô
+   1840 px quanh số 51; cả hai có lớp riêng, không còn mặt nạ hay nền chuyển màu vẽ lại từng khung hình trên cả lớp #kc. Đĩa phủ kín màn
+   hình thì #kc nhận lớp kc-lo: sân kéo co tắt hẳn, dưới đĩa sáng là báo tường. */
+.kc-vong{position:absolute;left:0;top:0;width:800px;height:800px;margin:-400px 0 0 -400px;border-radius:50%;pointer-events:none;opacity:0;visibility:hidden;will-change:transform,opacity;
+  background:radial-gradient(circle closest-side,#fffdf0 0,#fff8d6 52%,#ffeeb0 74%,rgba(255,226,130,.99) 80%,rgba(255,186,70,.96) 86%,rgba(255,120,28,.6) 92%,rgba(255,80,10,0) 100%)}
+.kc-chop{position:absolute;left:0;top:0;width:1840px;height:1840px;margin:-920px 0 0 -920px;border-radius:50%;background:radial-gradient(circle closest-side,rgba(255,236,170,.95) 0,rgba(255,170,60,.55) 37%,rgba(255,120,30,0) 99%);opacity:0;visibility:hidden;pointer-events:none;will-change:opacity}
+#kc.kc-lo{background:none}
+#kc.kc-lo .kc-trong{display:none}
 #world.kc-che-nut #nutHienBao{visibility:hidden}
 /* màn câu hỏi: dải sức mạnh của câu cạnh nhãn "Câu n/5" */
 .mc-sm{flex:0 1 auto;min-width:0;height:54px;display:flex;align-items:center;gap:12px;padding:0 22px 0 6px;border-radius:999px;background:linear-gradient(100deg,#2a1f5c 0,#3c2a7a 55%,#5a2f86 100%);border:3px solid #ffd56e;box-shadow:0 0 0 3px rgba(255,213,110,.25),0 0 16px rgba(255,200,90,.4);color:#fff;white-space:nowrap;overflow:hidden}
 .mc-sm .bieu{flex:none;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 60%,#c4850d);display:grid;place-items:center}
 .mc-sm .ten{flex:none;font:800 30px/1 var(--f-tieu);color:#ffd56e;letter-spacing:.6px;padding-top:4px;text-transform:uppercase}
 .mc-sm .sm-luat{font:600 23px/1 var(--f-chu);overflow:hidden;text-overflow:ellipsis}
+.mc-sm.hai-dong .sm-luat{white-space:normal;font-size:19px;line-height:1.14;text-overflow:clip;max-height:44px}
 .mc-tien{flex:none}
 </style>
 </head>
@@ -883,18 +894,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="870c5d6e";</script>
-<script src="js/cau-hinh.js?v=870c5d6e"></script>
-<script src="js/scanlib.js?v=870c5d6e"></script>
-<script src="js/du-lieu.js?v=870c5d6e"></script>
-<script src="js/dong-bo.js?v=870c5d6e"></script>
-<script src="js/am-thanh.js?v=870c5d6e"></script>
-<script src="js/quet.js?v=870c5d6e"></script>
-<script src="js/cay-cau.js?v=870c5d6e"></script>
-<script src="js/san-khau.js?v=870c5d6e"></script>
-<script src="js/keo-co.js?v=870c5d6e"></script>
-<script src="js/tro-choi.js?v=870c5d6e"></script>
-<script src="js/nhanh.js?v=870c5d6e"></script>
-<script src="js/do.js?v=870c5d6e"></script>
+<script>window.RD_V="1ea0ffc4";</script>
+<script src="js/cau-hinh.js?v=1ea0ffc4"></script>
+<script src="js/scanlib.js?v=1ea0ffc4"></script>
+<script src="js/du-lieu.js?v=1ea0ffc4"></script>
+<script src="js/dong-bo.js?v=1ea0ffc4"></script>
+<script src="js/am-thanh.js?v=1ea0ffc4"></script>
+<script src="js/quet.js?v=1ea0ffc4"></script>
+<script src="js/cay-cau.js?v=1ea0ffc4"></script>
+<script src="js/san-khau.js?v=1ea0ffc4"></script>
+<script src="js/keo-co.js?v=1ea0ffc4"></script>
+<script src="js/tro-choi.js?v=1ea0ffc4"></script>
+<script src="js/nhanh.js?v=1ea0ffc4"></script>
+<script src="js/do.js?v=1ea0ffc4"></script>
 </body>
 </html>

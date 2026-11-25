@@ -56,10 +56,15 @@
   //   25/11 19:25 thầy xem bản 18:22: "Cân chỉnh lại tỷ lệ của các [bạn] học sinh cho ngang ngang nhau nhé". Nên hình đội thắng, hình
   //   đội thua và hình từng bạn chìa tay làm lại cho các bạn cao bằng nhau: bạn nào đứng thẳng cũng cao 284 điểm ảnh trên màn hình
   //   (bản 18:22 các bạn cao từ 263 đến 293). dinh: hình đội thắng cao hơn khung chung bấy nhiêu điểm ảnh ở phía trên (bạn nhảy "siu").
+  //   25/11 22:12 thầy xem bản 5, gửi ảnh đội áo vàng hạ người cầm dây ngang hông: "cái hình để dây này chỉnh lại là để dây lên vai nha kéo
+  //   nha". Hình "ha" của đội áo vàng (d2-ha.webp) vẽ lại: cả bốn bạn quay lưng về phía đội bạn, vắt dây qua vai, chúi người kéo; sợi dây
+  //   chui ra sau bím tóc bạn đứng trong cùng (nam.ha mới). dayTT: sợi dây trong hình của tư thế đó dày bao nhiêu điểm ảnh gốc khi khác
+  //   vanH (khúc dây trang tự vẽ thu theo cho khít); chanTT: chỗ bàn chân của tư thế đó khi khác CHAN_F. Hình "ha" của đội áo thể dục
+  //   (ngả người ra sau, dây ngang ngực) thầy không nhắc tới: giữ nguyên.
   const HINH = [
     { k: "d1", w: 1175, h: 543, base: 529, s: .62, dinh: 0, nam: { keo: [94, 297.5], truot: [91, 298.2], quay: [96, 296.2], ha: [144, 378] }, vanH: 16, duoc: .225,
       ban: [[202, 465, 461, 67.5, 197, 198.5, 95.5], [204, 465, 460, 67, 199, 195, 346.5], [218, 466, 462, 76, 213, 189, 591.5], [241, 466, 461, 97.5, 236, 187, 829.5]] },
-    { k: "d2", w: 1187, h: 493, base: 487, s: .585, dinh: 12, nam: { keo: [163, 216.8], truot: [150, 222.2], quay: [147, 226.5], ha: [110, 326] }, vanH: 21, duoc: .205,
+    { k: "d2", w: 1187, h: 493, base: 487, s: .585, dinh: 12, nam: { keo: [163, 216.8], truot: [150, 222.2], quay: [147, 226.5], ha: [198.5, 184.2] }, vanH: 21, dayTT: { ha: 14.4 }, chanTT: { ha: [.065, .294, .532, .736] }, duoc: .205,
       ban: [[213, 492, 487, 70.5, 208, 184, 76.5], [209, 493, 488, 78, 205, 192.5, 355], [230, 494, 489, 88.5, 225, 183, 626], [227, 493, 488, 81.5, 222, 182.5, 913]] }
   ];
   const TU_THE = ["keo", "truot", "quay", "ha", "thang", "thua"];
@@ -76,6 +81,8 @@
   // mặt đất khi kéo (25/11 20:16 thầy Thịnh: "bên nào kéo mạnh quá thì nứt đất ..., bên nào bị kéo giật quá thì bụi bay lên"):
   //   vết nứt + sỏi văng + vòng chấn động dưới chân đội đang kéo, vệt trượt + cụm bụi bốc lên ở chân đội bị kéo
   const CHAN_F = [[.07, .3, .51, .73], [.065, .25, .445, .65]];      // bàn chân trước của từng bạn (theo ĐỘI): cách mép TRONG của khung hình bao nhiêu phần bề rộng
+  let TT_BEN = ["keo", "keo"];                      // tư thế đang vẽ của đội đứng mỗi BÊN (ve() ghi): tư thế có chanTT thì lấy chỗ bàn chân ở đó
+  const chanF = (b, k) => { const d = ben(b), H = HINH[d], v = H.chanTT && H.chanTT[TT_BEN[b]]; return (v || CHAN_F[d])[k]; };
   const NUT = 14, SOI = 24, BUI_CAO = 8;              // 2 vết nứt mỗi nấc (nhiều nhất 7 nấc); sỏi và bụi chia hai lượt theo nấc chẵn, lẻ
   // cụm bụi vẽ kiểu mây: mấy hình tròn chồng nhau, mặt dưới sẫm, thân màu đất, phía trên sáng
   const mayBui = (w, h, ds) => {
@@ -239,13 +246,26 @@
   //   có 4 bạn). Nên từ T_DI cả bốn bạn đội thắng cùng đi sang, bốn bạn đội kia đứng dậy bước ra đón (T_DOI_KIA), xếp thành bốn cặp đứng
   //   đối mặt (lichBat), cặp nào tới nơi thì bắt tay, cặp cuối bắt tay lúc T_BAT; rồi đuốc đội kia sáng như trên.
   const T_VE = .7, T_D1 = 1.2, T_NUT_DICH = 3.6, T_CT = .3;
+  // đĩa lửa lộ báo tường: VONG_R là bán kính viền lửa của .kc-vong lúc chưa phóng (800 px, viền ở 86%); R_KIN: bán kính viền lúc đĩa đã phủ
+  //   kín cả màn hình không đúng 16:9; V_KIN: tới phần đó của quãng T_CHAY..T_HET thì đĩa phủ kín, sau đó đĩa mờ dần
+  const VONG_R = 344, R_KIN = 1900, V_KIN = .52;
   const T_DI = .35, DAI_DI = 2.3, T_DOI_KIA = T_DI + .55, T_BAT = T_DI + DAI_DI, T_SANG2 = T_BAT + .55, T_BAY = T_SANG2 + 3.4, DAI_BAY = 1.3, T_CHAY = T_BAY + DAI_BAY, DAI_CHAY = 3.1, T_HET = T_CHAY + DAI_CHAY;
   const CHAM = 10;                                  // lúc bắt tay hai bàn tay chồng lên nhau bấy nhiêu điểm ảnh
   const BAT_CACH = 270, BAT_LECH = 140, BAT_TRUOC = 9;   // hai cặp bắt tay kề nhau cách nhau; cả hàng lệch khỏi vạch giữa về phía đội được sang bắt tay; đội đi sang đứng nhích ra phía người xem
-  const THANG_Y = 366;                              // mép trên dòng chữ vàng "ĐỘI n CHIẾN THẮNG"
-  const THANG_X = [700, 1220];                      // tâm ngang của dòng chữ đó ở bên trái, bên phải (tinhO() đặt lại: nằm giữa cây đuốc và vạch giữa)
+  // 25/11 22:12 thầy xem bản 5: "khi đã có đội chiến thắng thì ẩn toàn bộ mấy cái khung không cần thiết đi nhé và hiện cái mục đội ....
+  //   chiến thắng to lên". Nên kéo xong câu 5 mà cả ván đã có đội thắng thì nhãn câu, dải sức mạnh, 5 bước, hai bảng đội, lời báo và thanh
+  //   nấc mờ đi hết (T_AN giây), chỉ còn hai thẻ tên đội có sao ở hai góc như bước thắp đuốc; dòng chữ vàng to lên (104 px, trước 74 px).
+  //   Chữ to hơn khoảng trống giữa cây đuốc và vạch giữa nên mép ngoài của chữ đứng sát cột lửa của đội thắng, phần còn lại lấn qua vạch giữa.
+  const THANG_NUA = 356, T_AN = .35;                // nửa bề rộng dòng "CHIẾN THẮNG" cỡ 104 px (đo trên trang); thời gian các khung mờ đi
+  const THANG_X = [820, 1100];                      // tâm ngang của dòng chữ đó ở bên trái, bên phải (tinhO() đặt lại theo cây đuốc)
+  // 25/11 22:12: "sức mạnh tình bạn viết ở bên đội mà chiến thắng thôi nhé": dòng chữ vàng trước lượt kéo câu 5 hiện hai dòng phía trên đội
+  //   thắng câu 5 (đội đang toả sáng), không còn nằm giữa sân. TB_X: tâm ngang ở bên trái, bên phải (tinhO() đặt lại)
+  const TB_X = [674, 1252];
+  // 25/11 22:30 thầy: "đội nào thắng thì đuốc sẽ được thắp sáng luôn nhé, không cần tôi bấm": kéo xong câu 5, đội thắng mừng T_TU giây (hòa
+  //   cả ván: T_TU_HOA giây) thì trang tự sang bước thắp đuốc (KC.khiXongCau5 do tro-choi.js gắn)
+  const T_TU = 1.7, T_TU_HOA = .9;
 
-  const S = { che: "an", q: 0, kc: [], t0: XA, phu: false, tinh: false, ket: 0, cues: [], L: null, d1Trai: false, doi: null, chay: null };
+  const S = { che: "an", q: 0, kc: [], t0: XA, phu: false, tinh: false, ket: 0, cues: [], L: null, d1Trai: false, doi: null, chay: null, daTu: false };
   let E = null;
 
   /* ---------- ghi vào DOM chỉ khi đổi ---------- */
@@ -264,7 +284,8 @@
     for (let b = 0; b < 2; b++) {
       const H = HINH[ben(b)], w = H.w * H.s, h = H.h * H.s, O = BEN_O[b] = { x: b ? 960 + KHE / 2 : 960 - KHE / 2 - w, y: GND - H.base * H.s, w: w, h: h };
       DUOC[b].x = Math.round(b ? O.x + w * (1 - H.duoc) : O.x + w * H.duoc);
-      THANG_X[b] = b ? (976 + DUOC[b].x - 112) / 2 : (DUOC[b].x + 112 + 944) / 2;
+      THANG_X[b] = b ? DUOC[b].x - 118 - THANG_NUA : DUOC[b].x + 118 + THANG_NUA;
+      TB_X[b] = b ? (972 + DUOC[b].x - 72) / 2 : (DUOC[b].x + 72 + 948) / 2;
     }
   }
   // 25/11 19:25 thầy: "cái ngọn lửa đuốc thì cho nó đẹp hơn nhé, cho nó lấp lánh hơn". Ngọn lửa ba lớp tô chuyển màu (đỏ cam, vàng cam,
@@ -356,7 +377,7 @@
     // dòng chữ vàng lấp lánh "ĐỘI n CHIẾN THẮNG" (hai lớp chữ chồng nhau: viền nâu ở dưới, mặt chữ vàng có vệt sáng chạy ở trên; quanh chữ là sao nhấp nháy)
     const lsO = [[-5, 8], [14, -14], [40, -6], [66, -16], [92, -8], [104, 30], [98, 78], [70, 100], [36, 104], [8, 96], [-7, 56], [52, 44]];
     h += '<div class="kc-thang" id="kcThang"><div class="th-trong"><span class="th-dong th-nho"><span class="th-v"></span><span class="th-m"></span></span><span class="th-dong"><span class="th-v">CHIẾN THẮNG</span><span class="th-m">CHIẾN THẮNG</span></span>' +
-      lsO.map((o, k) => '<i class="th-ls" style="left:' + o[0] + "%;top:" + o[1] + "%;animation-delay:-" + (k * .37 % 1.4).toFixed(2) + "s" + (k % 3 === 1 ? ";width:18px;height:18px" : "") + '"></i>').join("") + "</div></div>";
+      lsO.map((o, k) => '<i class="th-ls" style="left:' + o[0] + "%;top:" + o[1] + "%;animation-delay:-" + (k * .37 % 1.4).toFixed(2) + "s" + (k % 3 === 1 ? ";width:24px;height:24px;margin:-12px 0 0 -12px" : "") + '"></i>').join("") + "</div></div>";
     h += '<div class="kc-no" id="kcNo"></div></div>';
     // nhãn câu, sức mạnh, 5 bước
     h += '<div class="kc-cau" id="kcCau"></div>';
@@ -490,7 +511,10 @@
     if (q === 2) {
       const x = K.thuong[0], y = K.thuong[1];
       if (x && y) o.vi += "<br>Cả hai đội đúng từ " + D + "% trở lên: <b>Đồng lòng</b>, hai nấc thưởng bù nhau.";
-      else if (x || y) { o.vi += "<br>Đội " + (x ? 1 : 2) + " đúng từ " + D + "% trở lên: <b>Đồng lòng, thưởng 1 nấc</b>."; o.lon2 = "ĐỘI " + (x ? 1 : 2) + " THƯỞNG 1 NẤC"; }
+      else if (x || y) {
+        if (!K.goc) o.vi = o.vi.replace(", dây đứng yên.", ".");          // soát 25/11 22:12: hòa nhưng có nấc thưởng thì dây vẫn đi 1 nấc
+        o.vi += "<br>Đội " + (x ? 1 : 2) + " đúng từ " + D + "% trở lên: <b>Đồng lòng, thưởng 1 nấc</b>."; o.lon2 = "ĐỘI " + (x ? 1 : 2) + " THƯỞNG 1 NẤC";
+      }
       else o.vi += "<br>Chưa đội nào đúng từ " + D + "% trở lên nên chưa có nấc thưởng.";
     }
     if (q === 3 && K.goc) { o.vi += "<br><b>Tăng tốc</b>: kéo thêm 1 nấc thành " + K.nac + " nấc."; o.dau = "+1"; }
@@ -521,11 +545,12 @@
     S.che = o.che === "tuong" && !hc ? "an" : o.che;
     S.q = o.q || 0;
     S.t0 = hc ? t : XA;
-    S.cues = []; S.tinh = false; S.L = null; S.ket = 0; S.song = false; S.chay = null;
+    S.cues = []; S.tinh = false; S.L = null; S.ket = 0; S.song = false; S.chay = null; S.daTu = false;
     const che = S.che;
     if (E.g.hidden !== (che === "an")) E.g.hidden = che === "an";
     lop(E.world, "kc-che-nut", che === "tuong");
-    if (che !== "tuong") { kieu(E.g, "webkitMaskImage", ""); kieu(E.g, "maskImage", ""); mo(E.vong, 0); mo(E.chop, 0); }
+    lop(E.g, "kc-lo", false);
+    if (che !== "tuong") { mo(E.vong, 0); mo(E.chop, 0); }
     if (che === "keo") {
       const K = trong(S.q).cau[S.q];
       if (K) {
@@ -540,12 +565,13 @@
           if (S.q === 2 && S.L.moc.length) hen(t + S.L.moc[0] + .1, keu("vut"));                    // có bạn trượt chân
           if (S.q === 5 && S.L.moc.length > 1) hen(t + S.L.moc[1] + .1, keu("vut"));
           if (S.L.tb != null) { hen(t + S.L.tb, keu("lapLanh")); hen(t + S.L.tb + .12, keu("ting")); }      // dòng chữ vàng "SỨC MẠNH TÌNH BẠN"
-          if (S.q === 5 && trong(5).thang) { hen(t + S.L.het + T_MUNG + T_CT, keu("lapLanh")); hen(t + S.L.het + T_MUNG + T_CT + .1, keu("ken")); }      // dòng chữ vàng "ĐỘI n CHIẾN THẮNG"
+          if (S.q === 5 && trong(5).thang) { hen(t + S.L.het + T_MUNG + T_CT, keu("lapLanh")); hen(t + S.L.het + T_MUNG + T_CT + .1, keu("ken")); S.kenLuc = t + S.L.het + T_MUNG + T_CT + .1; }      // dòng chữ vàng "ĐỘI n CHIẾN THẮNG"
         }
       }
     } else if (che === "dich") {
       S.ket = T_D1 + TRI_DAI + .4;
-      if (hc) { hen(t + .05, keu("ken")); hen(t + T_D1, keu("bungLua")); hen(t + T_D1 + .1, keu("vut")); hen(t + T_D1 + .15, keu("lachTach", 2.4)); hen(t + T_D1 + .7, keu("voTay")); }
+      // 25/11 22:30: bước thắp đuốc tự tới ngay sau khúc vui của dòng "ĐỘI n CHIẾN THẮNG" thì không kêu khúc vui lần nữa (hai lần cách nhau hơn 1 giây nghe lặp)
+      if (hc) { if (!(S.kenLuc != null && t >= S.kenLuc && t - S.kenLuc < 3)) hen(t + .05, keu("ken")); hen(t + T_D1, keu("bungLua")); hen(t + T_D1 + .1, keu("vut")); hen(t + T_D1 + .15, keu("lachTach", 2.4)); hen(t + T_D1 + .7, keu("voTay")); }
     } else if (che === "tuong") {
       S.ket = T_HET + .3;
       hen(t + T_DI, keu("vut")); lichBat(trong(5).thang).cap.forEach(c => hen(t + c.luc, keu("ting")));      // mỗi cặp bắt tay một tiếng "ting"
@@ -561,6 +587,7 @@
   // lúc báo tường lộ ra hết (giây, cùng đồng hồ performance.now); không đang đốt thì null
   KC.lucBaoHien = () => (S.che === "tuong" ? S.t0 + T_HET : null);
   KC.khiBam = null;
+  KC.khiXongCau5 = null;
   KC._S = S;
   KC._ve = t => ve(t);
 
@@ -606,8 +633,9 @@
       const f = fx.no, sc = ob(lin(f.d, 0, .18)) * (1 + .03 * Math.sin(f.d * 22));
       chu(E.no, f.chu);
       if (E.no._lop !== f.lop) { E.no._lop = f.lop; E.no.className = "kc-no " + f.lop; }
+      kieu(E.no, "left", px(f.x != null ? f.x : 960));
       kieu(E.no, "opacity", (f.d < f.dai - .25 ? 1 : Math.max(0, (f.dai - f.d) / .25)).toFixed(3));
-      kieu(E.no, "transform", "translate(-50%,0) rotate(-4deg) scale(" + sc.toFixed(3) + ")");
+      kieu(E.no, "transform", "translate(-50%,0) rotate(" + (f.x != null ? -3 : -4) + "deg) scale(" + sc.toFixed(3) + ")");
     } else kieu(E.no, "opacity", "0");
     const laDung = [];
     fx.la.forEach(o => { for (let j = o.i % 3; j < LA_O.length; j += 3) laDung[j] = o; });
@@ -669,10 +697,12 @@
   }
 
   // một nửa sợi dây giữa hai đội: từ a tới b, dải vân lặp theo chiều dài (25/11 16:18 thầy: "khi kéo sợi dây ở giữa nó cứ bị tách rời nè")
-  function veDay(el, a, b, H, phai) {
+  //   k: tỉ lệ bề dày (tư thế mà sợi dây trong hình mảnh hơn dải vân, HINH.dayTT): thu cả khúc dây quanh trục của nó, chiều dài giữ nguyên
+  function veDay(el, a, b, H, phai, k) {
     const dx = b[0] - a[0], dy = b[1] - a[1], dai = Math.hypot(dx, dy) || 1, ux = dx / dai, uy = dy / dai, lui = phai ? 1 : 6;      // đầu ở nắm tay thò thêm 6 px vào dưới bàn tay
-    kieu(el, "width", px(dai + 7));
-    kieu(el, "transform", "translate(" + px(a[0] - ux * lui) + "," + px(a[1] - uy * lui - H.vanH * H.s / 2) + ") rotate(" + (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(2) + "deg)");
+    k = k || 1;
+    kieu(el, "width", px((dai + 7) / k));
+    kieu(el, "transform", "translate(" + px(a[0] - ux * lui) + "," + px(a[1] - uy * lui - H.vanH * H.s / 2) + ") rotate(" + (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(2) + "deg)" + (k !== 1 ? " scale(" + k.toFixed(3) + ")" : ""));
   }
   // hai đội và sợi dây. P (mọi mảng theo BÊN): tt tư thế ("ban": hình cả đội ẩn, veBan vẽ từng bạn), ng độ ngả (độ, dương là ngả sang
   //   phải), nhay độ nhảy, rung, pop (giây từ lúc đổi tư thế), roi (0 đang cầm dây, 1 dây đã nằm dưới đất), vang (bên đang toả sáng, -1
@@ -703,8 +733,9 @@
       roiTB += k / 2;
     }
     const M = [(A[0][0] + A[1][0]) / 2, (A[0][1] + A[1][1]) / 2];
-    veDay(E.day[0], A[0], M, HINH[ben(0)], false);
-    veDay(E.day[1], M, A[1], HINH[ben(1)], true);
+    const kDay = b => { const H = HINH[ben(b)], v = H.dayTT && H.dayTT[P.tt[b]]; return v ? v / H.vanH : 1; };
+    veDay(E.day[0], A[0], M, HINH[ben(0)], false, kDay(0));
+    veDay(E.day[1], M, A[1], HINH[ben(1)], true, kDay(1));
     // dải lụa đỏ buộc ở giữa dây: che chỗ hai nửa dây gặp nhau; dây rơi xuống đất thì dải lụa nằm bẹp
     kieu(E.neo, "transform", "translate(" + px(M[0] - 45) + "," + px(M[1] - 12) + ")" + (roiTB > 0 ? " scaleY(" + (1 - .55 * roiTB).toFixed(3) + ")" : ""));
     lop(E.neo, "nam", roiTB > .5);
@@ -790,7 +821,7 @@
     if (!co) { if (!E.soi._tat) { E.soi._tat = true; E.soi.forEach(el => kieu(el, "opacity", "0")); } return; }
     E.soi._tat = false;
     const dxCua = p => hg * PXN * Math.max(-RD.NAC_HIEN, Math.min(RD.NAC_HIEN, p));
-    const chanX = (b, k) => { const O = BEN_O[b], f = CHAN_F[ben(b)][k]; return b ? O.x + O.w * f : O.x + O.w * (1 - f); };
+    const chanX = (b, k) => { const O = BEN_O[b], f = chanF(b, k); return b ? O.x + O.w * f : O.x + O.w * (1 - f); };
     const nutHien = [], soiHien = [], vet = [null, null];
     let vg = null;
     ds.forEach(f => {
@@ -858,7 +889,7 @@
     const cuoi = trong(5), W = cuoi.thang, hg = huong();
     let p = 0, sao = [0, 0], lit = [0, 0], thap = [-1, -1], bayTri = -1, LB = null, thangChu = null;
     const C51 = (RD.SanKhau && RD.SanKhau.C51) || [955, 66];
-    let sx = 0, sy = 0, la = 0, kh = 0, khD = 0, khLuc = 0, dangKeo = 0, moHUD = 1;
+    let sx = 0, sy = 0, la = 0, kh = 0, khD = 0, khLuc = 0, dangKeo = 0, moHUD = 1, an = 0;      // an: 0..1, các khung của lượt kéo mờ đi khi cả ván đã có đội thắng
     const buiT = [], datT = [];
     const qua = [null, null];
     // hiệu ứng khi kéo (25/11 13:44 thầy Thịnh: "nhớ cho thêm hiệu ứng khi kéo để nhìn đẹp hơn"): hai đội ngả người theo từng nhịp, lấy đà trước
@@ -897,11 +928,11 @@
           const t0 = L.moc[0], r = u < t0 ? eo(lin(u, t0 - .55, t0 - .3)) : 1 - lin(u, t0, t0 + .12);
           if (r > 0) { ng[0] -= 2.4 * r; ng[1] += 2.4 * r; if (u < t0) rung = r; }
           // câu 5: dòng chữ vàng "SỨC MẠNH TÌNH BẠN" hiện trước khi kéo, đội thắng câu toả sáng
-          if (L.tb != null && u >= L.tb && u < L.tb + TB_DAI) { fx.no = { chu: "SỨC MẠNH TÌNH BẠN", d: u - L.tb, dai: TB_DAI, lop: "tb" }; fx.vang = ben(K.thang - 1); }
+          if (L.tb != null && u >= L.tb && u < L.tb + TB_DAI) { fx.vang = ben(K.thang - 1); fx.no = { chu: "SỨC MẠNH\nTÌNH BẠN", d: u - L.tb, dai: TB_DAI, lop: "tb", x: TB_X[fx.vang] }; }
           if (u >= t0 - .5 && u < t0 + .3) fx.no = { chu: "KÉO!", d: u - (t0 - .5), dai: .8, lop: "" };
           if (K.gapDoi && u >= t0 - .3 && u < L.het) fx.vang = ben(K.thang - 1);
           // đội đang bị dẫn kéo dải lụa qua vạch giữa
-          if (L.vuot != null) { const d = u - L.moc[L.vuot]; if (d > 0 && d < 1.6) fx.no = { chu: "ĐỘI " + K.thang + " VƯỢT LÊN!", d: d, dai: 1.6, lop: "nho d" + K.thang }; }
+          if (L.vuot != null) { const d = u - L.moc[L.vuot]; if (d > 0 && d < 1.6) { const dk = K.thang || (K.buoc[0] > 0 ? 1 : 2); fx.no = { chu: "ĐỘI " + dk + " VƯỢT LÊN!", d: d, dai: 1.6, lop: "nho d" + dk }; } }
         }
         // 25/11 17:19 thầy: "chỉ có câu 5 khi chiến thắng thì các bạn học sinh mới nhảy lên thôi": kéo xong câu 5, đội thắng cả ván buông dây
         //   nhảy mừng, hoa giấy tung lên (câu 1 đến câu 4 không ai nhảy)
@@ -910,6 +941,7 @@
           if (th > 0 && th < .66) nhay[ben(W - 1)] = -20 * Math.abs(Math.sin(Math.PI * th / .33));
           if (th > 0 && th < 1.6) fx.hoa = { doi: W - 1, d: th };
           thangChu = { doi: W, b: ben(W - 1), d: th - T_CT, mo: 1 };      // 17:34: dòng chữ vàng "ĐỘI n CHIẾN THẮNG" bên phía đội thắng
+          an = lin(th, 0, T_AN);
         }
         if (K.thang && u >= L.sao + .8) sao[K.thang - 1]++;
       }
@@ -951,6 +983,7 @@
       P.mung[b] = nen.mung[b] = tu === "thang";
       if (coDay || P.mung[b]) song = true;
     }
+    TT_BEN = P.tt;
     veDoi(t, P);
     veBan(t, u, LB, [P.tt[0] === "ban" ? P.pop[0] : -1, P.tt[1] === "ban" ? P.pop[1] : -1]);
     { const moTen = che === "tuong" ? 1 - lin(u, T_DI - .1, T_DI + .3) : 1; E.tenDoi.forEach(el => mo(el, moTen)); }      // nhãn tên đội dưới chân: hai đội rời chỗ thì ẩn
@@ -976,7 +1009,7 @@
           if (f.thua !== b || (f.i % 2) * 4 !== j - j % 4) return;
           const k = j % 4, x = (f.d - k * .07) / 1.05;
           if (x <= 0 || x >= 1) return;
-          const O = BEN_O[b], cf = CHAN_F[ben(b)][k], cx = b ? O.x + O.w * cf : O.x + O.w * (1 - cf);
+          const O = BEN_O[b], cf = chanF(b, k), cx = b ? O.x + O.w * cf : O.x + O.w * (1 - cf);
           o = Math.pow(Math.sin(Math.PI * Math.pow(x, .6)), .9) * (f.manh ? 1 : .9);
           const sc = (.55 + 1.15 * x) * (f.manh ? 1.2 : 1) * [1.1, .82, 1, .88][k];
           tf = "translate(" + px(cx + f.sb * (44 - 120 * x)) + "," + px(GND - 34 - (f.manh ? 124 : 96) * eo(x)) + ") scale(" + (k % 2 ? -sc : sc).toFixed(3) + "," + sc.toFixed(3) + ")";
@@ -999,12 +1032,13 @@
     } else kieu(E.soNac, "opacity", "0");
 
     /* --- nhãn câu, sức mạnh, 5 bước, bảng 2 đội --- */
-    mo(E.cau, tran ? 1 : 0); mo(E.duong, tran ? 1 : 0);
+    const hud = tran ? 1 - an : 0;
+    mo(E.cau, hud); mo(E.duong, hud);
     if (tran) chu(E.cau, RD.nhanCau(q));
     const K = che === "keo" ? trong(q).cau[q] : null, L = S.L;
     if (che === "keo" && K) {
       const b = lin(u, T_SM, T_SM + .65), sm = RD.SUC_MANH[q - 1];
-      mo(E.sm, b > 0 ? 1 : 0);
+      mo(E.sm, b > 0 ? 1 - an : 0);
       chu(E.smNho, "Sức mạnh câu " + q); chu(E.smTen, sm.ten.toUpperCase()); chu(E.smLuat, sm.luat);
       kieu(E.sm, "transform", b < 1 ? "perspective(900px) rotateX(" + ((1 - ob(b)) * -90).toFixed(2) + "deg)" : "");
     } else mo(E.sm, 0);
@@ -1017,7 +1051,7 @@
     }
     for (let d = 0; d < 2; d++) {
       const B = E.bang[d], C = E.chip[d];
-      mo(B.el, tran ? 1 : 0); mo(C.el, tran ? 0 : moHUD);
+      mo(B.el, hud); mo(C.el, tran ? an : moHUD);
       datSao(B.sao, sao[d]); datSao(C.sao, sao[d]);
       if (!tran) continue;
       let f = 0, r = null;
@@ -1030,7 +1064,7 @@
     /* --- lời báo giữa màn --- */
     if (che === "keo" && K && L) {
       const a = lin(u, T_BAO, T_BAO + .35), loi = L.loi, coThuong = K.buoc.length > K.nac, tThuong = coThuong ? L.moc[K.buoc.length - 1] - .45 : 1e9;
-      mo(E.bao, lin(u, T_BAO, T_BAO + .2));
+      mo(E.bao, lin(u, T_BAO, T_BAO + .2) * (1 - an));
       chu(E.lon, u >= tThuong && loi.lon2 ? loi.lon2 : u >= T_DOI ? loi.lon1 : loi.lon0);
       kieu(E.lon, "opacity", a.toFixed(3));
       kieu(E.lon, "transform", a < 1 ? "translateY(" + px((1 - eo(a)) * -24) + ")" : "");
@@ -1041,14 +1075,14 @@
       // dấu ×2 (Tiếp sức, Về đích) hay +1 (Tăng tốc) rơi xuống cạnh lời báo
       const tX = loi.dau ? T_X : 1e9, x = lin(u, tX, tX + .35);
       if (x > 0) {
-        chu(E.x2, loi.dau || "+1"); mo(E.x2, 1);
+        chu(E.x2, loi.dau || "+1"); mo(E.x2, 1 - an);
         kieu(E.x2, "transform", "translateY(" + px((1 - ob(x)) * -110) + ") rotate(" + (-12 - (1 - x) * 30).toFixed(1) + "deg)");
       } else mo(E.x2, 0);
     } else { mo(E.bao, 0); mo(E.x2, 0); }
 
     /* --- thước nấc --- */
     const coThuoc = tran || che === "dau";
-    mo(E.thuoc, coThuoc ? 1 : 0);
+    mo(E.thuoc, coThuoc ? 1 - an : 0);
     if (coThuoc) {
       const mx = TH_G + hg * pv * TH_U;
       kieu(E.moc, "left", px(mx)); kieu(E.dan, "left", px(Math.max(120, Math.min(1100, mx))));
@@ -1073,7 +1107,7 @@
     }
     /* --- ngôi sao bay vào bảng đội thắng câu --- */
     let saoHien = false;
-    if (che === "keo" && K && L && K.thang) {
+    if (che === "keo" && K && L && K.thang && !(q === 5 && W)) {          // câu 5 mà cả ván đã có đội thắng: bảng đội đang mờ đi, sao hiện thẳng ở thẻ tên đội
       const e0 = lin(u, L.sao, L.sao + .8);
       if (e0 > 0 && e0 < 1) {
         const B = E.bang[K.thang - 1], o = B.sao[Math.min(4, trong(q - 1).sao[K.thang - 1])];
@@ -1109,28 +1143,38 @@
     } else { mo(E.ket, 0); if (!E.nut.hidden) E.nut.hidden = true; }
     for (let i = 0; i < 2; i++) veQua(i, qua[i], u);
 
-    /* --- vành lửa lan ra, lộ báo tường ở lớp dưới --- */
+    /* --- lửa từ số 51 lan ra phủ kín màn hình rồi tan đi, lộ báo tường ở lớp dưới ---
+       25/11 22:12 thầy xem bản 5: "màn hình chuyển cảnh sang tấm thiệp của nhóm em bị lag với giật". Bản 5 đục thủng sân kéo co bằng mặt nạ
+       (mask-image) đặt lại từng khung hình trên cả lớp #kc 3840 × 3240 và tô lại vành lửa cỡ đó: máy phải vẽ lại cả sân qua mặt nạ mỗi khung
+       hình (đo trên máy không có card đồ hoạ: còn 9 khung hình mỗi giây, lúc thường là 23). Nay vành lửa là MỘT đĩa sáng (.kc-vong 800 px,
+       viền lửa cam) chỉ phóng to bằng transform; đĩa phủ kín màn hình (V_KIN) thì sân kéo co tắt hẳn (lớp kc-lo), đĩa mờ dần là thấy báo tường. */
     if (che === "tuong") {
       const cx = 960 + C51[0], cy = 1080 + C51[1];
       const v = lin(u, T_CHAY, T_HET);
       if (v > 0) {
-        const r = v < .25 ? 130 * (v / .25) : 130 + 1650 * em((v - .25) / .75);
-        const mn = "radial-gradient(circle at " + cx + "px " + cy + "px,transparent " + px(Math.max(0, r - 8)) + ",#000 " + px(r) + ")";
-        kieu(E.g, "webkitMaskImage", mn); kieu(E.g, "maskImage", mn);
-        mo(E.vong, 1);
-        kieu(E.vong, "background", "radial-gradient(circle at " + cx + "px " + cy + "px,rgba(255,250,220,0) " + px(Math.max(0, r - 10)) + ",rgba(255,248,214,.98) " + px(r + 3) + ",rgba(255,196,80,.92) " + px(r + 20) + ",rgba(255,110,24,.5) " + px(r + 64) + ",rgba(255,80,10,0) " + px(r + 150) + ")");
-      } else mo(E.vong, 0);
+        const r = v < .25 ? 130 * (v / .25) : 130 + (R_KIN - 130) * em(lin(v, .25, V_KIN));
+        kieu(E.vong, "transform", "translate(" + px(cx) + "," + px(cy) + ") scale(" + (r / VONG_R).toFixed(4) + ")");
+        mo(E.vong, 1 - eo(lin(v, V_KIN + .02, .96)));
+        lop(E.g, "kc-lo", v >= V_KIN);
+      } else { mo(E.vong, 0); lop(E.g, "kc-lo", false); }
       const c = u < T_CHAY ? lin(u, T_CHAY - .12, T_CHAY) : 1 - lin(u, T_CHAY, T_CHAY + .7);
-      if (E.chop._cx !== cx + "," + cy) { E.chop._cx = cx + "," + cy; E.chop.style.setProperty("--cx", cx + "px"); E.chop.style.setProperty("--cy", cy + "px"); }
+      if (E.chop._cx !== cx + "," + cy) { E.chop._cx = cx + "," + cy; kieu(E.chop, "transform", "translate(" + px(cx) + "," + px(cy) + ")"); }
       mo(E.chop, c);
       if (u >= T_HET + .15) {                      // xong: lớp kéo co ẩn hẳn, nút "Tiếp theo" của báo tường hiện ra
-        S.che = "an"; E.g.hidden = true; lop(E.world, "kc-che-nut", false);
-        kieu(E.g, "webkitMaskImage", ""); kieu(E.g, "maskImage", "");
+        S.che = "an"; E.g.hidden = true; lop(E.world, "kc-che-nut", false); lop(E.g, "kc-lo", false);
       }
     }
     if (u > S.ket + .2 && !saoHien) S.tinh = true;
   }
 
+  // 25/11 22:30: kéo xong câu 5 thì báo cho trò chơi để tự sang bước thắp đuốc (một lần cho mỗi lần vào bước; vào bước mà không phát
+  //   hoạt cảnh, ví dụ tải lại trang ở bước này, thì báo ngay)
+  function tuThap(t) {
+    if (S.daTu || S.che !== "keo" || S.q !== 5 || !S.L) return;
+    if (t - S.t0 < S.L.het + T_MUNG + (trong(5).thang ? T_TU : T_TU_HOA)) return;
+    S.daTu = true;
+    if (KC.khiXongCau5) KC.khiXongCau5();
+  }
   function vong() {
     requestAnimationFrame(vong);
     if (!E || S.che === "an") return;
@@ -1143,6 +1187,7 @@
         if (S.song && S.doi) veDoi(t, S.doi);
         if (S.chay) for (let b = 0; b < 2; b++) if (S.chay[b]) veTri(b, 1e6, t, true);
       }
+      tuThap(t);
     } catch (e) { console.error(e); }
   }
   KC.khoiTao = function () {

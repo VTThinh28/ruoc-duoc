@@ -41,13 +41,15 @@
   function tinh(boQua) { return RD.tinhDiem(cfg(), cacScan(), cauDaTinh(boQua)); }
 
   /* ---------- ghi trạng thái ---------- */
-  function datBuoc(step) {
+  // tuDong: TV tự sang bước (kéo xong câu 5 thì tự thắp đuốc), ghi n.tu để máy khác biết bước này không do thầy bấm
+  function datBuoc(step, tuDong) {
     if (!DB) return;
     var n = clone(nowHopLe());
     n.ses = ses();
     n.step = step;
     n.at = Date.now();
     n.by = TAB;
+    if (tuDong) n.tu = 1; else delete n.tu;
     delete n.luat;   // 9/11: đổi bước thì luật chơi về ẩn (vào màn giới thiệu là ẩn sẵn) và thôi đếm ngược
     delete n.dem;
     var q = RD.cauCuaBuoc(step);
@@ -244,9 +246,15 @@
 
   /* ---------- tiếp và lùi ---------- */
   var choXacNhan = null;
+  // 25/11 22:30 thầy Thịnh: "đội nào thắng thì đuốc sẽ được thắp sáng luôn nhé, không cần tôi bấm". Kéo xong câu 5, TV tự sang bước thắp
+  //   đuốc (KC.khiXongCau5). Thầy quen tay bấm "Đốt đuốc" đúng lúc đó thì cú bấm sẽ rơi vào bước thắp đuốc và nhảy luôn sang bắt tay: máy
+  //   nào vừa thấy bước thắp đuốc tự tới (now.tu) thì bỏ qua cú bấm "tiếp" trong 2 giây đầu (tính bằng đồng hồ của chính máy đó).
+  var tuThay = { at: 0, luc: 0 };
+  function ghiNhanTu(now) { if (now.step === "finish" && now.tu && tuThay.at !== now.at) { tuThay.at = now.at; tuThay.luc = performance.now(); } }
   function tiep(daDongY) {
     var now = nowHopLe(), i = RD.BUOC.indexOf(now.step);
     if (i < 0 || i >= RD.BUOC.length - 1) return;
+    if (now.step === "finish" && now.tu && tuThay.at === now.at && performance.now() - tuThay.luc < 2000) return;
     var step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
     if (step === "setup") {
       var lop = RD.lop(cfg());
@@ -658,6 +666,8 @@
     KC.khoiTao();
     // nút trên sân kéo co (phần kết): "Tiếp theo" ở bước finish
     KC.khiBam = function () { if (nowHopLe().step === "finish") tiep(); };
+    // 25/11 22:30: kéo xong câu 5 thì tự sang bước thắp đuốc (chỉ khi vẫn đang ở bước kéo câu 5)
+    KC.khiXongCau5 = function () { if (nowHopLe().step === "r5") datBuoc("finish", true); };
     SK.khiBamLuat = function (an) { SK.anLuat(an); ghiLuat(!an); };   // 9/11: điện thoại cũng thấy, cũng đổi được
     A.taiNhac();
     if (A.taiVoTay) A.taiVoTay();
@@ -877,6 +887,7 @@
 
   function veTV() {
     var now = nowHopLe(), step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
+    ghiNhanTu(now);
     // các lần công bố đã có trước khi TV mở trang: không phát lại hoạt cảnh
     if (coNow && (tvDaDien === null || tvDaDienSes !== ses())) { tvDaDien = clone(now.pub || {}); tvDaDienSes = ses(); }
     var cu = tvTruoc;
@@ -1207,11 +1218,18 @@
       // Kéo co: số bạn đúng của 2 đội (mỗi đội 2 nhóm)
       html = RD.doiCau(q, lop, sc).map(function (r, d) {
         var D = RD.DOI[d];
-        return '<span style="--m:' + D.dam + '">' + D.ten + ": " + r.dung + "/" + r.thay + " HS đúng</span>";
+        return '<span class="doi" style="--m:' + D.dam + '">' + D.ten + ": " + r.dung + "/" + r.thay + " HS đúng</span>";          // 25/11 22:12 thầy: "cho dòng đội 1 đội 2 số hs đúng to lên" (lớp doi)
       }).join("");
     }
     var el = $("#mcTien");
-    if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
+    if (el.dataset.html !== html) {
+      el.innerHTML = html; el.dataset.html = html;
+      // 25/11 22:12: dòng "Đội n: x/y HS đúng" to lên nên dải sức mạnh bên cạnh hẹp lại; lời luật không còn vừa một dòng thì xuống hai dòng
+      //   chữ nhỏ hơn (lớp hai-dong) thay vì bị cắt bằng dấu ba chấm
+      var sm = $("#mcSm"), lu = $("#mcSmLuat");
+      sm.classList.remove("hai-dong");
+      if (lu.scrollWidth > lu.clientWidth + 1) sm.classList.add("hai-dong");
+    }
   }
 
   /* ---------- chơi thử: TV tự điền kết quả ---------- */
@@ -1368,6 +1386,7 @@
   }
   function veDT() {
     var now = nowHopLe(), step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
+    ghiNhanTu(now);
     // bấm Quét xong (hay sang bước khác): camera đang toàn màn hình thì thu nhỏ để thấy bảng thẻ còn thiếu
     if (step !== dtBuocCu) {
       if (dtBuocCu !== null && loai !== "q" && $("#dtCam").classList.contains("lon")) datCamLon(false);
@@ -1425,7 +1444,7 @@
     if (loai === "q") capNutDem();
     // hướng dẫn ngắn theo bước
     var ghi = $("#dtGhi"), html = "";
-    if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề cơ bản</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, số thẻ của 2 đội, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
+    if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề chính thức</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, số thẻ của 2 đội, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
     else if (step === "intro") html = "Bấm <b>Hiện luật chơi trên TV</b> ở trên để cả lớp cùng xem, đọc luật cho các em nghe, rồi bấm <b>Ẩn luật chơi trên TV</b> để các em xem lại màn chơi (trên TV cũng có nút Ẩn, Hiện luật chơi ở góc phải)." +
       // 18/11: bản 4 thẻ đọc trúng mã là ghi, thẻ ngửa mặt mã trên bàn cũng được ghi, nên dặn các em trước câu 1
       (RD.BO_THE === "moi" ? " Dặn các em: mỗi câu chỉ giơ <b>1 thẻ</b>, mặt mã quay về phía thầy; <b>3 thẻ còn lại úp mặt mã xuống bàn</b>." : "") +
@@ -1436,7 +1455,7 @@
     else if (loai === "r") {
       var kcr = lichSuKC()[q], Kr = kcr && kcr.cau[q];
       html = "TV đang cho hai đội kéo co theo kết quả câu " + q + " (sức mạnh: <b>" + RD.SUC_MANH[q - 1].ten + "</b>)." + (Kr ? " Câu này: Đội 1 đúng " + Kr.doi[0].tram + "%, Đội 2 đúng " + Kr.doi[1].tram + "%. Sau câu " + q + ": <b>" + RD.vietVT(kcr.vt) + "</b>." : "") +
-        (q < 5 ? " Dây đứng yên rồi thì bấm <b>Hiện câu " + (q + 1) + "</b>." : " Dây đứng yên rồi thì bấm <b>Đốt đuốc</b>.");
+        (q < 5 ? " Dây đứng yên rồi thì bấm <b>Hiện câu " + (q + 1) + "</b>." : " Kéo xong, TV tự sang bước thắp đuốc: đuốc của đội thắng tự sáng, thầy không cần bấm.");
     }
     else if (step === "finish") {
       var wf = lichSuKC()[5].thang;
