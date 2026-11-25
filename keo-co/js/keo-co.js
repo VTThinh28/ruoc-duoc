@@ -556,29 +556,28 @@
       if (K) {
         S.L = lichKeo(K); S.ket = S.L.ket;
         if (hc) {
+          // 25/11 23:24 thầy Thịnh: "bỏ mấy cái âm thanh ting ting gì đi và mấy cái âm nghe kì kì lúc mà 2 ngọn đuốc sáng á, có tiếng gì nghe kì kì lúc
+          //   tri thức bay ra". Bỏ hết tiếng "ting" (trước lượt kéo, nấc thưởng, huy hiệu ×2, dòng tình bạn, từng cặp bắt tay) và tiếng lấp lánh
+          //   (lapLanh: vượt lên, ngôi sao, tình bạn, chiến thắng, bắt tay xong, tri thức bay về số 51); lúc đuốc sáng bỏ tiếng phừng (bungLua),
+          //   tiếng vút (vut), tiếng lách tách (lachTach), cả ở lúc đội thắng sang bắt tay và lúc vầng sáng lan ra. Còn lại: gõ mộc cầm và chuông
+          //   lúc hiện ô báo, trống mỗi nấc kéo, tiếng vút lúc có bạn trượt chân, khúc vui, vỗ tay, trống lúc vầng sáng lan ra, nhạc nền.
           hen(t + T_SM, keu("go", 3, .35)); hen(t + T_BAO, keu("chuong", .35));
-          if (S.L.loi.dau) hen(t + T_X, keu("ting"));
-          S.L.moc.forEach((m, i) => { hen(t + m, keu("trong", i >= K.nac ? .7 : .85)); if (i >= K.nac) hen(t + m - .4, keu("ting")); });
-          if (S.L.moc.length) hen(t + S.L.moc[0] - .5, keu("ting"));
-          if (S.L.vuot != null) hen(t + S.L.moc[S.L.vuot] + .05, keu("lapLanh"));
-          if (K.thang) hen(t + S.L.sao + .75, keu("lapLanh"));
+          S.L.moc.forEach((m, i) => { hen(t + m, keu("trong", i >= K.nac ? .7 : .85)); });
           if (S.q === 2 && S.L.moc.length) hen(t + S.L.moc[0] + .1, keu("vut"));                    // có bạn trượt chân
           if (S.q === 5 && S.L.moc.length > 1) hen(t + S.L.moc[1] + .1, keu("vut"));
-          if (S.L.tb != null) { hen(t + S.L.tb, keu("lapLanh")); hen(t + S.L.tb + .12, keu("ting")); }      // dòng chữ vàng "SỨC MẠNH TÌNH BẠN"
-          if (S.q === 5 && trong(5).thang) { hen(t + S.L.het + T_MUNG + T_CT, keu("lapLanh")); hen(t + S.L.het + T_MUNG + T_CT + .1, keu("ken")); S.kenLuc = t + S.L.het + T_MUNG + T_CT + .1; }      // dòng chữ vàng "ĐỘI n CHIẾN THẮNG"
+          if (S.q === 5 && trong(5).thang) { hen(t + S.L.het + T_MUNG + T_CT + .1, keu("ken")); S.kenLuc = t + S.L.het + T_MUNG + T_CT + .1; }      // dòng chữ vàng "ĐỘI n CHIẾN THẮNG": khúc vui
         }
       }
     } else if (che === "dich") {
       S.ket = T_D1 + TRI_DAI + .4;
       // 25/11 22:30: bước thắp đuốc tự tới ngay sau khúc vui của dòng "ĐỘI n CHIẾN THẮNG" thì không kêu khúc vui lần nữa (hai lần cách nhau hơn 1 giây nghe lặp)
-      if (hc) { if (!(S.kenLuc != null && t >= S.kenLuc && t - S.kenLuc < 3)) hen(t + .05, keu("ken")); hen(t + T_D1, keu("bungLua")); hen(t + T_D1 + .1, keu("vut")); hen(t + T_D1 + .15, keu("lachTach", 2.4)); hen(t + T_D1 + .7, keu("voTay")); }
+      if (hc) { if (!(S.kenLuc != null && t >= S.kenLuc && t - S.kenLuc < 3)) hen(t + .05, keu("ken")); hen(t + T_D1 + .7, keu("voTay")); }      // 23:24: đuốc sáng chỉ còn vỗ tay
     } else if (che === "tuong") {
       S.ket = T_HET + .3;
-      hen(t + T_DI, keu("vut")); lichBat(trong(5).thang).cap.forEach(c => hen(t + c.luc, keu("ting")));      // mỗi cặp bắt tay một tiếng "ting"
-      hen(t + T_BAT + .05, keu("lapLanh")); hen(t + T_BAT + .2, keu("voTay"));
-      hen(t + T_SANG2, keu("bungLua")); hen(t + T_SANG2 + .1, keu("vut")); hen(t + T_SANG2 + .15, keu("lachTach", 2.4)); hen(t + T_SANG2 + .3, keu("ken"));
-      hen(t + T_BAY, keu("vut")); hen(t + T_BAY + .45, keu("lapLanh"));
-      hen(t + T_CHAY, keu("trong", 1)); hen(t + T_CHAY, keu("bungLua")); hen(t + T_CHAY + .2, keu("lachTach", 2.4));
+      // 23:24: bước này chỉ còn vỗ tay lúc cả bốn cặp bắt tay xong, khúc vui lúc ngọn đuốc thứ hai sáng, một tiếng trống lúc vầng sáng lan ra
+      hen(t + T_BAT + .2, keu("voTay"));
+      hen(t + T_SANG2 + .3, keu("ken"));
+      hen(t + T_CHAY, keu("trong", 1));
     }
     if (che !== "an") { try { ve(t); } catch (e) { console.error(e); } }
   };
