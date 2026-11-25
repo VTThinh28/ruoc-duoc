@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c8322a">
-<title>Kéo co</title>
+<title>Ngọn đuốc tri thức</title>
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js">
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js">
 <link rel="preconnect" href="https://my-project-1473334284611-default-rtdb.asia-southeast1.firebasedatabase.app">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Kéo co</title>
+<title>Ngọn đuốc tri thức</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,7 +63,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 #world img{max-width:none}
 #cv{position:absolute;left:0;top:0;width:1920px;height:1080px}
 #world .tieu{position:absolute;left:0;right:0;top:22px;text-align:center;color:#fff;pointer-events:none}
-#world .tieu h1{margin:0;font:800 116px/1 var(--f-tieu);letter-spacing:.02em;color:#ffd76a;-webkit-text-stroke:10px #6b3f00;paint-order:stroke fill;text-shadow:0 6px 0 #4a2b00,0 0 30px rgba(255,220,140,.7)}
+#world .tieu h1{margin:0;font:800 96px/1.15 var(--f-tieu);letter-spacing:.02em;color:#ffd76a;-webkit-text-stroke:10px #6b3f00;paint-order:stroke fill;text-shadow:0 6px 0 #4a2b00,0 0 30px rgba(255,220,140,.7)}
 /* 9/11 05:27 UTC thầy Thịnh: "chữ rước đuốc với phần luật chơi cho to lên tí nha. che luôn cây cầu cũng được": tiêu đề 116 px
    (trước 88), chữ luật chơi 46 px (trước 36), khung rộng 1536 px phủ gần hết cây cầu, chừa trọn nhãn Nhóm 1–4 bên trái; san-khau.js co khung cho vừa trên hai
    cụm nút góc (doLuat).
@@ -452,57 +452,109 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-nen .tr{right:100%;background-image:linear-gradient(to right,rgba(141,181,154,.1),rgba(141,181,154,.97) 70%),url(hinh/nen-sang.webp);background-size:100% 100%,1920px 1080px;background-position:0 0,0 0}
 .kc-nen .p{left:100%;background-image:linear-gradient(to left,rgba(141,181,154,.1),rgba(141,181,154,.97) 70%),url(hinh/nen-sang.webp);background-size:100% 100%,1920px 1080px;background-position:0 0,100% 0}
 .kc-toi{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,52,96,.3) 0,rgba(18,52,96,.1) 300px,rgba(18,52,96,0) 430px)}
-/* đuốc của 4 nhóm ở mép sân phía sau */
-.kc-duoc{position:absolute;width:56px;height:218px;background:url(../anh/duoc.webp) center/contain no-repeat;filter:drop-shadow(0 6px 5px rgba(40,30,10,.35))}
-.kc-nhan{position:absolute;transform:translateX(-50%);font:700 19px/1 var(--f-tieu);color:#fff;padding:6px 11px 4px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35)}
-.kc-lua{position:absolute;width:54px;height:86px;margin-left:-27px;transform-origin:50% 100%;opacity:0}
-.kc-lua i{position:absolute;inset:0;transform-origin:50% 100%;border-radius:50% 50% 46% 46%/62% 62% 38% 38%;background:radial-gradient(ellipse at 50% 72%,#fffbe0 0,#ffe27a 22%,#ffab2e 48%,#ff5a14 72%,rgba(255,60,10,0) 100%);filter:blur(.6px) drop-shadow(0 0 16px rgba(255,170,60,.95)) drop-shadow(0 0 40px rgba(255,130,40,.7));animation:kcLua .5s ease-in-out infinite alternate}
-.kc-lua i::after{content:"";position:absolute;left:30%;top:-18%;width:40%;height:50%;border-radius:50%;background:radial-gradient(ellipse,#ffd36b 0,rgba(255,140,40,0) 70%)}
-.kc-lua:nth-of-type(odd) i{animation-duration:.43s}
-@keyframes kcLua{0%{transform:scale(1,1) rotate(-2deg)}50%{transform:scale(.94,1.07) rotate(1.5deg)}100%{transform:scale(1.05,.95) rotate(2.5deg)}}
-.kc-quang{position:absolute;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:radial-gradient(circle,rgba(255,190,90,.38) 0,rgba(255,160,60,.14) 40%,rgba(255,150,60,0) 70%);opacity:0}
+/* 25/11 16:18 thầy Thịnh: "chỉ có 2 cây đuốc thôi cây đuốc của đội 1 và đội 2"; 17:19: "đuốc thiết kế giống trò rước đuốc nhưng đứng ngang
+   hông mỗi đội không đứng đằng sau". Hai cây đuốc là hình cây đuốc của trò Rước đuốc (từ 19:25: hinh/duoc.webp, thân cắt ngắn lại), đứng ngay bên hông hai đội;
+   ngọn lửa cháy trên đống củi trong chảo. */
+.kc-duoc{position:absolute;filter:drop-shadow(0 6px 5px rgba(40,30,10,.38));transition:filter .5s}
+.kc-duoc.sang{filter:brightness(1.1) drop-shadow(0 0 16px rgba(255,190,90,.85)) drop-shadow(0 6px 5px rgba(40,30,10,.38))}
+/* 25/11 19:25 thầy: "cái ngọn lửa đuốc thì cho nó đẹp hơn nhé, cho nó lấp lánh hơn": lửa ba lớp tô chuyển màu, hai lưỡi lửa nhỏ liếm lên
+   (.l1, .l2), tàn lửa bay lên (.tl), sao nhỏ nhấp nháy (.ls), quầng sáng có tia toả chậm (.kc-quang) */
+.kc-lua{position:absolute;width:124px;height:198px;margin:-198px 0 0 -62px;transform-origin:50% 100%;opacity:0;filter:drop-shadow(0 0 14px rgba(255,190,70,.95)) drop-shadow(0 0 40px rgba(255,130,40,.75))}
+.kc-lua svg{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 100%;overflow:visible}
+.kc-lua .n{opacity:.95;animation:kcLua .47s ease-in-out infinite alternate}
+.kc-lua .g{animation:kcLua .39s ease-in-out -.2s infinite alternate-reverse}
+.kc-lua .t{animation:kcLua .31s ease-in-out -.1s infinite alternate}
+.kc-lua .l1{animation:kcLuoi .9s ease-in -.2s infinite}
+.kc-lua .l2{animation:kcLuoi 1.1s ease-in -.7s infinite}
+@keyframes kcLua{0%{transform:scale(1,1) skewX(-3deg)}50%{transform:scale(.93,1.08) skewX(2deg)}100%{transform:scale(1.06,.95) skewX(4deg)}}
+@keyframes kcLuoi{0%{transform:translateY(8px) scale(.9);opacity:0}25%{opacity:.95}100%{transform:translateY(-58px) scale(.5,.8);opacity:0}}
+.kc-lua .tl{position:absolute;left:50%;top:42%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:radial-gradient(circle,#fff 0,#ffe98a 40%,#ffa424 100%);box-shadow:0 0 8px 2px rgba(255,205,90,.95);opacity:0;animation:kcTanLua var(--t,2s) linear var(--d,0s) infinite}
+@keyframes kcTanLua{0%{transform:translate(var(--x0,0),0) scale(1);opacity:0}10%{opacity:1}70%{opacity:.85}100%{transform:translate(var(--x1,20px),-250px) scale(.25);opacity:0}}
+.kc-lua .ls{position:absolute;background:radial-gradient(circle,#fff 0,#fff6c2 45%,#ffd95a 100%);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);animation:kcLs 1.5s ease-in-out infinite}
+.kc-quang{position:absolute;width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;background:radial-gradient(circle,rgba(255,206,110,.5) 0,rgba(255,165,65,.2) 40%,rgba(255,150,60,0) 70%);opacity:0}
+.kc-quang::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,232,160,.5) 0deg 5deg,rgba(255,232,160,0) 5deg 30deg);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.9) 0,rgba(0,0,0,.55) 28%,rgba(0,0,0,0) 62%);mask-image:radial-gradient(circle,rgba(0,0,0,.9) 0,rgba(0,0,0,.55) 28%,rgba(0,0,0,0) 62%);animation:kcQuangXoay 26s linear infinite}
+.kc-quang::after{content:"";position:absolute;inset:24%;border-radius:50%;background:radial-gradient(circle,rgba(255,244,196,.6) 0,rgba(255,205,105,.24) 45%,rgba(255,180,80,0) 70%);animation:kcQuangNhip 1.1s ease-in-out infinite alternate}
+@keyframes kcQuangXoay{to{transform:rotate(360deg)}}
+@keyframes kcQuangNhip{0%{transform:scale(.9);opacity:.65}100%{transform:scale(1.12);opacity:1}}
+/* 25/11 17:19 thầy Thịnh: "đội nào đối đuốc thì có hoạt ảnh tri thức bay lên như là cuốn sách, kí hiệu toán học etc."; 17:34: thêm số pi,
+   công thức chu vi, diện tích, và tất cả "cùng bay về phía cái số 51". Quyển sách, số π, kí hiệu toán, công thức (.cthuc) bay lên từ ngọn lửa,
+   js/keo-co.js (veTri) đặt chỗ từng khung hình (tâm hình nằm ở điểm đặt) */
+.kc-tri{position:absolute;left:0;top:0;white-space:nowrap;font:800 54px/1 var(--f-tieu);font-style:normal;color:#fff3b8;-webkit-text-stroke:7px #b3560f;paint-order:stroke fill;text-shadow:0 0 14px rgba(255,200,80,.95),0 0 30px rgba(255,150,40,.7);opacity:0;will-change:transform,opacity}
+/* 25/11 19:25 thầy: "các cái chữ cũng vậy, cho tỷ lệ đều nhau lại": công thức, tên định lí, tên nhà toán học cùng cỡ 32 */
+.kc-tri.cthuc{font-size:32px;-webkit-text-stroke-width:5.5px;letter-spacing:.4px}
+.kc-tri svg{display:block;width:76px;height:76px;overflow:visible;filter:drop-shadow(0 0 7px rgba(255,200,80,.95)) drop-shadow(0 0 18px rgba(255,150,40,.6))}
+/* 25/11 18:22 thầy: thêm "định lý Thales", "định lý Pythagore", "hình cây bút, hình cây thước", "hình mặt của Pythagore, hình mặt của Thales".
+   .the: hình vẽ định lí có dòng chữ bên dưới; .chan: chân dung tròn có tên bên dưới */
+.kc-tri.the{display:flex;flex-direction:column;align-items:center;font-size:32px;-webkit-text-stroke-width:5.5px;letter-spacing:.4px}
+.kc-tri.the svg{width:116px;height:110px}
+.kc-tri.the b{font-weight:800;margin-top:3px}
+.kc-tri.chan img{display:block;width:104px;height:104px;border-radius:50%;object-fit:cover;border:4px solid #ffe9a8;box-shadow:0 0 0 3px #b3560f,0 0 16px 3px rgba(255,190,70,.95)}
+/* 25/11 17:34 thầy Thịnh: "hiện ra cái dòng chữ là đội 1 chiến thắng [...] ở phía bên đội đó dòng chữ đó hiện lên màu vàng lấp lánh nhá, mà có cái
+   hiệu ứng nào nó đẹp đẹp một chút". Hai lớp chữ chồng nhau: .th-v là viền nâu và quầng sáng, .th-m là mặt chữ vàng có vệt sáng chạy ngang;
+   .th-ls là các ngôi sao nhấp nháy quanh chữ; cả khối phập phồng nhẹ. js/keo-co.js (veThang) cho hiện, đặt bên trái hay bên phải. */
+.kc-thang{position:absolute;left:0;top:366px;text-align:center;white-space:nowrap;opacity:0;visibility:hidden;transform-origin:50% 60%;will-change:transform,opacity}
+.kc-thang .th-trong{position:relative;display:inline-block;animation:kcThangNhip 1.5s ease-in-out infinite alternate}
+.kc-thang .th-dong{position:relative;display:block;font:800 74px/1.04 var(--f-tieu);letter-spacing:1px}
+.kc-thang .th-dong.th-nho{font-size:74px}   /* 19:25: hai dòng cùng một cỡ chữ */
+.kc-thang .th-v{display:block;color:#7a2c00;-webkit-text-stroke:14px #7a2c00;text-shadow:0 7px 0 rgba(70,25,0,.5),0 0 26px rgba(255,214,110,1),0 0 60px rgba(255,180,50,.85)}
+.kc-thang .th-m{position:absolute;left:0;top:0;width:100%;background:linear-gradient(100deg,#ffb400 0,#ffe45c 12%,#fffbe2 22%,#ffd23a 34%,#ffb400 50%,#ffe45c 62%,#fffbe2 72%,#ffd23a 84%,#ffb400 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:kcThangLap 1.7s linear infinite}
+.kc-thang .th-ls{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;background:radial-gradient(circle,#fff 0,#fff6c2 45%,#ffd95a 100%);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);animation:kcLs 1.4s ease-in-out infinite}
+@keyframes kcThangLap{from{background-position:100% 0}to{background-position:0 0}}
+@keyframes kcThangNhip{from{transform:scale(1)}to{transform:scale(1.045)}}
+@keyframes kcLs{0%,100%{transform:scale(0) rotate(0)}50%{transform:scale(1.25) rotate(45deg)}}
 /* vạch giữa bằng phấn */
 .kc-vach{position:absolute;left:956px;top:596px;width:8px;height:246px;background:repeating-linear-gradient(180deg,#fff 0 22px,transparent 22px 36px);filter:drop-shadow(0 0 2px rgba(80,50,10,.85))}
 .kc-chu-vach{position:absolute;left:960px;top:850px;transform:translateX(-50%);font:700 19px/1 var(--f-tieu);color:#fff;letter-spacing:.5px;white-space:nowrap;padding:6px 13px 4px;border-radius:999px;background:rgba(14,18,40,.7)}
-/* hai đội, dây, dải lụa đỏ (cả cụm trượt theo số nấc) */
+/* hai đội, dây, dải lụa đỏ (cả cụm trượt theo số nấc). 25/11 16:18: mỗi đội 6 hình tư thế chồng lên nhau trong một khung, js cho hiện một hình;
+   17:19: Đội 1 áo thể dục, Đội 2 áo vàng bán trú, hình nào cũng vẽ hướng đứng bên trái, đội đứng bên phải thì lật lại (.lat);
+   sợi dây giữa hai đội gồm hai nửa (.kc-day.t, .kc-day.p) lấy vân từ chính sợi dây trong hình của đội đứng bên đó (js đặt), js đặt lại từng
+   khung hình cho khít hai đầu dây */
 .kc-nhom{position:absolute;left:0;top:0;width:1920px;height:1080px;will-change:transform}
 .kc-doi-boc{position:absolute;transform-origin:50% 97%;will-change:transform}
-.kc-doi{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 100%}
-.kc-doi.vang{filter:drop-shadow(0 0 9px rgba(255,205,70,.95)) drop-shadow(0 0 22px rgba(255,170,30,.65))}
+.kc-doi{position:absolute;left:0;top:0;width:100%;height:100%;visibility:hidden}
+.kc-doi-boc.lat .kc-doi{transform:scaleX(-1)}
+.kc-doi-boc.vang{filter:drop-shadow(0 0 9px rgba(255,205,70,.95)) drop-shadow(0 0 22px rgba(255,170,30,.65))}
+/* 25/11 18:22 thầy: "bắt tay thì cả bốn bạn bên này qua bắt bốn bạn bên kia". Hình từng bạn chìa tay: khung gốc 0 × 0 đặt ở giữa hai bàn chân
+   (js/keo-co.js veBan dời khung, datBen đặt cỡ hình), <i> là bóng dưới chân */
+.kc-ban{position:absolute;left:0;top:0;width:0;height:0;opacity:0;visibility:hidden;z-index:1;will-change:transform}
+.kc-ban img{position:absolute;max-width:none;will-change:transform}
+.kc-ban i{position:absolute;left:-54px;top:-14px;width:108px;height:28px;border-radius:50%;background:radial-gradient(ellipse,rgba(50,40,20,.36) 0,rgba(50,40,20,.18) 50%,rgba(50,40,20,0) 72%)}
 .kc-bong-doi{position:absolute;height:34px;border-radius:50%;background:radial-gradient(ellipse,rgba(50,40,20,.34) 0,rgba(50,40,20,.18) 50%,rgba(50,40,20,0) 72%)}
 .kc-ten-doi{position:absolute;transform:translateX(-50%);font:800 24px/1 var(--f-tieu);color:#fff;padding:8px 17px 6px;border-radius:999px;white-space:nowrap;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.3);letter-spacing:.5px}
-.kc-doi.d1{animation:kcGong1 1.1s ease-in-out infinite alternate}
-.kc-doi.d2{animation:kcGong2 1.1s ease-in-out -.4s infinite alternate}
-@keyframes kcGong1{from{transform:translateX(0) rotate(0)}to{transform:translateX(-5px) rotate(-.5deg)}}
-@keyframes kcGong2{from{transform:translateX(0) rotate(0)}to{transform:translateX(5px) rotate(.5deg)}}
-.kc-doi.mung{animation:kcMung .52s ease-in-out infinite alternate}
-@keyframes kcMung{from{transform:translateY(0)}to{transform:translateY(-16px)}}
-.kc-day{position:absolute;height:10px;background:url(hinh/day.webp) left center/auto 10px repeat-x;filter:drop-shadow(0 3px 2px rgba(0,0,0,.35))}
-.kc-den-boc{position:absolute;width:90px;height:150px;transform-origin:45px 12px;animation:kcDen 2.2s ease-in-out infinite alternate}
+.kc-day,.kc-day-dat{position:absolute;background-repeat:repeat-x;background-size:auto 100%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+.kc-day{left:0;top:0;transform-origin:0 50%;will-change:transform,width}
+.kc-day.t,.kc-day-dat.t{background-position:left center}
+.kc-day.p,.kc-day-dat.p{background-position:right center}
+.kc-day-dat{opacity:0}
+.kc-den-neo{position:absolute;left:0;top:0;width:90px;height:150px;transform-origin:45px 12px;will-change:transform}
+.kc-den-boc{position:absolute;inset:0;transform-origin:45px 12px;animation:kcDen 2.2s ease-in-out infinite alternate}
+.kc-den-neo.nam .kc-den-boc{animation:none}
 @keyframes kcDen{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
 .kc-den{position:absolute;inset:0;transform-origin:45px 12px;filter:drop-shadow(0 4px 4px rgba(40,20,0,.35))}
 .kc-den svg{display:block;width:100%;height:100%;overflow:visible}
 .kc-bui{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(176,146,102,.72) 0,rgba(176,146,102,.36) 45%,rgba(176,146,102,0) 70%);filter:blur(2px);opacity:0}
-.kc-mui{position:absolute;top:632px;opacity:0;filter:drop-shadow(0 0 2px rgba(120,50,0,.95)) drop-shadow(0 0 8px rgba(255,150,40,.9))}
-.kc-so-nac{position:absolute;left:960px;top:556px;width:76px;height:76px;margin-left:-38px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 62%,#c4850d);border:4px solid #fff3c4;display:grid;place-items:center;font:800 44px/1 var(--f-tieu);color:#6b2a00;box-shadow:0 0 18px rgba(255,200,90,.9);opacity:0}
+.kc-mui{position:absolute;top:652px;opacity:0;filter:drop-shadow(0 0 2px rgba(120,50,0,.95)) drop-shadow(0 0 8px rgba(255,150,40,.9))}
+.kc-so-nac{position:absolute;left:960px;top:560px;width:76px;height:76px;margin-left:-38px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 62%,#c4850d);border:4px solid #fff3c4;display:grid;place-items:center;font:800 44px/1 var(--f-tieu);color:#6b2a00;box-shadow:0 0 18px rgba(255,200,90,.9);opacity:0}
 /* hiệu ứng khi kéo: vệt gió, tiếng hò, chữ nổ giữa sân, lá rơi, hoa giấy */
 .kc-vut{position:absolute;left:0;top:0;height:5px;border-radius:3px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.95) 40%,rgba(255,255,255,0));box-shadow:0 0 6px rgba(60,110,190,.55);opacity:0;will-change:transform,opacity}
 .kc-vut.vang{background:linear-gradient(90deg,rgba(255,220,110,0),rgba(255,226,120,1) 40%,rgba(255,220,110,0));box-shadow:0 0 8px rgba(214,140,10,.75)}
 .kc-ho{position:absolute;left:0;top:0;font:800 40px/1 var(--f-tieu);white-space:nowrap;color:#fff;padding:9px 18px 6px;border-radius:999px 999px 999px 10px;border:4px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.28);opacity:0;transform-origin:20% 100%;letter-spacing:.5px;will-change:transform,opacity}
-.kc-ho.d1{background:var(--xanh)}
-.kc-ho.d2{background:var(--cam);border-radius:999px 999px 10px 999px;transform-origin:80% 100%}
+.kc-ho.b1{border-radius:999px 999px 10px 999px;transform-origin:80% 100%}
 .kc-ho.nho{font-size:28px;padding:7px 14px 5px;border-width:3px}
 .kc-no{position:absolute;left:960px;top:452px;font:800 104px/1 var(--f-tieu);white-space:nowrap;color:#fff;letter-spacing:2px;-webkit-text-stroke:14px #b3260f;paint-order:stroke fill;text-shadow:0 8px 0 rgba(90,20,0,.55),0 0 34px rgba(255,210,110,.95);opacity:0;will-change:transform,opacity}
 .kc-no.d1{-webkit-text-stroke-color:var(--xanhdam)}
 .kc-no.d2{-webkit-text-stroke-color:var(--camdam)}
 .kc-no.nho{font-size:74px;-webkit-text-stroke-width:11px}
+/* 25/11 17:19 thầy Thịnh: câu 5 "hiện lên dòng chữ vàng là sức mạnh tình bạn sau đó kéo" */
+.kc-no.tb{top:440px;font-size:118px;letter-spacing:3px;color:#ffd83a;-webkit-text-stroke:15px #8a3d00;text-shadow:0 9px 0 rgba(90,35,0,.6),0 0 30px rgba(255,226,120,1),0 0 70px rgba(255,190,60,.9)}
 .kc-la{position:absolute;left:0;top:0;width:20px;height:12px;border-radius:85% 0 85% 0;background:linear-gradient(135deg,#a6d95a,#5fa62e);box-shadow:inset -1px -1px 0 rgba(40,90,20,.35);opacity:0;will-change:transform,opacity}
 .kc-la:nth-child(3n){background:linear-gradient(135deg,#d6e36a,#93bd2f);width:17px;height:10px}
 .kc-la:nth-child(4n){background:linear-gradient(135deg,#8ccf52,#3f8f2a);width:23px;height:13px}
 .kc-la.nen{animation:kcLaRoi 9s linear infinite;opacity:1}
 @keyframes kcLaRoi{0%{transform:translate(0,-40px) rotate(0);opacity:0}8%{opacity:.95}50%{transform:translate(90px,330px) rotate(260deg)}92%{opacity:.9}100%{transform:translate(30px,700px) rotate(520deg);opacity:0}}
 .kc-hoa{position:absolute;left:0;top:0;width:13px;height:18px;border-radius:3px;opacity:0;will-change:transform,opacity}
-.kc-tia{position:absolute;left:960px;top:664px;width:0;height:0;opacity:0}
+.kc-tia{position:absolute;left:960px;top:671px;width:0;height:0;opacity:0}
+.kc-tia.bt{z-index:3}
 .kc-tia i{position:absolute;left:-3px;top:-3px;width:6px;height:26px;border-radius:3px;background:linear-gradient(180deg,#fff,#ffd56e);box-shadow:0 0 8px rgba(255,190,60,.9);transform-origin:50% 0}
 #kc.kc-dung *{animation-play-state:paused!important}
 /* bảng, nhãn */
@@ -538,10 +590,12 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-bang .thanh{flex:1;height:30px;border-radius:999px;background:#efe0c2;border:2px solid #d9c194;overflow:hidden;position:relative}
 .kc-bang .thanh i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px}
 .kc-bang .pt{font:800 40px/1 var(--f-tieu);width:104px;text-align:right}
-.kc-bang.d1{left:36px;border-left:12px solid var(--xanh)}
+.kc-bang.d1,.kc-chip.d1{--m:var(--xanh)}
+.kc-bang.d2,.kc-chip.d2{--m:var(--cam)}
+.kc-bang.ben-t{left:36px;border-left:12px solid var(--m)}
+.kc-bang.ben-p{left:1324px;border-right:12px solid var(--m)}
 .kc-bang.d1 .ten,.kc-bang.d1 .pt,.kc-chip.d1 .ten{color:var(--xanhdam)}
 .kc-bang.d1 .thanh i{background:linear-gradient(90deg,#5d93ea,#2f6fd6)}
-.kc-bang.d2{left:1324px;border-right:12px solid var(--cam)}
 .kc-bang.d2 .ten,.kc-bang.d2 .pt,.kc-chip.d2 .ten{color:var(--camdam)}
 .kc-bang.d2 .thanh i{background:linear-gradient(90deg,#f6b25c,#e9861c)}
 .kc-bang.thang{box-shadow:0 0 0 4px rgba(255,190,90,.85),0 0 28px rgba(255,170,60,.65),0 8px 22px rgba(0,0,0,.35)}
@@ -551,28 +605,58 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-chip .nh{font:600 17px/1.2 var(--f-chu);color:var(--muc2)}
 .kc-chip .kc-sao{margin-left:0}
 .kc-chip .kc-sao span{width:26px;height:26px}
-.kc-chip.d1{left:30px;border-left:10px solid var(--xanh)}
-.kc-chip.d2{left:1506px;border-right:10px solid var(--cam)}
+.kc-chip.ben-t{left:30px;border-left:10px solid var(--m)}
+.kc-chip.ben-p{left:1506px;border-right:10px solid var(--m)}
 .kc-bao{position:absolute;left:604px;top:132px;width:712px;text-align:center;color:#fff;padding:16px 8px 12px;border-radius:22px;background:rgba(14,18,40,.86);border:3px solid rgba(255,213,110,.8);box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .kc-bao .lon{font:800 58px/1 var(--f-tieu);color:#fff;text-shadow:0 0 18px rgba(255,160,50,.95),0 0 4px rgba(255,160,50,.9),0 3px 6px rgba(0,0,0,.6);letter-spacing:.5px;white-space:nowrap;opacity:0}
 .kc-bao .vi{display:block;margin-top:10px;padding:0 8px;font:600 23px/1.35 var(--f-chu);opacity:0}
 .kc-bao .vi b{color:var(--vang2)}
 .kc-x2{position:absolute;left:1212px;top:122px;width:86px;height:86px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 62%,#c4850d);border:4px solid #fff3c4;display:grid;place-items:center;font:800 40px/1 var(--f-tieu);color:#6b2a00;box-shadow:0 0 22px rgba(255,200,90,.9),0 6px 12px rgba(0,0,0,.4);opacity:0}
-/* thước nấc: nằm trên hai cụm nút góc dưới (--dayThe do san-khau.js tính) */
-.kc-thuoc{position:absolute;left:350px;top:calc(var(--dayThe,1066px) - 90px);width:1220px;height:84px;border-radius:22px;background:rgba(14,18,40,.82);border:3px solid rgba(226,200,150,.75);box-shadow:0 6px 18px rgba(0,0,0,.45)}
-.kc-thuoc .ray{position:absolute;left:140px;right:140px;top:50px;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--xanh) 0,#7fa6e6 49.6%,#fff 49.6%,#fff 50.4%,#f2b06a 50.4%,var(--cam) 100%);opacity:.9}
-.kc-thuoc .vach-nac{position:absolute;top:44px;width:3px;height:22px;margin-left:-1.5px;background:rgba(255,255,255,.75);border-radius:2px}
-.kc-thuoc .vach-nac.giua{top:36px;height:38px;width:5px;margin-left:-2.5px;background:var(--vang2)}
-.kc-thuoc .ben{position:absolute;top:30px;font:800 26px/1 var(--f-tieu);white-space:nowrap}
-.kc-thuoc .dan{position:absolute;top:4px;transform:translateX(-50%);font:700 19px/1 var(--f-chu);color:#ffe3a0;white-space:nowrap}
-.kc-thuoc .moc{position:absolute;top:34px;width:36px;height:36px;margin-left:-18px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffd38a,#e2552e 60%,#a32a12);border:3px solid #fff3c4;box-shadow:0 0 14px rgba(255,170,70,.95)}
-.kc-thuoc .bong{position:absolute;top:38px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px dashed rgba(255,255,255,.55);opacity:0}
-.kc-thuoc .mui-ten{position:absolute;top:44px;height:6px;border-radius:3px;opacity:0}
+/* thước nấc: nằm trên hai cụm nút góc dưới (--dayThe do san-khau.js tính).
+   25/11 19:25 thầy Thịnh: "cái thanh mà qua trái qua phải [...] khi mà nó trượt về bên nào đó thì bên [đó] [...] sáng loáng lên để người ta
+   biết là bên [đó] đang thắng nhá. Kiểu giống như là các cái thanh máu hay thanh năng lượng [...] của các cái game nhập vai". Bảng tối viền
+   vàng, rãnh chìm; dải năng lượng .nang màu của đội đang dẫn (.dan1 xanh, .dan2 cam) chạy từ vạch giữa tới mốc, bóng loáng, có vệt sáng quét
+   qua; nửa bảng phía đội đang dẫn rực lên (.hao, lớp .sang-t / .sang-p) và tên đội đó sáng, to hơn; mốc là viên ngọc có vòng sáng lan ra.
+   --mt, --mp: màu đội đứng bên trái, bên phải (.dao: Đội 1 đứng bên phải). */
+.kc-thuoc{--mt:61,139,255;--mp:255,154,46;position:absolute;left:350px;top:calc(var(--dayThe,1066px) - 90px);width:1220px;height:84px;border-radius:22px;background:linear-gradient(180deg,#252c62 0,#151a3c 48%,#0b0e26 100%);border:3px solid #e9c46a;box-shadow:inset 0 0 0 2px rgba(60,40,10,.9),inset 0 0 0 4px rgba(255,226,150,.25),inset 0 9px 16px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.5);transition:box-shadow .35s}
+.kc-thuoc.dao{--mt:255,154,46;--mp:61,139,255}
+.kc-thuoc.dan1{box-shadow:inset 0 0 0 2px rgba(60,40,10,.9),inset 0 0 0 4px rgba(255,226,150,.25),inset 0 9px 16px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.5),0 0 30px 2px rgba(80,160,255,.6)}
+.kc-thuoc.dan2{box-shadow:inset 0 0 0 2px rgba(60,40,10,.9),inset 0 0 0 4px rgba(255,226,150,.25),inset 0 9px 16px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.5),0 0 30px 2px rgba(255,165,55,.6)}
+.kc-thuoc .hao{position:absolute;top:0;bottom:0;width:52%;border-radius:19px;opacity:0;transition:opacity .35s;pointer-events:none}
+.kc-thuoc .hao.t{left:0;background:linear-gradient(90deg,rgba(var(--mt),.62) 0,rgba(var(--mt),.2) 50%,rgba(var(--mt),0) 100%)}
+.kc-thuoc .hao.p{right:0;background:linear-gradient(270deg,rgba(var(--mp),.62) 0,rgba(var(--mp),.2) 50%,rgba(var(--mp),0) 100%)}
+.kc-thuoc.sang-t .hao.t,.kc-thuoc.sang-p .hao.p{opacity:1;animation:kcHao 1.2s ease-in-out infinite alternate}
+@keyframes kcHao{0%{opacity:.5}100%{opacity:1}}
+.kc-thuoc .ray{position:absolute;left:144px;right:144px;top:36px;height:30px;border-radius:15px;background:linear-gradient(90deg,rgba(var(--mt),.3) 0,rgba(var(--mt),.06) 46%,rgba(var(--mp),.06) 54%,rgba(var(--mp),.3) 100%),linear-gradient(180deg,#04060e 0,#11183a 62%,#1c2552 100%);border:2px solid #b9923f;box-shadow:inset 0 3px 7px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.16)}
+.kc-thuoc .nang{position:absolute;top:40px;left:610px;width:0;height:22px;border-radius:4px;overflow:hidden;opacity:0;background:linear-gradient(180deg,var(--n1) 0,var(--n2) 36%,var(--n3) 72%,var(--n4) 100%);box-shadow:0 0 10px 1px var(--nq),0 0 26px 5px var(--nq2)}
+.kc-thuoc.dan1 .nang{--n1:#e3f2ff;--n2:#74b6ff;--n3:#2b74e8;--n4:#1a4bb0;--nq:rgba(100,175,255,.95);--nq2:rgba(60,130,255,.6);opacity:1}
+.kc-thuoc.dan2 .nang{--n1:#fff3d2;--n2:#ffc65e;--n3:#f6891b;--n4:#bf5a05;--nq:rgba(255,185,80,.95);--nq2:rgba(255,140,30,.6);opacity:1}
+.kc-thuoc .nang::before{content:"";position:absolute;left:0;right:0;top:2px;height:7px;border-radius:4px;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0))}
+.kc-thuoc .nang::after{content:"";position:absolute;top:-6px;bottom:-6px;left:0;width:64px;background:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.95) 50%,rgba(255,255,255,0) 100%);transform:translateX(-90px) skewX(-22deg);animation:kcNangQuet 1.5s linear infinite}
+@keyframes kcNangQuet{0%{transform:translateX(-90px) skewX(-22deg)}100%{transform:translateX(520px) skewX(-22deg)}}
+.kc-thuoc .vach-nac{position:absolute;top:41px;width:2px;height:20px;margin-left:-1px;background:rgba(255,255,255,.5);border-radius:1px}
+.kc-thuoc .vach-nac.giua{top:30px;height:42px;width:4px;margin-left:-2px;background:linear-gradient(180deg,#fff3c4,#ffd56e 50%,#d99a2b);box-shadow:0 0 8px rgba(255,213,110,.95)}
+.kc-thuoc .ben{position:absolute;top:36px;font:800 26px/30px var(--f-tieu);white-space:nowrap;transition:opacity .35s,transform .35s,filter .35s}
+.kc-thuoc .ben.t{transform-origin:0 50%}.kc-thuoc .ben.p{transform-origin:100% 50%}
+.kc-thuoc.sang-t .ben.t,.kc-thuoc.sang-p .ben.p{transform:scale(1.14);filter:brightness(1.6) drop-shadow(0 0 7px currentColor);animation:kcBenSang 1.2s ease-in-out infinite alternate}
+.kc-thuoc.sang-t .ben.p,.kc-thuoc.sang-p .ben.t{opacity:.5}
+@keyframes kcBenSang{0%{filter:brightness(1.35) drop-shadow(0 0 4px currentColor)}100%{filter:brightness(1.75) drop-shadow(0 0 11px currentColor)}}
+.kc-thuoc .dan{position:absolute;top:5px;transform:translateX(-50%);font:700 21px/1 var(--f-chu);color:#ffe9b0;text-shadow:0 2px 3px rgba(0,0,0,.75);white-space:nowrap}
+.kc-thuoc .moc{position:absolute;top:32px;width:38px;height:38px;margin-left:-19px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fff 0,#ffe9a8 24%,#ffb02e 58%,#d9641a 100%);border:3px solid #fff6d6;box-shadow:0 0 0 2px rgba(110,55,0,.85),0 0 16px 3px rgba(255,200,90,.95)}
+.kc-thuoc.dan1 .moc{background:radial-gradient(circle at 38% 32%,#fff 0,#d3e9ff 24%,#4f9bff 60%,#1a4bb0 100%);box-shadow:0 0 0 2px rgba(10,40,110,.85),0 0 18px 4px rgba(100,175,255,.95)}
+.kc-thuoc.dan2 .moc{background:radial-gradient(circle at 38% 32%,#fff 0,#ffeec4 24%,#ffa22e 60%,#bf5a05 100%);box-shadow:0 0 0 2px rgba(110,50,0,.85),0 0 18px 4px rgba(255,175,65,.95)}
+.kc-thuoc .moc::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,255,255,.8);opacity:0}
+.kc-thuoc.dan1 .moc::after,.kc-thuoc.dan2 .moc::after{animation:kcMocVong 1.2s ease-out infinite}
+@keyframes kcMocVong{0%{transform:scale(.62);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.kc-thuoc .bong{position:absolute;top:37px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px dashed rgba(255,255,255,.6);opacity:0}
+.kc-thuoc .mui-ten{position:absolute;top:48px;height:6px;border-radius:3px;opacity:0}
 .kc-sao-bay{position:absolute;left:0;top:0;width:44px;height:44px;opacity:0;filter:drop-shadow(0 0 10px rgba(255,210,110,.95));fill:#f2b531;stroke:#9c6a07;stroke-width:1.2}
 /* phần kết: băng báo kết quả, quả lửa bay, nút */
 .kc-ket{position:absolute;left:432px;top:22px;width:1056px;height:150px;border-radius:26px;text-align:center;padding-top:12px;background:linear-gradient(100deg,#7a3a0c 0,#a8560a 50%,#7a3a0c 100%);border:4px solid #ffd56e;box-shadow:0 0 0 5px rgba(255,213,110,.25),0 0 40px rgba(255,190,90,.6),0 10px 24px rgba(0,0,0,.45);color:#fff;opacity:0}
 .kc-ket .lon{font:800 60px/1 var(--f-tieu);color:#fff3c4;text-shadow:0 0 16px rgba(255,190,90,.9),0 3px 6px rgba(0,0,0,.5);white-space:nowrap}
 .kc-ket .vi{font:600 26px/1.3 var(--f-chu);margin-top:8px;white-space:nowrap}
+.kc-ket.mot{height:104px;padding-top:20px}
+.kc-ket.mot .vi{display:none}
 .kc-qua{position:absolute;left:0;top:0;width:0;height:0;opacity:0}
 .kc-qua b{position:absolute;left:-34px;top:-34px;width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,#fffbe0 0,#ffe27a 24%,#ffab2e 50%,rgba(255,90,20,.7) 72%,rgba(255,60,10,0) 100%);filter:drop-shadow(0 0 14px rgba(255,170,60,.95)) drop-shadow(0 0 34px rgba(255,130,40,.7))}
 .kc-qua i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:#ffe6a3;box-shadow:0 0 12px 4px rgba(255,190,90,.85)}
@@ -592,7 +676,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 <body>
 <div id="vaiTro" class="vai" hidden>
   <div class="vai-the">
-    <h1>Kéo co</h1>
+    <h1>Ngọn đuốc tri thức</h1>
     <p>Máy này dùng để làm gì trong tiết học?</p>
     <div class="vai-nut">
       <button type="button" data-vai="tv"><img src="../anh/duoc.webp" alt=""><b>Màn hình TV</b><small>Laptop nối TV hoặc máy chiếu</small></button>
@@ -606,21 +690,25 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
   <div id="world">
     <div class="nen-ngoai" id="nenNgoai" aria-hidden="true"><i class="nn-tren"></i><i class="nn-duoi"></i><i class="nn-trai"></i><i class="nn-phai"></i></div>
     <canvas id="cv" width="1920" height="1080" aria-label="Báo tường và bốn bạn cầm đuốc của bốn nhóm (phần kết)"></canvas>
-    <div class="tieu" id="tieu" hidden><h1>KÉO CO</h1></div>
+    <!-- 25/11/2026 16:27 thầy Thịnh: "đổi tên trò chơi thành ngọn đuốc tri thức nha" -->
+    <div class="tieu" id="tieu" hidden><h1>NGỌN ĐUỐC TRI THỨC</h1></div>
     <div class="luat" id="luat" hidden>
       <button type="button" class="luat-nut" id="luatAn" aria-controls="luat" aria-label="Ẩn luật chơi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.1 4.1"/><path d="M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a10.4 10.4 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>Ẩn</button>
       <span class="luat-cho" id="luatCho" aria-hidden="true" hidden></span>
-      <!-- KÉO CO 25/11/2026: BẢN NHÁP, CHƯA PHẢI LỜI THẦY. Luật chơi trên TV là lời thầy đọc cho lớp (bản Rước đuốc thầy tự viết
-           24/11, sửa 25/11). Hai dòng đầu của "Cách chơi" giữ nguyên lời thầy ở bản Rước đuốc; các câu còn lại tôi viết theo mẫu
-           câu của thầy để có cái xem trước. Thầy gửi lời của thầy thì chép đúng từng chữ vào đây, chỉ chia dòng. -->
+      <!-- NGỌN ĐUỐC TRI THỨC (kéo co) 25/11/2026. Luật chơi trên TV là lời thầy đọc cho lớp.
+           LỜI THẦY (25/11 16:18, chép đúng từng chữ, chỉ thêm dấu câu): dòng "Mỗi câu hỏi sẽ cho đội chiến thắng nhận được sức mạnh riêng: Khai cuộc,
+           Đồng lòng, Tăng tốc, Tiếp sức, Về đích." và dòng "Sau 5 câu, đội kéo được dây về phía mình sẽ được thắp đuốc trước và nhận một phần quà
+           của thầy." (thầy: "cái này đúng rồi"). Hai dòng đầu của "Cách chơi" là lời thầy ở bản Rước đuốc.
+           CÒN LÀ BẢN NHÁP CỦA TÔI, thầy chưa duyệt: đoạn "Nhiệm vụ" và dòng thứ ba của "Cách chơi". Thầy gửi lời của thầy thì chép đúng từng
+           chữ vào đây, chỉ chia dòng. 25/11 16:18 chỉ còn 2 cây đuốc (của Đội 1 và Đội 2) nên "ngọn đuốc của nhóm" sửa thành "ngọn đuốc của đội mình". -->
       <h2>Nhiệm vụ</h2>
-      <p>Nhóm 1 và nhóm 2 ghép thành Đội 1, nhóm 3 và nhóm 4 ghép thành Đội 2. Nhiệm vụ của hai đội là trả lời 5 câu hỏi thầy đưa ra để kéo dải lụa đỏ về phía đội mình và thắp sáng ngọn đuốc của nhóm.</p>
+      <p>Nhóm 1 và nhóm 2 ghép thành Đội 1, nhóm 3 và nhóm 4 ghép thành Đội 2. Nhiệm vụ của hai đội là trả lời 5 câu hỏi thầy đưa ra để kéo dải lụa đỏ về phía đội mình và thắp sáng ngọn đuốc của đội mình.</p>
       <h2>Cách chơi</h2>
       <ul>
         <li>Khi câu hỏi hiện lên, mỗi bạn tự suy nghĩ và tính đáp án.</li>
         <li>Khi màn hình báo "Giơ đáp án", mỗi bạn giơ thẻ có chữ cái của đáp án mình chọn, mặt có mã hướng về phía thầy, giữ yên cho đến khi thầy quét xong.</li>
         <li>Mỗi câu, đội nào có tỉ lệ bạn trả lời đúng cao hơn thì kéo được dây về phía đội mình; hơn càng nhiều thì kéo được càng nhiều nấc.</li>
-        <li>Mỗi câu có một sức mạnh riêng: Khai cuộc, Đồng lòng, Tăng tốc, Tiếp sức, Câu vàng.</li>
+        <li>Mỗi câu hỏi sẽ cho đội chiến thắng nhận được sức mạnh riêng: Khai cuộc, Đồng lòng, Tăng tốc, Tiếp sức, Về đích.</li>
         <li>Sau 5 câu, đội kéo được dây về phía mình sẽ được thắp đuốc trước và nhận một phần quà của thầy.</li>
       </ul>
     </div>
@@ -642,7 +730,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
         </div>
         <div class="mc-chon" id="mcChon"></div>
       </div>
-      <div id="mcNuocTo" hidden>Câu vàng: số nấc nhân đôi</div>
+      <div id="mcNuocTo" hidden>Về đích: số nấc nhân đôi</div>
     </div>
     <div id="goiY" hidden></div>
     <div id="canhBao" hidden><div><p id="cbChu"></p><div class="cb-nut"><button type="button" id="cbVan">Vẫn công bố</button><button type="button" id="cbThem">Quét thêm</button></div></div></div>
@@ -680,7 +768,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 
 <div id="dt" hidden>
   <header class="dt-dau">
-    <div><b>Kéo co</b><span id="dtBuoc">Chuẩn bị</span></div>
+    <div><b>Ngọn đuốc tri thức</b><span id="dtBuoc">Chuẩn bị</span></div>
     <!-- 25/11/2026 thầy Thịnh: "ok thêm nút refresh hình vòng tròn giống mấy trình duyệt hay có". Nút tròn cạnh ô trạng thái: nối lại
          ngay với TV, KHÔNG tải lại trang (tải lại lúc chưa có mạng thì trang không mở lên được, bước đã bấm và thẻ đã quét chưa gửi đi
          sẽ mất). Ô trạng thái, nút tròn và nút Nhạc nằm chung một hàng cao cố định: lúc mất mạng ô trạng thái dài ra thì chữ xuống
@@ -757,18 +845,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="48114f5d";</script>
-<script src="js/cau-hinh.js?v=48114f5d"></script>
-<script src="js/scanlib.js?v=48114f5d"></script>
-<script src="js/du-lieu.js?v=48114f5d"></script>
-<script src="js/dong-bo.js?v=48114f5d"></script>
-<script src="js/am-thanh.js?v=48114f5d"></script>
-<script src="js/quet.js?v=48114f5d"></script>
-<script src="js/cay-cau.js?v=48114f5d"></script>
-<script src="js/san-khau.js?v=48114f5d"></script>
-<script src="js/keo-co.js?v=48114f5d"></script>
-<script src="js/tro-choi.js?v=48114f5d"></script>
-<script src="js/nhanh.js?v=48114f5d"></script>
-<script src="js/do.js?v=48114f5d"></script>
+<script>window.RD_V="23beed5e";</script>
+<script src="js/cau-hinh.js?v=23beed5e"></script>
+<script src="js/scanlib.js?v=23beed5e"></script>
+<script src="js/du-lieu.js?v=23beed5e"></script>
+<script src="js/dong-bo.js?v=23beed5e"></script>
+<script src="js/am-thanh.js?v=23beed5e"></script>
+<script src="js/quet.js?v=23beed5e"></script>
+<script src="js/cay-cau.js?v=23beed5e"></script>
+<script src="js/san-khau.js?v=23beed5e"></script>
+<script src="js/keo-co.js?v=23beed5e"></script>
+<script src="js/tro-choi.js?v=23beed5e"></script>
+<script src="js/nhanh.js?v=23beed5e"></script>
+<script src="js/do.js?v=23beed5e"></script>
 </body>
 </html>

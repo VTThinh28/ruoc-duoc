@@ -1,6 +1,8 @@
-/* Kéo co (bản tách từ Rước đuốc 25/11/2026): điều khiển buổi chơi (TV và điện thoại).
-   Các bước giữ như Rước đuốc (RD.BUOC): bước r của mỗi câu là lượt kéo co, finish là đội thắng thắp đuốc, rank là đội còn lại
-   thắp đuốc (phần kết bản tạm, chờ thầy chốt cách chuyển tiếp), tuong là vành lửa lan ra lộ báo tường, bao là bồ câu kéo vải. Phần quét thẻ giữ nguyên. */
+/* Ngọn đuốc tri thức (trò kéo co, bản tách từ Rước đuốc 25/11/2026): điều khiển buổi chơi (TV và điện thoại).
+   Các bước theo Rước đuốc (RD.BUOC): bước r của mỗi câu là lượt kéo co, finish là đội thắng thắp đuốc; bước rank của Rước đuốc không còn
+   (thầy chốt 25/11 17:34: bấm Tiếp theo thì đội thắng sang bắt tay đội kia, hai ngọn đuốc cùng sáng, sách và công thức bay về số 51, hiện
+   báo tường; 18:22: cả bốn bạn đội thắng sang bắt tay bốn bạn đội kia); tuong là cảnh bắt tay đó rồi vành lửa lan ra lộ báo tường, bao là
+   bồ câu kéo vải. Phần quét thẻ giữ nguyên. */
 (function () {
   "use strict";
   var RD = window.RD, SK = RD.SanKhau, KC = RD.KeoCo, Q = RD.Quet, A = RD.AmThanh;
@@ -442,6 +444,10 @@
       '<div class="cb-khoi" data-cb="khoiAnh" hidden><h3>5. Ảnh báo tường</h3>' +
       '<div class="cb-hang"><label class="nut"><input type="file" accept="image/*" data-cb="anh" hidden>Chọn ảnh báo tường từ máy</label><span class="chip" data-cb="anhTT"></span></div>' +
       '<p class="cb-ghi">Ảnh có hình thầy cô nên không đưa lên mạng: ảnh chỉ nằm trong trình duyệt của máy này. Chưa chọn thì trang dùng tấm báo tường vẽ tạm. Ảnh mới nhất là file <b>bao-tuong-A0-4-o-A3-xem-truoc.jpg</b> (bản 15/11, số 51 màu đỏ): máy nào chọn ảnh trước ngày đó thì chọn lại một lần.</p></div>' +
+      // 25/11 16:18 thầy Thịnh: "đội 1 và đổi 2 đảo vị trí cho nhau nhé, có thêm nút đổi bên trong cài đặt nhé"
+      '<div class="cb-khoi"><h3>Vị trí hai đội trên TV</h3>' +
+      '<div class="cb-hang"><button type="button" class="nut" data-cb="doiBen">Đổi bên</button><span class="chip" data-cb="benTT"></span></div>' +
+      '<p class="cb-ghi">Bấm để hai đội đổi chỗ cho nhau trên TV (bảng điểm, cây đuốc và thước nấc đổi theo). Nên xếp theo đúng chỗ ngồi của hai đội trong lớp.</p></div>' +
       '<div class="cb-khoi"><h3>Chơi thử và ván mới</h3>' +
       '<div class="cb-hang"><label><input type="checkbox" data-cb="thu"> Chơi thử không cần điện thoại: TV tự điền kết quả ngẫu nhiên cho mỗi câu</label></div>' +
       '<div class="cb-hang" style="margin-top:10px"><button type="button" class="nut" data-cb="vanMoi">Ván mới (xóa kết quả, giữ danh sách lớp)</button>' +
@@ -495,6 +501,7 @@
       this.value = "";
     });
     q("thu").addEventListener("change", function () { var on = this.checked; ghiCfg(function (c) { c.thu = on; }); });
+    q("doiBen").addEventListener("click", function () { ghiCfg(function (c) { c.d1Trai = !c.d1Trai; }); });
     $$("[data-de]", el).forEach(function (b) {
       b.addEventListener("click", function () {
         var k = this.dataset.de;
@@ -572,6 +579,7 @@
     att.className = "chip " + (RD.anhBao ? "ok" : "");
     att.textContent = RD.anhBao ? "Đã có ảnh trên máy này" : "Chưa chọn ảnh";
     q("thu").checked = !!c.thu;
+    q("benTT").textContent = c.d1Trai ? "Đội 1 bên trái, Đội 2 bên phải" : "Đội 2 bên trái, Đội 1 bên phải";
     // bộ đề: chọn được cho tới khi hiện câu 1; đang chơi thì chỉ còn sáng ô đề đang dùng
     var doiDuoc = duocDoiDe();
     $$("[data-de]", el).forEach(function (b) {
@@ -647,8 +655,8 @@
     $("#tv").hidden = false;
     SK.khoiTao();
     KC.khoiTao();
-    // nút trên sân kéo co (phần kết): "Tổng kết" ở bước finish, "Tiếp theo" ở bước rank
-    KC.khiBam = function () { var b = nowHopLe().step; if (b === "finish" || b === "rank") tiep(); };
+    // nút trên sân kéo co (phần kết): "Tiếp theo" ở bước finish
+    KC.khiBam = function () { if (nowHopLe().step === "finish") tiep(); };
     SK.khiBamLuat = function (an) { SK.anLuat(an); ghiLuat(!an); };   // 9/11: điện thoại cũng thấy, cũng đổi được
     A.taiNhac();
     if (A.taiVoTay) A.taiVoTay();
@@ -877,6 +885,7 @@
     if (step !== "setup") anCB = false;
     $("#chuanBiTV").hidden = !((step === "setup" && !anCB) || moCB);
     capNhatChuanBi($("#cbTV"));
+    KC.datBen(!!cfg().d1Trai);
     A.batNhac(cfg().nhac !== false);
     var laCau = loai === "q" || loai === "k" || loai === "a";
     $('[data-tv="thu"]').hidden = !(laCau && cfg().thu);
@@ -958,7 +967,7 @@
     if (step === "setup" || step === "intro") {
       var vao = step === "intro" && (cu === "setup" || choiLaiCho);
       if (step === "intro") choiLaiCho = false;
-      SK.dat({ che: "dau", ls: ls, gioiThieu: step === "intro", hoatCanh: vao });     // tiêu đề KÉO CO và khung luật chơi
+      SK.dat({ che: "dau", ls: ls, gioiThieu: step === "intro", hoatCanh: vao });     // tiêu đề NGỌN ĐUỐC TRI THỨC và khung luật chơi
       KC.dat({ che: "dau", kc: kc });
       return;
     }
@@ -971,12 +980,11 @@
       return;
     }
     if (step === "finish") { SK.dat({ che: "hoi", q: 5, ls: ls }); KC.dat({ che: "dich", kc: kc, hoatCanh: cu === "r5" }); return; }
-    if (step === "rank") { SK.dat({ che: "hoi", q: 5, ls: ls }); KC.dat({ che: "hang", kc: kc, hoatCanh: cu === "finish" }); return; }
     // tuong: sân khấu cũ dựng sẵn cảnh báo tường đã lộ (4 bạn cầm đuốc đứng trong 4 ô thiệp, vải xanh lá còn che băng chúc mừng);
-    //   sân kéo co ở trên: 4 quả lửa bay lên số 51 rồi lửa đốt thủng sân kéo co, lộ báo tường
+    //   sân kéo co ở trên: đội thắng sang bắt tay, hai ngọn đuốc cùng sáng, sách và công thức bay lên số 51 rồi lửa đốt thủng sân kéo co, lộ báo tường
     if (step === "tuong") {
       SK.dat({ che: "hang", tiep: true, ls: ls, hoatCanh: false });
-      KC.dat({ che: "tuong", kc: kc, hoatCanh: cu === "rank" });
+      KC.dat({ che: "tuong", kc: kc, hoatCanh: cu === "finish" });
       return;
     }
     KC.dat({ che: "an" });
@@ -1344,7 +1352,7 @@
     if (l === "k") return "Câu " + q + " · quét xong, TV hiện số em chọn";
     if (l === "a") return "Câu " + q + " · đã hiện đáp án";
     if (l === "r") return "Câu " + q + " · hai đội kéo co";
-    return { finish: "Đốt đuốc · đội thắng thắp 2 ngọn đuốc", rank: "Tổng kết · đội còn lại thắp 2 ngọn đuốc", tuong: "Bốn ngọn lửa bay lên, báo tường hiện hình và số 51", bao: "Bồ câu kéo vải xanh lá bay lên, dòng chữ chúc mừng hiện ra, báo tường đầy đủ" }[step] || step;
+    return { finish: "Đốt đuốc · đội thắng thắp đuốc trước", tuong: "Hai đội bắt tay, hai ngọn đuốc cùng sáng, báo tường hiện hình và số 51", bao: "Bồ câu kéo vải xanh lá bay lên, dòng chữ chúc mừng hiện ra, báo tường đầy đủ" }[step] || step;
   }
   function nhanTiep(step) {
     var l = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -1354,7 +1362,7 @@
     if (l === "k") return "Đáp án";
     if (l === "a") return "Kéo co";
     if (l === "r") return q < 5 ? "Hiện câu " + (q + 1) : "Đốt đuốc";      // 6/11 trưa: thầy bấm thì nhóm về nhất thắp đuốc
-    return { finish: "Tổng kết", rank: "Tiếp theo", tuong: "Tiếp theo" }[step] || "Đã xong phần khởi động";
+    return { finish: "Tiếp theo", tuong: "Tiếp theo" }[step] || "Đã xong phần khởi động";      // finish: cùng chữ với nút trên TV
   }
   function veDT() {
     var now = nowHopLe(), step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
@@ -1428,9 +1436,12 @@
       html = "TV đang cho hai đội kéo co theo kết quả câu " + q + " (sức mạnh: <b>" + RD.SUC_MANH[q - 1].ten + "</b>)." + (Kr ? " Câu này: Đội 1 đúng " + Kr.doi[0].tram + "%, Đội 2 đúng " + Kr.doi[1].tram + "%. Sau câu " + q + ": <b>" + RD.vietVT(kcr.vt) + "</b>." : "") +
         (q < 5 ? " Dây đứng yên rồi thì bấm <b>Hiện câu " + (q + 1) + "</b>." : " Dây đứng yên rồi thì bấm <b>Đốt đuốc</b>.");
     }
-    else if (step === "finish") html = "Đội thắng thắp 2 ngọn đuốc của đội (hai đội hòa thì cả 4 ngọn đuốc cùng sáng). Chúc mừng đội thắng, rồi bấm <b>Tổng kết</b> để đội còn lại thắp đuốc.";
-    else if (step === "rank") html = "Đội còn lại thắp 2 ngọn đuốc, cả 4 ngọn đuốc cùng sáng. Chúc mừng các nhóm rồi bấm <b>Tiếp theo</b>.";
-    else if (step === "tuong") html = "4 quả lửa bay lên số 51, vành lửa lan ra, báo tường hiện ra (tấm vải xanh lá còn che dải băng chúc mừng). Hỏi cả lớp: <b>Số 51 trên báo tường có ý nghĩa gì?</b> (Kỷ niệm 51 năm ngày truyền thống trường.) Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo tấm vải xanh lá bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
+    else if (step === "finish") {
+      var wf = lichSuKC()[5].thang;
+      html = "Hai đội buông dây. " + (wf ? "Bên phía Đội " + wf + " có dòng chữ vàng <b>Đội " + wf + " chiến thắng</b>. Đội " + wf + " thắp ngọn đuốc của đội mình: sách, bút, thước, số pi, định lí Pythagore, định lí Thalès và các công thức chu vi, diện tích bay lên từ ngọn lửa. Chúc mừng Đội " + wf + ", rồi bấm <b>Tiếp theo</b>: cả bốn bạn Đội " + wf + " sang bắt tay bốn bạn Đội " + (3 - wf) + ", hai ngọn đuốc cùng sáng, tất cả bay về số 51, báo tường hiện ra."
+        : "Hai đội hòa nhau: hai ngọn đuốc cùng sáng, sách, bút, thước, số pi, định lí Pythagore, định lí Thalès và các công thức chu vi, diện tích bay lên từ ngọn lửa. Chúc mừng hai đội, rồi bấm <b>Tiếp theo</b>: bốn bạn mỗi đội vào giữa sân bắt tay nhau, tất cả bay về số 51, báo tường hiện ra.");
+    }
+    else if (step === "tuong") html = "Bốn bạn đội này bắt tay bốn bạn đội kia, hai ngọn đuốc cùng sáng, sách, định lí và công thức toán học bay về số 51, vành lửa lan ra, báo tường hiện ra (tấm vải xanh lá còn che dải băng chúc mừng). Hỏi cả lớp: <b>Số 51 trên báo tường có ý nghĩa gì?</b> (Kỷ niệm 51 năm ngày truyền thống trường.) Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo tấm vải xanh lá bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
     else if (step === "bao") {
       var kcc = lichSuKC()[5];
       html = "Xong phần khởi động. Kết quả kéo co: <b>" + (kcc.thang ? "Đội " + kcc.thang + " thắng, dẫn " + Math.abs(kcc.vt) + " nấc" : "hai đội hòa") + "</b>. Báo tường còn 4 ô trống để dán 4 tấm thiệp: mời các nhóm giúp thầy hoàn thiện. Pháo giấy rơi hết thì trên TV hiện nút <b>Tấm thiệp của nhóm em</b>: bấm nút đó trên TV để sang hoạt động tiếp theo.";

@@ -175,7 +175,7 @@
   // Điểm câu = phần trăm bạn có mặt của tổ trả lời đúng (số nguyên); câu 5 nhân đôi. Tối đa 600 (thiết kế cây cầu 4/11/2026).
   RD.HE_SO = [1, 1, 1, 1, 2];
   RD.TONG_DIEM = 600;
-  // Kéo co: câu 5 không còn "nhân đôi số điểm" (thay bằng sức mạnh Câu vàng, xem RD.SUC_MANH)
+  // Kéo co: câu 5 không còn "nhân đôi số điểm" (thay bằng sức mạnh Về đích, xem RD.SUC_MANH)
   RD.nhanCau = function (q) { return "Câu " + q + "/5"; };
 
   /* ---------- Kéo co (25/11/2026) ----------
@@ -186,8 +186,9 @@
        10 ≤ d < 25 kéo 2 nấc; d ≥ 25 kéo 3 nấc. Rồi tới sức mạnh của câu:
        câu 1 Khai cuộc: không thêm gì · câu 2 Đồng lòng: đội nào đúng từ 90% trở lên được thưởng thêm 1 nấc (cả hai đội đều có thể)
        · câu 3 Tăng tốc: đội thắng câu này kéo thêm 1 nấc · câu 4 Tiếp sức: đội đang bị dẫn mà thắng câu này thì số nấc nhân đôi
-       · câu 5 Câu vàng: số nấc nhân đôi. Mỗi câu thắng được 1 ngôi sao (chỉ để nhìn, không tính vào kết quả).
-     vt: vị trí dây tính bằng nấc, dương là Đội 1 đang dẫn (dây lệch về bên trái màn hình), âm là Đội 2 đang dẫn. */
+       · câu 5 Về đích (25/11 16:18 thầy: "câu vàng đổi thành về đích"): số nấc nhân đôi. Mỗi câu thắng được 1 ngôi sao (chỉ để nhìn, không tính vào kết quả).
+     vt: vị trí dây tính bằng nấc, dương là Đội 1 đang dẫn (dây lệch về bên Đội 1 đứng), âm là Đội 2 đang dẫn.
+     Đội nào đứng bên nào trên TV: cfg.d1Trai (true: Đội 1 bên trái; mặc định Đội 1 bên phải), nút "Đổi bên" trong Cài đặt. */
   RD.DOI = [
     { n: 1, ten: "Đội 1", mau: "#2f6fd6", dam: "#1b4a97", nhat: "#dfe9fb", to: [0, 1] },
     { n: 2, ten: "Đội 2", mau: "#e9861c", dam: "#a8560a", nhat: "#fdead3", to: [2, 3] }
@@ -197,7 +198,7 @@
     { ten: "Đồng lòng", luat: "Đội nào đúng từ 90% trở lên được thưởng thêm 1 nấc", ngan: "Đội nào đúng từ 90% trở lên được thưởng thêm 1 nấc" },
     { ten: "Tăng tốc", luat: "Đội thắng câu này được kéo thêm 1 nấc", ngan: "Đội thắng câu này được kéo thêm 1 nấc" },
     { ten: "Tiếp sức", luat: "Đội đang bị dẫn mà thắng câu này thì được kéo gấp đôi", ngan: "Đội đang bị dẫn mà thắng câu này thì được kéo gấp đôi" },
-    { ten: "Câu vàng", luat: "Số nấc của câu này được nhân đôi", ngan: "Số nấc của câu này được nhân đôi" }
+    { ten: "Về đích", luat: "Số nấc của câu này được nhân đôi", ngan: "Số nấc của câu này được nhân đôi" }
   ];
   RD.DONG_LONG = 90;         // ngưỡng Đồng lòng (phần trăm). Ván thật 19/11 cao nhất 87%: thầy chưa chốt giữ 90 hay hạ
   RD.NAC_HIEN = 10;          // dây và thước trên TV chỉ lệch tối đa bấy nhiêu nấc; chữ vẫn ghi số nấc thật
@@ -251,7 +252,10 @@
   // finish: 4 bạn tới cuối cầu, tổ nhất thắp đuốc · rank: 3 tổ còn lại thắp đuốc, đủ 4 ngọn đuốc thì hiện nút "Tiếp theo" ·
   // tuong: 4 tia lửa bay lên số 51, lửa đốt tan màn đêm, báo tường chỉ hiện hình và số 51 · bao: hiện toàn bộ báo tường, vỗ tay
   // (8/11 thầy Thịnh: "sau khi cả 4 bạn đốt đuốc, hiện thêm nút tiếp theo, tôi bấm vô thì mới hiện báo tường")
-  RD.BUOC.push("finish", "rank", "tuong", "bao");
+  // Ngọn đuốc tri thức (25/11 17:34 thầy Thịnh: "sau khi tôi bấm nút tiếp theo á, thì cái đội chiến thắng sẽ qua bắt tay cái đội bên kia, thì lúc
+  //   này cả hai ngọn đuốc sẽ cùng phát sáng và xuất hiện cái hiệu ứng ra cái tờ báo tường"): không còn bước rank. finish: đội thắng thắp
+  //   đuốc · tuong: đội thắng sang bắt tay, hai ngọn đuốc cùng sáng, sách và công thức bay về số 51, báo tường hiện hình và số 51 · bao: như cũ
+  RD.BUOC.push("finish", "tuong", "bao");
   RD.cauCuaBuoc = function (b) { var m = /^[qkar]([1-5])$/.exec(b || ""); return m ? +m[1] : 0; };
   RD.loaiBuoc = function (b) { return /^[qkar][1-5]$/.test(b || "") ? b[0] : b; };
 
