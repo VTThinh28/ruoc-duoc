@@ -1293,7 +1293,30 @@
       veHinhO(); veO();
       $("o").hidden = false;
     }
-    function dongO() { clearTimeout(O.dong); O.kh = null; $("o").hidden = true; }
+    function dongO() { clearTimeout(O.dong); O.kh = null; $("o").hidden = true; baoNhap(); }
+    /* 25/11 08:05, thầy (kèm ảnh ô nhập này): "khi học sinh mà bấm vô nhập cái này nè thì trên màn hình của TV ấy, nó cũng sẽ hiện ra cái này luôn … những cái ô số
+       mà học sinh nhập á, thì nó sẽ không hiện ra. Học sinh nhập đúng thì nó hiện ra dấu tích, nhập sai thì hiện ra dấu chéo … đừng cứ hiện số để cho các nhóm khác
+       khỏi copy." Máy báo cho tivi màn nhập đang mở: <phòng>/nh/n<k>/<mã máy> = { kh: mục, i: ô đang chọn (-1: không còn ô nào gõ được), n: mỗi ô đã gõ mấy chữ số,
+       q: mỗi ô "d" đúng / "s" sai / "-" chưa kiểm, b: dòng nhắc, l: kiểu dòng nhắc, t: giờ }. KHÔNG ghi chữ số các em gõ. Đóng ô nhập thì xóa; rớt mạng thì máy chủ
+       tự xóa (T.coMat). Máy giáo viên đang xem điện thoại của nhóm thì không báo. */
+    var nhDuong = "nh/n" + k + "/" + mayId, nhKy = "";
+    function baoNhap() {
+      var kh = O.kh, M, d, kb, o, ky;
+      if (!T || laGV) return;
+      if (!kh) { if (nhKy) { nhKy = ""; T.coMat(nhDuong, null); } return; }
+      M = MUC[kh]; d = nhap[kh]; kb = biKhoa(kh);
+      o = {
+        kh: kh, i: d || kb ? -1 : O.i,
+        n: M.o.map(function (x, i) { return d ? 0 : Math.min(9, O.v[i].length); }).join(""),
+        q: M.o.map(function (x, i) { return d ? "d" : O.kq && O.v[i] !== "" && O.kq.v[i] === O.v[i] ? (O.kq.dung[i] ? "d" : "s") : "-"; }).join(""),
+        b: d ? "Chính xác!" : kb ? "Nhóm đã nhập sai " + SAI_KHOA + " lần. " + CHU_KHOA + "." : O.bao,
+        l: d ? "tot" : kb ? "khoa" : O.lopBao
+      };
+      ky = JSON.stringify(o);
+      if (ky === nhKy) return;
+      nhKy = ky; o.t = Math.round(T.gio());
+      T.coMat(nhDuong, o);
+    }
     $("oVe").onclick = dongO;
     function veHinhO() {                           // hình minh họa của mục đang nhập
       var kh = O.kh, M = MUC[kh], o = $("oHinh"), d = nhap[kh];
@@ -1351,6 +1374,7 @@
       $("oKiem").textContent = d ? "Đã đúng" : kb ? "Đã khóa" : "Kiểm tra";
       var hinh = $("oHinh").querySelector(".o-svg .than");
       if (hinh && M.manh) hinh.setAttribute("fill", d ? mau[M.so[0] - 1] : "#f1ece2");
+      baoNhap();
     }
     function bam(p) {
       if (!O.kh || nhap[O.kh] || biKhoa(O.kh)) return;
@@ -1938,6 +1962,114 @@
     chu(B.dem, demDung(nhap) + "/" + THU_TU.length);
   }
 
+  /* MÀN NHẬP CỦA NHÓM TRÊN TIVI (25/11 08:05). Thầy, kèm ảnh ô nhập "Hình thoi (mảnh to)" trên điện thoại: "khi học sinh mà bấm vô nhập cái này nè thì trên màn hình
+     của TV ấy, nó cũng sẽ hiện ra cái này luôn. Để cho giáo viên nhìn thấy học sinh đang nhập. Nhưng mà những cái ô số mà học sinh nhập á, thì nó sẽ không hiện ra.
+     Học sinh nhập đúng thì nó hiện ra dấu tích, nhập sai thì hiện ra dấu chéo … đừng cứ hiện số để cho các nhóm khác khỏi copy."
+     Điện thoại báo màn nhập đang mở vào <phòng>/nh/n<k>/<mã máy> (xem baoNhap; không có chữ số nào). Lúc nhóm còn làm nhiệm vụ 1 mà có máy đang mở ô nhập thì tấm thiệp
+     của nhóm trên tivi hiện màn nhập đó thay cho bảng nhiệm vụ 1: tên mục, hình, các ô (mỗi chữ số đã gõ là một chấm tròn; sau khi bấm Kiểm tra ô đúng có dấu tích,
+     ô sai có dấu chéo), dòng nhắc. Tivi không vẽ bàn phím. Hình minh họa của mục "Tổng diện tích 10 mảnh" trên tivi KHÔNG ghi diện tích từng mảnh (trên điện thoại có ghi).
+     Nhiều máy của nhóm cùng mở ô nhập: hiện máy gõ sau cùng, góc phải ghi "n máy đang nhập". Đóng ô nhập (hoặc đúng rồi, 1,3 giây sau ô tự đóng) thì tivi về bảng nhiệm vụ 1.
+     Số đo theo đơn vị của hình vẽ thiệp: ten = [x giữa, y]; hinh = [x, y, rộng, cao]; o = [mép trái, mép phải, y ô đầu, khoảng cách các ô]; bao = [x giữa, y (0: ngay dưới ô cuối), số chữ một dòng]. y tính từ y0. */
+  var NH_BO = {
+    dung: { x0: 16, x1: 274, y0: 56, cao: 348, ten: [145, 40], hinh: [28, 60, 234, 92], o: [26, 266, 160, 36], bao: [145, 0, 42], chu: 44, cot: 4 },
+    ngang: { x0: 16, x1: 404, y0: 55, cao: 218, ten: [210, 21], hinh: [24, 42, 122, 122], o: [158, 396, 38, 33], bao: [210, 186, 66], chu: 22, cot: 3 }
+  };
+  var NH_CHU_CON = "Dán đủ 10 mảnh lên thiệp, không mảnh nào chồng lên nhau. Phần giấy còn trống rộng bao nhiêu?";
+  function beDong(s, toiDa) {                      // cắt một câu thành các dòng không quá toiDa chữ (svg không tự xuống dòng)
+    var ds = [], d = "";
+    String(s).split(" ").forEach(function (w) { if (d && (d + " " + w).length > toiDa) { ds.push(d); d = w; } else d = d ? d + " " + w : w; });
+    if (d) ds.push(d);
+    return ds;
+  }
+  function nhDocMay(o) {                           // đọc lời báo của một máy; sai dạng thì bỏ
+    var M, n, q, i, so = [], kq = [], c;
+    if (!o || typeof o !== "object" || typeof o.kh !== "string" || !Object.prototype.hasOwnProperty.call(MUC, o.kh)) return null;
+    M = MUC[o.kh]; n = String(o.n === undefined ? "" : o.n); q = String(o.q === undefined ? "" : o.q);
+    for (i = 0; i < M.o.length; i++) { so.push(Math.max(0, Math.min(4, parseInt(n.charAt(i), 10) || 0))); c = q.charAt(i); kq.push(c === "d" || c === "s" ? c : ""); }
+    return { kh: o.kh, i: typeof o.i === "number" ? o.i : -1, so: so, kq: kq, b: typeof o.b === "string" ? o.b.slice(0, 140) : "", l: o.l === "xau" || o.l === "tot" || o.l === "khoa" ? o.l : "", t: +o.t || 0 };
+  }
+  function nhChon(ds) {                            // ds = <phòng>/nh/n<k> → màn nhập của máy gõ sau cùng (kèm may = số máy đang mở ô nhập), hoặc null
+    var id, x, chon = null, dem = 0;
+    if (ds && typeof ds === "object") for (id in ds) if (Object.prototype.hasOwnProperty.call(ds, id)) {
+      x = nhDocMay(ds[id]); if (!x) continue;
+      dem++; if (!chon || x.t > chon.t) chon = x;
+    }
+    if (chon) chon.may = dem;
+    return chon;
+  }
+  function dungManNhap(svg, k) {
+    var B = NH_BO[NHOM[k]], lop = S("g", { "class": "lop-nh" }, svg);
+    S("rect", { "class": "nh-nen", x: B.x0, y: B.y0, width: B.x1 - B.x0, height: B.cao, rx: 9 }, lop);
+    S("rect", { "class": "nh-vien", x: B.x0 + 9, y: B.y0 + 8, width: 63, height: 15, rx: 7.5 }, lop);
+    S("circle", { "class": "nh-cham", cx: B.x0 + 18.5, cy: B.y0 + 15.5, r: 2.7 }, lop);
+    Sc(lop, B.x0 + 24.5, B.y0 + 18.6, "nh-dang", "Đang nhập");
+    return { lop: lop, B: B, may: Sc(lop, B.x1 - 10, B.y0 + 18.6, "nh-may", "", { "text-anchor": "end" }), dau: S("g", { "class": "nh-dau" }, lop), hinh: S("g", { "class": "nh-hinh" }, lop), o: S("g", { "class": "nh-o" }, lop), ky: "", kyHinh: "" };
+  }
+  function nhVeHinh(g, kh, k, B, tot) {            // hình minh họa của mục đang nhập (như veHinhO trên điện thoại, nhưng không có số nào)
+    var M = MUC[kh], mau = MAU[k], x = B.hinh[0], y = B.y0 + B.hinh[1], w = B.hinh[2], h = B.hinh[3], cx = x + w / 2, cy = y + h / 2;
+    function ve(m, mauTo, ox, oy, s, coNet) {      // một mảnh, tâm khung bao đặt ở (ox, oy), s đơn vị vẽ cho 1 cm
+      var p = daGiac(m), b = khung(p), dx = ox - (b[0] + b[2]) / 2 * s, dy = oy - (b[1] + b[3]) / 2 * s;
+      function P(q) { return [dx + q[0] * s, dy + q[1] * s]; }
+      function net(a, c) { a = P(a); c = P(c); S("line", { "class": "nh-net", x1: f2(a[0]), y1: f2(a[1]), x2: f2(c[0]), y2: f2(c[1]) }, g); }
+      function vuong(q, sx, sy) { var t = P(q), e = 0.5 * s; S("path", { "class": "nh-vuong", d: "M" + f2(t[0] + sx * e) + " " + f2(t[1]) + "l0 " + f2(sy * e) + "l" + f2(-sx * e) + " 0" }, g); }
+      S("polygon", { "class": "nh-than", points: p.map(function (q) { var t = P(q); return f2(t[0]) + "," + f2(t[1]); }).join(" "), fill: mauTo }, g);
+      if (!coNet) return;
+      if (m.loai === "thoi") { net(p[0], p[2]); net(p[1], p[3]); }
+      else if (m.loai === "thang") { net(p[0], [p[0][0], p[3][1]]); vuong([p[0][0], p[3][1]], 1, -1); }
+      else if (m.loai === "bh") { net(p[3], [p[3][0], p[0][1]]); vuong([p[3][0], p[0][1]], 1, 1); }
+    }
+    g.textContent = "";
+    if (M.manh) {
+      var b0 = khung(daGiac(M.manh));
+      ve(M.manh, tot ? mau[M.so[0] - 1] : "#f1ece2", cx, cy, Math.min((w - 8) / (b0[2] - b0[0]), (h - 6) / (b0[3] - b0[1]), 11), true);
+    } else if (kh === "tong") {                    // 7 loại mảnh, loại có 2 mảnh ghi "× 2"; KHÔNG ghi diện tích
+      var cot = B.cot, hang = Math.ceil(KHOA_MANH.length / cot), cw = w / cot, ch = h / hang, toW = 0, toH = 0, s;
+      KHOA_MANH.forEach(function (k2) { var b = khung(daGiac(MUC[k2].manh)); toW = Math.max(toW, b[2] - b[0]); toH = Math.max(toH, b[3] - b[1]); });
+      s = Math.min((cw - 8) / toW, (ch - 13) / toH);
+      KHOA_MANH.forEach(function (k2, i) {
+        var M2 = MUC[k2], n = Math.min(cot, KHOA_MANH.length - Math.floor(i / cot) * cot), ox = cx + ((i % cot) - (n - 1) / 2) * cw, oy = y + Math.floor(i / cot) * ch + (ch - 9) / 2;
+        ve(M2.manh, mau[M2.so[0] - 1], ox, oy, s, false);
+        if (M2.so.length > 1) Sc(g, ox, y + Math.floor(i / cot) * ch + ch - 1.5, "nh-hai", "× 2", { "text-anchor": "middle" });
+      });
+    } else if (kh === "thiep") {
+      var bc = BOCUC[NHOM[k]], W = bc.W * U, Hh = bc.H * U, tl = Math.min((w - 6) / W, (h - 6) / Hh);
+      var g2 = S("g", { transform: "translate(" + f2(cx - W * tl / 2) + " " + f2(cy - Hh * tl / 2) + ") scale(" + tl.toFixed(4) + ")" }, g);
+      S("rect", { "class": "nh-thiep", x: 0, y: 0, width: W, height: Hh }, g2);
+      veTrangTri(S("g", { opacity: 0.55 }, g2), k);
+    } else {
+      var ds = beDong(NH_CHU_CON, B.chu);
+      ds.forEach(function (c, i) { Sc(g, cx, cy + (i - (ds.length - 1) / 2) * 13 + 3.4, "nh-chu", c, { "text-anchor": "middle" }); });
+    }
+  }
+  function veManNhap(N, x, k) {                    // x = kết quả của nhChon; null thì giữ nguyên hình đang có (lớp đang mờ dần)
+    var B = N.B, M, ky, kyH, hai, n, y0, yBao, rO = 58, cO = 28, xO = B.o[1] - 22 - rO;
+    if (!x) { N.ky = ""; return; }
+    ky = JSON.stringify([x.kh, x.i, x.so, x.kq, x.b, x.l, x.may]);
+    if (ky === N.ky) return;
+    N.ky = ky; M = MUC[x.kh]; hai = M.so && M.so.length > 1;
+    chu(N.may, x.may > 1 ? x.may + " máy đang nhập" : "");
+    kyH = x.kh + "|" + (x.l === "tot" ? 1 : 0);
+    if (kyH !== N.kyHinh) {                        // tên mục và hình chỉ vẽ lại khi đổi mục (hoặc mục vừa đúng: mảnh lên màu)
+      N.kyHinh = kyH; N.dau.textContent = "";
+      Sc(N.dau, B.ten[0], B.y0 + B.ten[1], "nh-ten", M.ten, { "text-anchor": "middle" });
+      if (hai) Sc(N.dau, B.ten[0], B.y0 + B.ten[1] + 11.5, "nh-hai", "có 2 hình cùng diện tích", { "text-anchor": "middle" });
+      nhVeHinh(N.hinh, x.kh, k, B, x.l === "tot");
+    }
+    N.o.textContent = "";
+    n = M.o.length; y0 = B.y0 + B.o[2] + (4 - n) * B.o[3] / 2; yBao = B.bao[1] ? B.y0 + B.bao[1] : y0 + (n - 1) * B.o[3] + cO + 21;
+    M.o.forEach(function (o, i) {
+      var y = y0 + i * B.o[3], kq = x.kq[i], dang = x.i === i && !kq, g = S("g", { "class": "nh-d" + (kq === "d" ? " dung" : kq === "s" ? " sai" : "") + (dang ? " dang" : ""), "data-o": i }, N.o), cx = xO + rO / 2, cy = y + cO / 2, j;
+      Sc(g, B.o[0], y + 18, "nh-nhan", o.nhan);
+      S("rect", { "class": "nh-so", x: xO, y: y, width: rO, height: cO, rx: 6 }, g);
+      Sc(g, B.o[1] - 18, y + 18, "nh-dv", o.dv || "cm");
+      if (kq === "d") S("path", { "class": "nh-tich", d: "M" + f2(cx - 7.4) + " " + f2(cy + 0.5) + "l4.9 5.2l9.8 -10.9" }, g);
+      else if (kq === "s") S("path", { "class": "nh-cheo", d: "M" + f2(cx - 5.7) + " " + f2(cy - 5.7) + "l11.4 11.4m0 -11.4l-11.4 11.4" }, g);
+      else if (x.so[i]) for (j = 0; j < x.so[i]; j++) S("circle", { "class": "nh-cham-so", cx: f2(cx + (j - (x.so[i] - 1) / 2) * 10.4), cy: cy, r: 3.4 }, g);
+      else if (dang) S("rect", { "class": "nh-nhay", x: f2(cx - 0.9), y: f2(cy - 7.5), width: 1.8, height: 15 }, g);
+    });
+    beDong(x.b, B.bao[2]).slice(0, 3).forEach(function (c, i) { Sc(N.o, B.bao[0], yBao + i * 13.4, "nh-bao" + (x.l ? " " + x.l : ""), c, { "text-anchor": "middle" }); });
+  }
+
   /* Một tấm thiệp trên báo tường (tivi): giấy, trang trí thiệp, lưới bàn xếp, 10 mảnh, bảng nhiệm vụ 1.
      Lúc nhóm còn làm nhiệm vụ 1 thì 10 mảnh ẩn, chỉ hiện bảng nhiệm vụ 1 (xem BANG_NV1); thầy mở nhiệm vụ 2 thì ngược lại. */
   function dungKhung(svg, k) {
@@ -1949,7 +2081,7 @@
     var lop = S("g", { "class": "lop-manh" }, svg), g = {}, khoaCua = {};
     KHOA_MANH.forEach(function (kh) { MUC[kh].so.forEach(function (so) { khoaCua[so] = kh; }); });
     goc.forEach(function (p, i) { g[i + 1] = veManh(lop, p, MAU[k][i], i + 1, false); });
-    return { nv1: dungBangNv1(svg, k), mung: dungMung(svg, k), hang: 0, lop: lop, lopLuoi: lopLuoi, g: g, khoaCua: khoaCua, dan: dan, W: bc.W, H: bc.H, cua: "" };
+    return { nv1: dungBangNv1(svg, k), nh: dungManNhap(svg, k), mung: dungMung(svg, k), hang: 0, lop: lop, lopLuoi: lopLuoi, g: g, khoaCua: khoaCua, dan: dan, W: bc.W, H: bc.H, cua: "" };
   }
 
   /* ---------- chấm điểm 4 nhóm theo rubric (25/11) ----------
@@ -2208,6 +2340,13 @@
     window.addEventListener("resize", veLai3d);
     if (!T3) $("dem3d").hidden = true;
 
+    var NH = {};                                   // <phòng>/nh: màn nhập đang mở trên điện thoại các nhóm (25/11 08:05, xem dungManNhap)
+    function veNh(k) {
+      var K = khungNhom[k], d = duLieu[k] || {}, x = null;
+      if (!d.mo && !d.xong && demDung(d.d) < THU_TU.length) x = nhChon(NH["n" + k]);      // chỉ lúc nhóm còn làm nhiệm vụ 1
+      veManNhap(K.nh, x, k);
+      K.o.classList.toggle("dang-nhap", !!x);
+    }
     function veNhom(k, d) {
       d = d || {}; duLieu[k] = d;
       var K = khungNhom[k], m = d.m || {}, nhap = d.d || {}, ds = [], so, mau = MAU[k];
@@ -2269,6 +2408,7 @@
       tat(K.moKhoa, !dsKhoa.length);
       chu(K.tt, dsKhoa.length ? "Sai " + SAI_KHOA + " lần, đã khóa: " + dsKhoa.map(function (kh) { return MUC[kh].ngan; }).join(", ") : pha === "xong" ? "Đã hoàn thành" : pha === "xep" ? "Đang xếp hình" : choMo ? "Xong nhiệm vụ 1, chờ mở nhiệm vụ 2" : nd ? "Đo và tính: đúng " + nd + "/10" : may ? "Đã vào, đang đo và tính" : "Chưa có máy nào vào");
       chu($("vao" + k).querySelector(".vao-tt"), may ? "Đã vào: " + may + " máy" : "Chưa có máy nào");
+      veNh(k);
       capNhatMa(); veMung();
       if (T3) {
         if (hx[k].ky !== undefined && (!d.xong || daGiacNhom(k).ky !== hx[k].ky)) bo3d(k);      // hình của nhóm đổi: bỏ tranh 3D của nhóm đó
@@ -3072,6 +3212,7 @@
       });
       T.coMat("tv/" + layMayId());                // cho máy giáo viên biết tivi đang mở trang
       bao3d();
+      T.on("nh", function (v) { NH = v && typeof v === "object" ? v : {}; [1, 2, 3, 4].forEach(veNh); });      // màn nhập của các nhóm (25/11 08:05)
       T.on("lenh", nhanLenh);
       T.on("dn", dnNhan);
       T.on("nhac", nhacNhan);
