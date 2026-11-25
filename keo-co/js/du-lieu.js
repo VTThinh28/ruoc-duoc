@@ -7,7 +7,7 @@
   RD.CHU = ["A", "B", "C", "D"];
   RD.MAXID = 46;          // thẻ mới 12/11: 46 bộ, mỗi bộ 4 thẻ A, B, C, D
   RD.BO_THE = "moi";
-  RD.SO_THE = 46;         // thẻ in sẵn: 1–45 và thẻ dự phòng 46
+  RD.SO_THE = 50;         // Cài đặt nhận số thẻ 1–50 (25/11 20:14 thầy: "bạn cứ làm cho tôi là 50 số đi"); bộ thẻ in và bộ đọc mới có số 1–46 (RD.MAXID)
 
   // 4 tổ (thiết kế 3/11/2026): bạn cầm đuốc vẽ kiểu Ghibli, mặt tự vẽ, đồng phục theo ảnh của trường.
   // anh: 520 px cao; lua: tâm ngọn lửa trên ảnh; kieu: cách di chuyển (đi, lướt, tốc biến, nhảy), mọi kiểu mất cùng thời gian
@@ -294,8 +294,31 @@
     }
     return lists;
   };
+  // 25/11 20:14 thầy Thịnh: "trong cái phần cài đặt ấy, thì cái nhóm thì vì bây giờ chỉ có hai đội thôi ... bạn cứ làm cho tôi là 50 số đi ...
+  //   Rồi bữa đó tôi sẽ nhập vô rồi chia thành hai đội. Ví dụ lớp 46 em thì chia thành 23 em mỗi đội chẳng hạn."
+  //   Hai đội nằm ở ô 0 và ô 2 của cfg.ds (ô 1 và ô 3 để trống), nên phần tính điểm (4 ô; RD.DOI[].to = [0, 1] và [2, 3]) giữ nguyên, và danh
+  //   sách cũ ghi theo 4 nhóm vẫn đọc được: Đội 1 = ô 0 + ô 1, Đội 2 = ô 2 + ô 3. Sĩ số lẻ thì Đội 2 nhiều hơn 1 bạn (45 -> 22 và 23, như trước).
+  RD.chiaDoi = function (siSo) {
+    var n = Math.max(2, Math.min(RD.SO_THE, siSo | 0)), a = Math.floor(n / 2);
+    return [a > 1 ? "1-" + a : "1", "", a + 1 < n ? (a + 1) + "-" + n : String(n), ""];
+  };
+  // số thẻ của từng đội, đã gộp các ô: [{ ids, coMat, ds: "1-23" }, { … }]
+  RD.lopDoi = function (lop) {
+    var tang = function (a, b) { return a - b; };
+    return RD.DOI.map(function (D) {
+      var ids = [], coMat = [];
+      D.to.forEach(function (t) {
+        ids = ids.concat(lop.to[t].ids.filter(function (id) { return lop.toCua[id] === t + 1; }));
+        coMat = coMat.concat(lop.to[t].coMat);
+      });
+      ids.sort(tang); coMat.sort(tang);
+      return { ids: ids, coMat: coMat, ds: RD.vietDanhSach(ids) };
+    });
+  };
+  // thẻ số id thuộc đội nào: 1, 2, hoặc 0 (ngoài lớp)
+  RD.doiCuaThe = function (lop, id) { var t = lop.toCua[id]; return !t ? 0 : RD.DOI[0].to.indexOf(t - 1) >= 0 ? 1 : 2; };
   RD.cfgMacDinh = function (ses) {
-    return { ses: ses, siSo: 45, ds: RD.chiaTo(45), vang: [], at: 0 };
+    return { ses: ses, siSo: 45, ds: RD.chiaDoi(45), vang: [], at: 0 };
   };
   // thông tin lớp đã giải mã: tổ của từng thẻ, ai có mặt
   RD.lop = function (cfg) {

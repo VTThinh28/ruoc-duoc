@@ -250,16 +250,16 @@
     var step = now.step, loai = RD.loaiBuoc(step), q = RD.cauCuaBuoc(step);
     if (step === "setup") {
       var lop = RD.lop(cfg());
-      if (!lop.coMat) { thongBao("Chưa có bạn nào có mặt: kiểm tra sĩ số và danh sách nhóm."); return; }
+      if (!lop.coMat) { thongBao("Chưa có bạn nào có mặt: kiểm tra sĩ số và số thẻ của hai đội."); return; }
     }
     // 18/11: hỏi lúc bấm Đáp án (bước "k"), không đợi tới lúc bấm Di chuyển: TV đã hiện đáp án thì máy thôi ghi thẻ (daHienDapAn),
     //   nên "Quét thêm" chỉ còn công bằng trước khi các em thấy đáp án.
     if (loai === "k" && !daDongY) {
-      var kq = RD.ketQuaCau(q, RD.lop(cfg()), scanHopLe(q));
+      var kq = RD.doiCau(q, RD.lop(cfg()), scanHopLe(q));
       var trong = [];
-      kq.forEach(function (r, t) { if (r.coMat > 0 && r.thay === 0) trong.push(RD.TO[t].ten); });
+      kq.forEach(function (r, d) { if (r.coMat > 0 && r.thay === 0) trong.push(RD.DOI[d].ten); });
       if (trong.length) {
-        hoi((trong.length === 4 ? "Chưa đọc được thẻ nào ở câu " + q + "." : "Chưa đọc được thẻ nào của " + trong.join(", ") + " ở câu " + q + ".") + " Vẫn hiện đáp án?", "Vẫn hiện đáp án", "Quét thêm").then(function (ok) { if (ok) tiep(true); });
+        hoi((trong.length === 2 ? "Chưa đọc được thẻ nào ở câu " + q + "." : "Chưa đọc được thẻ nào của " + trong.join(", ") + " ở câu " + q + ".") + " Vẫn hiện đáp án?", "Vẫn hiện đáp án", "Quét thêm").then(function (ok) { if (ok) tiep(true); });
         return;
       }
     }
@@ -417,7 +417,8 @@
 
   /* ---------- khung chuẩn bị (dùng chung cho TV và điện thoại) ---------- */
   function dungChuanBi(el) {
-    var to = RD.TO.map(function (t, i) {
+    // 25/11 20:14 thầy Thịnh: "bây giờ chỉ có hai đội thôi ... bạn cứ làm cho tôi là 50 số đi ... bữa đó tôi sẽ nhập vô rồi chia thành hai đội"
+    var to = RD.DOI.map(function (t, i) {
       return '<span class="ten" style="--m:' + t.mau + ';--d:' + t.dam + '"><i></i>' + t.ten + '</span>' +
         '<input type="text" data-cb="ds" data-t="' + i + '" inputmode="numeric" autocomplete="off" aria-label="Số thẻ của ' + t.ten + '">' +
         '<span class="dem" data-cb="dem" data-t="' + i + '"></span>';
@@ -430,11 +431,11 @@
         return '<button type="button" role="radio" aria-checked="false" data-de="' + k + '"><span class="dau"><i aria-hidden="true"></i><b>' +
           esc(RD.TEN_DE[k]) + '</b></span><small>' + esc(RD.MO_TA_DE[k]) + '</small></button>';
       }).join("") + '</div><p class="cb-ghi" data-cb="deGhi"></p></div>' +
-      '<div class="cb-khoi"><h3>2. Sĩ số và 4 nhóm</h3>' +
-      '<div class="cb-hang"><label>Sĩ số lớp <input type="number" min="4" max="46" data-cb="siSo"></label>' +
-      '<button type="button" class="nut" data-cb="chia">Chia lại 4 nhóm theo sĩ số</button></div>' +
+      '<div class="cb-khoi"><h3>2. Sĩ số và 2 đội</h3>' +
+      '<div class="cb-hang"><label>Sĩ số lớp <input type="number" min="2" max="' + RD.SO_THE + '" data-cb="siSo"></label>' +
+      '<button type="button" class="nut" data-cb="chia">Chia đôi lớp thành 2 đội</button></div>' +
       '<div class="cb-to">' + to + '</div>' +
-      '<p class="cb-ghi">Ghi số thẻ của từng nhóm, ví dụ 1-11 hoặc 1-10, 46 (thẻ 46 là thẻ dự phòng).</p>' +
+      '<p class="cb-ghi">Nhập sĩ số thì lớp tự chia đôi, ví dụ 46 bạn: Đội 1 thẻ 1-23, Đội 2 thẻ 24-46. Muốn chia khác thì ghi lại số thẻ của từng đội, ví dụ 1-20, 45. Nhận số thẻ từ 1 đến ' + RD.SO_THE + '; bộ thẻ đã in có số 1 đến ' + RD.MAXID + '.</p>' +
       '<p class="cb-loi" data-cb="loi" hidden></p></div>' +
       '<div class="cb-khoi"><h3>3. Chạm vào số thẻ của bạn vắng hôm nay</h3><div class="cb-luoi" data-cb="luoi"></div><p class="cb-tom" data-cb="tom"></p></div>' +
       '<div class="cb-khoi"><h3>4. Nối điện thoại với TV</h3><div data-cb="noi"></div></div>' +
@@ -455,16 +456,16 @@
       '</div>';
     var q = function (s) { return el.querySelector('[data-cb="' + s + '"]'); };
     q("siSo").addEventListener("change", function () {
-      var n = Math.max(4, Math.min(46, parseInt(this.value, 10) || 45));
-      ghiCfg(function (c) { c.siSo = n; c.ds = RD.chiaTo(n); c.vang = (c.vang || []).filter(function (id) { return id <= n || id === 46; }); });
+      var n = Math.max(2, Math.min(RD.SO_THE, parseInt(this.value, 10) || 45));
+      ghiCfg(function (c) { c.siSo = n; c.ds = RD.chiaDoi(n); c.vang = (c.vang || []).filter(function (id) { return id <= n; }); });
     });
     q("chia").addEventListener("click", function () {
-      ghiCfg(function (c) { c.ds = RD.chiaTo(c.siSo || 45); });
+      ghiCfg(function (c) { c.ds = RD.chiaDoi(c.siSo || 45); });
     });
     $$('[data-cb="ds"]', el).forEach(function (inp) {
       inp.addEventListener("change", function () {
         var t = +this.dataset.t, v = RD.vietDanhSach(RD.docDanhSach(this.value));
-        ghiCfg(function (c) { c.ds = (c.ds || RD.chiaTo(45)).slice(); c.ds[t] = v; });
+        ghiCfg(function (c) { var L = RD.lopDoi(RD.lop(c)), hai = [L[0].ds, L[1].ds]; hai[t] = v; c.ds = [hai[0], "", hai[1], ""]; });
       });
     });
     q("luoi").addEventListener("click", function (e) {
@@ -531,30 +532,30 @@
   }
   function capNhatChuanBi(el) {
     if (!el || !el.firstChild) return;
-    var c = cfg(), lop = RD.lop(c);
+    var c = cfg(), lop = RD.lop(c), hai = RD.lopDoi(lop);
     var q = function (s) { return el.querySelector('[data-cb="' + s + '"]'); };
     var siSo = q("siSo");
     if (document.activeElement !== siSo) siSo.value = c.siSo || 45;
     $$('[data-cb="ds"]', el).forEach(function (inp) {
       var t = +inp.dataset.t;
-      if (document.activeElement !== inp) inp.value = (c.ds || [])[t] || "";
+      if (document.activeElement !== inp) inp.value = hai[t].ds;
     });
     $$('[data-cb="dem"]', el).forEach(function (sp) {
-      var x = lop.to[+sp.dataset.t];
+      var x = hai[+sp.dataset.t];
       sp.textContent = x.coMat.length + "/" + x.ids.length + " có mặt";
     });
     var loi = q("loi");
     loi.hidden = !lop.trung.length;
-    if (lop.trung.length) loi.textContent = "Thẻ số " + lop.trung.join(", ") + " đang nằm ở 2 nhóm, mỗi thẻ chỉ để ở 1 nhóm.";
+    if (lop.trung.length) loi.textContent = "Thẻ số " + lop.trung.join(", ") + " đang nằm ở cả 2 đội, mỗi thẻ chỉ để ở 1 đội.";
     var luoi = q("luoi"), html = "";
     for (var id = 1; id <= RD.SO_THE; id++) {
-      var t = lop.toCua[id], T = t ? RD.TO[t - 1] : null;
+      var t = RD.doiCuaThe(lop, id), T = t ? RD.DOI[t - 1] : null;
       var cls = !t ? "ngoai" : (lop.vang[id] ? "vang" : "");
       html += '<button type="button" data-id="' + id + '" class="' + cls + '"' + (T ? ' style="--m:' + T.mau + ';--d:' + T.dam + ';--n:' + T.nhat + '"' : "") +
         ' aria-pressed="' + (lop.vang[id] ? "true" : "false") + '" aria-label="Thẻ ' + id + (T ? ", " + T.ten : ", ngoài lớp") + (lop.vang[id] ? ", vắng" : "") + '">' + id + "</button>";
     }
     if (luoi.dataset.html !== html) { luoi.innerHTML = html; luoi.dataset.html = html; }
-    q("tom").textContent = "Có mặt " + lop.coMat + "/" + lop.tong + " bạn · " + lop.to.map(function (x, i) { return RD.TO[i].ten + ": " + x.coMat.length; }).join(" · ");
+    q("tom").textContent = "Có mặt " + lop.coMat + "/" + lop.tong + " bạn · " + hai.map(function (x, i) { return RD.DOI[i].ten + ": " + x.coMat.length; }).join(" · ");
     // nối máy
     var noi = q("noi"), dong = '<div class="cb-hang"><span class="chip ' + esc(NOI.kieu) + '">' + esc(NOI.chu) + "</span>";
     if (S.ph && S.ph.at) dong += '<span class="chip ok">Điện thoại mở trang lúc ' + gio(S.ph.at) + "</span>";
@@ -886,6 +887,7 @@
     $("#chuanBiTV").hidden = !((step === "setup" && !anCB) || moCB);
     capNhatChuanBi($("#cbTV"));
     KC.datBen(!!cfg().d1Trai);
+    KC.datThe(RD.lopDoi(RD.lop(cfg())).map(function (x) { return x.ds; }));
     A.batNhac(cfg().nhac !== false);
     var laCau = loai === "q" || loai === "k" || loai === "a";
     $('[data-tv="thu"]').hidden = !(laCau && cfg().thu);
@@ -1423,7 +1425,7 @@
     if (loai === "q") capNutDem();
     // hướng dẫn ngắn theo bước
     var ghi = $("#dtGhi"), html = "";
-    if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề cơ bản</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, danh sách 4 nhóm, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
+    if (step === "setup") html = "<b>Trước giờ học</b><ol><li>Chọn <b>Đề cơ bản</b> hoặc <b>Đề nâng cao</b> ở phần chuẩn bị bên dưới.</li><li>Kiểm tra sĩ số, số thẻ của 2 đội, chạm số thẻ bạn vắng.</li><li>Trên laptop nối TV: mở trang này, chọn <b>Màn hình TV</b>, bấm F11.</li><li>Bấm <b>Bắt đầu trò chơi</b> ở dưới.</li></ol>";
     else if (step === "intro") html = "Bấm <b>Hiện luật chơi trên TV</b> ở trên để cả lớp cùng xem, đọc luật cho các em nghe, rồi bấm <b>Ẩn luật chơi trên TV</b> để các em xem lại màn chơi (trên TV cũng có nút Ẩn, Hiện luật chơi ở góc phải)." +
       // 18/11: bản 4 thẻ đọc trúng mã là ghi, thẻ ngửa mặt mã trên bàn cũng được ghi, nên dặn các em trước câu 1
       (RD.BO_THE === "moi" ? " Dặn các em: mỗi câu chỉ giơ <b>1 thẻ</b>, mặt mã quay về phía thầy; <b>3 thẻ còn lại úp mặt mã xuống bàn</b>." : "") +
@@ -1438,8 +1440,10 @@
     }
     else if (step === "finish") {
       var wf = lichSuKC()[5].thang;
-      html = "Hai đội buông dây. " + (wf ? "Bên phía Đội " + wf + " có dòng chữ vàng <b>Đội " + wf + " chiến thắng</b>. Đội " + wf + " thắp ngọn đuốc của đội mình: sách, bút, thước, số pi, định lí Pythagore, định lí Thalès và các công thức chu vi, diện tích bay lên từ ngọn lửa. Chúc mừng Đội " + wf + ", rồi bấm <b>Tiếp theo</b>: cả bốn bạn Đội " + wf + " sang bắt tay bốn bạn Đội " + (3 - wf) + ", hai ngọn đuốc cùng sáng, tất cả bay về số 51, báo tường hiện ra."
-        : "Hai đội hòa nhau: hai ngọn đuốc cùng sáng, sách, bút, thước, số pi, định lí Pythagore, định lí Thalès và các công thức chu vi, diện tích bay lên từ ngọn lửa. Chúc mừng hai đội, rồi bấm <b>Tiếp theo</b>: bốn bạn mỗi đội vào giữa sân bắt tay nhau, tất cả bay về số 51, báo tường hiện ra.");
+      // 25/11 20:14: mỗi ngọn đuốc một bộ tri thức riêng (keo-co.js, TRI_BO)
+      var triDoi = ["", "sách, bút, thước, số pi, định lí Pythagore, định lí Thalès và các công thức chu vi, diện tích", "tiên đề Euclid, đạo hàm, tích phân, nguyên hàm và nhiều công thức toán học khác"];
+      html = "Hai đội buông dây. " + (wf ? "Bên phía Đội " + wf + " có dòng chữ vàng <b>Đội " + wf + " chiến thắng</b>. Đội " + wf + " thắp ngọn đuốc của đội mình: " + triDoi[wf] + " bay lên từ ngọn lửa. Chúc mừng Đội " + wf + ", rồi bấm <b>Tiếp theo</b>: cả bốn bạn Đội " + wf + " sang bắt tay bốn bạn Đội " + (3 - wf) + ", ngọn đuốc của Đội " + (3 - wf) + " cũng sáng với " + triDoi[3 - wf] + ", tất cả bay về số 51, báo tường hiện ra."
+        : "Hai đội hòa nhau: hai ngọn đuốc cùng sáng, mỗi ngọn một bộ tri thức bay lên từ ngọn lửa. Bên Đội 1 là " + triDoi[1] + "; bên Đội 2 là " + triDoi[2] + ". Chúc mừng hai đội, rồi bấm <b>Tiếp theo</b>: bốn bạn mỗi đội vào giữa sân bắt tay nhau, tất cả bay về số 51, báo tường hiện ra.");
     }
     else if (step === "tuong") html = "Bốn bạn đội này bắt tay bốn bạn đội kia, hai ngọn đuốc cùng sáng, sách, định lí và công thức toán học bay về số 51, vành lửa lan ra, báo tường hiện ra (tấm vải xanh lá còn che dải băng chúc mừng). Hỏi cả lớp: <b>Số 51 trên báo tường có ý nghĩa gì?</b> (Kỷ niệm 51 năm ngày truyền thống trường.) Nghe các em trả lời rồi bấm <b>Tiếp theo</b>: hai chú bồ câu bay xuống kéo tấm vải xanh lá bay lên (có tiếng vỗ tay), dòng chữ chúc mừng hiện ra, hiện cả báo tường.";
     else if (step === "bao") {
@@ -1496,8 +1500,8 @@
     if (!PQ) return;
     var lb = RD.loaiBuoc(nowHopLe().step), lop = RD.lop(cfg()), m = theHienTai(), man = PQ.man, hien = lb === "a", hienPB = lb === "k" || lb === "a";
     var dungChu = RD.CAU[PQ.q - 1].dung, tongThay = 0, tongCo = 0, demCam = [];
-    var html = lop.to.map(function (x, t) {
-      var T = RD.TO[t], thay = 0, dung = 0, chua = [], dd = [];
+    var html = RD.lopDoi(lop).map(function (x, t) {
+      var T = RD.DOI[t], thay = 0, dung = 0, chua = [], dd = [];
       x.coMat.forEach(function (id) {
         var k = "t" + id, mm = man[k];
         if (mm) { dd.push({ id: id, m: mm }); if (mm !== "V") { thay++; if (mm === "D") dung++; } return; }
@@ -1533,8 +1537,8 @@
   }
   function moMenu(id) {
     menuThe = id;
-    var lop = RD.lop(cfg()), t = lop.toCua[id];
-    $("#dtMenuTen").textContent = "Thẻ số " + id + (t ? " · " + RD.TO[t - 1].ten : "") + ": ghi kết quả câu này";
+    var lop = RD.lop(cfg()), t = RD.doiCuaThe(lop, id);
+    $("#dtMenuTen").textContent = "Thẻ số " + id + (t ? " · " + RD.DOI[t - 1].ten : "") + ": ghi kết quả câu này";
     $("#dtMenu").hidden = false;
   }
   function dongMenu() { $("#dtMenu").hidden = true; menuThe = null; }
@@ -1563,7 +1567,7 @@
       veAnh(r);
       var giay = r.giay.toFixed(1).replace(".", ",");
       var msg = trong ? "Ảnh " + soAnh + ": đọc được " + trong + " thẻ (" + moi + " thẻ mới) trong " + giay + " giây." : "Ảnh " + soAnh + ": chưa thấy thẻ nào. Đứng gần hơn, giữ máy chắc tay, nhờ các em giơ thẻ cao và thẳng.";
-      if (ngoai.length) msg += " Bỏ qua thẻ " + ngoai.join(", ") + " vì không có trong danh sách nhóm.";
+      if (ngoai.length) msg += " Bỏ qua thẻ " + ngoai.join(", ") + " vì không có trong danh sách hai đội.";
       trangThai(trong ? "ok" : "loi", msg);
       if (moi) { A.tich(); try { navigator.vibrate && navigator.vibrate(30); } catch (e) { /* bỏ qua */ } }
       ghiQuet(true);

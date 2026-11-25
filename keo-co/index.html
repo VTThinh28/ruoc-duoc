@@ -489,6 +489,12 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-tri.the svg{width:116px;height:110px}
 .kc-tri.the b{font-weight:800;margin-top:3px}
 .kc-tri.chan img{display:block;width:104px;height:104px;border-radius:50%;object-fit:cover;border:4px solid #ffe9a8;box-shadow:0 0 0 3px #b3560f,0 0 16px 3px rgba(255,190,70,.95)}
+/* 25/11 20:14 thầy: đuốc của đội thứ hai hiện tri thức khác ("tiên đề [Euclid], tích phân, đạo hàm, nguyên hàm ... hai bên đừng giống nhau").
+   .ct: dòng công thức trong thẻ có tên bên dưới; .tp: hai cận của tích phân xếp chồng; sup: số mũ */
+.kc-tri.the .ct{font-size:38px;line-height:1.36;white-space:nowrap}
+.kc-tri sup{font-size:.62em;line-height:0;vertical-align:.52em}
+.kc-tri .tp{display:inline-flex;flex-direction:column;font-size:.5em;line-height:1.05;vertical-align:middle;margin:0 .14em 0 0}
+.kc-tri .tp i{font-style:normal}
 /* 25/11 17:34 thầy Thịnh: "hiện ra cái dòng chữ là đội 1 chiến thắng [...] ở phía bên đội đó dòng chữ đó hiện lên màu vàng lấp lánh nhá, mà có cái
    hiệu ứng nào nó đẹp đẹp một chút". Hai lớp chữ chồng nhau: .th-v là viền nâu và quầng sáng, .th-m là mặt chữ vàng có vệt sáng chạy ngang;
    .th-ls là các ngôi sao nhấp nháy quanh chữ; cả khối phập phồng nhẹ. js/keo-co.js (veThang) cho hiện, đặt bên trái hay bên phải. */
@@ -532,7 +538,23 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 @keyframes kcDen{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
 .kc-den{position:absolute;inset:0;transform-origin:45px 12px;filter:drop-shadow(0 4px 4px rgba(40,20,0,.35))}
 .kc-den svg{display:block;width:100%;height:100%;overflow:visible}
-.kc-bui{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(176,146,102,.72) 0,rgba(176,146,102,.36) 45%,rgba(176,146,102,0) 70%);filter:blur(2px);opacity:0}
+.kc-dat{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .45s;pointer-events:none}
+.kc-nut{position:absolute;left:-115px;top:-38px;width:230px;height:96px;opacity:0;transform-origin:115px 38px;will-change:transform,opacity}
+.kc-nut::before{content:"";position:absolute;left:8%;right:8%;top:6%;bottom:14%;border-radius:50%;background:radial-gradient(ellipse at 50% 42%,rgba(58,40,22,.34) 0,rgba(58,40,22,.14) 45%,rgba(58,40,22,0) 70%)}
+.kc-nut svg{position:absolute;left:0;top:0;overflow:visible}
+.kc-nut .sang{opacity:0}
+.kc-nut.vang .sang{opacity:.9;stroke-width:1.2px}
+.kc-nut.vang::before{background:radial-gradient(ellipse at 50% 42%,rgba(255,206,96,.66) 0,rgba(255,196,80,.26) 40%,rgba(255,196,80,0) 70%)}
+.kc-vet{position:absolute;left:0;top:0;height:6px;border-radius:3px;background:linear-gradient(90deg,rgba(84,62,40,0),rgba(84,62,40,.5) 16%,rgba(84,62,40,.5) 84%,rgba(84,62,40,0));opacity:0}
+.kc-vet::after{content:"";position:absolute;left:10px;right:6px;top:11px;height:5px;border-radius:3px;background:inherit;opacity:.75}
+.kc-vong-dat{position:absolute;left:0;top:0;width:640px;height:112px;border-radius:50%;border:5px solid rgba(255,250,236,.9);box-shadow:0 0 14px rgba(186,156,108,.7),inset 0 0 16px rgba(186,156,108,.55);opacity:0;will-change:transform,opacity}
+.kc-vong-dat.vang{border-color:rgba(255,226,128,.96);box-shadow:0 0 20px rgba(240,170,40,.85),inset 0 0 18px rgba(240,170,40,.6)}
+.kc-soi{position:absolute;left:-6px;top:-6px;width:12px;height:10px;border-radius:45% 55% 50% 40%;background:#b7a587;box-shadow:inset -2px -2px 0 rgba(90,70,45,.45);opacity:0;will-change:transform,opacity}
+.kc-soi.s1{width:9px;height:8px;background:#8f7c63}
+.kc-soi.s2{width:14px;height:11px;background:#d9cbb0}
+.kc-khoi{position:absolute;left:0;top:0;width:180px;height:116px;margin:-58px 0 0 -90px;opacity:0;will-change:transform,opacity}
+.kc-khoi svg,.kc-bui svg{display:block;overflow:visible}
+.kc-bui{position:absolute;opacity:0;will-change:transform,opacity}
 .kc-mui{position:absolute;top:652px;opacity:0;filter:drop-shadow(0 0 2px rgba(120,50,0,.95)) drop-shadow(0 0 8px rgba(255,150,40,.9))}
 .kc-so-nac{position:absolute;left:960px;top:560px;width:76px;height:76px;margin-left:-38px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 62%,#c4850d);border:4px solid #fff3c4;display:grid;place-items:center;font:800 44px/1 var(--f-tieu);color:#6b2a00;box-shadow:0 0 18px rgba(255,200,90,.9);opacity:0}
 /* hiệu ứng khi kéo: vệt gió, tiếng hò, chữ nổ giữa sân, lá rơi, hoa giấy */
@@ -615,22 +637,25 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 /* thước nấc: nằm trên hai cụm nút góc dưới (--dayThe do san-khau.js tính).
    25/11 19:25 thầy Thịnh: "cái thanh mà qua trái qua phải [...] khi mà nó trượt về bên nào đó thì bên [đó] [...] sáng loáng lên để người ta
    biết là bên [đó] đang thắng nhá. Kiểu giống như là các cái thanh máu hay thanh năng lượng [...] của các cái game nhập vai". Bảng tối viền
-   vàng, rãnh chìm; dải năng lượng .nang màu của đội đang dẫn (.dan1 xanh, .dan2 cam) chạy từ vạch giữa tới mốc, bóng loáng, có vệt sáng quét
+   vàng, rãnh chìm; dải năng lượng .nang (bản 4: màu của đội đang dẫn; từ 20:16 là màu theo bên, xem ngay dưới) chạy từ vạch giữa tới mốc, bóng loáng, có vệt sáng quét
    qua; nửa bảng phía đội đang dẫn rực lên (.hao, lớp .sang-t / .sang-p) và tên đội đó sáng, to hơn; mốc là viên ngọc có vòng sáng lan ra.
    --mt, --mp: màu đội đứng bên trái, bên phải (.dao: Đội 1 đứng bên phải). */
-.kc-thuoc{--mt:61,139,255;--mp:255,154,46;position:absolute;left:350px;top:calc(var(--dayThe,1066px) - 90px);width:1220px;height:84px;border-radius:22px;background:linear-gradient(180deg,#252c62 0,#151a3c 48%,#0b0e26 100%);border:3px solid #e9c46a;box-shadow:inset 0 0 0 2px rgba(60,40,10,.9),inset 0 0 0 4px rgba(255,226,150,.25),inset 0 9px 16px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.5);transition:box-shadow .35s}
-.kc-thuoc.dao{--mt:255,154,46;--mp:61,139,255}
-.kc-thuoc.dan1{box-shadow:inset 0 0 0 2px rgba(60,40,10,.9),inset 0 0 0 4px rgba(255,226,150,.25),inset 0 9px 16px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.5),0 0 30px 2px rgba(80,160,255,.6)}
-.kc-thuoc.dan2{box-shadow:inset 0 0 0 2px rgba(60,40,10,.9),inset 0 0 0 4px rgba(255,226,150,.25),inset 0 9px 16px rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.5),0 0 30px 2px rgba(255,165,55,.6)}
-.kc-thuoc .hao{position:absolute;top:0;bottom:0;width:52%;border-radius:19px;opacity:0;transition:opacity .35s;pointer-events:none}
+/* 25/11 20:16 thầy Thịnh: "Bên phải màu đỏ thanh máu á, bên trái là màu của mana ... di chuyển về bên phải thì là màu đỏ, di chuyển về bên trái
+   thì là màu xanh, xanh dương đó ... giống như là cái thanh của game Diablo". Màu theo BÊN màn hình, không theo đội: bên trái xanh dương (mana),
+   bên phải đỏ (máu). Khung sắt viền vàng, rãnh thuỷ tinh tối, hai đầu thanh có hai quả cầu thuỷ tinh: dây lệch về bên nào thì quả cầu bên đó
+   đầy lên và sáng, quả bên kia vơi đi. */
+.kc-thuoc{--mt:64,140,255;--mp:236,52,44;position:absolute;left:350px;top:calc(var(--dayThe,1066px) - 90px);width:1220px;height:84px;border-radius:20px;background:linear-gradient(180deg,#3b3542 0,#1f1b26 46%,#0e0c13 100%);border:3px solid #d2a84c;box-shadow:inset 0 0 0 2px rgba(40,26,8,.95),inset 0 0 0 4px rgba(255,226,150,.22),inset 0 9px 16px rgba(255,255,255,.06),0 6px 18px rgba(0,0,0,.55);transition:box-shadow .35s}
+.kc-thuoc.sang-t{box-shadow:inset 0 0 0 2px rgba(40,26,8,.95),inset 0 0 0 4px rgba(255,226,150,.22),inset 0 9px 16px rgba(255,255,255,.06),0 6px 18px rgba(0,0,0,.55),0 0 30px 2px rgba(80,160,255,.6)}
+.kc-thuoc.sang-p{box-shadow:inset 0 0 0 2px rgba(40,26,8,.95),inset 0 0 0 4px rgba(255,226,150,.22),inset 0 9px 16px rgba(255,255,255,.06),0 6px 18px rgba(0,0,0,.55),0 0 30px 2px rgba(255,70,60,.6)}
+.kc-thuoc .hao{position:absolute;top:0;bottom:0;width:52%;border-radius:17px;opacity:0;transition:opacity .35s;pointer-events:none}
 .kc-thuoc .hao.t{left:0;background:linear-gradient(90deg,rgba(var(--mt),.62) 0,rgba(var(--mt),.2) 50%,rgba(var(--mt),0) 100%)}
 .kc-thuoc .hao.p{right:0;background:linear-gradient(270deg,rgba(var(--mp),.62) 0,rgba(var(--mp),.2) 50%,rgba(var(--mp),0) 100%)}
 .kc-thuoc.sang-t .hao.t,.kc-thuoc.sang-p .hao.p{opacity:1;animation:kcHao 1.2s ease-in-out infinite alternate}
 @keyframes kcHao{0%{opacity:.5}100%{opacity:1}}
-.kc-thuoc .ray{position:absolute;left:144px;right:144px;top:36px;height:30px;border-radius:15px;background:linear-gradient(90deg,rgba(var(--mt),.3) 0,rgba(var(--mt),.06) 46%,rgba(var(--mp),.06) 54%,rgba(var(--mp),.3) 100%),linear-gradient(180deg,#04060e 0,#11183a 62%,#1c2552 100%);border:2px solid #b9923f;box-shadow:inset 0 3px 7px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.16)}
+.kc-thuoc .ray{position:absolute;left:226px;right:226px;top:36px;height:30px;border-radius:15px;background:linear-gradient(90deg,rgba(var(--mt),.34) 0,rgba(var(--mt),.06) 46%,rgba(var(--mp),.06) 54%,rgba(var(--mp),.34) 100%),linear-gradient(180deg,#030308 0,#15121c 62%,#262130 100%);border:2px solid #b9923f;box-shadow:inset 0 3px 7px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.16)}
 .kc-thuoc .nang{position:absolute;top:40px;left:610px;width:0;height:22px;border-radius:4px;overflow:hidden;opacity:0;background:linear-gradient(180deg,var(--n1) 0,var(--n2) 36%,var(--n3) 72%,var(--n4) 100%);box-shadow:0 0 10px 1px var(--nq),0 0 26px 5px var(--nq2)}
-.kc-thuoc.dan1 .nang{--n1:#e3f2ff;--n2:#74b6ff;--n3:#2b74e8;--n4:#1a4bb0;--nq:rgba(100,175,255,.95);--nq2:rgba(60,130,255,.6);opacity:1}
-.kc-thuoc.dan2 .nang{--n1:#fff3d2;--n2:#ffc65e;--n3:#f6891b;--n4:#bf5a05;--nq:rgba(255,185,80,.95);--nq2:rgba(255,140,30,.6);opacity:1}
+.kc-thuoc.sang-t .nang{--n1:#e3f2ff;--n2:#74b6ff;--n3:#2b74e8;--n4:#1a3fa6;--nq:rgba(100,175,255,.95);--nq2:rgba(60,130,255,.6);opacity:1}
+.kc-thuoc.sang-p .nang{--n1:#ffe4de;--n2:#ff7d6c;--n3:#e22a22;--n4:#8c0f0f;--nq:rgba(255,100,85,.95);--nq2:rgba(255,50,40,.6);opacity:1}
 .kc-thuoc .nang::before{content:"";position:absolute;left:0;right:0;top:2px;height:7px;border-radius:4px;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0))}
 .kc-thuoc .nang::after{content:"";position:absolute;top:-6px;bottom:-6px;left:0;width:64px;background:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.95) 50%,rgba(255,255,255,0) 100%);transform:translateX(-90px) skewX(-22deg);animation:kcNangQuet 1.5s linear infinite}
 @keyframes kcNangQuet{0%{transform:translateX(-90px) skewX(-22deg)}100%{transform:translateX(520px) skewX(-22deg)}}
@@ -638,17 +663,30 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-thuoc .vach-nac.giua{top:30px;height:42px;width:4px;margin-left:-2px;background:linear-gradient(180deg,#fff3c4,#ffd56e 50%,#d99a2b);box-shadow:0 0 8px rgba(255,213,110,.95)}
 .kc-thuoc .ben{position:absolute;top:36px;font:800 26px/30px var(--f-tieu);white-space:nowrap;transition:opacity .35s,transform .35s,filter .35s}
 .kc-thuoc .ben.t{transform-origin:0 50%}.kc-thuoc .ben.p{transform-origin:100% 50%}
-.kc-thuoc.sang-t .ben.t,.kc-thuoc.sang-p .ben.p{transform:scale(1.14);filter:brightness(1.6) drop-shadow(0 0 7px currentColor);animation:kcBenSang 1.2s ease-in-out infinite alternate}
+.kc-thuoc.sang-t .ben.t,.kc-thuoc.sang-p .ben.p{transform:scale(1.1);filter:brightness(1.5) drop-shadow(0 0 7px currentColor);animation:kcBenSang 1.2s ease-in-out infinite alternate}
 .kc-thuoc.sang-t .ben.p,.kc-thuoc.sang-p .ben.t{opacity:.5}
-@keyframes kcBenSang{0%{filter:brightness(1.35) drop-shadow(0 0 4px currentColor)}100%{filter:brightness(1.75) drop-shadow(0 0 11px currentColor)}}
+@keyframes kcBenSang{0%{filter:brightness(1.3) drop-shadow(0 0 4px currentColor)}100%{filter:brightness(1.65) drop-shadow(0 0 11px currentColor)}}
 .kc-thuoc .dan{position:absolute;top:5px;transform:translateX(-50%);font:700 21px/1 var(--f-chu);color:#ffe9b0;text-shadow:0 2px 3px rgba(0,0,0,.75);white-space:nowrap}
 .kc-thuoc .moc{position:absolute;top:32px;width:38px;height:38px;margin-left:-19px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fff 0,#ffe9a8 24%,#ffb02e 58%,#d9641a 100%);border:3px solid #fff6d6;box-shadow:0 0 0 2px rgba(110,55,0,.85),0 0 16px 3px rgba(255,200,90,.95)}
-.kc-thuoc.dan1 .moc{background:radial-gradient(circle at 38% 32%,#fff 0,#d3e9ff 24%,#4f9bff 60%,#1a4bb0 100%);box-shadow:0 0 0 2px rgba(10,40,110,.85),0 0 18px 4px rgba(100,175,255,.95)}
-.kc-thuoc.dan2 .moc{background:radial-gradient(circle at 38% 32%,#fff 0,#ffeec4 24%,#ffa22e 60%,#bf5a05 100%);box-shadow:0 0 0 2px rgba(110,50,0,.85),0 0 18px 4px rgba(255,175,65,.95)}
+.kc-thuoc.sang-t .moc{background:radial-gradient(circle at 38% 32%,#fff 0,#d3e9ff 24%,#4f9bff 60%,#1a3fa6 100%);box-shadow:0 0 0 2px rgba(10,40,110,.85),0 0 18px 4px rgba(100,175,255,.95)}
+.kc-thuoc.sang-p .moc{background:radial-gradient(circle at 38% 32%,#fff 0,#ffd9d2 24%,#f4483c 60%,#8c0f0f 100%);box-shadow:0 0 0 2px rgba(110,10,10,.85),0 0 18px 4px rgba(255,95,80,.95)}
 .kc-thuoc .moc::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,255,255,.8);opacity:0}
-.kc-thuoc.dan1 .moc::after,.kc-thuoc.dan2 .moc::after{animation:kcMocVong 1.2s ease-out infinite}
+.kc-thuoc.sang-t .moc::after,.kc-thuoc.sang-p .moc::after{animation:kcMocVong 1.2s ease-out infinite}
 @keyframes kcMocVong{0%{transform:scale(.62);opacity:.9}100%{transform:scale(1.5);opacity:0}}
 .kc-thuoc .bong{position:absolute;top:37px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px dashed rgba(255,255,255,.6);opacity:0}
+/* hai quả cầu thuỷ tinh ở hai đầu thanh: nước trong cầu (thẻ i) cao thấp theo vị trí dây */
+.kc-thuoc .cau{position:absolute;top:-11px;width:100px;height:100px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 38%,#24202c 0,#08070c 78%);border:4px solid #d2a84c;box-shadow:0 0 0 2px rgba(40,26,8,.95),inset 0 0 16px rgba(0,0,0,.9),0 5px 12px rgba(0,0,0,.55);transition:box-shadow .35s}
+.kc-thuoc .cau.t{left:-24px}.kc-thuoc .cau.p{right:-24px}
+.kc-thuoc .cau i{position:absolute;left:0;right:0;bottom:0;height:50%}
+.kc-thuoc .cau.t i{background:linear-gradient(180deg,#7fbcff 0,#3f8cff 18%,#1d58d8 58%,#0b2a86 100%)}
+.kc-thuoc .cau.p i{background:linear-gradient(180deg,#ff9486 0,#f2483c 18%,#c41c1c 58%,#6e0a0a 100%)}
+.kc-thuoc .cau i::before{content:"";position:absolute;left:-12%;right:-12%;top:-7px;height:14px;border-radius:50%;background:rgba(255,255,255,.55);animation:kcCauSong 2.2s ease-in-out infinite alternate}
+.kc-thuoc .cau i::after{content:"";position:absolute;left:22%;bottom:14%;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.5);box-shadow:26px 12px 0 -2px rgba(255,255,255,.4),40px -6px 0 -3px rgba(255,255,255,.35);animation:kcCauBot 2.6s ease-in infinite}
+@keyframes kcCauSong{0%{transform:scaleX(.9) translateX(-4px);opacity:.45}100%{transform:scaleX(1.06) translateX(4px);opacity:.7}}
+@keyframes kcCauBot{0%{transform:translateY(8px);opacity:0}20%{opacity:.9}100%{transform:translateY(-30px);opacity:0}}
+.kc-thuoc .cau::after{content:"";position:absolute;left:13%;top:7%;width:46%;height:30%;border-radius:50%;background:radial-gradient(ellipse at 45% 45%,rgba(255,255,255,.8),rgba(255,255,255,0) 70%);transform:rotate(-24deg)}
+.kc-thuoc.sang-t .cau.t{box-shadow:0 0 0 2px rgba(40,26,8,.95),inset 0 0 16px rgba(0,0,0,.9),0 5px 12px rgba(0,0,0,.55),0 0 26px 7px rgba(80,160,255,.85)}
+.kc-thuoc.sang-p .cau.p{box-shadow:0 0 0 2px rgba(40,26,8,.95),inset 0 0 16px rgba(0,0,0,.9),0 5px 12px rgba(0,0,0,.55),0 0 26px 7px rgba(255,70,60,.85)}
 .kc-thuoc .mui-ten{position:absolute;top:48px;height:6px;border-radius:3px;opacity:0}
 .kc-sao-bay{position:absolute;left:0;top:0;width:44px;height:44px;opacity:0;filter:drop-shadow(0 0 10px rgba(255,210,110,.95));fill:#f2b531;stroke:#9c6a07;stroke-width:1.2}
 /* phần kết: băng báo kết quả, quả lửa bay, nút */
@@ -845,18 +883,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="23beed5e";</script>
-<script src="js/cau-hinh.js?v=23beed5e"></script>
-<script src="js/scanlib.js?v=23beed5e"></script>
-<script src="js/du-lieu.js?v=23beed5e"></script>
-<script src="js/dong-bo.js?v=23beed5e"></script>
-<script src="js/am-thanh.js?v=23beed5e"></script>
-<script src="js/quet.js?v=23beed5e"></script>
-<script src="js/cay-cau.js?v=23beed5e"></script>
-<script src="js/san-khau.js?v=23beed5e"></script>
-<script src="js/keo-co.js?v=23beed5e"></script>
-<script src="js/tro-choi.js?v=23beed5e"></script>
-<script src="js/nhanh.js?v=23beed5e"></script>
-<script src="js/do.js?v=23beed5e"></script>
+<script>window.RD_V="870c5d6e";</script>
+<script src="js/cau-hinh.js?v=870c5d6e"></script>
+<script src="js/scanlib.js?v=870c5d6e"></script>
+<script src="js/du-lieu.js?v=870c5d6e"></script>
+<script src="js/dong-bo.js?v=870c5d6e"></script>
+<script src="js/am-thanh.js?v=870c5d6e"></script>
+<script src="js/quet.js?v=870c5d6e"></script>
+<script src="js/cay-cau.js?v=870c5d6e"></script>
+<script src="js/san-khau.js?v=870c5d6e"></script>
+<script src="js/keo-co.js?v=870c5d6e"></script>
+<script src="js/tro-choi.js?v=870c5d6e"></script>
+<script src="js/nhanh.js?v=870c5d6e"></script>
+<script src="js/do.js?v=870c5d6e"></script>
 </body>
 </html>
