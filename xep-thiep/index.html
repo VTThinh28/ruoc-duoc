@@ -440,6 +440,89 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
 .gv-tv.xau { color: #9c2a22; font-weight: 600; }
 .gv-duoi .nut { min-height: 48px; font-size: 16px; }
 .gv-ghi { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--chu-nhat); }
+/* ---------- 25/11 08:00: MÁY GIÁO VIÊN GỌN LẠI ----------
+   Thầy: "cho cái ứng dụng nó cố gắng nó gọn lại, đừng có phải vuốt lên vuốt xuống nhiều". Các dòng dưới đây đè lên kiểu cũ ở trên.
+   Đầu trang 2 dòng (Máy giáo viên / Tấm thiệp của nhóm em); một hàng 5 ô cho tivi; đồng hồ và nhạc chung một hàng (.gv-2o);
+   mỗi nhóm một hàng (.gv-hang: tên + tình hình bên trái, 3 nút bên phải); hai nút cuối chung một hàng. */
+.gv-dau { margin-bottom: 5px; }
+.nut-noi-lai[hidden] { display: none; }
+.gv-ten { display: flex; flex-direction: column; min-width: 0; }
+.gv-ten b { font-weight: 700; font-size: 21px; line-height: 1.1; white-space: nowrap; }
+.gv-ten i { font-family: var(--chu-thuong); font-style: normal; font-weight: 600; font-size: 13px; line-height: 1.25; color: var(--chu-nhat); white-space: nowrap; }
+.gv-tom { margin: 0 0 4px; padding: 3px 10px; border-radius: 9px; font-size: 13px; line-height: 1.3; }
+.gv-tom.xau { padding: 5px 10px; font-size: 15px; }
+.gv-tivi { margin: 0 0 6px; }
+.gv-tv { margin: 0 0 5px; padding: 0 2px; font-size: 13px; line-height: 1.3; }
+.gv-4nut { gap: 4px; }
+.gv-4nut .nut { flex: 1 1 auto; min-width: 44px; min-height: 46px; padding: 2px 3px; border-radius: 11px; }      /* ô rộng theo chữ: ô "QR" hẹp, ô "chấm điểm" rộng hơn */
+.gv-4nut .nut span { font-size: 11.5px; }
+.gv-4nut .nut b { font-size: 12.5px; letter-spacing: -.25px; }
+.gv-2o { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.gv-2o .gv-dn { margin-top: 0; min-width: 0; flex-direction: column; align-items: stretch; justify-content: space-between; gap: 4px; padding: 4px 6px 6px; border-radius: 12px; }
+.gv-2o .gv-dn-chu { flex: none; padding: 0 2px; font-size: 13px; line-height: 1.3; }
+.gv-2o .gv-dn-chu b { margin-left: 2px; font-size: 19px; vertical-align: -1.5px; }
+.gv-2o .gv-nhac .gv-dn-chu { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.gv-2o .gv-nhac .gv-dn-chu span { display: block; min-width: 0; }
+.gv-2o .gv-nhac .gv-dn-chu i { display: block; flex: none; font-size: 12.5px; white-space: nowrap; }
+.gv-dn-nut { display: flex; gap: 5px; }
+.gv-2o .gv-dn .nut { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 2px 4px; border-radius: 11px; font-size: 13.5px; line-height: 1.1; white-space: normal; }
+.gv-2o .gv-dn .nut.gv-am { flex: 0 0 38px; width: 38px; font-size: 22px; }
+.gv-2o #gvDnTat { flex: 0 0 auto; min-width: 46px; }
+.gv-2o #gvDnChay[hidden] + #gvDnTat, .gv-2o #gvDnTat.hoi { flex: 1 1 0; }      /* "Tắt đồng hồ" (hết giờ) và "Bấm lần nữa" thì rộng ra */
+.gv-2o .gv-dn .nut.hoi { font-size: 12.5px; }
+.gv-ds { gap: 5px; }
+.gv-nhom { border-width: 1.5px; border-left-width: 7px; border-radius: 12px; padding: 5px 5px 5px 6px; gap: 5px; }
+.gv-hang { display: flex; align-items: center; gap: 5px; }
+.gv-hang1 { flex: 0 0 104px; min-width: 0; flex-wrap: wrap; column-gap: 4px; row-gap: 0; }
+.gv-so { order: 1; font-size: 17.5px; line-height: 1.15; }
+.gv-may { order: 2; font-size: 11.5px; }
+.gv-tt { order: 3; flex: 0 0 100%; font-size: 12px; line-height: 1.2; }
+.gv-tt span { white-space: nowrap; }      /* tình hình xuống dòng đúng chỗ: "Nhiệm vụ 1:" / "đúng 3/10" */
+.gv-nut { flex: 1 1 0; min-width: 0; grid-template-columns: 1.22fr 1fr .9fr; gap: 3px; }
+.gv-nut .nut { min-height: 44px; padding: 2px 2px; border-radius: 11px; font-size: 12.5px; line-height: 1.15; white-space: normal; flex-direction: column; gap: 0; }
+.gv-nut .nut.hoi, .gv-nut .nut.dang-chay { font-size: 12.5px; }
+.gv-nut .nut .gv-tren { font-size: 11.5px; font-weight: 500; opacity: .85; line-height: 1.2; }
+.gv-nut .nut .gv-duoi2 { font-size: 12px; font-weight: 700; line-height: 1.2; letter-spacing: -.2px; white-space: nowrap; }
+.gv-nut .nut.bat .gv-tren { opacity: 1; }
+.gv-nut .nut .gv-3d-tren { font-size: 12.5px; line-height: 1.1; }
+.gv-nut .nut.hoi .gv-tren { font-size: 11.5px; font-weight: 700; opacity: 1; white-space: nowrap; letter-spacing: -.25px; }
+.gv-nut .nut.hoi .gv-duoi2 { font-size: 11.5px; font-weight: 500; }
+.gv-khoa { padding: 4px 5px 4px 8px; border-width: 1.5px; border-radius: 10px; }
+.gv-khoa-chu { font-size: 13.5px; line-height: 1.3; }
+.gv-khoa .nut { min-height: 44px; padding: 0 10px; font-size: 14.5px; border-radius: 10px; }
+.gv-duoi { margin-top: 7px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.gv-duoi > .nut { min-height: 44px; padding: 2px 6px; border-radius: 11px; font-size: 13.5px; line-height: 1.15; white-space: normal; }
+.gv-duoi > .gv-cd-mo { padding: 2px 10px; }
+.gv-duoi > .gv-cd, .gv-duoi > .gv-ghi { grid-column: 1 / -1; }
+@media (max-width: 345px) {      /* điện thoại rất hẹp (320): chữ nhỏ thêm một nấc để không tràn ngang */
+  #gv { padding-left: 6px; padding-right: 6px; }
+  .gv-4nut { gap: 3px; }
+  .gv-4nut .nut { padding: 2px 1px; min-width: 40px; }
+  .gv-4nut .nut b { font-size: 11.5px; letter-spacing: -.3px; }
+  .gv-4nut .nut span { font-size: 10.5px; }
+  .gv-hang1 { flex-basis: 92px; }
+  .gv-so { font-size: 16px; }
+  .gv-may { font-size: 10.5px; }
+  .gv-tt { font-size: 11px; }
+  .gv-nut .nut .gv-duoi2 { font-size: 11px; }
+  .gv-nut .nut .gv-tren, .gv-nut .nut.hoi .gv-tren { font-size: 10.5px; }
+  .gv-nut .nut.hoi .gv-duoi2 { font-size: 10.5px; }
+  .gv-2o .gv-dn .nut { font-size: 12.5px; }
+  .gv-2o .gv-dn .nut.gv-am { flex-basis: 34px; width: 34px; }
+  .gv-2o .gv-dn-chu, .gv-2o .gv-nhac .gv-dn-chu i { font-size: 12px; }
+}
+@media (min-width: 400px) {
+  .gv-4nut .nut b { font-size: 13.5px; letter-spacing: -.1px; }
+  .gv-4nut .nut span { font-size: 12.5px; }
+  .gv-hang1 { flex-basis: 116px; }
+  .gv-tt { font-size: 12.5px; }
+  .gv-nut { gap: 4px; }
+  .gv-nut .nut .gv-duoi2 { font-size: 13.5px; }
+  .gv-nut .nut .gv-tren { font-size: 12px; }
+  .gv-2o .gv-dn-chu { font-size: 14px; }
+  .gv-2o .gv-nhac .gv-dn-chu i { font-size: 13.5px; }
+}
+
 
 /* 16/11 06:30, thầy (kèm 2 ảnh chụp hai cột bên của tivi): "TÔI MUỐN MẤY CÁI NÀY ẨN HẾT LUÔN, CHỈ CÓ CHỌN TRÊN ĐIỆN THOẠI CỦA GIÁO VIÊN. MÀN HÌNH HIỆN RA Y CHANG LÚC CHƠI TRÒ RƯỚC ĐUỐC"
    → tivi chỉ còn tấm báo tường trong khung gỗ trên nền tối, đúng như màn cuối của trang Rước đuốc (js/san-khau.js: ảnh báo tường 1472 × 1041 nằm giữa màn hình 1920 × 1080,
@@ -907,7 +990,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 
 <!-- ============ TIVI ============ -->
 <div id="gv" hidden>
-  <div class="gv-dau"><span class="gv-ten">Máy giáo viên</span><span class="gv-noi-nhom"><span id="gvNoi" class="noi">Đang nối…</span><button id="gvNoiLai" class="nut-noi-lai" type="button" aria-label="Nối lại" title="Nối lại"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button></span></div>
+  <div class="gv-dau"><span class="gv-ten"><b>Máy giáo viên</b><i>Tấm thiệp của nhóm em</i></span><span class="gv-noi-nhom"><span id="gvNoi" class="noi">Đang nối…</span><button id="gvNoiLai" class="nut-noi-lai" type="button" aria-label="Nối lại" title="Nối lại"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button></span></div>
   <p id="gvLoi" class="gv-loi" hidden></p>
   <div id="gvThan" hidden>
     <p id="gvTom" class="gv-tom"></p>
@@ -916,24 +999,27 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
       <p id="gvAm" class="gv-tv xau" hidden>Tivi chưa phát được tiếng (âm báo đồng hồ, nhạc). Thầy chạm một lần vào màn hình tivi.</p>
       <div class="gv-4nut">
         <button id="gvNv" class="nut"><span>Hiện</span><b>nhiệm vụ</b></button>
-        <button id="gvQr" class="nut"><span>Ẩn</span><b>mã QR</b></button>
+        <button id="gvQr" class="nut"><span>Ẩn</span><b>QR</b></button>
         <button id="gvDap" class="nut"><span>Hiện</span><b>đáp số</b></button>
-        <button id="gvVe" class="nut" disabled><span>Về</span><b>báo tường</b></button>
+        <button id="gvChamNut" class="nut"><span>Hiện</span><b>chấm điểm</b></button>
+        <button id="gvVe" class="nut" disabled><span>Hiện</span><b>báo tường</b></button>
       </div>
-      <div id="gvDn" class="gv-dn">
-        <span id="gvDnChu" class="gv-dn-chu">Đồng hồ đếm ngược 15 phút</span>
-        <button id="gvDnChay" class="nut">▶ Bắt đầu</button>
-        <button id="gvDnTat" class="nut" hidden>Tắt</button>
-      </div>
-      <div id="gvNhac" class="gv-dn gv-nhac">
-        <span id="gvNhacChu" class="gv-dn-chu">Nhạc nền</span>
-        <button id="gvNhacNho" class="nut gv-am" aria-label="Giảm âm lượng">−</button>
-        <button id="gvNhacTo" class="nut gv-am" aria-label="Tăng âm lượng">+</button>
-        <button id="gvNhacNut" class="nut">▶ Bật nhạc</button>
-      </div>
-      <div id="gvCham" class="gv-dn gv-cham">
-        <span id="gvChamChu" class="gv-dn-chu">Bảng chấm điểm 4 nhóm</span>
-        <button id="gvChamNut" class="nut">Chấm điểm</button>
+      <div class="gv-2o">
+        <div id="gvDn" class="gv-dn">
+          <span id="gvDnChu" class="gv-dn-chu">Đếm ngược 15 phút</span>
+          <div class="gv-dn-nut">
+            <button id="gvDnChay" class="nut">▶ Bắt đầu</button>
+            <button id="gvDnTat" class="nut" hidden>Tắt</button>
+          </div>
+        </div>
+        <div id="gvNhac" class="gv-dn gv-nhac">
+          <span id="gvNhacChu" class="gv-dn-chu">Nhạc nền</span>
+          <div class="gv-dn-nut">
+            <button id="gvNhacNho" class="nut gv-am" aria-label="Giảm âm lượng">−</button>
+            <button id="gvNhacTo" class="nut gv-am" aria-label="Tăng âm lượng">+</button>
+            <button id="gvNhacNut" class="nut">▶ Bật nhạc</button>
+          </div>
+        </div>
       </div>
     </div>
     <div id="gvDs" class="gv-ds"></div>
@@ -946,7 +1032,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
         <p>Xóa cả số đo đã nhập, hình và điểm đã chấm của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Chấm điểm: tivi hiện bảng chấm của 4 nhóm và bảng rubric, chấm trên tivi hay trên máy này đều được; trên tivi, bấm Ẩn ở bảng của nhóm nào thì bảng đó cất đi để nhìn tấm thiệp. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Hiện chấm điểm: tivi hiện bảng chấm của 4 nhóm và bảng rubric, chấm trên tivi hay trên máy này đều được; trên tivi, bấm Ẩn ở bảng của nhóm nào thì bảng đó cất đi để nhìn tấm thiệp. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
     </div>
     <div id="gvChamMan" class="gv-cm" hidden>
       <div class="gv-cm-dau"><b>Chấm điểm 4 nhóm</b><button id="gvChamX" class="nut gv-cm-x" aria-label="Tắt màn chấm điểm, tivi về báo tường"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>
@@ -1121,7 +1207,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
           <ul>
             <li>nhóm đang bị khóa và nút Mở khóa;</li>
             <li>nút Mở nhiệm vụ 2 (bàn xếp), Tranh 3D, Xem ĐT nhóm và Cho sửa lại hình của từng nhóm;</li>
-            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc, nút Chấm điểm.</li>
+            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc, nút Hiện chấm điểm.</li>
           </ul>
           <p class="gvma-nhac">Mã này chỉ dành cho giáo viên. Thầy quét trước giờ học, lúc học sinh chưa nhìn màn hình.</p>
           <p>Quét một lần là đủ: link dùng được tới khi thầy bấm Tạo phòng mới.</p>
@@ -1136,6 +1222,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=a6142860"></script>
-<script src="js/xep-thiep.js?v=a0749ccb"></script>
+<script src="js/xep-thiep.js?v=342609ac"></script>
 </body>
 </html>

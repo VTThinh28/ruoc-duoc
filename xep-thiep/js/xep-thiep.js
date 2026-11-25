@@ -813,8 +813,58 @@
     if (!v) { v = maNgauNhien(6); try { sessionStorage.setItem("xt-may", v); } catch (e) { /* bỏ qua */ } }
     return v;
   }
-  function giuSang() { try { if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(function () {}); } catch (e) { /* bỏ qua */ } }
+  /* GIỮ SÁNG MÀN HÌNH. 25/11 08:01, thầy: "sẽ có một cái chế độ cài đặt mặc định là khi đã mở ứng dụng thì màn hình điện thoại sẽ không tắt".
+     Cách chính: xin trình duyệt khóa giữ sáng (Wake Lock). Trình duyệt tự nhả khóa khi trang bị che hay tắt màn; nhả rồi thì xin lại lúc trang hiện lại,
+     lúc đổi toàn màn hình và mỗi lần chạm vào màn hình. Cách dự phòng (máy không có Wake Lock: iPhone đời cũ, trình duyệt nằm trong Zalo, Facebook…;
+     hoặc máy từ chối): phát lặp một đoạn phim rất ngắn, không hình không tiếng, không hiện ra (cách của thư viện NoSleep.js, MIT); máy đang phát phim thì
+     không tắt màn hình. Trình duyệt chỉ cho phát sau khi người dùng chạm, nên phim bắt đầu từ lần chạm đầu tiên.
+     <html data-giu-sang="khoa" | "phim" | ""> cho bài thử đọc. */
+  var sangKhoa = null, sangXin = false, sangDuPhong = false, sangPhim = null, sangNap = null;
+  function sangGhi(v) { datTT(document.documentElement, "data-giu-sang", v); }
+  function sangNapPhim() {                        // tải 2 đoạn phim (js/giu-sang.js, 13 KB) và dựng thẻ video; chưa phát
+    if (sangNap) return sangNap;
+    sangNap = napScript("js/giu-sang.js?v=1").then(function () {
+      var d = window.XT_GIU_SANG, v;
+      function them(kieu, src) { var s = document.createElement("source"); s.src = src; s.type = "video/" + kieu; v.appendChild(s); }
+      if (!d) return;
+      v = document.createElement("video");
+      v.setAttribute("title", "Giữ sáng màn hình"); v.setAttribute("playsinline", "");
+      them("webm", d.webm); them("mp4", d.mp4);
+      v.addEventListener("loadedmetadata", function () {
+        if (v.duration <= 1) v.setAttribute("loop", "");      // đoạn webm: lặp
+        else v.addEventListener("timeupdate", function () { if (v.currentTime > 0.5) v.currentTime = Math.random(); });      // đoạn mp4: nhảy về đầu
+      });
+      v.addEventListener("pause", function () { if (!sangKhoa) sangGhi(""); });
+      sangPhim = v;
+    }, function () { sangNap = null; });
+    return sangNap;
+  }
+  function sangPhatPhim() {                       // phải gọi ngay trong lúc người dùng chạm
+    var p;
+    if (!sangPhim || !sangPhim.paused) return;
+    try { p = sangPhim.play(); if (p && p.then) p.then(function () { sangGhi("phim"); }, function () { /* chưa được phép: lần chạm sau thử lại */ }); } catch (e) { /* bỏ qua */ }
+  }
+  function giuSang(cham) {                        // cham = true: gọi từ một lần chạm của người dùng
+    try {
+      if (document.visibilityState !== "visible") return;
+      if (!sangDuPhong && navigator.wakeLock && navigator.wakeLock.request) {
+        if (sangKhoa || sangXin) return;
+        sangXin = true;
+        navigator.wakeLock.request("screen").then(function (k) {
+          sangXin = false; sangKhoa = k; sangGhi("khoa");
+          k.addEventListener("release", function () { if (sangKhoa === k) { sangKhoa = null; sangGhi(""); } });
+        }, function () { sangXin = false; sangDuPhong = true; sangNapPhim(); });      // máy từ chối (tiết kiệm pin, không cho phép…): sang cách dự phòng
+        return;
+      }
+      sangDuPhong = true;
+      if (cham && sangPhim) sangPhatPhim(); else sangNapPhim();
+    } catch (e) { /* bỏ qua */ }
+  }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") giuSang(); });   // quay lại trang thì xin giữ sáng màn hình lại
+  document.addEventListener("fullscreenchange", function () { giuSang(); });
+  ["pointerdown", "touchend", "click"].forEach(function (ten) {      // mỗi lần chạm: khóa đã bị nhả thì xin lại; cách dự phòng thì phát phim (iPhone tính lần chạm ở touchend, click)
+    document.addEventListener(ten, function () { giuSang(true); }, { capture: true, passive: true });
+  });
 
   /* ---------- nối các máy ---------- */
   function napScript(src) {
@@ -3045,7 +3095,7 @@
       $("gvThan").hidden = !!chu;
     }
     if (!phong || !/^[a-z0-9]{3,12}$/.test(phong) || !ts.gv) {
-      $("gvNoi").hidden = true;
+      $("gvNoi").hidden = true; $("gvNoiLai").hidden = true;
       baoLoi("Link này thiếu mã phòng. Thầy quét lại mã ở tivi: Cài đặt, nút “Mã cho máy giáo viên”.");
       return;
     }
@@ -3056,7 +3106,8 @@
       var o = H("section", "gv-nhom", null, $("gvDs")), h, kh, n, X = { o: o };
       o.id = "gvNhom" + k;
       o.style.setProperty("--m", MAU_NHOM[k]);
-      h = H("div", "gv-hang1", null, o);
+      var hg = H("div", "gv-hang", null, o);          // 25/11 08:00 (bản gọn): tên nhóm + tình hình bên trái, 3 nút bên phải, chung một hàng
+      h = H("div", "gv-hang1", null, hg);
       H("b", "gv-so", "Nhóm " + k, h);
       X.tt = H("span", "gv-tt", "", h);
       X.may = H("span", "gv-may", "", h);
@@ -3064,11 +3115,12 @@
       X.khoa = kh;
       X.khoaChu = H("span", "gv-khoa-chu", "", kh);
       X.moKhoa = H("button", "nut gv-mo-khoa", "Mở khóa", kh);
-      n = H("div", "gv-nut", null, o);
+      n = H("div", "gv-nut", null, hg);
       X.b2 = H("button", "nut gv-b2", null, n);
-      X.b2a = H("span", "gv-b2a", "Mở nhiệm vụ 2", X.b2); X.b2b = H("span", "gv-b2b", "bàn xếp", X.b2);
-      X.b3 = H("button", "nut gv-3d", "▶ Tranh 3D", n);
-      X.xem = H("button", "nut gv-xem", "", n); H("span", "", "Xem ĐT ", X.xem); H("span", "", "nhóm " + k, X.xem);      // 16/11 10:02: mở màn hình của nhóm ngay trên máy giáo viên (chayDienThoai, có gv=<mã>). 16/11 13:11 thầy đổi tên nút: "Xem màn hình đổi thành Xem ĐT nhóm 1"
+      X.b2a = H("span", "gv-b2a gv-tren", "Mở ", X.b2); X.b2b = H("span", "gv-b2b gv-duoi2", "nhiệm vụ 2", X.b2);      // bản gọn: dòng trên chữ nhỏ (việc làm), dòng dưới chữ đậm
+      X.b3 = H("button", "nut gv-3d", null, n);
+      X.b3a = H("span", "gv-tren gv-3d-tren", "▶ ", X.b3); H("span", "gv-duoi2", "Tranh 3D", X.b3);      // chữ đọc ra vẫn là "▶ Tranh 3D" / "■ Dừng Tranh 3D" như trước
+      X.xem = H("button", "nut gv-xem", "", n); H("span", "gv-tren", "Xem ĐT ", X.xem); H("span", "gv-duoi2", "nhóm " + k, X.xem);      // 16/11 10:02: mở màn hình của nhóm ngay trên máy giáo viên (chayDienThoai, có gv=<mã>). 16/11 13:11 thầy đổi tên nút: "Xem màn hình đổi thành Xem ĐT nhóm 1"
       X.xem.onclick = function () { location.href = location.pathname + "?p=" + encodeURIComponent(phong) + "&n=" + k + "&gv=" + encodeURIComponent(ts.gv) + (thu ? "&thu=1" : ""); };
       O[k] = X;
       X.moKhoa.onclick = function () { var u = {}; if (!T) return; u["n" + k + "/khoa"] = null; T.update(u); };
@@ -3104,9 +3156,9 @@
     var nhacBat = false, nhacAm = 5;
     function veNhacGV() {
       var m = coTv && tv ? +tv.m || 0 : -1;
-      var chu = !coTv ? "Nhạc nền: tivi chưa mở trang" : !nhacBat ? "Nhạc nền: đang tắt" : m === 2 ? "Tivi chưa cho phát nhạc: thầy chạm một lần vào màn hình tivi" : m === 4 ? "Tivi không mở được bài hát" : m === 1 ? "Nhạc nền: đang phát" : "Nhạc nền: đang bật";
+      var chu = !coTv ? "Nhạc: tivi chưa mở" : !nhacBat ? "Nhạc: đang tắt" : m === 2 ? "Nhạc: thầy chạm một lần vào màn hình tivi" : m === 4 ? "Nhạc: tivi không mở được bài hát" : m === 1 ? "Nhạc: đang phát" : "Nhạc: đang bật";
       $("gvNhacChu").innerHTML = "";
-      H("span", null, chu, $("gvNhacChu")); H("i", null, "Âm lượng " + nhacAm + "/10", $("gvNhacChu"));
+      H("span", null, chu + " ", $("gvNhacChu")); H("i", null, nhacAm + "/10", $("gvNhacChu")).title = "Âm lượng " + nhacAm + "/10";      // bản gọn 25/11: chữ bên trái, mức âm lượng bên phải, chung một dòng
       $("gvNhacNut").textContent = nhacBat ? "Tắt nhạc" : "▶ Bật nhạc"; $("gvNhacNut").classList.toggle("bat", nhacBat);
       $("gvNhac").className = "gv-dn gv-nhac" + (!nhacBat ? " tat" : m === 1 ? " chay" : m === 2 || m === 4 ? " het" : "");
       $("gvNhacNut").disabled = !T || !coTv; $("gvNhacNho").disabled = !T || nhacAm <= 1; $("gvNhacTo").disabled = !T || nhacAm >= 10;
@@ -3124,7 +3176,7 @@
       var st = dnTinh(dn, T ? T.gio() : Date.now()), tt = st ? st.tt : "", dangHoi = Date.now() - dnHoi <= 3000, hoiChay = tt === "dung" && Date.now() - dnHoiC <= 3000;
       $("gvDnChu").innerHTML = "";
       if (!st) { dnHoi = 0; dnHoiC = 0; }           // đồng hồ đã tắt (kể cả khi tivi tự cất sau hồi trống hết giờ, 16/11 23:48): bỏ câu hỏi lại đang dở, lần sau vẫn phải bấm đủ hai lần
-      if (!st) H("span", null, "Đồng hồ đếm ngược " + DEM_NGUOC_PHUT + " phút", $("gvDnChu"));
+      if (!st) H("span", null, "Đếm ngược " + DEM_NGUOC_PHUT + " phút", $("gvDnChu"));
       else if (tt === "het") H("b", "het", "Hết giờ", $("gvDnChu"));
       else { H("span", null, tt === "dung" ? "Dừng ở " : "Còn ", $("gvDnChu")); H("b", null, dnChu(st.con), $("gvDnChu")); }
       $("gvDn").className = "gv-dn" + (tt ? " " + tt : "");
@@ -3178,7 +3230,6 @@
       chamG = g;
       $("gvChamMan").hidden = !chamMo;
       $("gvChamNut").classList.toggle("bat", g === 1);
-      $("gvChamChu").textContent = g === 1 ? "Tivi đang hiện bảng chấm điểm" : "Bảng chấm điểm 4 nhóm";
       $("gvChamTom").textContent = g === 1 ? "Tivi đang hiện bảng chấm điểm. Bấm dấu X để tắt, tivi về báo tường."
         : coTv ? "Tivi chưa hiện bảng chấm điểm. Thầy vẫn chấm được ở đây." : "Tivi chưa mở trang Xếp thiệp. Thầy vẫn chấm được ở đây, điểm được lưu lại.";
       $("gvChamTom").classList.toggle("xau", g !== 1);
@@ -3209,16 +3260,21 @@
       var ds = pha === "xong" ? [] : THU_TU.filter(function (kh) { return kh3[kh] && !nhap[kh]; });
       var choMo = pha === "nhap" && nd === THU_TU.length, hoiGan = Date.now() - (hoi[k] || 0) <= 3000, dangHoi = pha === "nhap" && !choMo && hoiGan, hoiSua = pha === "xong" && hoiGan, c3 = !!d.xong && chay(k);
       X.o.classList.toggle("bi-khoa", ds.length > 0); X.o.classList.toggle("cho-mo", choMo);
-      X.tt.textContent = pha === "xong" ? "Đã hoàn thành hình" : pha === "xep" ? "Nhiệm vụ 2: đang xếp hình" : choMo ? "Xong nhiệm vụ 1, chờ mở nhiệm vụ 2" : nd || may ? "Nhiệm vụ 1: đúng " + nd + "/10" : "Chưa có máy nào vào";
+      /* bản gọn 25/11: tình hình nằm trong cột hẹp bên trái. Dấu | là chỗ được xuống dòng (mỗi đoạn không bị ngắt giữa chừng), chữ đọc ra vẫn liền như trước */
+      X.tt.textContent = "";
+      (pha === "xong" ? "Đã hoàn thành| hình" : pha === "xep" ? "Nhiệm vụ 2:| đang xếp hình" : choMo ? "Xong nhiệm vụ 1,| chờ mở" : nd || may ? "Nhiệm vụ 1:| đúng " + nd + "/10" : "Chưa có máy| nào vào").split("|").forEach(function (doan) {
+        if (doan.charAt(0) === " ") { X.tt.appendChild(document.createTextNode(" ")); doan = doan.slice(1); }
+        H("span", null, doan, X.tt);
+      });
       X.may.textContent = may ? may + " máy" : "";
       X.khoa.hidden = !ds.length;
       X.khoaChu.textContent = "Đã khóa: " + ds.map(function (kh) { return MUC[kh].ngan + " (sai " + (s[kh] || SAI_KHOA) + " lần)"; }).join(", ");
       X.b2.disabled = pha === "xep";
-      X.b2a.textContent = pha === "xong" ? (hoiSua ? "Bấm lần nữa" : "Cho sửa lại") : pha === "xep" ? "Nhiệm vụ 2" : dangHoi ? "Bấm lần nữa" : "Mở nhiệm vụ 2";
-      X.b2b.textContent = pha === "xong" ? (hoiSua ? "để nhóm sửa hình" : "hình") : pha === "xep" ? "đã mở" : dangHoi ? "nhóm chưa xong nhiệm vụ 1" : "bàn xếp";
+      X.b2a.textContent = pha === "xong" ? (hoiSua ? "Bấm lần nữa " : "Cho sửa ") : pha === "xep" ? "Đã mở " : dangHoi ? "Bấm lần nữa " : "Mở ";
+      X.b2b.textContent = pha === "xong" ? (hoiSua ? "để sửa hình" : "lại hình") : pha === "xep" ? "nhiệm vụ 2" : dangHoi ? "để mở sớm" : "nhiệm vụ 2";
       X.b2.classList.toggle("san", choMo); X.b2.classList.toggle("hoi", dangHoi || hoiSua); X.b2.classList.toggle("bat", pha === "xep");      // nhiệm vụ 2 đang mở: nút xanh
       X.b3.disabled = !d.xong;
-      X.b3.textContent = c3 ? "■ Dừng Tranh 3D" : "▶ Tranh 3D";
+      X.b3a.textContent = c3 ? "■ Dừng " : "▶ ";
       X.b3.classList.toggle("dang-chay", c3); X.b3.classList.toggle("bat", c3);
       return ds.length > 0;
     }
@@ -3233,7 +3289,7 @@
       $("gvTom").textContent = dsK.length ? "Đang bị khóa: nhóm " + dsK.join(", nhóm ") : "Chưa có nhóm nào bị khóa";
       $("gvTom").classList.toggle("xau", dsK.length > 0);
       l = tt("l");
-      $("gvTv").textContent = !coTv ? "Tivi chưa mở trang Xếp thiệp nên các nút cho tivi chưa có tác dụng." : "Tivi đang hiện " + (nv ? "bảng nhiệm vụ" : d ? "bảng đáp số" : g ? "bảng chấm điểm" : l ? "to thiệp nhóm " + l : "báo tường") + ". Tranh 3D: đã bấm " + n + "/4 nhóm.";
+      $("gvTv").textContent = !coTv ? "Tivi chưa mở trang Xếp thiệp nên các nút cho tivi chưa có tác dụng." : "Tivi đang hiện " + (nv ? "bảng nhiệm vụ" : d ? "bảng đáp số" : g ? "bảng chấm điểm" : l ? "to thiệp nhóm " + l : "báo tường") + ". Tranh 3D: " + n + "/4 nhóm.";
       $("gvTv").classList.toggle("xau", !coTv);
       $("gvAm").hidden = !(coTv && tv && tv.a === 0);      // 16/11 13:11: tivi chưa được chạm lần nào thì trình duyệt chưa cho phát tiếng (âm báo đồng hồ, nhạc)
       hai($("gvNv"), nv ? "Ẩn" : "Hiện"); $("gvNv").classList.toggle("dang-hien", !!nv); $("gvNv").classList.toggle("bat", !!nv);
