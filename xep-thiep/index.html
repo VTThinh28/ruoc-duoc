@@ -67,9 +67,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
    Nút tròn mũi tên vòng như nút tải lại của trình duyệt, nằm cạnh dòng trạng thái nối (điện thoại các nhóm, máy giáo viên) và cuối hàng nút tròn của tivi.
    Bấm là máy nối lại ngay, KHÔNG tải lại trang.
    Chỗ chạm rộng 44 px (bằng các nút khác), hình tròn nhìn thấy 34 px; lề âm để hàng đầu trang KHÔNG cao thêm: bố cục bên dưới giữ nguyên từng px. */
-.nut-noi-lai { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; margin: -8px -5px -8px auto; border: 0; background: none; color: #7a5a2a; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-.nut-noi-lai::before { content: ""; position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px; border-radius: 50%; border: 1.5px solid #c9b48a; background: #fffaf0; box-shadow: 0 1px 3px rgba(60, 40, 20, .18); }
-.nut-noi-lai:active::before { background: #f3e3c0; }
+.nut-noi-lai { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; margin: -8px -5px -8px auto; border: 0; background: none; color: #fff; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.nut-noi-lai::before { content: ""; position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px; border-radius: 50%; border: 1.5px solid #1f56ad; background: #2f6fd6; box-shadow: 0 1px 3px rgba(20, 40, 90, .3); }
+.nut-noi-lai.quay::before { background: #4a86e4; }
+.nut-noi-lai:active::before { background: #1f56ad; }
 .nut-noi-lai svg { position: relative; display: block; width: 21px; height: 21px; }
 .nut-noi-lai.quay svg, #nutNoiLai.quay svg { animation: noi-lai-quay .62s linear 2; }
 @keyframes noi-lai-quay { to { transform: rotate(360deg); } }
@@ -648,6 +649,9 @@ body.tv { background: #130c06; }
 .nut-toan.dang .thu { display: block; }
 #tv .nut.nut-rang { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; color: #7a5a2a; background: #f6e7c4; border: 2px solid #b8892f; box-shadow: 0 2px 7px rgba(0, 0, 0, .4); }
 .nut-rang svg { display: block; width: 26px; height: 26px; }
+#tv #nutNoiLai.nut.nut-rang { background: #2f6fd6; border-color: #1f56ad; color: #fff; }      /* 25/11 07:59: nút Nối lại màu xanh dương cho khác các nút còn lại */
+#tv #nutNoiLai.nut.nut-rang.quay { background: #4a86e4; }
+#tv #nutNoiLai.nut.nut-rang:active:not(:disabled) { background: #1f56ad; }
 
 /* --- bảng Nhiệm vụ (15/11 21:28): 4 nhiệm vụ của hoạt động, thầy bật tắt từ máy giáo viên. Cỡ chữ cho tivi 70 inch, học sinh cuối lớp đọc được --- */
 #nhiemVu { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .45); display: flex; align-items: center; justify-content: center; }
