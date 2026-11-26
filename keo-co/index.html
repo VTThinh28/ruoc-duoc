@@ -541,6 +541,27 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 @keyframes kcDen{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
 .kc-den{position:absolute;inset:0;transform-origin:45px 12px;filter:drop-shadow(0 4px 4px rgba(40,20,0,.35))}
 .kc-den svg{display:block;width:100%;height:100%;overflow:visible}
+/* 26/11 11:09 thầy Thịnh: "thiết kế cho tôi cái sợi dây kéo co á, mà nó có hình ảnh liên quan đến môn toán". BẢN MẪU (thầy chưa chọn), ba kiểu ở
+   khúc dây giữa hai đội, js/keo-co.js (KIEU_DAY, veToan) đặt chỗ: .kc-toan.co lá cờ phép tính treo trên dây (.la giật theo nhịp kéo, .lac đung đưa),
+   .kc-toan.hinh hạt hình học xâu vào dây, .kc-thuoc-do dải thước đo mỗi vạch một nấc */
+.kc-toan{position:absolute;left:0;top:0;width:0;height:0;will-change:transform;filter:drop-shadow(0 3px 2px rgba(40,20,0,.32))}
+.kc-toan .la{position:absolute;left:-25px;top:-8px;width:50px;height:67px;transform-origin:50% 8px}
+.kc-toan .lac{display:block;width:100%;height:100%;transform-origin:50% 8px;animation:kcCoLac 1.9s ease-in-out infinite alternate}
+.kc-toan.nam .lac{animation:none}
+.kc-toan svg{display:block;width:100%;height:100%;overflow:visible}
+.kc-toan.hinh .la{left:-24px;top:-24px;width:48px;height:48px;transform-origin:50% 50%}
+.kc-toan.hinh .lac{animation:none}
+@keyframes kcCoLac{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.kc-thuoc-do{position:absolute;left:0;top:0;height:34px;background-repeat:no-repeat;background-size:240px 34px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3));will-change:transform,width}
+.kc-thuoc-do.t{background-position:right center;transform-origin:100% 50%}
+.kc-thuoc-do.p{background-position:left center;transform-origin:0 50%}
+/* 26/11 11:09 thầy Thịnh: "từ cái thân đuốc nó chạy lên trên cũng là các cái công thức toán [...] chạy lên trên xong nó thông qua cái ngọn lửa nó bay
+   lên". BẢN MẪU: .kc-mach là khung dọc theo cây đuốc (từ mặt đế đá lên gần đỉnh lửa, hai đầu mờ dần), trong đó công thức (.ct, viết dọc theo
+   thân đuốc) và kí hiệu (.kh, đứng thẳng) nối nhau chạy lên, xuyên qua ngọn lửa; js/keo-co.js (veMach) đặt chỗ từng khung hình */
+.kc-mach{position:absolute;overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 54px,#000 calc(100% - 14px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 54px,#000 calc(100% - 14px),transparent 100%)}
+.kc-mach i{position:absolute;left:0;top:0;white-space:nowrap;font:800 25px/1 var(--f-tieu);font-style:normal;letter-spacing:.3px;color:#fffbe0;-webkit-text-stroke:4.6px #a34a08;paint-order:stroke fill;text-shadow:0 0 8px rgba(255,214,110,.95),0 0 16px rgba(255,160,50,.65);opacity:0;will-change:transform}
+.kc-mach i.kh{font-size:38px;-webkit-text-stroke-width:5.4px}
+.kc-mach sup{font-size:.62em;line-height:0;vertical-align:.52em}
 .kc-dat{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .45s;pointer-events:none}
 .kc-nut{position:absolute;left:-115px;top:-38px;width:230px;height:96px;opacity:0;transform-origin:115px 38px;will-change:transform,opacity}
 .kc-nut::before{content:"";position:absolute;left:8%;right:8%;top:6%;bottom:14%;border-radius:50%;background:radial-gradient(ellipse at 50% 42%,rgba(58,40,22,.34) 0,rgba(58,40,22,.14) 45%,rgba(58,40,22,0) 70%)}
@@ -890,18 +911,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="eb01f5db";</script>
-<script src="js/cau-hinh.js?v=eb01f5db"></script>
-<script src="js/scanlib.js?v=eb01f5db"></script>
-<script src="js/du-lieu.js?v=eb01f5db"></script>
-<script src="js/dong-bo.js?v=eb01f5db"></script>
-<script src="js/am-thanh.js?v=eb01f5db"></script>
-<script src="js/quet.js?v=eb01f5db"></script>
-<script src="js/cay-cau.js?v=eb01f5db"></script>
-<script src="js/san-khau.js?v=eb01f5db"></script>
-<script src="js/keo-co.js?v=eb01f5db"></script>
-<script src="js/tro-choi.js?v=eb01f5db"></script>
-<script src="js/nhanh.js?v=eb01f5db"></script>
-<script src="js/do.js?v=eb01f5db"></script>
+<script>window.RD_V="4dba6f0a";</script>
+<script src="js/cau-hinh.js?v=4dba6f0a"></script>
+<script src="js/scanlib.js?v=4dba6f0a"></script>
+<script src="js/du-lieu.js?v=4dba6f0a"></script>
+<script src="js/dong-bo.js?v=4dba6f0a"></script>
+<script src="js/am-thanh.js?v=4dba6f0a"></script>
+<script src="js/quet.js?v=4dba6f0a"></script>
+<script src="js/cay-cau.js?v=4dba6f0a"></script>
+<script src="js/san-khau.js?v=4dba6f0a"></script>
+<script src="js/keo-co.js?v=4dba6f0a"></script>
+<script src="js/tro-choi.js?v=4dba6f0a"></script>
+<script src="js/nhanh.js?v=4dba6f0a"></script>
+<script src="js/do.js?v=4dba6f0a"></script>
 </body>
 </html>

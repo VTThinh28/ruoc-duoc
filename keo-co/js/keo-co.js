@@ -129,6 +129,33 @@
     '<path d="M35 22 C28 44 22 68 25 98" fill="none" stroke="#ff8a78" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>' +
     '<path d="M45 12 C30 -3 10 1 14 14 C17 25 34 21 45 12 Z M45 12 C60 -3 80 1 76 14 C73 25 56 21 45 12 Z" fill="#ea3a3a" stroke="#a31515" stroke-width="1.6" stroke-linejoin="round"/>' +
     '<ellipse cx="45" cy="12" rx="9" ry="8" fill="#f04a4a" stroke="#a31515" stroke-width="1.6"/></svg>';
+  // 26/11 11:09 thầy Thịnh (gõ bằng giọng nói ở luồng "Thảo luận giáo án"): "Bạn thử thiết kế cho tôi cái sợi dây kéo co á, mà nó có hình ảnh
+  //   liên quan đến môn toán coi. [...] bạn thử thiết kế vậy coi, cho tôi hình mẫu trước đi". BẢN MẪU, thầy chưa chọn: ba kiểu hình Toán gắn
+  //   ở khúc dây giữa hai đội (khúc dây trang tự vẽ; khúc dây trong tay các bạn là hình vẽ sẵn nên không đổi được), chọn bằng ?day= trên
+  //   địa chỉ: "co" = bốn lá cờ nhỏ treo trên dây mang bốn phép tính + − × ÷ (mặc định của bản mẫu); "hinh" = bốn hạt xâu vào dây hình
+  //   vuông, tam giác đều, hình tròn, lục giác đều; "thuoc" = khúc dây giữa bọc một dải thước đo, mỗi vạch cách nhau đúng một nấc dây
+  //   (PXN), số đếm từ dải lụa đỏ ra hai phía; "khong" = dây trơn như bản 8.
+  const KIEU_DAY = (/[?&]day=(co|hinh|thuoc|khong)\b/.exec(location.search) || [])[1] || "co";
+  const TOAN_O = [-116, -64, 64, 116];              // bốn hình cách dải lụa bấy nhiêu điểm ảnh dọc theo sợi dây
+  const TOAN_MAU = [["#f6c544", "#b07a12", "#fff0a8"], ["#72c56b", "#3b8a3a", "#c9f0b4"], ["#5fbdea", "#2a7fb5", "#cdefff"], ["#b892ea", "#7550b8", "#eadcff"]];   // mặt, viền, vệt sáng
+  const PHEP = ["M23 17 V37 M13 27 H33", "M13 27 H33", "M15.6 19.6 L30.4 34.4 M30.4 19.6 L15.6 34.4", "M13 27 H33 M23 18 h.01 M23 36 h.01"];      // + − × ÷
+  const CO_TOAN = TOAN_MAU.map((m, i) => '<svg viewBox="0 0 46 62" aria-hidden="true"><path d="M3 3 H43 V32 L23 57 L3 32 Z" fill="' + m[0] + '" stroke="' + m[1] + '" stroke-width="2.4" stroke-linejoin="round"/>' +
+    '<path d="M4.2 4.2 H41.8 V10.5 H4.2 Z" fill="' + m[1] + '" opacity=".5"/><path d="M8.5 15 V30.5 L15.5 39.5" fill="none" stroke="' + m[2] + '" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>' +
+    '<g fill="none" stroke-linecap="round"><path d="' + PHEP[i] + '" stroke="' + m[1] + '" stroke-width="9"/><path d="' + PHEP[i] + '" stroke="#fff" stroke-width="4.8"/></g></svg>');
+  const HAT_DANG = ['<rect x="7" y="7" width="34" height="34" rx="4.5"', '<path d="M24 4.5 L44.5 40 H3.5 Z"', '<circle cx="24" cy="24" r="18.5"', '<path d="M43.5 24 L33.75 40.9 H14.25 L4.5 24 L14.25 7.1 H33.75 Z"'];
+  const HAT_SANG = ["M12.5 30 V13.5 H24", "M15 34 L24 17.5", "M11.5 24 A12.5 12.5 0 0 1 24 11.5", "M11.5 24 L17.5 13.5 H25"];
+  const HAT_TOAN = TOAN_MAU.map((m, i) => '<svg viewBox="0 0 48 48" aria-hidden="true">' + HAT_DANG[i] + ' fill="' + m[0] + '" stroke="' + m[1] + '" stroke-width="2.8" stroke-linejoin="round"/>' +
+    '<path d="' + HAT_SANG[i] + '" fill="none" stroke="' + m[2] + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/></svg>');
+  const THUOC_CAO = 34, THUOC_DAI = 240;            // dải thước đo: cao, dài nhất mỗi nửa (11 vạch số)
+  const thuocNen = phai => {                        // nửa bên phải dải lụa: số tăng dần sang phải kể từ mép trái; nửa bên trái thì ngược lại
+    let h = '<svg xmlns="http://www.w3.org/2000/svg" width="' + THUOC_DAI + '" height="' + THUOC_CAO + '" viewBox="0 0 ' + THUOC_DAI + " " + THUOC_CAO + '"><rect x="-6" y="1.6" width="' + (THUOC_DAI + 12) + '" height="' + (THUOC_CAO - 3.2) + '" fill="#fff6d2" stroke="#b3560f" stroke-width="2.6"/><path d="M-6 ' + (THUOC_CAO - 6.5) + " H" + (THUOC_DAI + 6) + '" stroke="#f0d9a0" stroke-width="5"/>';
+    for (let k = 0; k < 12; k++) {
+      const x = phai ? k * PXN : THUOC_DAI - k * PXN, x2 = phai ? x + PXN / 2 : x - PXN / 2;
+      if (k) h += '<path d="M' + x + ' 3 v10" stroke="#b3560f" stroke-width="2.2"/><text x="' + x + '" y="' + (THUOC_CAO - 6) + '" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="' + (k > 9 ? 12.5 : 15) + '" fill="#6b2a00">' + k + "</text>";
+      h += '<path d="M' + x2 + ' 3 v5.5" stroke="#b3560f" stroke-width="1.5"/>';
+    }
+    return 'url("data:image/svg+xml,' + encodeURIComponent(h + "</svg>") + '")';
+  };
   // 25/11 17:19 thầy Thịnh: "đuốc thiết kế giống trò rước đuốc nhưng đứng ngang hông mỗi đội không đứng đằng sau" (bản 16:18 là đuốc đài
   //   sen đứng ở đầu ngoài mỗi đội, thầy chê). Dùng lại cây đuốc của trò Rước đuốc (../anh/duoc.webp: chân đá, thân đồng thắt nơ đỏ, chảo
   //   xếp củi), mỗi đội một cây, cắm ngay bên hông đội: trong hàng 4 bạn, ở khe giữa hai bạn nam (HINH.duoc), lùi vào trong sân một chút
@@ -199,6 +226,23 @@
     ["", DOGOC, NHO], ["", "∞", [60, 60]], ["the", '<span class="ct">∫ 2x dx = x² + C</span><b>Nguyên hàm</b>', CTL], ["cthuc", "(a + b)² = a² + 2ab + b²", [308, 40]], ["", HINHTRON, NHO], ["", "√", [42, 60]],
     ["cthuc", "e<sup>iπ</sup> + 1 = 0", [140, 40]], ["", BANGDEN, NHO]];
   const TRI_BO = [TRI_HINH, TRI_HINH_2];                 // bộ của Đội 1, bộ của Đội 2
+  // 26/11 11:09 thầy Thịnh: "lúc mà ngọn đuốc được thắp lên á, thì từ cái thân đuốc nó chạy lên trên cũng là các cái công thức toán, những cái
+  //   vấn đề liên quan toán học, kiểu nó chạy lên trên xong nó thông qua cái ngọn lửa nó bay lên á". BẢN MẪU, thầy chưa duyệt: MACH_LEO giây
+  //   trước lúc đuốc bùng lửa, các công thức và kí hiệu của chính đội đó (lấy từ bộ tri thức của đội: công thức viết dọc theo thân đuốc, kí
+  //   hiệu đứng thẳng) nối nhau chui ra từ đế đá, chạy dọc thân đồng lên chảo củi; dòng đầu vừa tới chảo thì lửa bùng lên, các dòng sau
+  //   chạy lên thong thả (MACH_V điểm ảnh mỗi giây), đi xuyên qua ngọn lửa (to dần), tới đỉnh lửa thì tan; sách, công thức, định lí vẫn bay
+  //   ra từ ngọn lửa như bản 8. Dòng công thức nằm cùng lớp với cây đuốc và ngọn lửa (sau lưng hai đội): bạn nào đứng trước cây đuốc thì
+  //   che khúc thân đuốc đó, đội thắng đi sang bắt tay rồi thì thấy cả thân đuốc. Đã thử cho công thức nằm đè lên các bạn (xoắn quanh thân
+  //   đuốc): chữ che mặt các bạn, rối, nên bỏ.
+  const MACH_LEO = 1.1, MACH_V = 92, MACH_CO = .78, MACH_HO = 26;                  // MACH_CO: cỡ chữ so với công thức bay lên (32 → 25); MACH_HO: hai dòng cách nhau
+  const MACH_Y0 = DUOC_DAY - 50, MACH_Y1 = MIENG - 156, MACH_DAI = MACH_Y0 - MACH_Y1, MACH_CHAO = MACH_Y0 - (MIENG + 14), MACH_RONG = 120;      // mặt đế đá; gần đỉnh lửa; quãng từ đế lên miệng chảo
+  const MACH_BO = TRI_BO.map(bo => {
+    const ds = bo.filter(h => (h[0] === "cthuc" && h[2][0] <= 250) || (h[0] === "" && h[1].charAt(0) !== "<")).map(h => ({ ct: h[0] === "cthuc", nd: h[1], dai: h[0] === "cthuc" ? h[2][0] * MACH_CO : 36 }));
+    let L = 0;
+    ds.forEach(g => { g.o = L + g.dai / 2; L += g.dai + MACH_HO; });
+    return { ds: ds, L: Math.max(L, MACH_DAI + 240) };
+  });
+  const MACH_N = Math.max(MACH_BO[0].ds.length, MACH_BO[1].ds.length);
   // Xếp làn cho từng hình để hình vẽ định lí, chân dung và công thức không đè lên nhau: các hình nối nhau bay lên cùng một tốc độ, hình sau
   //   thấp hơn hình trước một quãng đều, nên chỉ cần chọn cho mỗi hình một độ lệch ngang (so với cây đuốc, lúc đã xoè hết) sao cho khung
   //   của nó không chạm khung các hình ngay trước nó. Xếp lần lượt, chọn chỗ gần giữa nhất mà không chạm (không còn chỗ thì chọn chỗ chạm
@@ -265,7 +309,7 @@
   //   cả ván: T_TU_HOA giây) thì trang tự sang bước thắp đuốc (KC.khiXongCau5 do tro-choi.js gắn)
   const T_TU = 1.7, T_TU_HOA = .9;
 
-  const S = { che: "an", q: 0, kc: [], t0: XA, phu: false, tinh: false, ket: 0, cues: [], L: null, d1Trai: false, doi: null, chay: null, daTu: false };
+  const S = { che: "an", q: 0, kc: [], t0: XA, phu: false, tinh: false, ket: 0, cues: [], L: null, d1Trai: false, doi: null, chay: null, daTu: false, m0: [0, 0] };
   let E = null;
 
   /* ---------- ghi vào DOM chỉ khi đổi ---------- */
@@ -341,6 +385,8 @@
     DUOC.forEach(() => { h += '<div class="kc-quang" style="top:' + (MIENG - 76) + 'px"></div>'; });
     DUOC.forEach(() => { h += '<img class="kc-duoc" src="hinh/duoc.webp" alt="" draggable="false" style="top:' + (DUOC_DAY - DUOC_H) + "px;width:" + DUOC_W + "px;height:" + DUOC_H + 'px">'; });
     DUOC.forEach(() => { h += '<div class="kc-lua" style="top:' + (MIENG + 6) + 'px">' + LUA + "</div>"; });
+    // 26/11 11:09 (bản mẫu): công thức chạy dọc thân đuốc lên chảo củi rồi xuyên qua ngọn lửa (nằm trên cây đuốc và ngọn lửa, sau hai đội)
+    DUOC.forEach(() => { h += '<div class="kc-mach" style="top:' + MACH_Y1 + "px;width:" + MACH_RONG + "px;height:" + MACH_DAI + 'px">' + new Array(MACH_N + 1).join("<i></i>") + "</div>"; });
     h += '<div class="kc-vach"></div><div class="kc-chu-vach" id="kcChuVach">VẠCH GIỮA</div>';
     // vệt gió khi kéo (nằm sau hai đội)
     for (let k = 0; k < VUT; k++) h += '<i class="kc-vut" style="width:' + (150 + (k * 53) % 150) + 'px"></i>';
@@ -355,6 +401,9 @@
       // dây nằm dưới đất (hiện khi hai đội buông dây) và hai nửa sợi dây giữa hai đội (vẽ lại từng khung hình cho khít tay hai đội); chỗ đứng,
       //   vân dây theo đội đang đứng mỗi bên do datBen() đặt
       '<div class="kc-day-dat t"></div><div class="kc-day-dat p"></div><div class="kc-day t"></div><div class="kc-day p"></div>' +
+      // 26/11 11:09 (bản mẫu): hình Toán ở khúc dây giữa hai đội, kiểu theo KIEU_DAY
+      (KIEU_DAY === "thuoc" ? '<div class="kc-thuoc-do t"></div><div class="kc-thuoc-do p"></div>' : KIEU_DAY === "khong" ? "" :
+        TOAN_O.map((o, i) => '<div class="kc-toan ' + KIEU_DAY + '"><span class="la"><span class="lac" style="animation-delay:-' + (i * .55).toFixed(2) + 's">' + (KIEU_DAY === "co" ? CO_TOAN[i] : HAT_TOAN[i]) + "</span></span></div>").join("")) +
       HINH.map(H => '<div class="kc-doi-boc">' + TU_THE.map(p => '<img class="kc-doi" data-p="' + p + '" src="hinh/' + H.k + "-" + p + '.webp" alt="" draggable="false"' +
         (p === "thang" && H.dinh ? ' style="top:' + (-H.dinh / H.h * 100).toFixed(3) + "%;height:" + ((H.h + H.dinh) / H.h * 100).toFixed(3) + '%"' : "") + ">").join("") + "</div>").join("") +
       // từng bạn chìa tay bắt tay (xếp theo ĐỘI rồi theo bạn): khung gốc đặt ở giữa hai bàn chân, <i> là bóng dưới chân
@@ -416,6 +465,7 @@
       g: g, world: $("#world"), canh: $("#kcCanh", g), nhom: $("#kcNhom", g), den: $("#kcDen", g), neo: $("#kcNeo", g), chuVach: $("#kcChuVach", g), boc: boc,
       hinh: boc.map(el => tat(".kc-doi", el).map(i => ({ el: i, p: i.dataset.p }))), ban: [ban.slice(0, 4), ban.slice(4, 8)], tiaBat: tat(".kc-tia.bt").map(el => ({ el: el, i: tat("i", el) })), day: tat(".kc-day"), dayDat: tat(".kc-day-dat"), tenDoi: tat(".kc-ten-doi"),
       vut: tat(".kc-vut"), ho: [tat(".kc-ho.b0"), tat(".kc-ho.b1")], no: $("#kcNo", g), thang: $("#kcThang", g), thangDoi: tat("#kcThang .th-nho span"), la: tat(".kc-la:not(.nen)"), hoa: tat(".kc-hoa"), tia: $("#kcTia", g), tiaI: tat("#kcTia i"),
+      toan: tat(".kc-toan"), toanLa: tat(".kc-toan .la"), thuocDo: tat(".kc-thuoc-do"), mach: tat(".kc-mach").map(el => ({ el: el, i: tat("i", el) })),
       lua: tat(".kc-lua"), quang: tat(".kc-quang"), duoc: tat(".kc-duoc"), tri: [tat(".kc-tri.x0"), tat(".kc-tri.x1")], bongDoi: tat(".kc-bong-doi"),
       dat: $("#kcDat", g), nutDat: tat(".kc-nut"), vetDat: tat(".kc-vet"), vongDat: $(".kc-vong-dat", g), soi: tat(".kc-soi"), khoi: [tat(".kc-khoi.b0"), tat(".kc-khoi.b1")],
       bui: [tat(".kc-bui.b0"), tat(".kc-bui.b1")], mui: [$(".kc-mui.m1", g), $(".kc-mui.m2", g)], soNac: $("#kcSoNac", g),
@@ -429,6 +479,7 @@
     E.hinh.forEach(ds => ds.forEach(o => { if (o.el.decode) o.el.decode().catch(function () { /* hình chưa tải kịp: trình duyệt tự vẽ khi có */ }); }));
     E.ban.forEach(ds => ds.forEach(o => { if (o.img.decode) o.img.decode().catch(function () { /* như trên */ }); }));
     E.nut.addEventListener("click", function () { if (am().mo) am().mo(); if (KC.khiBam) KC.khiBam(S.che); });
+    E.thuocDo.forEach((el, b) => { el.style.backgroundImage = thuocNen(b === 1); });
     datBen(); ghiThe();
   }
   // gắn tên, màu, hình của hai đội vào đúng bên đang đứng (E.boc, E.hinh xếp theo ĐỘI; bóng, dây, nhãn, bụi xếp theo BÊN)
@@ -447,6 +498,8 @@
       kieu(E.quang[b], "left", px(DUOC[b].x)); kieu(E.duoc[b], "left", px(DUOC[b].x - DUOC_W / 2)); kieu(E.lua[b], "left", px(DUOC[b].x));
       // tri thức bay lên từ cây đuốc bên này: bộ của đội đang đứng ở đây (20:14: "hai bên đừng giống nhau")
       E.tri[b].forEach((el, k) => { const tr = TRI_BO[d][k], cls = "kc-tri x" + b + (tr[0] ? " " + tr[0] : ""); if (el.className !== cls) el.className = cls; html(el, tr[1]); });
+      kieu(E.mach[b].el, "left", px(DUOC[b].x - MACH_RONG / 2));
+      E.mach[b].i.forEach((el, k) => { const g = MACH_BO[d].ds[k], cls = g ? (g.ct ? "ct" : "kh") : ""; if (el.className !== cls) el.className = cls; html(el, g ? g.nd : ""); });
       // hình từng bạn: gốc xoay và lật là điểm giữa hai bàn chân; đội đứng bên phải thì lật lại cho quay mặt sang trái
       E.ban[d].forEach((o, k) => {
         const B = H.ban[k], im = o.img;
@@ -702,6 +755,23 @@
     kieu(el, "width", px((dai + 7) / k));
     kieu(el, "transform", "translate(" + px(a[0] - ux * lui) + "," + px(a[1] - uy * lui - H.vanH * H.s / 2) + ") rotate(" + (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(2) + "deg)" + (k !== 1 ? " scale(" + k.toFixed(3) + ")" : ""));
   }
+  // 26/11 11:09 (bản mẫu): hình Toán ở khúc dây giữa hai đội đi theo sợi dây. Cờ phép tính treo thẳng xuống từ dây (đung đưa bằng CSS, giật
+  //   theo nhịp kéo cùng dải lụa); hạt hình học xâu vào dây nên nghiêng theo dây; dải thước là hai nửa đi từ dải lụa ra tới nắm tay hai đội
+  //   (số đếm từ dải lụa). Dây rơi xuống đất thì cờ nằm bẹp như dải lụa.
+  function veToan(A, M, roi) {
+    if (!E.toan.length && !E.thuocDo.length) return;
+    const dx = A[1][0] - A[0][0], dy = A[1][1] - A[0][1], dai = Math.hypot(dx, dy) || 1, ux = dx / dai, uy = dy / dai, goc = (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(2);
+    E.toan.forEach((el, i) => {
+      const o = TOAN_O[i];
+      kieu(el, "transform", "translate(" + px(M[0] + ux * o) + "," + px(M[1] + uy * o) + ")" + (KIEU_DAY === "hinh" ? " rotate(" + goc + "deg)" : roi > 0 ? " scaleY(" + (1 - .55 * roi).toFixed(3) + ")" : ""));
+      lop(el, "nam", roi > .5);
+    });
+    E.thuocDo.forEach((el, b) => {
+      const w = Math.min(THUOC_DAI, Math.hypot(A[b][0] - M[0], A[b][1] - M[1]) + 5);
+      kieu(el, "width", px(w));
+      kieu(el, "transform", "translate(" + px(b ? M[0] : M[0] - w) + "," + px(M[1] - THUOC_CAO / 2) + ") rotate(" + goc + "deg)");
+    });
+  }
   // hai đội và sợi dây. P (mọi mảng theo BÊN): tt tư thế ("ban": hình cả đội ẩn, veBan vẽ từng bạn), ng độ ngả (độ, dương là ngả sang
   //   phải), nhay độ nhảy, rung, pop (giây từ lúc đổi tư thế), roi (0 đang cầm dây, 1 dây đã nằm dưới đất), vang (bên đang toả sáng, -1
   //   không), mung (đang nhảy mừng).
@@ -737,6 +807,7 @@
     // dải lụa đỏ buộc ở giữa dây: che chỗ hai nửa dây gặp nhau; dây rơi xuống đất thì dải lụa nằm bẹp
     kieu(E.neo, "transform", "translate(" + px(M[0] - 45) + "," + px(M[1] - 12) + ")" + (roiTB > 0 ? " scaleY(" + (1 - .55 * roiTB).toFixed(3) + ")" : ""));
     lop(E.neo, "nam", roiTB > .5);
+    veToan(A, M, roiTB);
     kieu(E.chuVach, "opacity", (1 - roiTB).toFixed(2));          // dải lụa nằm đè lên nhãn "VẠCH GIỮA" thì ẩn nhãn
   }
 
@@ -809,6 +880,26 @@
       }
       kieu(el, "opacity", a.toFixed(3));
       kieu(el, "transform", "translate(" + px(P[0]) + "," + px(P[1]) + ") translate(-50%,-50%) rotate(" + P[2].toFixed(1) + "deg) scale(" + P[3].toFixed(3) + ")");
+    });
+  }
+
+  // 26/11 11:09 (bản mẫu): dòng công thức chạy dọc thân đuốc bên b rồi xuyên qua ngọn lửa. tm: giây kể từ lúc dòng đầu chui ra khỏi đế đá
+  //   (âm: không có). Trong MACH_LEO giây đầu dòng đầu chạy nhanh từ đế lên tới miệng chảo (lúc đó lửa bùng), sau đó cả dòng chạy đều MACH_V
+  //   điểm ảnh mỗi giây, hết bộ thì quay vòng. Khung .kc-mach cắt hai đầu (mờ dần): dưới là mặt đế đá, trên là gần đỉnh lửa; qua miệng chảo
+  //   thì chữ to dần.
+  function veMach(b, tm) {
+    const C = E.mach[b];
+    if (!(tm >= 0)) { if (C._tat !== true) { C._tat = true; mo(C.el, 0); } return; }
+    if (C._tat !== false) { C._tat = false; mo(C.el, 1); }
+    const bo = MACH_BO[ben(b)], phi = tm < MACH_LEO ? MACH_CHAO * tm / MACH_LEO : MACH_CHAO + MACH_V * (tm - MACH_LEO);
+    C.i.forEach((el, k) => {
+      const g = bo.ds[k];
+      if (!g) { kieu(el, "opacity", "0"); return; }
+      const z = phi - g.o + g.dai / 2 + 8;          // dòng này đã ló ra khỏi đế bấy nhiêu điểm ảnh (âm: chưa tới lượt)
+      const x = z < 0 ? -1e4 : z % bo.L - g.dai / 2 - 8;
+      if (x < -g.dai / 2 - 8 || x > MACH_DAI + g.dai * .7 + 8) { kieu(el, "opacity", "0"); return; }
+      kieu(el, "opacity", "1");
+      kieu(el, "transform", "translate(" + (MACH_RONG / 2) + "px," + px(MACH_DAI - x) + ") translate(-50%,-50%)" + (g.ct ? " rotate(-90deg)" : "") + " scale(" + (1 + .32 * cl((x - MACH_CHAO + 20) / 110)).toFixed(3) + ")");
     });
   }
 
@@ -886,6 +977,7 @@
     const tran = che === "hoi" || che === "keo", ketCanh = che === "dich" || che === "tuong";
     const cuoi = trong(5), W = cuoi.thang, hg = huong();
     let p = 0, sao = [0, 0], lit = [0, 0], thap = [-1, -1], bayTri = -1, LB = null, thangChu = null;
+    const mach = [null, null];                        // giây kể từ lúc công thức bắt đầu chạy lên thân đuốc bên b (null: bước này không thắp đuốc đó)
     const C51 = (RD.SanKhau && RD.SanKhau.C51) || [955, 66];
     let sx = 0, sy = 0, la = 0, kh = 0, khD = 0, khLuc = 0, dangKeo = 0, moHUD = 1, an = 0;      // an: 0..1, các khung của lượt kéo mờ đi khi cả ván đã có đội thắng
     const buiT = [], datT = [];
@@ -951,7 +1043,9 @@
     /* --- phần kết: đuốc sáng, tri thức bay lên, bắt tay, tất cả bay về số 51 --- */
     if (ketCanh) {
       const bW = W ? ben(W - 1) : -1;
-      const sang = (b, luc) => { lit[b] = Math.max(lit[b], lin(u, luc, luc + .35)); thap[b] = u - luc; };
+      // 26/11 11:09 (bản mẫu): MACH_LEO giây trước lúc lửa bùng, công thức đã chạy từ đế đuốc lên (S.m0: đồng hồ lúc dòng công thức bắt đầu,
+      //   giữ lại để sang bước sau dòng công thức chạy tiếp không giật)
+      const sang = (b, luc) => { lit[b] = Math.max(lit[b], lin(u, luc, luc + .35)); thap[b] = u - luc; mach[b] = u - luc + MACH_LEO; S.m0[b] = S.t0 + luc - MACH_LEO; };
       if (che === "dich") {
         if (W) { sang(bW, T_D1); thangChu = { doi: W, b: bW, d: 9, mo: 1 }; } else { sang(0, T_D1); sang(1, T_D1); }
       } else {
@@ -971,6 +1065,7 @@
     kieu(E.nhom, "transform", "translateX(" + px(dx) + ")");
     kieu(E.canh, "transform", sx || sy ? "translate(" + px(sx) + "," + px(sy) + ")" : "");
     kieu(E.den, "transform", Math.abs(la) > .02 ? "rotate(" + la.toFixed(2) + "deg)" : "");
+    if (KIEU_DAY === "co") E.toanLa.forEach((el, i) => kieu(el, "transform", Math.abs(la) > .02 ? "rotate(" + (la * (i % 2 ? 1.25 : .95)).toFixed(2) + "deg)" : ""));
     const TT = tuTheDoi(che, q, u, W), P = { tt: [], ng: ng, nhay: nhay, rung: rung, pop: [-1, -1], roi: [0, 0], vang: fx.vang, mung: [false, false] };
     const nen = { tt: [], ng: [0, 0], nhay: [0, 0], rung: 0, pop: [-1, -1], roi: [0, 0], vang: -1, mung: [false, false] };
     let song = false;
@@ -991,6 +1086,7 @@
       mo(E.lua[b], a); mo(E.quang[b], a); lop(E.duoc[b], "sang", a > .5);
       if (a > 0) kieu(E.lua[b], "transform", a < 1 ? "scale(" + (.3 + .7 * ob(a)).toFixed(3) + ")" : "");
       veTri(b, thap[b] >= 0 ? thap[b] : a >= 1 ? 1e6 : -1, t, a >= 1, bayTri, C51);
+      veMach(b, mach[b] != null ? mach[b] : a >= 1 ? t - S.m0[b] : -1);
       E.bui[b].forEach((el, j) => {
         let o = 0, sc = .7, bx = 0, by = 0;
         buiT.forEach(f => {                         // đội bị kéo trượt chân nên bụi to hơn, bốc cao hơn
@@ -1176,7 +1272,7 @@
       if (!S.tinh) ve(t);
       else {                                          // sân đã đứng yên: chỉ còn hai đội gồng nhẹ hoặc nhảy mừng (dây đi theo), đuốc đang cháy thì tri thức vẫn bay lên
         if (S.song && S.doi) veDoi(t, S.doi);
-        if (S.chay) for (let b = 0; b < 2; b++) if (S.chay[b]) veTri(b, 1e6, t, true);
+        if (S.chay) for (let b = 0; b < 2; b++) if (S.chay[b]) { veTri(b, 1e6, t, true); veMach(b, t - S.m0[b]); }
       }
       tuThap(t);
     } catch (e) { console.error(e); }
