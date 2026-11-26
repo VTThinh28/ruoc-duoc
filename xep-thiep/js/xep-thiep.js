@@ -1990,9 +1990,7 @@
     S("rect", { "class": "mung-bong", x: 2, y: 5, width: w, height: h, rx: 16 }, g);
     S("rect", { "class": "mung-nen", x: 0, y: 0, width: w, height: h, rx: 16 }, g);
     S("rect", { "class": "mung-vien", x: 5, y: 5, width: w - 10, height: h - 10, rx: 12 }, g);
-    for (i = 0; i < 2; i++) {                     // hai dải nơ nhỏ hai bên dòng giữa
-      S("path", { "class": "mung-no", d: "M" + (i ? w - 20 : 20) + " 60l" + (i ? -9 : 9) + " -7v14z" }, g);
-    }
+    // 26/11 12:55 thầy: "chữ này bị dấu mũi tên 2 bên che nè, bỏ hết mấy dấu mũi tên đi nhé." → bỏ hai dải nơ nhỏ hai bên dòng giữa.
     return { lop: lop, hoa: hoa, W: W, H: bc.H * U,
       d1: Sc(g, w / 2, 36, "mung-d1", "", { "text-anchor": "middle" }),
       d2: Sc(g, w / 2, 70, "mung-d2", "", { "text-anchor": "middle" }),
