@@ -1205,6 +1205,8 @@
     function veGV() {                              // nút chỉ giáo viên có
       $("dtGoiY").hidden = !gvDung;
       $("thiepSua").hidden = !gvDung;
+      if (O && O.kh) veO();                        // 26/11: mã giáo viên vừa được nhận lúc bảng nhập đang mở: hiện nút "AI hỗ trợ nhóm"
+      veAi();                                      // 26/11 11:21: nút "AI hỗ trợ nhóm nhiệm vụ 1"
       $("thiepChu").textContent = gvDung ? "Nhóm đã bấm Hoàn thành. Chỉ thầy mở lại được cho nhóm sửa hình." : "Hình đã lên thiệp. Cả nhóm nhìn số trên từng mảnh để dán giấy nhé. Muốn sửa lại hình thì báo giáo viên.";
     }
     if (laGV) {
@@ -1276,13 +1278,34 @@
       if (!lanDau || du10) du10Cu = du10;
       tat($("nhapSang"), !duocXep());
       an($("nhapDuoi"), !duocXep());          // nút sang bước 2 chỉ hiện khi giáo viên đã mở bước 2 (trước đó là một nút mờ không bấm được, rối mắt)
+      veAi();
       if (O.kh) veO();
+      xetHopAi();
+    }
+    /* 26/11 11:21, thầy: "trên app giáo viên, ngay ngoài màn hình nhóm một cũng sẽ có nút AI hỗ trợ nhóm nhiệm vụ 1" (kèm ảnh màn "Thầy đang xem màn hình Nhóm 1").
+       Nút nằm ở chân màn nhiệm vụ 1, chỉ khi thầy đang Xem ĐT nhóm (mã giáo viên đúng) và nhóm chưa đúng đủ 10 mục. Bấm thì hỏi lại; thầy đồng ý thì mọi mục còn lại
+       (kể cả mục đang khóa) được ghi là đúng cho nhóm trong MỘT lần ghi, như các em tự nhập đúng (kèm giờ về đích), điện thoại của nhóm và tivi thấy ngay. */
+    function veAi() {
+      an($("nhapAi"), !gvDung || demDung(nhap) === THU_TU.length);
+      tat($("nhapAiNut"), !T);
+      $("nhapAi").classList.toggle("tren", !$("nhapDuoi").hidden);      // nút "Sang nhiệm vụ 2" đang hiện ngay dưới: bỏ khoảng trống ở chân nút AI
+    }
+    /* Bảng hỏi của hai nút AI (moHop với ai: { kh } hoặc { nv1: 1 }). Trước 26/11 bảng hỏi chỉ dùng ở bàn xếp nên doiMan đóng nó mỗi lần dữ liệu của nhóm đổi
+       lúc đang ở màn nhiệm vụ 1; nay bảng hỏi của nút AI ở lại tới khi thầy bấm, trừ khi việc đã xong (nhóm vừa nhập đúng mục đó, mục vừa bị khóa, nhóm đã đúng đủ
+       10 mục) hay máy đổi màn. */
+    var hopAi = null;
+    function xetHopAi() {
+      if (!hopAi || $("hop").hidden) return;
+      if (hopAi.kh ? O.kh !== hopAi.kh || nhap[hopAi.kh] || biKhoa(hopAi.kh) : demDung(nhap) === THU_TU.length) dongHop();
     }
 
     /* --- bảng nhập một mục --- */
     var O = { kh: null, v: [], i: 0, kq: null, bao: "", lopBao: "", dong: null };
+    /* 26/11 11:21, thầy: "Ô sau đổi tên thành nhập ô tiếp theo. dấu vẫn vẽ nhưng ghi kế bên chữ xóa." data-p: tên phím cho bài thử (không phụ thuộc chữ trên phím). */
     "1 2 3 4 5 6 7 8 9 xoa 0 tiep".split(" ").forEach(function (p) {
-      var b = H("button", "phim" + (p === "xoa" || p === "tiep" ? " phu" : ""), p === "xoa" ? "⌫" : p === "tiep" ? "Ô sau" : p, $("oPhim"));
+      var b = H("button", "phim" + (p === "xoa" ? " phu xoa" : p === "tiep" ? " phu tiep" : ""), p === "xoa" ? null : p === "tiep" ? "Nhập ô tiếp theo" : p, $("oPhim"));
+      b.setAttribute("data-p", p);
+      if (p === "xoa") { H("span", "phim-bieu", "⌫", b).setAttribute("aria-hidden", "true"); H("span", null, "Xóa", b); b.setAttribute("aria-label", "Xóa"); }
       b.onclick = function () { bam(p); };
     });
     function moO(kh) {
@@ -1349,7 +1372,7 @@
     }
     function veO() {
       var kh = O.kh, M = MUC[kh], d = nhap[kh], hop = $("oO"), kb = biKhoa(kh);
-      $("oTen").textContent = M.ten;
+      $("oTen").textContent = M.ten.replace("thang cân", "thang\u00a0cân").replace(/\(mảnh (to|nhỏ)\)/, "(mảnh\u00a0$1)");      // 26/11 11:21: tên to hơn, tên dài xuống dòng: giữ "thang cân", "(mảnh to)" liền một dòng
       if (M.so && M.so.length > 1) H("small", null, "có 2 hình cùng diện tích", $("oTen"));   // thầy dặn 14/11 16:06
       hop.textContent = "";
       M.o.forEach(function (x, i) {
@@ -1372,6 +1395,7 @@
       $("oPhim").classList.toggle("tat", !!d || kb);
       $("oKiem").disabled = !!d || !T || kb;
       $("oKiem").textContent = d ? "Đã đúng" : kb ? "Đã khóa" : "Kiểm tra";
+      $("oGv").hidden = !gvDung || !!d || kb;      // 26/11 10:49: chỉ máy giáo viên (mã đúng) mới có; mục đã đúng hoặc đang khóa thì không hiện
       var hinh = $("oHinh").querySelector(".o-svg .than");
       if (hinh && M.manh) hinh.setAttribute("fill", d ? mau[M.so[0] - 1] : "#f1ece2");
       baoNhap();
@@ -1407,6 +1431,37 @@
         veNhap();
       }
     };
+    /* 26/11 10:49, thầy: "khi mà tôi xem điện thoại nhóm 1 chẳng hạn, thì đang là nhiệm vụ 1 … riêng cái trang giáo viên thôi nha … ví dụ tôi bấm vô hình bình hành
+       thì … phía dưới nút kiểm tra sẽ có cái nút là giáo viên điền đáp án. Rồi sau đó tôi bấm kiểm tra để làm cho các em luôn … Tương tự như vậy cho cái diện tích
+       tấm thiệp rồi các cái kiểu vậy luôn … nếu mà ví dụ mà các em chậm quá thì tôi làm cho các em luôn."
+       Nút chỉ điền số đúng vào các ô (trên máy thầy thôi: máy giáo viên không báo màn nhập lên tivi, xem baoNhap). Thầy bấm Kiểm tra thì mục đó mới được ghi là đúng
+       cho cả nhóm, y như các em tự nhập. Thứ tự các mục giữ như cũ (tổng cần đủ 7 mảnh trước; phần còn lại cần tổng và tấm thiệp). Mục đang khóa: thầy mở khóa trước. */
+    /* 26/11 11:21, thầy: "giáo viên điền đáp án nhớ có xác nhận nhé và đổi tên thành AI hỗ trợ nhóm." Bấm nút thì hỏi lại trước; đồng ý thì mới điền số,
+       rồi thầy bấm Kiểm tra như cũ. */
+    $("oGv").onclick = function () {
+      var kh = O.kh; if (!gvDung || !kh || nhap[kh] || biKhoa(kh)) return;
+      moHop({ kieu: "ai", ten: "AI hỗ trợ nhóm", dong: ["Điền sẵn đáp án đúng cho mục “" + MUC[kh].ten + "”?", "Điền xong, thầy bấm Kiểm tra để ghi cho nhóm."], phu: "Không", chinh: "Điền đáp án", ai: { kh: kh }, lam: function () {
+        if (O.kh !== kh || nhap[kh] || biKhoa(kh)) return;      // trong lúc hỏi, mục đã đổi (nhóm vừa nhập đúng, vừa bị khóa)
+        O.v = MUC[kh].o.map(function (x) { return String(x.dung); }); O.i = O.v.length - 1; O.kq = null;
+        O.bao = "AI đã điền đáp án. Thầy bấm Kiểm tra để ghi cho nhóm."; O.lopBao = "";
+        veO();
+      } });
+    };
+    $("nhapAiNut").onclick = function () {
+      if (!gvDung || !T) return;
+      var con = THU_TU.filter(function (kh) { return !nhap[kh]; });
+      if (!con.length) return;
+      moHop({ kieu: "ai", ten: "AI hỗ trợ nhóm nhiệm vụ 1", dong: ["Ghi đúng luôn " + con.length + " mục còn lại của nhiệm vụ 1 cho Nhóm " + k + "?", con.some(biKhoa) ? "Mục đang khóa cũng được ghi đúng." : "", "Điện thoại của nhóm và tivi sẽ thấy nhóm đã xong nhiệm vụ 1."].filter(Boolean), phu: "Không", chinh: "Đồng ý", ai: { nv1: 1 }, lam: aiNv1 });
+    };
+    function aiNv1() {                             // ghi đúng mọi mục còn lại, một lần ghi (như $("oKiem").onclick: "s" = chưa sai lần nào, "d" = đúng sau khi sai)
+      if (!gvDung || !T) return;
+      var ghiD = {};
+      THU_TU.forEach(function (kh) { if (nhap[kh]) return; nhap[kh] = (sai[kh] || 0) === 0 ? "s" : "d"; ghiD["n" + k + "/d/" + kh] = nhap[kh]; });
+      if (!Object.keys(ghiD).length) return;
+      if (!h1Nhom) { h1Nhom = Math.round(T.gio()); ghiD["n" + k + "/h1"] = h1Nhom; }      // giờ về đích (cùng một lần ghi)
+      T.update(ghiD);
+      veNhap();
+    }
     $("nhapSang").onclick = function () { if (duocXep()) { man = "xep"; doiMan(); } };
     /* (14/11 14:03, thầy dặn "số đo 10/10 xóa ô đó đi": bàn xếp không còn nút quay về bước nhập số đo) */
 
@@ -1570,6 +1625,7 @@
     function moHop(o) {                            // o = { kieu: "hoi" | "de" | "le", ten, dong: [chữ hoặc {chu, lop}], phu: chữ nút phụ (bỏ trống thì không có), chinh: chữ nút chính, lam: việc làm khi bấm nút chính }
       var hop = $("hop"), chu = $("hopChu");
       hop.className = "hop " + o.kieu;
+      hopAi = o.ai || null;                        // 26/11 11:21: bảng hỏi của nút AI (xem xetHopAi)
       $("hopTen").textContent = o.ten;
       chu.textContent = "";
       o.dong.forEach(function (d) { H("p", typeof d === "string" ? null : d.lop, typeof d === "string" ? d : d.chu, chu); });
@@ -1803,7 +1859,8 @@
       an($("manNhap"), ten !== "nhap"); an($("manXep"), ten !== "xep"); an($("manThiep"), ten !== "thiep");
       chu($("dtTen"), ten === "nhap" ? "Nhiệm vụ 1: Đo đạc và tính toán" : ten === "xep" ? "Nhiệm vụ 2: Xếp hình" : "Tấm thiệp đã xong");
       if (ten !== "nhap" && O.kh) dongO();
-      if (ten !== "xep") { dongHop(); $("goiY").hidden = true; }
+      if (ten !== "xep") { if (ten !== tenCu || !hopAi) dongHop(); $("goiY").hidden = true; }      // 26/11 11:21: bảng hỏi của nút AI ở màn nhiệm vụ 1 không tự đóng mỗi lần dữ liệu đổi
+      else if (hopAi && !$("hop").hidden) dongHop();      // vừa sang bàn xếp lúc bảng hỏi của nút AI còn mở: đóng
       if (ten === "thiep") veThiepXong();
       if (tuMayChu === true && ten === tenCu && !document.hidden && window.requestAnimationFrame) coBanSau(); else coBan();
       tenCu = ten;
@@ -2174,6 +2231,7 @@
     [1, 2, 3, 4].forEach(function (k) {
       var o = $("khung" + k), svg = o.querySelector("svg.thiep"), K = dungKhung(svg, k);
       K.o = o; K.hien = {}; K.daVe = {}; K.thuTu = ""; K.tt = o.querySelector(".tt"); K.xong = false; K.pha = "";
+      K.noi = H("div", "ket-noi", null, o); H("b", null, "Nhóm " + k, K.noi); H("span", null, "đã kết nối", K.noi);      // 26/11 10:52, xem baoKetNoi
       khungNhom[k] = K;
       o.querySelector(".the").onclick = function () { phong_to(k); };
       svg.onclick = function () { if (chamHien) { chamAnBang(k, false); return; } phong_to(k); };      // đang chấm điểm mà bảng nhóm này đang ẩn: chạm tấm thiệp là hiện lại bảng (không hiện to thiệp)
@@ -2468,6 +2526,7 @@
       if (thuTu !== K.thuTu) { K.thuTu = thuTu; ds.forEach(function (x) { K.lop.appendChild(K.g[x.so]); }); }   // chỉ xếp lại lớp khi thứ tự trên dưới đổi (xếp lại làm đứt chuyển động)
       var may = d.co ? Object.keys(d.co).length : 0, nd = demDung(nhap);
       K.o.classList.toggle("co-may", may > 0);
+      if (may > 0 && !daVao[k] && K.daNhan && xem === "vao" && K.o.classList.contains("hien-ma")) baoKetNoi(k);      // 26/11 10:52: máy đầu tiên của nhóm vừa vào lúc mã QR của nhóm còn hiện
       if (may > 0 || (d.s && Object.keys(d.s).length)) daVao[k] = true;      // nhóm đã có máy vào (16/11 22:08): mã QR trên thiệp nhóm đó ẩn hẳn, xem hienMa
       if (nd === THU_TU.length && !d.h1 && T && !K.henH1) K.henH1 = setTimeout(function () {      // bài cũ (trước 16/11 22:08) hay máy nhóm không ghi được giờ về đích: tivi ghi thay sau 2,5 giây
         var d2 = duLieu[k] || {}; K.henH1 = 0;
@@ -2492,6 +2551,18 @@
     /* 16/11 22:08, thầy: "khi học sinh quét qr thì trên màn hình tivi sẽ hiện ra phần nhiệm vụ 1 khi học sinh làm luôn nhé, không cần chờ tôi bấm."
        Từ đó mã QR trên thiệp của một nhóm ẩn ngay khi nhóm đó có máy vào (daVao; trước đây phải chờ nhóm nhập đúng mục đầu tiên hoặc thầy bấm Ẩn mã QR).
        Máy của nhóm tắt màn hình hay rớt mạng thì mã không hiện lại (daVao giữ tới khi tải lại trang tivi). Muốn hiện lại mã cho máy vào sau: nút Hiện mã QR. */
+    /* 26/11 10:52, thầy: "học sinh quét xong thì cái mã QR biến mất, nó sẽ hiện lên một cái dòng chữ thật to nhé … chỉ đơn giản là ghi là nhóm 1 đã kết nối, rồi sau đó
+       khoảng tầm 5 giây rồi mới bắt đầu hiện ra cái màn hình nhóm 1 đang mà làm. Ý là trên điện thoại các em cứ làm bình thường thôi, nhưng mà ở trên cái màn hình TV
+       á thì phải tầm 5 giây để cho giáo viên người ta dự giờ người ta thấy là cái QR này để làm cái gì ha."
+       Tấm phủ .ket-noi che kín tấm thiệp của nhóm trong KET_NOI_MS rồi mờ đi; bài của nhóm (bảng nhiệm vụ 1) vẫn được vẽ bên dưới như cũ, điện thoại không bị chậm lại.
+       Chỉ hiện khi mã QR của nhóm đang hiện và TỰ ẩn vì máy đầu tiên của nhóm vừa vào (xem = "vao"). Không hiện khi: tivi vừa tải lại mà nhóm đã có máy từ trước
+       (K.daNhan: đã nhận dữ liệu lần đầu của nhóm), máy thứ hai của nhóm vào, thầy đang bật "Hiện QR" (mã khi đó không tự ẩn). */
+    var KET_NOI_MS = 5000;
+    function baoKetNoi(k) {
+      var K = khungNhom[k];
+      K.o.classList.add("vua-noi"); clearTimeout(K.henNoi);
+      K.henNoi = setTimeout(function () { K.o.classList.remove("vua-noi"); }, KET_NOI_MS);
+    }
     function hienMa(k) { var d = duLieu[k] || {}; return xem === "ma" || (xem === "vao" && !(d.mo || d.xong || demDung(d.d) > 0 || daVao[k])); }
     function gioVeDich() {                         // giờ về đích của 4 nhóm (0: chưa đúng đủ 10 mục hoặc chưa có giờ)
       var h1 = {};
@@ -3277,7 +3348,7 @@
     [1, 2, 3, 4].forEach(function (k) { veNhom(k, null); });
     noi(phong, thu, trangThai).then(function (t) {
       T = t;
-      [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { veNhom(k, d); }); });
+      [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { veNhom(k, d); khungNhom[k].daNhan = true; }); });      // daNhan (26/11): đã vẽ dữ liệu lần đầu của nhóm, từ đây máy mới vào mới tính là "vừa kết nối"
       var daGhiGV = false;
       T.on("gv", function (v) {
         if (typeof v === "string" && /^[a-z0-9]{6}$/.test(v)) { if (v !== maGV) { maGV = v; try { localStorage.setItem("xt-gv", phong + ":" + maGV); } catch (e) { /* bỏ qua */ } veMaGV(); } }
@@ -3361,6 +3432,15 @@
     $("gvQr").onclick = function () { lenh("ma", tt("q") ? 0 : 1); };
     $("gvDap").onclick = function () { lenh("dap", tt("d") ? 0 : 1); };
     $("gvVe").onclick = function () { lenh("ve", 0); };
+    /* 26/11 10:49, thầy: "có thêm một cái phần ở trong điện thoại của giáo viên á, có ghi là mã QR của học sinh mà nằm ở dưới cuối, để ví dụ học sinh mà lỡ cái bấm
+       thoát ra khỏi cái phần điện thoại á, thì sẽ có thể dùng mã QR đó để vô lại. Có nghĩa là tôi đưa điện thoại cho học sinh quét, chứ không nhất thiết là phải
+       bấm lại cái phần ẩn hiện QR nữa". Cùng một link với 4 mã trên tivi (?p=<phòng>&n=0): em quét xong thì màn chọn nhóm chọn sẵn nhóm cũ của máy đó. Mã nằm sẵn, không phải bấm gì. */
+    (function () {
+      var l = location.origin + location.pathname + "?p=" + phong + "&n=0" + (thu ? "&thu=1" : ""), o = $("gvMaHsHinh"), q;
+      if (window.qrcode) { q = window.qrcode(0, "M"); q.addData(l); q.make(); o.innerHTML = q.createSvgTag({ cellSize: 4, margin: 4, scalable: true }); }
+      else o.textContent = l;
+      o.setAttribute("data-link", l);
+    })();
     bamHaiLan($("gvMoHet"), "Bấm lần nữa để mở cho cả 4 nhóm", function () { var o = {}; if (!T) return; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/mo"] = 1; }); T.update(o); });
     bamHaiLan($("gvXoaHinh"), "Bấm lần nữa để xóa cả 4 hình", function () { var o = {}; if (!T) return; [1, 2, 3, 4].forEach(function (k) { o["n" + k + "/m"] = null; o["n" + k + "/xong"] = null; }); T.update(o); });
     bamHaiLan($("gvLamLai"), "Bấm lần nữa để xóa hết", function () { var o = { dn: null, diem: null }; if (!T) return; [1, 2, 3, 4].forEach(function (k) { ["m", "xong", "d", "s", "mo", "khoa", "h1"].forEach(function (d) { o["n" + k + "/" + d] = null; }); }); T.update(o); });

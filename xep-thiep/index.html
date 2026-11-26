@@ -171,7 +171,8 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .o { position: absolute; inset: 0; z-index: 5; background: var(--nen); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
 .o-tren { display: flex; align-items: center; gap: 10px; padding: 7px 10px; }
 .o-tren .nut { min-height: 40px; padding: 0 14px; }
-#oTen { font-family: var(--chu-dam); font-weight: 700; font-size: 18px; color: #5a3a22; line-height: 1.2; min-width: 0; }
+#oTen { font-family: var(--chu-dam); font-weight: 700; font-size: 20px; color: #1d5bb8; line-height: 1.2; min-width: 0; text-wrap: balance; }   /* 26/11 11:21, thầy: "phần tên hình thì cho màu khác nổi bật nha" (trước: nâu #5a3a22, 18px) */
+.o-tren .nut { flex: none; white-space: nowrap; }   /* tên dài thì tên xuống dòng, nút Quay lại giữ một dòng */
 #oTen small { display: block; font-family: var(--chu-thuong); font-weight: 600; font-size: 13.5px; color: var(--chu-nhat); }
 .o-hinh { flex: 1; min-height: 64px; display: flex; align-items: center; justify-content: center; padding: 4px 16px; }
 .o-svg { display: block; width: 100%; max-height: 100%; overflow: visible; }
@@ -197,7 +198,11 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .o-bao.tot { color: #2f6b3c; font-weight: 600; }
 .o-phim { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 12px; }
 .phim { min-height: 46px; border: 2px solid var(--nut-vien); background: var(--nut); border-radius: 12px; font-size: 22px; font-weight: 600; }
-.phim.phu { font-size: 15px; }
+.phim.phu { font-size: 14.5px; line-height: 1.1; padding: 0 4px; }
+/* 26/11 11:21, thầy: "Ô sau đổi tên thành nhập ô tiếp theo. dấu vẫn vẽ nhưng ghi kế bên chữ xóa." */
+.phim.xoa { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.phim .phim-bieu { font-size: 21px; line-height: 1; }
+.phim.tiep { text-wrap: balance; }
 .phim:active { background: #f3e6cb; }
 .o-phim.tat { opacity: .35; pointer-events: none; }
 /* 15/11 19:02: mục nhập sai 3 lần thì khóa, hiện "Báo GVCN để mở khóa" */
@@ -224,6 +229,8 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .o-bao.khoa3 { font-size: 16.5px; font-weight: 700; }
 .o-duoi { padding: 7px 12px calc(8px + env(safe-area-inset-bottom)); }
 .o-duoi .nut { width: 100%; min-height: 52px; font-size: 17px; }
+/* 26/11 10:49: nút "Giáo viên điền đáp án", chỉ hiện khi thầy đang "Xem ĐT nhóm" (màu tím như nút Hình AI gợi ý, cũng là nút riêng của thầy) */
+.o-duoi .nut.o-gv { margin-top: 6px; min-height: 46px; font-size: 16px; }
 
 /* --- bước 2: bàn xếp có lưới --- */
 /* lưới phủ kín khung này (thầy dặn 14/11 14:03: lưới kéo dài ra cả những chỗ trống) */
@@ -255,6 +262,11 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
 .dt-nut3 .nut { width: 100%; min-height: 48px; margin: 0 0 calc(8px + env(safe-area-inset-bottom)); font-size: 16px; }
 .nut.goi-y-nut { background: #efe7ff; border-color: #9a7fd4; color: #47298c; }
 .nut.goi-y-nut:active:not(:disabled) { background: #e2d6fb; }
+/* 26/11 11:21: bảng hỏi lại của hai nút AI (viền tím, nút chính tím) và nút "AI hỗ trợ nhóm nhiệm vụ 1" ở chân màn nhiệm vụ 1 (chỉ máy giáo viên) */
+.hop.ai .hop-the { border-top-color: #9a7fd4; }
+.hop.ai #hopChinh { background: #6f4fc0; border-color: #553a9e; color: #fff; }
+.hop.ai #hopChinh:active { background: #5f41ad; }
+.nhap-duoi.nhap-ai.tren { padding-bottom: 0; }
 .hop.goi-y { align-items: center; z-index: 9; }
 .hop.goi-y .hop-the { border-top-color: #9a7fd4; padding: 14px 16px 16px; max-height: 100%; overflow-y: auto; }
 .goi-y-hinh { display: block; margin: 0 auto 8px; background: #fff; border-radius: 3px; box-shadow: 0 0 0 1.5px #d9c9ab; max-width: 100%; }
@@ -311,7 +323,7 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
   .o-bao { grid-column: 1; grid-row: 4; }
   .o-phim { grid-column: 2; grid-row: 2 / 4; align-content: center; }
   .o-duoi { grid-column: 2; grid-row: 4; }
-  .phim { min-height: 38px; } .o-so { height: 34px; }
+  .phim { min-height: 38px; } .o-so { height: 34px; } .phim.phu { font-size: 12.5px; }
   /* bảng Hình AI gợi ý khi cầm ngang: hình mẫu bên trái, chữ và 2 nút bên phải, để không phải kéo mới thấy nút */
   .hop.goi-y { justify-content: center; padding: 8px 12px; }
   .hop.goi-y .hop-the { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: 16px; align-content: center; width: auto; max-width: min(680px, 96vw); padding: 10px 16px 12px; }
@@ -334,9 +346,9 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
   .dong { min-height: 62px; } .dong-ten { font-size: 19px; } .dong-kq { font-size: 16px; } .dong.xong .dong-kq { font-size: 19px; }
   .nhap-duoi .nut, .o-duoi .nut { min-height: 62px; font-size: 20px; }
   .o > * { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
-  #oTen { font-size: 24px; } .o-nhan { font-size: 20px; } .o-dv { font-size: 18px; }
+  #oTen { font-size: 26px; } .o-nhan { font-size: 20px; } .o-dv { font-size: 18px; }
   .o-dong { grid-template-columns: 1fr 130px 50px; } .o-so { height: 54px; font-size: 28px; }
-  .phim { min-height: 62px; font-size: 28px; } .phim.phu { font-size: 18px; }
+  .phim { min-height: 62px; font-size: 28px; } .phim.phu { font-size: 18px; } .phim .phim-bieu { font-size: 26px; }
   .o-tong-o { font-size: 19px; } .o-chu { font-size: 19px; }
   .hop-the { max-width: 560px; padding: 26px 30px 26px; } .hop-the h2 { font-size: 32px; } .hop-chu p { font-size: 21px; } .hop-nut .nut { min-height: 66px; font-size: 21px; }
 }
@@ -507,7 +519,13 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
 .gv-duoi { margin-top: 7px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .gv-duoi > .nut { min-height: 44px; padding: 2px 6px; border-radius: 11px; font-size: 13.5px; line-height: 1.15; white-space: normal; }
 .gv-duoi > .gv-cd-mo { padding: 2px 10px; }
-.gv-duoi > .gv-cd, .gv-duoi > .gv-ghi { grid-column: 1 / -1; }
+.gv-duoi > .gv-cd, .gv-duoi > .gv-ghi, .gv-duoi > .gv-ma-hs { grid-column: 1 / -1; }
+/* 26/11 10:49: mã QR của học sinh nằm sẵn ở cuối máy giáo viên: em nào lỡ thoát ra thì quét mã này trên điện thoại của thầy để vào lại (cùng một mã với 4 mã trên tivi) */
+.gv-ma-hs { margin-top: 4px; padding: 10px 10px 12px; border: 2px solid var(--nut-vien); border-radius: 14px; background: #fff; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.gv-ma-hs b { font-family: var(--chu-dam); font-size: 18px; line-height: 1.2; }
+.gv-ma-hs-hinh { width: min(76vw, 300px); line-height: 0; font-size: 12px; word-break: break-all; }
+.gv-ma-hs-hinh svg { display: block; width: 100%; height: auto; }
+.gv-ma-hs p { margin: 0; font-size: 13.5px; line-height: 1.35; color: var(--chu-nhat); }
 @media (max-width: 345px) {      /* điện thoại rất hẹp (320): chữ nhỏ thêm một nấc để không tràn ngang */
   #gv { padding-left: 6px; padding-right: 6px; }
   .gv-4nut { gap: 3px; }
@@ -560,6 +578,11 @@ body.tv { background: #130c06; }
 .khung .ma-phu { position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; padding: 12px; display: none; gap: 14px; background: rgba(255, 253, 248, .96); border-radius: 2px; }
 .khung.hien-ma .ma-phu { display: flex; }
 .khung.lon .ma-phu { display: none; }
+/* 26/11 10:52: nhóm vừa quét mã vào thì mã QR ẩn, tấm thiệp của nhóm hiện chữ thật to "Nhóm k đã kết nối" trong 5 giây rồi mới hiện bài của nhóm (xem baoKetNoi) */
+.khung .ket-noi { position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #fffdf8; border-radius: 2px; text-align: center; color: var(--mau); font-family: var(--chu-dam); font-weight: 800; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 450ms ease, visibility 0s linear 450ms; }
+.khung.vua-noi .ket-noi { opacity: 1; visibility: visible; transition: opacity 250ms ease; }
+.khung .ket-noi b { font-size: 92px; line-height: 1.05; font-weight: 800; white-space: nowrap; }
+.khung .ket-noi span { font-size: 64px; line-height: 1.1; white-space: nowrap; }
 .khung.dung .ma-phu { flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
 #khung4 .ma-phu { flex-direction: row; align-items: flex-end; justify-content: flex-start; text-align: left; }
 #khung2 .ma-phu { flex-direction: row-reverse; align-items: flex-end; justify-content: flex-start; text-align: right; }
@@ -982,6 +1005,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <div id="nhapManh" class="nhap-luoi"></div>
         <div id="nhapDong" class="nhap-dong"></div>
       </div>
+      <div id="nhapAi" class="nhap-duoi nhap-ai" hidden><button id="nhapAiNut" class="nut goi-y-nut">✦ AI hỗ trợ nhóm nhiệm vụ 1</button></div>
       <div id="nhapDuoi" class="nhap-duoi" hidden><button id="nhapSang" class="nut chinh" disabled>Sang nhiệm vụ 2: Xếp hình</button></div>
     </section>
 
@@ -1029,7 +1053,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
       <div id="oO" class="o-o"></div>
       <p id="oBao" class="o-bao"></p>
       <div id="oPhim" class="o-phim"></div>
-      <div class="o-duoi"><button id="oKiem" class="nut chinh">Kiểm tra</button></div>
+      <div class="o-duoi"><button id="oKiem" class="nut chinh">Kiểm tra</button><button id="oGv" class="nut goi-y-nut o-gv" hidden>✦ AI hỗ trợ nhóm</button></div>
     </div>
   </div>
 </div>
@@ -1082,7 +1106,8 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
         <p>Xóa cả số đo đã nhập, hình và điểm đã chấm của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Cả 4 nhóm hoàn thành thì máy này hỏi “Hiện pháo hoa?”. Hiện chấm điểm: tivi hiện bảng chấm của 4 nhóm và bảng rubric, chấm trên tivi hay trên máy này đều được; trên tivi, bấm Ẩn ở bảng của nhóm nào thì bảng đó cất đi để nhìn tấm thiệp. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Cả 4 nhóm hoàn thành thì máy này hỏi “Hiện pháo hoa?”. Hiện chấm điểm: tivi hiện bảng chấm của 4 nhóm và bảng rubric, chấm trên tivi hay trên máy này đều được; trên tivi, bấm Ẩn ở bảng của nhóm nào thì bảng đó cất đi để nhìn tấm thiệp. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý, nút AI hỗ trợ nhóm nhiệm vụ 1 và nút AI hỗ trợ nhóm trong từng mục nhập. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <div id="gvMaHs" class="gv-ma-hs"><b>Mã QR của học sinh</b><div id="gvMaHsHinh" class="gv-ma-hs-hinh"></div><p>Em nào lỡ thoát ra thì quét mã này để vào lại.</p></div>
     </div>
     <div id="gvChamMan" class="gv-cm" hidden>
       <div class="gv-cm-dau"><b>Chấm điểm 4 nhóm</b><button id="gvChamX" class="nut gv-cm-x" aria-label="Tắt màn chấm điểm, tivi về báo tường"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>
@@ -1280,6 +1305,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=c621f24d"></script>
-<script src="js/xep-thiep.js?v=d0bab6e7"></script>
+<script src="js/xep-thiep.js?v=82ebf624"></script>
 </body>
 </html>
