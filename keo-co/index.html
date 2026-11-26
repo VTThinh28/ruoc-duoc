@@ -460,6 +460,10 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-duoc.sang{filter:brightness(1.1) drop-shadow(0 0 16px rgba(255,190,90,.85)) drop-shadow(0 6px 5px rgba(40,30,10,.38))}
 /* 25/11 19:25 thầy: "cái ngọn lửa đuốc thì cho nó đẹp hơn nhé, cho nó lấp lánh hơn": lửa ba lớp tô chuyển màu, hai lưỡi lửa nhỏ liếm lên
    (.l1, .l2), tàn lửa bay lên (.tl), sao nhỏ nhấp nháy (.ls), quầng sáng có tia toả chậm (.kc-quang) */
+/* 26/11 12:20: logo trường thay chiếc nơ đỏ trên thân đuốc; 13:29: đuốc trái logo cánh chim, đuốc phải huy hiệu tròn */
+.kc-huy{position:absolute;filter:drop-shadow(0 3px 3px rgba(40,30,10,.45));transition:filter .5s,transform .7s ease}
+/* đuốc đã thắp (màn về đích, màn bắt tay): các bạn đứng thẳng ngay trước đuốc, nên logo nhích lên trên đầu các bạn cho khỏi bị che */
+.kc-huy.sang{transform:translateY(-44px);filter:brightness(1.08) drop-shadow(0 0 10px rgba(255,200,100,.9)) drop-shadow(0 3px 3px rgba(40,30,10,.45))}
 .kc-lua{position:absolute;width:124px;height:198px;margin:-198px 0 0 -62px;transform-origin:50% 100%;opacity:0;filter:drop-shadow(0 0 14px rgba(255,190,70,.95)) drop-shadow(0 0 40px rgba(255,130,40,.75))}
 .kc-lua svg{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 100%;overflow:visible}
 .kc-lua .n{opacity:.95;animation:kcLua .47s ease-in-out infinite alternate}
@@ -541,6 +545,27 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 @keyframes kcDen{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
 .kc-den{position:absolute;inset:0;transform-origin:45px 12px;filter:drop-shadow(0 4px 4px rgba(40,20,0,.35))}
 .kc-den svg{display:block;width:100%;height:100%;overflow:visible}
+/* 26/11 11:09 thầy Thịnh: "thiết kế cho tôi cái sợi dây kéo co á, mà nó có hình ảnh liên quan đến môn toán". BẢN MẪU (thầy chưa chọn), ba kiểu ở
+   khúc dây giữa hai đội, js/keo-co.js (KIEU_DAY, veToan) đặt chỗ: .kc-toan.co lá cờ phép tính treo trên dây (.la giật theo nhịp kéo, .lac đung đưa),
+   .kc-toan.hinh hạt hình học xâu vào dây, .kc-thuoc-do dải thước đo mỗi vạch một nấc */
+.kc-toan{position:absolute;left:0;top:0;width:0;height:0;will-change:transform;filter:drop-shadow(0 3px 2px rgba(40,20,0,.32))}
+.kc-toan .la{position:absolute;left:-25px;top:-8px;width:50px;height:67px;transform-origin:50% 8px}
+.kc-toan .lac{display:block;width:100%;height:100%;transform-origin:50% 8px;animation:kcCoLac 1.9s ease-in-out infinite alternate}
+.kc-toan.nam .lac{animation:none}
+.kc-toan svg{display:block;width:100%;height:100%;overflow:visible}
+.kc-toan.hinh .la{left:-24px;top:-24px;width:48px;height:48px;transform-origin:50% 50%}
+.kc-toan.hinh .lac{animation:none}
+@keyframes kcCoLac{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.kc-thuoc-do{position:absolute;left:0;top:0;height:34px;background-repeat:no-repeat;background-size:240px 34px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3));will-change:transform,width}
+.kc-thuoc-do.t{background-position:right center;transform-origin:100% 50%}
+.kc-thuoc-do.p{background-position:left center;transform-origin:0 50%}
+/* 26/11 11:09 thầy Thịnh: "từ cái thân đuốc nó chạy lên trên cũng là các cái công thức toán [...] chạy lên trên xong nó thông qua cái ngọn lửa nó bay
+   lên". BẢN MẪU: .kc-mach là khung dọc theo cây đuốc (từ mặt đế đá lên gần đỉnh lửa, hai đầu mờ dần), trong đó công thức (.ct, viết dọc theo
+   thân đuốc) và kí hiệu (.kh, đứng thẳng) nối nhau chạy lên, xuyên qua ngọn lửa; js/keo-co.js (veMach) đặt chỗ từng khung hình */
+.kc-mach{position:absolute;overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 54px,#000 calc(100% - 14px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 54px,#000 calc(100% - 14px),transparent 100%)}
+.kc-mach i{position:absolute;left:0;top:0;white-space:nowrap;font:800 25px/1 var(--f-tieu);font-style:normal;letter-spacing:.3px;color:#fffbe0;-webkit-text-stroke:4.6px #a34a08;paint-order:stroke fill;text-shadow:0 0 8px rgba(255,214,110,.95),0 0 16px rgba(255,160,50,.65);opacity:0;will-change:transform}
+.kc-mach i.kh{font-size:38px;-webkit-text-stroke-width:5.4px}
+.kc-mach sup{font-size:.62em;line-height:0;vertical-align:.52em}
 .kc-dat{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .45s;pointer-events:none}
 .kc-nut{position:absolute;left:-115px;top:-38px;width:230px;height:96px;opacity:0;transform-origin:115px 38px;will-change:transform,opacity}
 .kc-nut::before{content:"";position:absolute;left:8%;right:8%;top:6%;bottom:14%;border-radius:50%;background:radial-gradient(ellipse at 50% 42%,rgba(58,40,22,.34) 0,rgba(58,40,22,.14) 45%,rgba(58,40,22,0) 70%)}
@@ -599,7 +624,9 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-bang .ten,.kc-chip .ten{font:800 44px/1 var(--f-tieu);white-space:nowrap}
 .kc-bang .the-so{font:600 19px/1.2 var(--f-chu);color:var(--muc2);white-space:nowrap}
 .kc-sao{display:flex;gap:4px;margin-left:auto}
-.kc-sao span{display:block;width:30px;height:30px}
+.kc-sao span{display:block;position:relative;width:34px;height:34px}
+.kc-sao b{position:absolute;left:0;top:1px;width:100%;height:100%;display:grid;place-items:center;font:800 13px/1 var(--f-tieu);color:#b7a078}   /* 26/11 12:20: ô sao thứ k là của câu k */
+.kc-sao span.co b{color:#6b2a00}
 .kc-sao svg{display:block;width:100%;height:100%;fill:none;stroke:#c9b28a;stroke-width:1.6}
 .kc-sao span.co svg{fill:#f2b531;stroke:#9c6a07;stroke-width:1.2}
 .kc-bang .keo{margin-top:12px;display:flex;align-items:center;gap:14px}
@@ -617,18 +644,38 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-bang.d2 .thanh i{background:linear-gradient(90deg,#f6b25c,#e9861c)}
 .kc-bang.thang{box-shadow:0 0 0 4px rgba(255,190,90,.85),0 0 28px rgba(255,170,60,.65),0 8px 22px rgba(0,0,0,.35)}
 .kc-bang.thang .thanh i{box-shadow:0 0 12px rgba(255,170,60,.8)}
+/* 26/11 12:20 thầy Thịnh: "đội nào thắng câu đó thì bảng của đội đó sẽ rực lửa xung quanh, nếu thắng liên tục thì lửa rực sáng hơn"; 13:29 thầy xem
+   bản mẫu rồi sửa: "làm cho cái khung này sáng lên thôi không cần lửa". Khung bảng của đội thắng câu sáng lên: viền vàng sáng quanh khung và
+   quầng sáng vàng toả ra (.kc-rang nằm ngay sau bảng, cùng chỗ, cùng cỡ, dưới dải hiệu ứng nên không che chữ), sáng thở nhẹ; sang1, sang2,
+   sang3 (thắng 1 câu, 2 câu liền, từ 3 câu liền): viền dày dần, quầng rộng và sáng dần. Không có lưỡi lửa, tàn lửa. */
+.kc-rang{position:absolute;top:136px;width:560px;height:164px;border-radius:22px;opacity:0;visibility:hidden;pointer-events:none}
+.kc-rang.ben-t{left:36px}
+.kc-rang.ben-p{left:1324px}
+.kc-rang::before{content:"";position:absolute;inset:0;border-radius:22px}
+.kc-rang.sang1::before{box-shadow:0 0 26px 10px rgba(255,216,92,.95),0 0 64px 22px rgba(255,198,70,.52);animation:kcRang 1.5s ease-in-out infinite alternate}
+.kc-rang.sang2::before{box-shadow:0 0 38px 17px rgba(255,222,104,1),0 0 96px 36px rgba(255,202,78,.68);animation:kcRang 1.3s ease-in-out infinite alternate}
+.kc-rang.sang3::before{box-shadow:0 0 52px 26px rgba(255,230,120,1),0 0 140px 58px rgba(255,206,86,.85);animation:kcRang 1.1s ease-in-out infinite alternate}
+@keyframes kcRang{0%{opacity:.72}100%{opacity:1}}
+.kc-bang.sang1{box-shadow:0 0 0 4px #ffd65a,0 0 9px 4px rgba(255,222,110,.9),inset 0 0 16px rgba(255,224,130,.5),0 8px 22px rgba(0,0,0,.35)}
+.kc-bang.sang2{box-shadow:0 0 0 5px #ffdb62,0 0 10px 5px rgba(255,226,116,.95),inset 0 0 24px rgba(255,224,130,.68),0 8px 22px rgba(0,0,0,.35)}
+.kc-bang.sang3{box-shadow:0 0 0 6px #ffe06c,0 0 11px 6px rgba(255,232,124,1),inset 0 0 32px rgba(255,224,130,.85),0 8px 22px rgba(0,0,0,.35)}
 .kc-chip{position:absolute;top:40px;width:384px;height:110px;padding:12px 18px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-content:center;white-space:nowrap}
 .kc-chip .ten{font-size:40px;grid-row:1/3;align-self:center}
 .kc-chip .nh{font:600 17px/1.2 var(--f-chu);color:var(--muc2)}
 .kc-chip .kc-sao{margin-left:0}
-.kc-chip .kc-sao span{width:26px;height:26px}
+.kc-chip .kc-sao span{width:30px;height:30px}
+.kc-chip .kc-sao b{font-size:12px}
 .kc-chip.ben-t{left:30px;border-left:10px solid var(--m)}
 .kc-chip.ben-p{left:1506px;border-right:10px solid var(--m)}
 .kc-bao{position:absolute;left:604px;top:132px;width:712px;text-align:center;color:#fff;padding:16px 8px 12px;border-radius:22px;background:rgba(14,18,40,.86);border:3px solid rgba(255,213,110,.8);box-shadow:0 8px 22px rgba(0,0,0,.35)}
-.kc-bao .lon{font:800 58px/1 var(--f-tieu);color:#fff;text-shadow:0 0 18px rgba(255,160,50,.95),0 0 4px rgba(255,160,50,.9),0 3px 6px rgba(0,0,0,.6);letter-spacing:.5px;white-space:nowrap;opacity:0}
-.kc-bao .vi{display:block;margin-top:10px;padding:0 8px;font:600 23px/1.35 var(--f-chu);opacity:0}
+.kc-bao .lon{font:800 54px/1 var(--f-tieu);color:#fff;text-shadow:0 0 18px rgba(255,160,50,.95),0 0 4px rgba(255,160,50,.9),0 3px 6px rgba(0,0,0,.6);letter-spacing:.5px;white-space:nowrap;opacity:0}
+.kc-bao .keo{margin-top:9px;font:800 38px/1.1 var(--f-tieu);color:#fff;white-space:nowrap;letter-spacing:.3px;opacity:0;text-shadow:0 2px 5px rgba(0,0,0,.6)}   /* 26/11 12:20: "đội 1 kéo 2 nấc + 1 nấc (in vàng để thể hiện hiệu ứng)" */
+.kc-bao .keo:empty{display:none}
+.kc-bao .keo b{display:inline-block;color:#ffd23a;text-shadow:0 0 14px rgba(255,190,60,.95),0 2px 5px rgba(0,0,0,.6);opacity:0;transform:scale(.4);transition:opacity .25s,transform .35s cubic-bezier(.3,1.7,.5,1)}
+.kc-bao .keo b.hien{opacity:1;transform:none}
+.kc-bao .vi{display:block;margin-top:8px;padding:0 8px;font:600 22px/1.32 var(--f-chu);opacity:0}
 .kc-bao .vi b{color:var(--vang2)}
-.kc-x2{position:absolute;left:1212px;top:122px;width:86px;height:86px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 62%,#c4850d);border:4px solid #fff3c4;display:grid;place-items:center;font:800 40px/1 var(--f-tieu);color:#6b2a00;box-shadow:0 0 22px rgba(255,200,90,.9),0 6px 12px rgba(0,0,0,.4);opacity:0}
+.kc-x2{position:absolute;left:1248px;top:110px;width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#f2b531 62%,#c4850d);border:4px solid #fff3c4;display:grid;place-items:center;font:800 34px/1 var(--f-tieu);color:#6b2a00;box-shadow:0 0 22px rgba(255,200,90,.9),0 6px 12px rgba(0,0,0,.4);opacity:0}
 /* thước nấc: nằm trên hai cụm nút góc dưới (--dayThe do san-khau.js tính).
    25/11 19:25 thầy Thịnh: "cái thanh mà qua trái qua phải [...] khi mà nó trượt về bên nào đó thì bên [đó] [...] sáng loáng lên để người ta
    biết là bên [đó] đang thắng nhá. Kiểu giống như là các cái thanh máu hay thanh năng lượng [...] của các cái game nhập vai". Bảng tối viền
@@ -744,10 +791,14 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
            26/11 00:45 thầy: "Mỗi câu hỏi sẽ cho đội chién thắng nhận được hiệu ứng riêng. hiệu ứng khai cuộc giữ nguyên như lúc đầu không đổi nhé":
            dòng đó ghi "hiệu ứng riêng" thay cho "sức mạnh riêng" và lại đủ 5 tên như lúc đầu. Thầy chỉ gõ tới chữ "riêng."; phần 5 tên sau dấu
            hai chấm là cách tôi hiểu chữ "giữ nguyên như lúc đầu", thầy chưa xác nhận.
-           CÒN LÀ BẢN NHÁP CỦA TÔI, thầy chưa duyệt: đoạn "Nhiệm vụ" và dòng thứ ba của "Cách chơi". Thầy gửi lời của thầy thì chép đúng từng
+           26/11 12:24 thầy: "viết lại hướng dẫn theo hướng 4 phép tính nhé và trong hướng dẫn sẽ có chỗ thêm chữ kéo co trong mục nhiệm vụ á. bạn đưa
+           tôi bản nháp trước đi"; xem bản nháp xong, 12:37 thầy: "giữ nguyên mục cách chơi trong phần luật như bản cũ, chỉ sửa lại nhiệm vụ thôi."
+           Nên "Cách chơi" để nguyên 5 dòng của bản 8; "Nhiệm vụ" thêm chữ "kéo co" và thay "kéo dải lụa đỏ" (nơ đã bỏ, 12:20) bằng "đưa bốn lá cờ
+           cộng, trừ, nhân, chia" (câu chữ là bản nháp của tôi gửi 12:27, thầy đọc rồi chỉ bảo giữ Cách chơi, chưa sửa chữ nào của Nhiệm vụ).
+           CÒN LÀ BẢN NHÁP CỦA TÔI, thầy chưa duyệt: dòng thứ ba của "Cách chơi" (đoạn "Nhiệm vụ": xem dòng trên). Thầy gửi lời của thầy thì chép đúng từng
            chữ vào đây, chỉ chia dòng. 25/11 16:18 chỉ còn 2 cây đuốc (của Đội 1 và Đội 2) nên "ngọn đuốc của nhóm" sửa thành "ngọn đuốc của đội mình". -->
       <h2>Nhiệm vụ</h2>
-      <p>Nhóm 1 và nhóm 2 ghép thành Đội 1, nhóm 3 và nhóm 4 ghép thành Đội 2. Nhiệm vụ của hai đội là trả lời 5 câu hỏi thầy đưa ra để kéo dải lụa đỏ về phía đội mình và thắp sáng ngọn đuốc của đội mình.</p>
+      <p>Nhóm 1 và nhóm 2 ghép thành Đội 1, nhóm 3 và nhóm 4 ghép thành Đội 2. Nhiệm vụ của hai đội là trả lời 5 câu hỏi thầy đưa ra để kéo co, đưa bốn lá cờ cộng, trừ, nhân, chia về phía đội mình và thắp sáng ngọn đuốc của đội mình.</p>
       <h2>Cách chơi</h2>
       <ul>
         <li>Khi câu hỏi hiện lên, mỗi bạn tự suy nghĩ và tính đáp án.</li>
@@ -890,18 +941,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="eb01f5db";</script>
-<script src="js/cau-hinh.js?v=eb01f5db"></script>
-<script src="js/scanlib.js?v=eb01f5db"></script>
-<script src="js/du-lieu.js?v=eb01f5db"></script>
-<script src="js/dong-bo.js?v=eb01f5db"></script>
-<script src="js/am-thanh.js?v=eb01f5db"></script>
-<script src="js/quet.js?v=eb01f5db"></script>
-<script src="js/cay-cau.js?v=eb01f5db"></script>
-<script src="js/san-khau.js?v=eb01f5db"></script>
-<script src="js/keo-co.js?v=eb01f5db"></script>
-<script src="js/tro-choi.js?v=eb01f5db"></script>
-<script src="js/nhanh.js?v=eb01f5db"></script>
-<script src="js/do.js?v=eb01f5db"></script>
+<script>window.RD_V="8ef1582f";</script>
+<script src="js/cau-hinh.js?v=8ef1582f"></script>
+<script src="js/scanlib.js?v=8ef1582f"></script>
+<script src="js/du-lieu.js?v=8ef1582f"></script>
+<script src="js/dong-bo.js?v=8ef1582f"></script>
+<script src="js/am-thanh.js?v=8ef1582f"></script>
+<script src="js/quet.js?v=8ef1582f"></script>
+<script src="js/cay-cau.js?v=8ef1582f"></script>
+<script src="js/san-khau.js?v=8ef1582f"></script>
+<script src="js/keo-co.js?v=8ef1582f"></script>
+<script src="js/tro-choi.js?v=8ef1582f"></script>
+<script src="js/nhanh.js?v=8ef1582f"></script>
+<script src="js/do.js?v=8ef1582f"></script>
 </body>
 </html>

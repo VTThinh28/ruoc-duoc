@@ -55,7 +55,9 @@
     if (!NH.src && dich > 0) {
       NH.g = ac.createGain();
       NH.g.gain.value = 0.0001;
-      NH.g.connect(tong);
+      NH.h = ac.createGain();          // nút hạ nhạc lúc có tiếng vỗ tay (haNhac)
+      NH.h.gain.value = 1;
+      NH.g.connect(NH.h); NH.h.connect(tong);
       NH.src = ac.createBufferSource();
       NH.src.buffer = NH.buf;
       NH.src.loop = true;
@@ -67,6 +69,18 @@
   // độ to nhạc: 0 tắt, 0.22 bình thường, 0.06 khi học sinh phát biểu (tro-choi.js, datNhac). 5/11: nhỏ lại theo ý thầy Thịnh, trước là 0.32 và 0.12;
   //   13/11: lúc học sinh phát biểu 0.08 → 0.06 và thêm lúc hỏi cả lớp ở màn báo tường
   A.nhacMuc = function (muc, giay) { NH.muc = muc; capNhatNhac(giay); };
+  // 26/11 12:41 thầy Thịnh: "lúc có tiếng vỗ tay thì phần nhạc phải nhỏ lại nhé". Nhạc nền đi qua thêm nút NH.h: tiếng vỗ tay vừa phát thì
+  //   nhạc hạ còn NHAC_VO phần của mức đang có (nhỏ đi khoảng 12 dB) trong chừng 0,25 giây, giữ tới gần hết tiếng vỗ tay (dai giây) rồi to
+  //   dần lại trong hơn 1 giây. Vỗ tay phát chồng lần nữa thì tính lại từ lần sau.
+  var NHAC_VO = 0.25;
+  function haNhac(dai) {
+    if (!ac || !NH.h) return;
+    var t = ac.currentTime, g = NH.h.gain;
+    g.cancelScheduledValues(t);
+    g.setTargetAtTime(NHAC_VO, t, 0.08);
+    g.setTargetAtTime(1, t + Math.max(0.8, dai - 1.5), 0.45);
+  }
+  A._nhac = NH; A._voTayDai = function () { return VT.buf ? VT.buf.duration : null; };          // cho bài thử đọc mức nhạc
   A.batNhac = function (on) { NH.batNhac = !!on; capNhatNhac(0.6); };
   A.nhacDangBat = function () { return NH.batNhac; };
   A.datBat = function (on) {
@@ -256,6 +270,7 @@
     g.gain.value = 0.55 * (manh == null ? 1 : manh);     // to hơn nhạc nền khoảng 4 dB (đo độ to LUFS của hai tệp)
     s.connect(g); g.connect(tong);
     s.start(ac.currentTime);
+    haNhac(VT.buf.duration);
   };
   A.lapLanh = function () {
     if (!san()) return;
