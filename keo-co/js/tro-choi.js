@@ -204,6 +204,7 @@
       $("#dtCamSoChu").textContent = con > 0 ? "Chưa ghi thẻ, chờ TV đếm xong" : "Bắt đầu ghi thẻ";
     }
     if (con > 0) chup.setAttribute("aria-disabled", "true"); else chup.removeAttribute("aria-disabled");
+    if (PQ) veNutNgau(emChuaQuet().length);   // 26/11: đang đếm thì chưa có nút Chọn đáp án ngẫu nhiên
     if (con > 0) trangThai("", "Đang đếm ngược " + con + " giây: máy chưa ghi thẻ, các em chưa giơ thẻ.");
     else if (con === 0) {
       trangThai("ok", "Hết giờ: các em giơ thẻ, máy bắt đầu ghi.");
@@ -1246,7 +1247,7 @@
   /* =====================================================================
      ĐIỆN THOẠI
      ===================================================================== */
-  var moCD = false, PQ = null, CHO = {}, soAnh = 0, anhCuoi = null, henGhi = 0, ghiCuoi = 0, menuThe = null;
+  var moCD = false, PQ = null, CHO = {}, soAnh = 0, anhCuoi = null, henGhi = 0, ghiCuoi = 0, menuThe = null, henNgau = 0, xacNgau = false;
   var ROT = { doc: 0, ngang: 0, live: 0 };
   // thẻ mới 12/11: chữ nằm trong mã, không tính theo cạnh nào ở trên, nên không có chuyện "xoay chữ" (ROT luôn bằng 0)
   // THAY[thẻ][chữ] = lúc vừa thấy chữ đó; HAI[thẻ] = lúc vừa thấy em đó giơ 2 thẻ khác chữ
@@ -1292,6 +1293,13 @@
       $("#dtChupChu").textContent = "Chụp một tấm ảnh";
     }
     $("#dtBatCam").addEventListener("click", function () { A.mo(); if (Q.Live.chay) dungCam(); else batCam(); });
+    // 26/11/2026 17:13 thầy Thịnh: nút "Chọn đáp án ngẫu nhiên" (chỉ có trên điện thoại). Bấm lần đầu: nút đỏ lên, ghi "Bấm thêm lần nữa
+    //   để xác nhận" (5 giây, quá thì về như cũ). Bấm lần hai: em nào chưa quét được thì máy chọn luôn cho em một đáp án ngẫu nhiên.
+    //   26/11 17:26 thầy: "Cái nút này nó sẽ hiện cái lúc mà tôi bấm quét. Tôi đang quét đấy, quét nếu mà quét không hết thì nó hiện. ...
+    //   Rồi sau khi chọn xong tôi bấm quét xong." Nên nút chỉ hiện khi đã bắt đầu quét mà còn em chưa quét được, có cả trên khung camera
+    //   toàn màn hình (#dtCamNgau, ngay trên thanh có nút Quét xong) lẫn dưới hai nút quét (#dtNgau). Hai nút chung một lần bấm xác nhận.
+    $("#dtNgau").addEventListener("click", bamNgau);
+    $("#dtCamNgau").addEventListener("click", bamNgau);
     $("#dtDen").addEventListener("click", function () {
       var b = this, on = b.getAttribute("aria-pressed") !== "true";
       Q.Live.den(on).then(function () { b.setAttribute("aria-pressed", on ? "true" : "false"); }, function () { b.hidden = true; });
@@ -1432,8 +1440,8 @@
       // 18/11: bản 4 thẻ đọc trúng mã là ghi, thẻ ngửa mặt mã trên bàn cũng được ghi, nên dặn các em trước câu 1
       (RD.BO_THE === "moi" ? " Dặn các em: mỗi câu chỉ giơ <b>1 thẻ</b>, mặt mã quay về phía thầy; <b>3 thẻ còn lại úp mặt mã xuống bàn</b>." : "") +
       " Xong thì bấm <b>Hiện câu 1</b>.";
-    else if (loai === "q") html = Q.coCamera() ? "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>: TV đếm từ 5 về 1, camera tự mở nhưng chỉ ghi thẻ khi TV báo <b>Giơ đáp án</b>. Lia chậm qua từng cụm nhóm, nhìn số thẻ còn thiếu của mỗi nhóm trên khung camera, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, quét lại không đổi." : "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>. Khi TV báo <b>Giơ đáp án</b>, đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, chụp lại không đổi.";
-    else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, hoặc chạm số thẻ để ghi Đúng, Sai hoặc Vắng (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>: từ lúc đó máy thôi ghi thẻ câu này.";
+    else if (loai === "q") html = Q.coCamera() ? "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>: TV đếm từ 5 về 1, camera tự mở nhưng chỉ ghi thẻ khi TV báo <b>Giơ đáp án</b>. Lia chậm qua từng cụm nhóm, nhìn số thẻ còn thiếu của mỗi nhóm trên khung camera, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, quét lại không đổi. Quét không hết thì bấm <b>Chọn đáp án ngẫu nhiên</b> (hiện ngay trên khung camera), bấm thêm lần nữa để xác nhận: em nào chưa quét được thì máy chọn ngẫu nhiên một đáp án, rồi bấm <b>Quét xong</b>." : "Đọc đề cho cả lớp nghe rồi bấm <b>Đếm ngược 5 giây</b>. Khi TV báo <b>Giơ đáp án</b>, đứng gần từng cụm nhóm, bấm <b>Chụp ảnh một nhóm</b>: mỗi cụm một tấm, chụp thêm nếu còn thiếu thẻ, rồi bấm <b>Quét xong</b>. Thẻ đã ghi thì giữ nguyên đáp án, chụp lại không đổi. Chụp không hết thì bấm <b>Chọn đáp án ngẫu nhiên</b>, bấm thêm lần nữa để xác nhận: em nào chưa quét được thì máy chọn ngẫu nhiên một đáp án, rồi bấm <b>Quét xong</b>.";
+    else if (loai === "k") html = "TV đang hiện số em chọn mỗi đáp án và số thẻ còn thiếu. Thẻ nào còn thiếu thì quét lại, chạm số thẻ để ghi Đúng, Sai hoặc Vắng, hoặc bấm <b>Chọn đáp án ngẫu nhiên</b> rồi bấm thêm lần nữa để xác nhận: em nào chưa quét được thì máy chọn ngẫu nhiên một đáp án (thẻ không ghi thì không tính đúng cũng không tính sai). Xong bấm <b>Đáp án</b>: từ lúc đó máy thôi ghi thẻ câu này.";
     else if (loai === "a") html = "TV hiện đáp án đúng và số bạn đúng của 2 đội. Máy đã thôi ghi thẻ câu này (em nào chưa có thì chạm số thẻ để ghi tay). Mời một em nêu cách làm, rồi bấm <b>Kéo co</b>.";
     else if (loai === "r") {
       var kcr = lichSuKC()[q], Kr = kcr && kcr.cau[q];
@@ -1467,14 +1475,18 @@
       soAnh = 0;
       $("#dtAnhKhung").hidden = true;
       trangThai("", "");
+      boXacNgau();
     }
-    // nhận kết quả từ máy khác (hoặc lúc trang vừa mở lại)
-    var sc = scanHopLe(q);
+    // nhận kết quả từ máy khác (hoặc lúc trang vừa mở lại). 26/11: sc.ngau = các thẻ máy đã chọn ngẫu nhiên đáp án (nn: 1 trong PQ.obs);
+    //   thẻ máy này chọn ngẫu nhiên mà máy khác đọc được thẻ thật thì lấy thẻ thật
+    var sc = scanHopLe(q), ng = (sc && sc.ngau) || {};
+    var nhan = function (k) { PQ.obs[k] = ng[k] ? { l: sc.cards[k], t: 0, nn: 1 } : { l: sc.cards[k], t: 0 }; };
     if (sc && sc.by !== TAB) {
-      Object.keys(sc.cards || {}).forEach(function (k) { var o = PQ.obs[k]; if (!o || !o.t) PQ.obs[k] = { l: sc.cards[k], t: 0 }; });
+      Object.keys(sc.cards || {}).forEach(function (k) { var o = PQ.obs[k]; if (!o || !o.t || (o.nn && !ng[k])) nhan(k); });
+      Object.keys(PQ.obs).forEach(function (k) { var o = PQ.obs[k]; if (o.nn && !o.t && !(sc.cards || {})[k]) delete PQ.obs[k]; });
       PQ.man = clone(sc.man || {});
     } else if (sc && !PQ.daNap) {
-      Object.keys(sc.cards || {}).forEach(function (k) { if (!PQ.obs[k]) PQ.obs[k] = { l: sc.cards[k], t: 0 }; });
+      Object.keys(sc.cards || {}).forEach(function (k) { if (!PQ.obs[k]) nhan(k); });
       PQ.man = clone(sc.man || {});
     }
     PQ.daNap = true;
@@ -1490,8 +1502,9 @@
     if (!PQ || !DB) return;
     var lam = function () {
       henGhi = 0; ghiCuoi = Date.now();
-      var cards = theHienTai();
-      DB.set("s" + PQ.q, { ses: ses(), q: PQ.q, cards: cards, man: PQ.man, n: Object.keys(cards).length, at: Date.now(), by: TAB });
+      var cards = theHienTai(), ngau = {};
+      Object.keys(PQ.obs).forEach(function (k) { if (PQ.obs[k].nn) ngau[k] = 1; });
+      DB.set("s" + PQ.q, { ses: ses(), q: PQ.q, cards: cards, man: PQ.man, ngau: ngau, n: Object.keys(cards).length, at: Date.now(), by: TAB });
     };
     if (ngay) { clearTimeout(henGhi); lam(); return; }
     if (henGhi) return;
@@ -1501,7 +1514,7 @@
   function veBangTo() {
     if (!PQ) return;
     var lb = RD.loaiBuoc(nowHopLe().step), lop = RD.lop(cfg()), m = theHienTai(), man = PQ.man, hien = lb === "a", hienPB = lb === "k" || lb === "a";
-    var dungChu = RD.CAU[PQ.q - 1].dung, tongThay = 0, tongCo = 0, demCam = [];
+    var dungChu = RD.CAU[PQ.q - 1].dung, tongThay = 0, tongCo = 0, demCam = [], tongChua = 0;
     var html = RD.lopDoi(lop).map(function (x, t) {
       var T = RD.DOI[t], thay = 0, dung = 0, chua = [], dd = [];
       x.coMat.forEach(function (id) {
@@ -1509,6 +1522,7 @@
         if (mm) { dd.push({ id: id, m: mm }); if (mm !== "V") { thay++; if (mm === "D") dung++; } return; }
         if (m[k]) { thay++; if (m[k] === dungChu) dung++; } else chua.push(id);
       });
+      tongChua += chua.length;
       var tong = x.coMat.length - dd.filter(function (d) { return d.m === "V"; }).length;
       tongThay += thay; tongCo += tong;
       var du = tong > 0 && !chua.length;
@@ -1534,8 +1548,66 @@
       Object.keys(m).forEach(function (k) { var id = +k.slice(1); if (lop.toCua[id] && !lop.vang[id] && !man[k]) dem[RD.CHU.indexOf(m[k])]++; });
       pb.innerHTML = RD.CHU.map(function (l, i) { return '<span class="' + (hien && l === dungChu ? "dung" : "") + '">' + l + ": " + dem[i] + " em</span>"; }).join("");
     }
+    veNutNgau(tongChua);
     var nut = $("#dtChupChu");
     if (!Q.Live.chay && !Q.coCamera()) nut.textContent = tongThay >= tongCo && tongCo ? "Đã đủ thẻ · chụp thêm nếu cần" : (soAnh && tongThay ? "Chụp thêm · còn thiếu " + (tongCo - tongThay) + " thẻ" : "Chụp ảnh một nhóm");
+  }
+  // 26/11/2026 thầy Thịnh: 17:13 nút chọn đáp án ngẫu nhiên cho em không quét được, có bấm xác nhận; 19:12 "không cần hiện lên là ghi cho
+  //   mấy em đâu, chỉ cần ghi đơn giản là chọn đáp án ngẫu nhiên. Đó, rồi tôi bấm vô thì xác nhận rồi chọn thôi. Nhưng mà không cần phải chọn
+  //   đáp án sai, mà bạn cứ cho ngẫu nhiên thôi, ngẫu nhiên đáp án nhé." (17:13 thầy dặn luôn chọn đáp án sai; 19:12 bỏ.)
+  //   Em chưa quét = có mặt (không vắng), chưa có thẻ, chưa ghi tay ở câu đang quét, của cả hai đội. Mỗi em được một trong bốn chữ A, B, C, D
+  //   (có thể trúng đáp án đúng), đánh dấu nn: 1 (sc.ngau); sau đó camera hay ảnh đọc được thẻ thật của em thì lấy thẻ thật.
+  //   Nút và lời báo không ghi số em, không kể tên em nào.
+  function emChuaQuet() {
+    var ds = [];
+    if (!PQ) return ds;
+    var m = theHienTai(), man = PQ.man;
+    RD.lopDoi(RD.lop(cfg())).forEach(function (x, t) { x.coMat.forEach(function (id) { var k = "t" + id; if (!man[k] && !m[k]) ds.push({ id: id, t: t }); }); });
+    return ds;
+  }
+  function chonNgauNhien(ds) {
+    if (!PQ || !ds.length) return;
+    var luc = Date.now();
+    ds.forEach(function (e) { PQ.obs["t" + e.id] = { l: RD.CHU[Math.floor(Math.random() * 4)], t: luc, nn: 1 }; });
+    ghiQuet(true);
+    veBangTo();
+    trangThai("ok", "Đã chọn đáp án ngẫu nhiên.");
+    try { navigator.vibrate && navigator.vibrate(30); } catch (e) { /* bỏ qua */ }
+  }
+  function boXacNgau() { clearTimeout(henNgau); henNgau = 0; xacNgau = false; }
+  // bấm nút (dưới nút quét hay trên khung camera): lần đầu chờ xác nhận 5 giây, lần hai mới chọn
+  function bamNgau() {
+    if (!PQ) return;
+    var ds = emChuaQuet();
+    if (!ds.length || dangDem()) { boXacNgau(); veBangTo(); return; }
+    if (!xacNgau) {
+      xacNgau = true;
+      clearTimeout(henNgau);
+      henNgau = setTimeout(function () { boXacNgau(); if (PQ) veBangTo(); }, 5000);
+      veNutNgau(ds.length);
+      return;
+    }
+    boXacNgau();
+    chonNgauNhien(ds);
+  }
+  // n: số em chưa quét. Nút chỉ hiện ở bước đọc đề (đã bắt đầu quét: camera đang chạy, đã chụp ảnh hay đã ghi được thẻ) và bước quét
+  //   xong, khi còn em chưa quét; đang đếm ngược thì chưa hiện. Trên khung camera: chờ dải "Giơ đáp án" tắt mới hiện.
+  function veNutNgau(n) {
+    var b = $("#dtNgau"), c = $("#dtCamNgau");
+    if (!b || !c || !PQ) return;
+    var lb = RD.loaiBuoc(nowHopLe().step);
+    var daQuet = lb === "k" || Q.Live.chay || soAnh > 0 || Object.keys(PQ.obs).length > 0;
+    var co = (lb === "q" || lb === "k") && n > 0 && !dangDem() && daQuet;
+    if (xacNgau && !co) boXacNgau();
+    var h = $("#dtNgauHang");
+    if (h.hidden === co) h.hidden = !co;
+    var chu = xacNgau ? "Bấm thêm lần nữa để xác nhận" : "Chọn đáp án ngẫu nhiên";
+    if ($("#dtNgauChu").textContent !== chu) $("#dtNgauChu").textContent = chu;
+    b.classList.toggle("xac", xacNgau);
+    var hienCam = co && $("#dtCamSo").hidden;
+    if (c.hidden === hienCam) c.hidden = !hienCam;
+    if ($("#dtCamNgauChu").textContent !== chu) $("#dtCamNgauChu").textContent = chu;
+    c.classList.toggle("xac", xacNgau);
   }
   function moMenu(id) {
     menuThe = id;
@@ -1562,7 +1634,8 @@
         trong++;
         var k = "t" + c.id;
         // 9/11 thầy Thịnh: "em nào đã quét rồi nhưng đổi đáp án thì đáp án đó bị quét lại cần cố định": thẻ đã ghi thì giữ nguyên
-        if (!PQ.obs[k]) { moi++; PQ.obs[k] = { k: c.k, dang: r.dang, t: Date.now() }; }
+        //   26/11: em máy đã chọn ngẫu nhiên (nn) mà nay đọc được thẻ thật thì lấy đáp án thật của em
+        if (!PQ.obs[k] || PQ.obs[k].nn) { moi++; PQ.obs[k] = { k: c.k, dang: r.dang, t: Date.now() }; }
       });
       soAnh++;
       anhCuoi = r;
@@ -1628,6 +1701,7 @@
       $("#dtXoayMay").hidden = !NGHIENG;
       datCamLon(true);
       giuManHinh();
+      if (PQ) veBangTo();   // 26/11: camera đã chạy là đang quét, hiện nút Chọn đáp án ngẫu nhiên nếu còn em chưa quét
     }, function (e) {
       camDangMo = false;
       nut.removeAttribute("aria-disabled");
@@ -1696,6 +1770,7 @@
     var nut = $("#dtBatCam");
     nut.textContent = "Bật camera quét liên tục";
     if (anhCuoi) $("#dtAnhKhung").hidden = false;
+    if (PQ && !$("#dtQuet").hidden) veBangTo();   // 26/11: tắt camera thì xem lại nút Chọn đáp án ngẫu nhiên
   }
   // nhãn vẽ trên khung camera
   function nhanThe(c) {
@@ -1704,7 +1779,7 @@
     if (lop.vang[c.id]) return { mau: "rgba(190,190,190,.85)", chu: c.id + " vắng" };
     if (dangDem()) return { mau: "rgba(190,190,190,.85)", chu: c.id + " chờ" };   // 9/11: đang đếm ngược, chưa ghi
     var o = PQ && PQ.obs[k];
-    if (o) return { mau: "#3ddc84", chu: c.id + " " + chuCua(o) };              // đã ghi: đáp án đã giữ, quét lại không đổi
+    if (o && !o.nn) return { mau: "#3ddc84", chu: c.id + " " + chuCua(o) };              // đã ghi: đáp án đã giữ, quét lại không đổi
     return { mau: "#ffd54a", chu: String(c.id) };
   }
   // mỗi khung camera đọc xong: thẻ phải giữ cùng một chữ một lúc mới ghi (xem GIU_CHU bên dưới).
@@ -1735,7 +1810,7 @@
       if (ch && t < ch.moi) return;
       if (ch && ch.l === l && t - ch.moi < 1600) ch.moi = t;
       else CHO[k] = ch = { l: l, dau: t, moi: t };
-      if (ch.moi - ch.dau >= (GHI_NGAY ? 0 : GIU_CHU) && !PQ.obs[k]) {
+      if (ch.moi - ch.dau >= (GHI_NGAY ? 0 : GIU_CHU) && (!PQ.obs[k] || PQ.obs[k].nn)) {   // 26/11: thẻ thật thay đáp án máy chọn ngẫu nhiên
         moi++;
         PQ.obs[k] = { k: c.k, dang: "live", t: Date.now() };
         if (RD.Do) RD.Do.ghi(c, t, PQ);   // bản thử: số đo
