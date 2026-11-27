@@ -266,8 +266,17 @@
        diễn ra trò chơi nhé."
      q: câu đang quét; cards, man: thẻ đã đọc và ghi tay của câu q trên máy giáo viên; ds: các em chưa quét [{ id, t: 0 Đội 1 | 1 Đội 2 }];
      vt: vị trí dây trước câu q (dương là Đội 1 đang dẫn); rnd: hàm ngẫu nhiên (để thử), mặc định Math.random.
-     Trả về { chon: { "t<id>": chữ }, cach: "ngang" | "tinh", x: [số em chọn đúng của Đội 1, của Đội 2], k: kết quả câu q dự tính }.
-     - Câu 1 đến câu 4 mà dây đang ở giữa (câu 1, hay hai đội đang ngang nhau): mỗi em một chữ ngẫu nhiên trong A, B, C, D như bản 10.
+     ngau: các thẻ do máy chọn trước đó (không tính vào tỉ lệ đúng).
+     Trả về { chon: { "t<id>": chữ }, cach: "ngang" | "tinh", x: [số em chọn đúng của Đội 1, của Đội 2], k: kết quả câu q dự tính, p: tỉ lệ dùng }.
+     7:47 thầy thử trên điện thoại (chưa quét em nào, bấm nút): "ví dụ nhóm 23 em mà có 8 em đúng là sao? claude chọn xác suất gì kì vậy ?"
+       Bản 11 bốc thăm đều A, B, C, D nên chỉ khoảng 1/4 số em đúng (ván thầy thử: câu 1 Đội 1 đúng 2/22, Đội 2 đúng 8/23), thấp hơn lớp
+       thật rất nhiều. Bản 12: em chưa quét chọn đúng theo tỉ lệ đúng của các em đã quét trong câu đó (RD.tiLeNgau: của đội em đó nếu đội đã
+       quét được từ RD.NGUONG_NGAU = 10 em, không thì của cả lớp nếu cả lớp đã quét được từ 10 em, không thì RD.TI_LE_NGAU; quét ít em mà
+       lấy tỉ lệ thì dễ lệch hẳn, ví dụ quét 4 em đều sai thì 40 em còn lại sai hết); thẻ máy đã chọn trước đó
+       (ngau) không tính vào tỉ lệ. 8:02 thầy: "bài này tương đôi đơn giản nên thường ví dụ nhóm 23 em thì tầm 7-8 em sai là cùng à." nên
+       RD.TI_LE_NGAU = 80% (nhóm 23 em thường sai 2 đến 7 em).
+     - Câu 1 đến câu 4 mà dây đang ở giữa (câu 1, hay hai đội đang ngang nhau): mỗi em chọn đúng với xác suất p của đội em đó (bốc thăm),
+       chọn sai thì bốc thăm một trong ba chữ sai.
      - Còn lại (dây đang lệch, hay đang ở câu 5): máy thử hết mọi cách "mỗi đội có bao nhiêu em chọn đúng" (các em còn lại chọn một chữ sai),
        tính kết quả câu q đúng luật kéo co (RD.doiCau, RD.keoCau, kể cả hiệu ứng của câu), rồi lấy cách tốt nhất theo thứ tự:
          0. câu 5: kết thúc có đội thắng, không hòa (thẻ quét được đã làm hòa chắc rồi thì thôi);
@@ -275,17 +284,29 @@
             (lúc đó mục 2 giúp đội bị dẫn bớt thua: đội đang dẫn kéo ít nấc nhất, hay hòa); dây ở giữa thì không có mục này;
          2. sau câu q dây gần giữa nhất: đội bị dẫn gỡ lại vừa đủ, không để đội nào bỏ xa;
          3. đội bị dẫn thắng câu q (được ngôi sao);
-         4. gần với chọn ngẫu nhiên nhất (mỗi đội khoảng một phần tư số em chọn đúng), để số em chọn mỗi đáp án trông tự nhiên.
-       Còn ngang nhau thì bốc thăm; trong mỗi đội, em nào chọn đúng cũng bốc thăm; chữ sai bốc thăm trong ba chữ sai. */
-  RD.chonNgauCoTinh = function (q, cfg, cards, man, ds, vt, rnd) {
+         4. (bản 12) còn nhiều cách tốt như nhau thì bốc thăm, cách nào giống lớp thật hơn thì dễ được chọn hơn: mỗi cách nặng bằng khả năng
+            có đúng chừng ấy em chọn đúng khi mỗi em đúng với xác suất p của đội (nhị thức, p giữ trong 5%..95%). Bản 11 lấy cách gần một phần
+            tư số em chọn đúng nhất, nên câu 5 dây ở giữa luôn ra cùng một đội thắng.
+       Trong mỗi đội, em nào chọn đúng cũng bốc thăm; chữ sai bốc thăm trong ba chữ sai. */
+  RD.TI_LE_NGAU = 0.8;       // quét được chưa tới RD.NGUONG_NGAU em (27/11 8:02 thầy: nhóm 23 em "tầm 7-8 em sai là cùng")
+  RD.NGUONG_NGAU = 10;       // quét được từ bấy nhiêu em trở lên thì mới theo tỉ lệ các em đã quét
+  // tỉ lệ đúng dùng cho các em chưa quét của câu q: [Đội 1, Đội 2]; ngau: { "t<id>": 1 } các thẻ do máy chọn trước đó (không tính)
+  RD.tiLeNgau = function (q, cfg, cards, man, ngau) {
+    var that = {};
+    Object.keys(cards || {}).forEach(function (k) { if (!(ngau && ngau[k])) that[k] = cards[k]; });
+    var r = RD.doiCau(q, RD.lop(cfg), { cards: that, man: man || {} }), dung = r[0].dung + r[1].dung, thay = r[0].thay + r[1].thay;
+    return r.map(function (x) { return x.thay >= RD.NGUONG_NGAU ? x.dung / x.thay : thay >= RD.NGUONG_NGAU ? dung / thay : RD.TI_LE_NGAU; });
+  };
+  RD.chonNgauCoTinh = function (q, cfg, cards, man, ds, vt, rnd, ngau) {
     rnd = rnd || Math.random;
     var bat = function (a) { return a[Math.floor(rnd() * a.length)]; };
     var chon = {};
-    if (!vt && q < 5) {
-      ds.forEach(function (e) { chon["t" + e.id] = bat(RD.CHU); });
-      return { chon: chon, cach: "ngang" };
-    }
     var dung = RD.CAU[q - 1].dung, sai = RD.CHU.filter(function (l) { return l !== dung; });
+    var p = RD.tiLeNgau(q, cfg, cards, man, ngau);
+    if (!vt && q < 5) {
+      ds.forEach(function (e) { chon["t" + e.id] = rnd() < p[e.t ? 1 : 0] ? dung : bat(sai); });
+      return { chon: chon, cach: "ngang", p: p };
+    }
     var lop = RD.lop(cfg), B = vt > 0 ? 2 : vt < 0 ? 1 : 0, huong = vt > 0 ? -1 : 1;   // B: đội đang bị dẫn (0: dây ở giữa); huong: về phía B
     var doi = [[], []];
     ds.forEach(function (e) { doi[e.t ? 1 : 0].push(e); });
@@ -299,17 +320,24 @@
       return RD.keoCau(q, RD.doiCau(q, lop, { cards: cd, man: man || {} }), vt);
     };
     var hon = function (a, b) { for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1; return 0; };
+    // khả năng có đúng x trong m em chọn đúng khi mỗi em đúng với xác suất pp (nhị thức)
+    var nang = function (x, m, pp) {
+      pp = Math.min(0.95, Math.max(0.05, pp));
+      for (var c = 1, i = 0; i < x; i++) c = c * (m - i) / (i + 1);
+      return c * Math.pow(pp, x) * Math.pow(1 - pp, m - x);
+    };
     var tot = [], dTot = null;
     for (var x0 = 0; x0 <= doi[0].length; x0++) for (var x1 = 0; x1 <= doi[1].length; x1++) {
       var K = thu([x0, x1]);
-      var d = [q === 5 && !K.sau ? 1 : 0, !B || (K.sau - vt) * huong > 0 ? 0 : 1, Math.abs(K.sau), !B || K.thang === B ? 0 : 1,
-        Math.abs(x0 - doi[0].length / 4) + Math.abs(x1 - doi[1].length / 4)];
-      var s = dTot ? hon(d, dTot) : -1;
-      if (s < 0) { dTot = d; tot = [{ x: [x0, x1], k: K }]; } else if (s === 0) tot.push({ x: [x0, x1], k: K });
+      var d = [q === 5 && !K.sau ? 1 : 0, !B || (K.sau - vt) * huong > 0 ? 0 : 1, Math.abs(K.sau), !B || K.thang === B ? 0 : 1];
+      var s = dTot ? hon(d, dTot) : -1, o = { x: [x0, x1], k: K, w: nang(x0, doi[0].length, p[0]) * nang(x1, doi[1].length, p[1]) };
+      if (s < 0) { dTot = d; tot = [o]; } else if (s === 0) tot.push(o);
     }
-    var c = bat(tot);
+    var tong = 0, c = tot[tot.length - 1];
+    tot.forEach(function (o) { tong += o.w; });
+    for (var r = rnd() * tong, j = 0; j < tot.length; j++) { r -= tot[j].w; if (r < 0) { c = tot[j]; break; } }
     doi.forEach(function (a, t) { a.forEach(function (e, i) { chon["t" + e.id] = i < c.x[t] ? dung : bat(sai); }); });
-    return { chon: chon, cach: "tinh", x: c.x, k: c.k };
+    return { chon: chon, cach: "tinh", x: c.x, k: c.k, p: p };
   };
 
   // các bước của buổi chơi, theo đúng thứ tự bấm "tiếp"

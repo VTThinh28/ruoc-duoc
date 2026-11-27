@@ -1562,6 +1562,8 @@
   //   để cho đội 2 có thể thắng được. Đó, và kéo ngược dây về phía mình." Nên lúc dây đang lệch, máy chọn có tính toán (RD.chonNgauCoTinh
   //   trong du-lieu.js): đội bị dẫn kéo được dây về phía mình nếu làm được, dây về gần giữa nhất. Dây đang ở giữa thì chọn ngẫu nhiên như cũ.
   //   Nút, lời báo và TV không đổi gì.
+  // 27/11 7:47 thầy: "ví dụ nhóm 23 em mà có 8 em đúng là sao? claude chọn xác suất gì kì vậy ?": em chưa quét chọn đúng theo tỉ lệ đúng
+  //   của các em đã quét trong câu đó (RD.tiLeNgau), không còn bốc thăm đều bốn chữ.
   function emChuaQuet() {
     var ds = [];
     if (!PQ) return ds;
@@ -1575,7 +1577,9 @@
     try {
       var truoc = {};
       for (var j = 1; j < PQ.q; j++) truoc[j] = true;
-      chon = RD.chonNgauCoTinh(PQ.q, cfg(), theHienTai(), PQ.man, ds, RD.keoCo(cfg(), cacScan(), truoc).vt).chon;
+      var ngau = {};
+      Object.keys(PQ.obs).forEach(function (k) { if (PQ.obs[k].nn) ngau[k] = 1; });
+      chon = RD.chonNgauCoTinh(PQ.q, cfg(), theHienTai(), PQ.man, ds, RD.keoCo(cfg(), cacScan(), truoc).vt, null, ngau).chon;
     } catch (e) { chon = null; }      // tính lỗi thì chọn ngẫu nhiên như cũ, không để nút hỏng giữa giờ dạy
     ds.forEach(function (e) {
       var l = chon && chon["t" + e.id];
