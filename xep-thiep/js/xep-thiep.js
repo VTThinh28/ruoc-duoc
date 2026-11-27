@@ -2267,6 +2267,7 @@
       var o = $("khung" + k), svg = o.querySelector("svg.thiep"), K = dungKhung(svg, k);
       K.o = o; K.hien = {}; K.daVe = {}; K.thuTu = ""; K.tt = o.querySelector(".tt"); K.xong = false; K.pha = "";
       K.noi = H("div", "ket-noi", null, o); H("b", null, "Nhóm " + k, K.noi); H("span", null, "đã kết nối", K.noi);      // 26/11 10:52, xem baoKetNoi
+      H("div", "ten-nhom", "Nhóm " + k, o);      // 27/11 21:35 + 22:00: tên nhóm (chữ như băng rôn báo tường) ở giữa mép dưới tấm thiệp (xem .ten-nhom trong index.html)
       khungNhom[k] = K;
       o.querySelector(".the").onclick = function () { phong_to(k); };
       svg.onclick = function () { if (chamHien) { chamAnBang(k, false); return; } phong_to(k); };      // đang chấm điểm mà bảng nhóm này đang ẩn: chạm tấm thiệp là hiện lại bảng (không hiện to thiệp)

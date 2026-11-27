@@ -37,7 +37,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Arimo:wght@700&display=swap" rel="stylesheet">
 <style>
 :root {
   --nen: #f6efe2; --giay: #fffdf8; --chu: #4a3524; --chu-nhat: #8a7458; --vien: #b89a74;
@@ -773,6 +773,18 @@ body.tv { background: #130c06; }
 @keyframes btdRoiT { from { transform: rotate(-18deg); } to { transform: rotate(16deg); } }
 @keyframes btdRoiP { from { transform: scaleX(-1) rotate(-18deg); } to { transform: scaleX(-1) rotate(16deg); } }
 .khung { position: absolute; }
+/* 27/11 21:35, thầy: "tôi muốn ở 4 tấm thiệp thì cuối 4 tấm thiệp sẽ ghi nhóm mấy, ghi nét chữ bay bướm đẹp đẹp nhé. Nhóm 1, Nhóm 2, Nhóm 3, Nhóm 4 á"
+   22:00, thầy: "ghi chữ nhóm mấy bằng cái chữ trên báo tường á." → chữ Arimo đậm viết hoa như băng rôn đỏ của báo tường A0 (Canva "Arimo Bold").
+   22:09, thầy: "cho nhỏ lại giống cỡ chữ chúc mừng 51 năm đi" → cỡ 25,8 = đúng cỡ dòng CHÚC MỪNG 51 NĂM... trên băng rôn (76 × 1527 / 4494), giãn chữ như băng rôn.
+   → bảng tên nhỏ ở giữa mép dưới mỗi tấm thiệp (khoảng một phần ba nằm trên thiệp, phần còn lại ló ra dưới mép), chữ và viền màu của nhóm.
+   Không đặt gọn trong thiệp được: thiệp ngang nhóm 4 ghép xong chỉ còn khoảng 25 điểm ảnh dưới hình, bảng nhiệm vụ 1 cũng xuống sát mép;
+   nên bảng tên hạ thấp hơn giữa mép (65%) để hở hình và bảng nhiệm vụ 1 chừng 5 điểm ảnh. Thiệp phóng to thì để giữa mép (50%) cho khỏi lọt khỏi màn hình.
+   Ẩn lúc tấm thiệp còn hiện mã QR (khỏi che mã) và lúc bảng chấm điểm của nhóm đang hiện; phóng to thiệp thì chữ to theo. Chạm vào chữ là chạm tấm thiệp. */
+.khung .ten-nhom { position: absolute; left: 50%; bottom: 0; z-index: 4; transform: translate(-50%, 65%); display: flex; align-items: center; justify-content: center; height: 1.7em; padding: 0 .78em; box-sizing: border-box; border-radius: .85em; background: #fffaf0; border: .09em solid var(--mau); box-shadow: 0 .1em .3em rgba(60, 40, 20, .3); font: 700 25.8px/1 Arimo, "Be Vietnam Pro", Arial, sans-serif; text-transform: uppercase; color: var(--mau); white-space: nowrap; pointer-events: none; }
+.khung.hien-ma .ten-nhom, .khung:has(> .bc:not([hidden])) .ten-nhom { display: none; }
+.khung.lon .ten-nhom { transform: translate(-50%, 50%); }
+.khung.dung.lon .ten-nhom { font-size: 38px; }
+.khung.ngang.lon .ten-nhom { font-size: 53px; }
 /* từ 19/11: cột phải Nhóm 1 (trên), Nhóm 2 (dưới); cột trái Nhóm 3 (trên), Nhóm 4 (dưới). Màu đi theo số nhóm như trước (1 đỏ, 2 cam, 3 xanh dương, 4 xanh lá). */
 #khung1 { left: 1319.6px; top: 78.3px; width: 372.4px; --ho: 41.5px; --mau: #d9463c; }
 #khung2 { left: 1157.1px; top: 676.1px; width: 539.4px; --ho: 37px; --mau: #e07b2a; }
@@ -1500,6 +1512,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=c621f24d"></script>
-<script src="js/xep-thiep.js?v=d3189e5d"></script>
+<script src="js/xep-thiep.js?v=938dbee0"></script>
 </body>
 </html>
