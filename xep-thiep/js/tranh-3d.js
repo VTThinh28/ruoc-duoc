@@ -537,12 +537,18 @@ function ve(c, kieu, t, a, P, M, cm, upx) {
    Trên nền sáng (giấy thiệp trắng) thì hạt trắng, quầng sáng cộng màu không còn thấy, nên mỗi hạt sao vẽ ba lớp chồng lên nhau theo cách vẽ thường (source-over):
    viền sẫm cùng màu, thân màu đậm, tâm màu nhạt. Sao "bạc" có tâm trắng, viền xanh thép. Chớp lúc nổ màu vàng nhạt.
    Tiếng: nhac/phao-bong.mp3 là 19 giây của một bản thu THẬT (xem test/lam-phao.py): 8 quả nổ lẻ, loạt pháo cuối 10 tiếng nổ, rồi tiếng vỗ tay reo hò ở xa.
+   28/11/2026 00:04, thầy: "thêm tiếng vút lúc bắn pháo bông đi, vút lên rồi bùm giống bên ngoài hay có á" → trong tệp có thêm tiếng vút lên của từng quả
+   (tạo bằng máy: tiếng gió rít lên cao dần, có quả kèm tiếng huýt; xem lam_vut.py của bản 28/11), kéo dài đúng lúc quả pháo bay lên (S.len) và dứt lúc nổ,
+   nghe trái phải theo chỗ quả pháo bay; tệp dài thêm PHAO_TRUOC giây ở đầu cho tiếng vút của quả đầu tiên.
+   00:06, thầy: "có pháo bông hình 14/12 , 51 càng tốt nhé." → hai quả kiểu "chu" nổ thành chữ "14/12" (tiếng nổ thứ 4, đỏ) và "51" (tiếng nổ thứ 8, vàng kim),
+   thay quả liễu rũ và quả cây cọ ở hai chỗ đó; quả "no" ở tiếng nổ thứ 7 dời sang phải cho khỏi đè chữ 51.
    NO = lúc bắt đầu 18 tiếng nổ trong tệp đó; tệp bắt đầu phát lúc tf = PHAO_AM. Mỗi tiếng nổ có đúng một quả pháo nổ trên màn hình vào lúc ấy; trong loạt cuối có thêm
    7 quả nhỏ xen giữa cho dày. Mọi thứ là hàm của tf (giây từ lúc pháo bông bắt đầu), không nhớ gì giữa hai khung hình: máy chậm bỏ khung hình vẫn đúng giờ với tiếng.
    Khung vẽ PHAO_W × PHAO_H; trang phóng khung này ra cả màn hình tivi. */
 const PHAO_W = 1152, PHAO_H = 648;
 const PHAO_AM = 1.2;                               // giây: tiếng pháo bắt đầu phát lúc này (trước đó nhạc nhỏ dần, quả đầu tiên bay lên)
-const PHAO_AM_DAI = 19.1;                          // giây: độ dài tệp tiếng
+const PHAO_AM_DAI = 19.1;                          // giây: độ dài tệp tiếng (tính từ PHAO_AM)
+const PHAO_TRUOC = 0.7;                            // 28/11: tệp tiếng có thêm ngần này giây ở đầu (tiếng vút của quả đầu tiên): tệp phát lúc tf = PHAO_AM - PHAO_TRUOC
 const NO = [0.442, 1.195, 2.111, 2.944, 5.179, 5.552, 7.189, 7.639, 9.988, 10.556, 10.892, 11.312, 11.642, 11.821, 12.235, 12.385, 12.597, 13.398];
 const MAU_PHAO = {                                 // [tâm nhạt, thân màu đậm, màu đậm dạng "r,g,b" (khói hắt màu), viền sẫm]
   do: ['#ffc2b5', '#f0281c', '240,40,28', '#98130f'], la: ['#c4f7bc', '#1fb83a', '31,184,58', '#0d6e21'], duong: ['#c3dcff', '#2a66f0', '42,102,240', '#143a9c'],
@@ -562,16 +568,44 @@ const KIEU = {
   nhuy: { n: 64,  k: 2.9,  g: 60,  doi: 1.6,  duoi: 0.18, J: 3, day: 2.6, chet: 0.74 }
 };
 KIEU.haimau = KIEU.mau;
+// 28/11: quả nổ thành chữ. n tính theo độ dài nét chữ; giu: tới phần này của đời quả pháo chữ vẫn sáng đủ, chưa nhấp nháy (để kịp đọc)
+KIEU.chu = { n: 0, k: 4.6, g: 8, doi: 2.8, duoi: 0.12, J: 3, day: 3.4, chet: 0.88, giu: 0.66 };
+// nét chữ: mỗi chữ là vài đường gấp khúc trong ô cao 1, rộng w (y hướng xuống)
+function cung(cx, cy, rx, ry, a0, a1) { const ra = []; for (let i = 0; i <= 16; i++) { const a = (a0 + (a1 - a0) * i / 16) * deg; ra.push([cx + rx * Math.cos(a), cy - ry * Math.sin(a)]); } return ra; }
+const NET_CHU = {
+  '1': { w: 0.5, net: [[[0.16, 0.22], [0.42, 0], [0.42, 1]]] },
+  '4': { w: 0.86, net: [[[0.62, 1], [0.62, 0], [0, 0.68], [0.86, 0.68]]] },
+  '/': { w: 0.6, net: [[[0.58, 0], [0.02, 1]]] },
+  '2': { w: 0.8, net: [cung(0.42, 0.28, 0.3, 0.27, 160, -40).concat([[0.04, 1], [0.8, 1]])] },
+  '5': { w: 0.78, net: [[[0.76, 0], [0.16, 0], [0.12, 0.45]].concat(cung(0.42, 0.66, 0.33, 0.33, 135, -140))] }
+};
+function taoHatChu(s, R, b) {                      // các hạt sao xếp đều dọc nét chữ s (cách nhau chừng 5,5 điểm ảnh lúc xoè hết); tâm chữ ở (0, 0), nửa chiều cao = 1
+  const GIAN = 0.16, BUOC = 5.5 / (2 * R), X = [], Y = [];
+  let x = 0;
+  for (const ch of s) {
+    const C = NET_CHU[ch];
+    C.net.forEach(function (n) {
+      for (let i = 0; i + 1 < n.length; i++) {
+        const a = n[i], c = n[i + 1], m = Math.max(1, Math.round(Math.hypot(c[0] - a[0], c[1] - a[1]) / BUOC));
+        for (let j = i ? 1 : 0; j <= m; j++) { X.push(x + a[0] + (c[0] - a[0]) * j / m); Y.push(a[1] + (c[1] - a[1]) * j / m); }
+      }
+    });
+    x += C.w + GIAN;
+  }
+  const rong = x - GIAN, n = X.length, ux = new Float32Array(n), uy = new Float32Array(n), ch = new Float32Array(n), K = KIEU.chu;
+  for (let i = 0; i < n; i++) { ux[i] = (X[i] - rong / 2) * 2; uy[i] = (Y[i] - 0.5) * 2; ch[i] = K.chet + (1 - K.chet) * rnd(i, b + 5); }
+  return { n: n, ux: ux, uy: uy, ch: ch };
+}
 // [lúc nổ theo giây của tệp tiếng, x, y (phần của khung), kiểu, màu, R (bán kính lúc xoè hết), màu thứ hai: nhuỵ ở giữa, hay màu sau khi đổi]
 const BAN_PHAO = [
   [NO[0], 0.50, 0.36, 'mau', 'do', 218, 'vang'],
   [NO[1], 0.21, 0.37, 'mau', 'la', 186],
   [NO[2], 0.79, 0.35, 'mau', 'duong', 190, 'bac'],
-  [NO[3], 0.53, 0.33, 'lieu', 'vang', 236],
+  [NO[3], 0.47, 0.33, 'chu', 'do', 44, null, '14/12'],      // 28/11: chữ 14/12 (thầy 00:06), R = nửa chiều cao chữ
   [NO[4], 0.27, 0.35, 'haimau', 'tim', 196, 'ngoc'],
   [NO[5], 0.73, 0.33, 'vong', 'hong', 186, 'bac'],
-  [NO[6], 0.64, 0.37, 'no', 'vang', 190],
-  [NO[7], 0.33, 0.34, 'co', 'cam', 214],
+  [NO[6], 0.80, 0.37, 'no', 'vang', 190],                    // 28/11: dời từ 0,64 sang 0,80 cho khỏi đè chữ 51
+  [NO[7], 0.50, 0.35, 'chu', 'vang', 72, null, '51'],       // 28/11: chữ 51 (thầy 00:06)
   // loạt pháo cuối: 10 tiếng nổ trong 3,4 giây, thêm 7 quả nhỏ xen giữa
   [NO[8], 0.50, 0.42, 'cuc', 'vang', 186],
   [10.25, 0.19, 0.35, 'mau', 'do', 138],
@@ -620,7 +654,7 @@ function taoDS() {
     const K = KIEU[p[3]], lon = NO.indexOf(p[0]) >= 0, S = { so: so, t: PHAO_AM + p[0], x: p[1] * PHAO_W, y: p[2] * PHAO_H, kieu: p[3], K: K, R: p[5], m1: MAU_PHAO[p[4]], m2: p[6] ? MAU_PHAO[p[6]] : null };
     S.len = lon ? 1.05 : 0.85;                     // giây bay lên trước khi nổ
     S.x0 = S.x + (rnd(so, 21) - 0.5) * 110;        // chỗ rời mặt đất
-    S.hat = taoHat(p[3] === 'haimau' ? 'mau' : p[3], p[3] === 'lieu' && p[5] > 240 ? 220 : K.n, so * 17);
+    S.hat = p[3] === 'chu' ? taoHatChu(p[7], p[5], so * 17) : taoHat(p[3] === 'haimau' ? 'mau' : p[3], p[3] === 'lieu' && p[5] > 240 ? 220 : K.n, so * 17);
     S.hat2 = S.m2 && p[3] !== 'haimau' ? taoHat(p[3] === 'lieu' ? 'sao' : 'nhuy', p[3] === 'lieu' ? 110 : KIEU.nhuy.n, so * 17 + 9) : null;
     S.dai = K.doi + (p[3] === 'no' ? 1.2 : 0) + (p[3] === 'co' ? 0.6 : 0);
     return S;
@@ -633,8 +667,9 @@ function veCau(c, x, y, R, K, hat, M, t, tf, so, sang) {
   const J = K.J, n = hat.n, ux = hat.ux, uy = hat.uy, ch = hat.ch;
   let j, q, i, m = 0;
   for (j = 0; j <= J; j++) { const tj = Math.max(0, t - j * K.duoi / J), e = 1 - Math.exp(-K.k * tj); EX[j] = R * e; GY[j] = K.g / K.k * (tj - e / K.k); }
-  const mo = (u < 0.5 ? 1 : Math.pow(1 - (u - 0.5) / 0.5, 1.15)) * sang;
-  const nhay = Math.max(K.nhay || 0, u > 0.4 ? (u - 0.4) * 1.3 : 0), fr = Math.floor(tf * 20) + so * 131;
+  const g1 = K.giu || 0.5, g2 = K.giu || 0.4;      // 28/11: quả chữ (K.giu) sáng đủ lâu hơn rồi mới mờ và nhấp nháy; các kiểu khác như cũ
+  const mo = (u < g1 ? 1 : Math.pow(1 - (u - g1) / (1 - g1), 1.15)) * sang;
+  const nhay = Math.max(K.nhay || 0, u > g2 ? (u - g2) * 1.3 : 0), fr = Math.floor(tf * 20) + so * 131;
   for (i = 0; i < n; i++) { if (u > ch[i]) continue; if (nhay > 0 && bam(i, fr) < nhay) continue; SONG[m++] = i; }
   if (!m) return;
   // vệt phía sau, vẽ từ đuôi lên: đuôi mảnh và mờ, màu đậm
@@ -738,6 +773,6 @@ function vePhaoBong(c, tf) {
 }
 
 window.Tranh3D = { TEN: TEN, MAU_HINH: MAU_HINH, DOI_HINH: DOI_HINH, khop: khop, tron: tron, ve: ve, muot: muot, vePhaoBong: vePhaoBong, PHAO_W: PHAO_W, PHAO_H: PHAO_H, DAI_PHAO: DAI_PHAO, TRE_PHAO: 0.5,
-  PHAO_AM: PHAO_AM, PHAO_NO: NO, PHAO_SO_QUA: BAN_PHAO.length,
+  PHAO_AM: PHAO_AM, PHAO_TRUOC: PHAO_TRUOC, PHAO_NO: NO, PHAO_SO_QUA: BAN_PHAO.length,
   PHAO_QUA: BAN_PHAO.map(function (p) { return [p[0], p[1] * PHAO_W, p[2] * PHAO_H, p[5]]; }) };      // [lúc nổ theo tệp tiếng, x, y, R] cho bài thử
 })();
