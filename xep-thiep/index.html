@@ -98,7 +98,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* =====================================================================
    ĐIỆN THOẠI
    ===================================================================== */
-#dt { position: fixed; left: 0; top: 0; width: 100%; height: 100%; height: 100dvh; display: flex; flex-direction: column; }
+#dt { position: fixed; left: 0; top: 0; width: 100%; height: 100%; height: 100dvh; height: var(--dt-cao, 100dvh); display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+/* 27/11 14:46, thầy: "trong app học sinh 1 số máy đt bị che mất dòng xác nhận cuối cùng". Có máy (trình duyệt trong Zalo, máy cũ không hiểu 100dvh, chữ hệ thống phóng to)
+   thì trang cao hơn phần thật sự nhìn thấy. → (1) js đặt --dt-cao = chiều cao phần nhìn thấy (visualViewport); (2) #dt cuộn được khi nội dung vẫn dài hơn;
+   (3) nút Xác nhận ở màn chọn nhóm dính ở đáy màn hình; (4) bảng hỏi lại (.hop) không cao quá màn hình: tiêu đề và hai nút luôn hiện, chữ ở giữa cuộn;
+   (5) máy thấp (dưới 640) thì màn chọn nhóm gọn lại. */
 body[data-nhom="1"] { --mau-nhom: #d9463c; }
 body[data-nhom="2"] { --mau-nhom: #e07b2a; }
 body[data-nhom="3"] { --mau-nhom: #3d8fc4; }
@@ -112,7 +116,18 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .nut.chon-nhom { position: relative; min-height: 86px; font-family: var(--chu-dam); font-weight: 700; font-size: 27px; border-radius: 18px; border: 3px solid var(--m); color: var(--m); background: #fffdf8; }
 .nut.chon-nhom.dang-chon, .nut.chon-nhom.dang-chon:active:not(:disabled) { background: var(--m); color: #fff; box-shadow: 0 0 0 4px #fffdf8, 0 0 0 7px var(--m); }
 .nut.chon-nhom.dang-chon::after { content: "✓"; position: absolute; right: 12px; top: 5px; font-size: 21px; line-height: 1.2; }
-#dtChonXong { width: 100%; min-height: 64px; font-size: 21px; border-radius: 18px; background: var(--mau-nhom, #b3322b); border-color: rgba(60, 40, 20, .28); }
+#dtChonXong { width: 100%; min-height: 64px; font-size: 21px; border-radius: 18px; background: var(--mau-nhom, #b3322b); border-color: rgba(60, 40, 20, .28); position: sticky; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 2; }
+#dtChon { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+@media (max-height: 640px) and (min-height: 481px) {      /* điện thoại thấp (hay trình duyệt có thanh to): màn chọn nhóm gọn lại cho thấy hết, kể cả nút Xác nhận */
+  #dtChon { padding: 12px 18px calc(14px + env(safe-area-inset-bottom)); }
+  #dtChon h1 { font-size: 25px; margin: 0 0 4px; }
+  #dtChon .chon-hoi { font-size: 20px; }
+  #dtChon .chon-chu { min-height: 0; font-size: 15px; line-height: 1.4; }
+  #dtChon #dtChonNut { gap: 10px; margin: 8px 0 12px; }
+  #dtChon .nut.chon-nhom { min-height: 66px; font-size: 24px; }
+  #dtChon #dtChonXong { min-height: 56px; font-size: 19px; }
+  #dtChon .nut.chon-nhom.dang-chon::after { right: 7px; top: 1px; font-size: 16px; }
+}
 @media (max-height: 480px) {      /* điện thoại cầm ngang: 4 nhóm thành một hàng cho vừa màn hình */
   #dtChon { padding: 8px 16px; max-width: 640px; }
   #dtChon h1 { font-size: 22px; margin: 0; }
@@ -168,7 +183,7 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .nhap-duoi .nut { width: 100%; min-height: 52px; font-size: 16px; }
 
 /* --- bảng nhập một mục --- */
-.o { position: absolute; inset: 0; z-index: 5; background: var(--nen); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+.o { position: absolute; inset: 0; z-index: 5; background: var(--nen); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .o-tren { display: flex; align-items: center; gap: 10px; padding: 7px 10px; }
 .o-tren .nut { min-height: 40px; padding: 0 14px; }
 #oTen { font-family: var(--chu-dam); font-weight: 700; font-size: 20px; color: #1d5bb8; line-height: 1.2; min-width: 0; text-wrap: balance; }   /* 26/11 11:21, thầy: "phần tên hình thì cho màu khác nổi bật nha" (trước: nâu #5a3a22, 18px) */
@@ -229,6 +244,44 @@ body[data-nhom="4"] { --mau-nhom: #4f9140; }
 .o-bao.khoa3 { font-size: 16.5px; font-weight: 700; }
 .o-duoi { padding: 7px 12px calc(8px + env(safe-area-inset-bottom)); }
 .o-duoi .nut { width: 100%; min-height: 52px; font-size: 17px; }
+/* 27/11 17:36, thầy: "ý tôi là nút kiểm tra á" (17:32: "cái nút ... bị che mất á, một vài máy bị như vầy thì học sinh phải xoay ngang màn hình").
+   Máy thấp hay chữ hệ thống to thì bảng nhập cao hơn màn hình, nút Kiểm tra rơi xuống dưới. → nút Kiểm tra dính đáy màn hình (luôn thấy);
+   js oVua: không đủ cao thì bảng gọn lại (.gon), còn thiếu thì gọn thêm (.gon2: hình minh họa nhỏ lại, có thể ẩn; .gon3: chữ, ô, phím nhỏ thêm); vẫn thiếu thì phần trên cuộn được (.tran). */
+.o-duoi { position: sticky; bottom: 0; z-index: 2; flex: none; background: var(--nen); }
+.o.tran .o-duoi { box-shadow: 0 -10px 12px -10px rgba(60, 40, 20, .35); }
+.o.gon .o-tren { padding-top: 4px; padding-bottom: 4px; }
+.o.gon .o-tren .nut { min-height: 36px; }
+.o.gon .o-hinh { min-height: 34px; padding-top: 2px; padding-bottom: 2px; }
+.o.gon .o-o { gap: 4px; }
+.o.gon .o-so { height: 36px; font-size: 20px; }
+.o.gon .o-bao { min-height: 2.4em; margin: 3px 12px 2px; font-size: 13.5px; }
+.o.gon .o-phim { gap: 5px; }
+.o.gon .phim { min-height: 38px; }
+.o.gon .o-duoi { padding-top: 5px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+.o.gon .o-duoi .nut { min-height: 46px; }
+.o.gon2 .o-hinh { min-height: 0; padding-top: 0; padding-bottom: 0; }
+.o.gon2 #oTen { font-size: 17px; }
+.o.gon2 #oTen small { font-size: 12.5px; }
+.o.gon2 .o-nhan { font-size: 14px; line-height: 1.2; }
+.o.gon2 .o-dong { grid-template-columns: 1fr 84px 34px; gap: 6px; }
+.o.gon2 .o-so { height: 32px; font-size: 19px; }
+.o.gon2 .o-bao { margin: 2px 12px; font-size: 13px; }
+.o.gon2 .phim { min-height: 34px; font-size: 20px; }
+.o.gon2 .phim.phu { font-size: 12.5px; }
+.o.gon2 .o-duoi .nut { min-height: 44px; }
+.o.gon3 .o-tren .nut { min-height: 32px; padding: 0 10px; }
+.o.gon3 #oTen { font-size: 15.5px; }
+.o.gon3 .o-nhan { font-size: 12.5px; line-height: 1.15; }
+.o.gon3 .o-dong { grid-template-columns: 1fr 76px 30px; gap: 5px; }
+.o.gon3 .o-o { gap: 3px; }
+.o.gon3 .o-so { height: 30px; font-size: 18px; }
+.o.gon3 .o-dv { font-size: 13px; }
+.o.gon3 .o-bao { min-height: 2.2em; font-size: 12.5px; }
+.o.gon3 .o-phim { gap: 4px; }
+.o.gon3 .phim { min-height: 30px; font-size: 18px; }
+.o.gon3 .phim.phu { font-size: 11.5px; }
+.o.gon3 .o-duoi { padding-top: 4px; padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
+.o.gon3 .o-duoi .nut { min-height: 42px; }
 /* 26/11 10:49: nút "Giáo viên điền đáp án", chỉ hiện khi thầy đang "Xem ĐT nhóm" (màu tím như nút Hình AI gợi ý, cũng là nút riêng của thầy) */
 .o-duoi .nut.o-gv { margin-top: 6px; min-height: 46px; font-size: 16px; }
 
@@ -280,6 +333,9 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
 /* --- bảng thông báo trên bàn xếp: xác nhận, báo mảnh đè lên nhau, báo chưa nhận ra hình --- */
 .hop { position: absolute; inset: 0; z-index: 8; background: rgba(74, 53, 36, .36); display: flex; align-items: flex-end; justify-content: center; padding: 14px 12px calc(14px + env(safe-area-inset-bottom)); }   /* bảng nằm phía dưới để các em vẫn thấy mảnh được tô viền trên bàn xếp */
 .hop-the { width: 100%; max-width: 430px; background: var(--giay); border-radius: 22px; padding: 18px 20px 18px; box-shadow: 0 16px 44px rgba(60, 40, 20, .35); border-top: 10px solid #b89a74; }
+.hop:not(.goi-y) .hop-the { max-height: 100%; display: flex; flex-direction: column; }      /* 27/11 14:46: bảng không cao quá màn hình; tiêu đề và hai nút luôn hiện */
+.hop:not(.goi-y) .hop-the > h2, .hop:not(.goi-y) .hop-the > .hop-nut { flex: none; }
+.hop:not(.goi-y) .hop-chu { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .hop.de .hop-the { border-top-color: #d1281e; }
 .hop.le .hop-the { border-top-color: #e07b00; }
 .hop.hoi .hop-the { border-top-color: #3f8f52; }
@@ -599,7 +655,14 @@ body.tv { background: #130c06; }
    Báo tường: trái 196.5, rộng 1527, cao 1080 (1 mm = 1,2842 px). Chỗ của 4 thiệp lấy từ bo-cuc-canva-a3.json (thiệp đã cắt 29 × 42). */
 .xep { position: absolute; inset: 0; transform-origin: 960px 540px; transform: scale(var(--bt)); }
 /* khung của báo tường như trang Rước đuốc (khungBao): viền kem 10 px, ngoài là viền gỗ tới 16 px, bóng đổ rgba(0,0,0,.6) nhoè 80 lệch xuống 30. Số ở đây đã chia cho .96398. */
-#baoTuong { position: absolute; left: 196.5px; top: 0; width: 1527px; height: 1080px; background: #fbf1da no-repeat 0 0 / 100% 100%; box-shadow: 0 0 0 10.37px #f6e7c4, 0 0 0 16.6px #b8892f, 0 31.1px 83px 16.6px rgba(0, 0, 0, .6); }
+#baoTuong { position: absolute; left: 196.5px; top: 0; width: 1527px; height: 1080px; background: #fbf1da no-repeat 0 0 / 100% 100%; }
+/* 27/11 14:56, thầy: "khi tôi để 1920 x 1080 thì full màn hình nhưng báo tường lại bị 2 viền đen. bạn hãy để kích cỡ giống trò kéo co thì mới không bị 2 viền đen."
+   15:00: "trò kéo co không bị viền, còn thiệp thì bị viền, chỉnh lại cho không bị viền luôn nhé." 15:04: "Khi bấm nút toàn màn hình ... phù hợp tỷ lệ luôn nhé."
+   → bỏ khung gỗ và bóng đổ quanh báo tường. #btNgoai nằm dưới báo tường, rộng ra mỗi phía đúng một tấm báo tường: chính báo tường lật gương ra bốn phía rồi làm nhoè
+   (như Kéo co vẽ tiếp nền bằng ảnh nền lật gương), nên màn hình tỉ lệ nào phần ngoài báo tường cũng là nền báo tường kéo dài, không còn nền tối.
+   Báo tường giữ đúng tỉ lệ (không kéo méo, hình các nhóm giữ đúng diện tích), cỡ vẫn tính theo màn hình thật như trước (coGian). Chưa có ảnh báo tường: nền kem như hình vẽ thay. */
+#btNgoai { position: absolute; left: -1330.5px; top: -1080px; width: 4581px; height: 3240px; pointer-events: none; background: #f8ecd2 linear-gradient(#fdf4de, #f3e1bb) 0 0 / 100% 100% no-repeat; }
+#tv.dang-lon #btNgoai { opacity: .16; }
 #baoTuong svg { display: block; width: 100%; height: 100%; }
 #baoTuong.co-anh svg { display: none; }
 .bt-o { fill: rgba(255, 255, 255, .45); stroke: #c9a66b; stroke-width: 2.2; stroke-dasharray: 9 7; }
@@ -609,7 +672,7 @@ body.tv { background: #130c06; }
 .bt-chu4 { font-family: var(--chu-thuong); font-size: 15.5px; fill: #a5814b; text-anchor: middle; }
 /* 27/11: Báo tường động (js: phần "Báo tường động"). Lớp #btd nằm trong #baoTuong, đè đúng lên ảnh to và 6 ảnh nhỏ của báo tường, không bắt chạm.
    Khung ảnh to có hai lớp ảnh: ảnh mới nằm trên, hiện ra trong 1,6 giây (BTD.DOI) theo một trong 3 kiểu: mờ chéo (.mo), quét mềm từ trái (.quet-trai),
-   từ phải (.quet-phai). Ảnh nhỏ đổi bằng mờ dần. Không phóng to thu nhỏ. */
+   từ phải (.quet-phai). Ảnh nhỏ: lúc bật mờ dần hiện ra, sau đó lật sách (27/11 13:06, xem dưới). Không phóng to thu nhỏ. */
 #btd { position: absolute; inset: 0; pointer-events: none; transition: opacity .8s ease; }
 #btd.tan { opacity: 0; }
 .btd-lon, .btd-nho { position: absolute; overflow: hidden; }
@@ -663,6 +726,30 @@ body.tv { background: #130c06; }
 .btd-nho img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; opacity: 0; transition: opacity 1s ease; }
 .btd-nho img.hien { opacity: 1; }
 .btd-nho img.tren { z-index: 1; }
+/* 27/11 13:06 (lời thầy: "hình nhỏ : cho đèn này nhấp nháy luôn nhé, ảnh ở dưới đổi theo kiểu lật sách nhé 3 hình trái đổi trước lật sang trái, 3 hình phải
+   lật sang phải"). Lật sách: ảnh mới hiện ngay ở dưới (.duoi, hơi tối rồi sáng dần như vừa hết bóng trang giấy), ảnh cũ nằm trên lật đi trong BTD.LAT = 1,2 giây:
+   cột trái xoay quanh mép trái (.lat-trai: mép phải nhấc lên rồi khép sang trái), cột phải xoay quanh mép phải (.lat-phai); trang tối dần khi nghiêng.
+   Khung nhỏ không cắt (overflow: visible) để thấy cả trang đang nhấc lên. Không phóng to thu nhỏ. */
+.btd-nho { overflow: visible; perspective: 700px; }
+.btd-nho img.duoi { z-index: 0; transition: none; }
+.btd-nho img.duoi.hien { animation: btdLoRa 1.2s ease-out both; }
+.btd-nho img.lat-trai, .btd-nho img.lat-phai { -webkit-backface-visibility: hidden; backface-visibility: hidden; transform-origin: 0 50%; animation: btdLatTrai 1.2s cubic-bezier(.45, .05, .6, 1) both; }
+.btd-nho img.lat-phai { transform-origin: 100% 50%; animation-name: btdLatPhai; }
+@keyframes btdLatTrai { from { transform: rotateY(0); filter: brightness(1); } to { transform: rotateY(-90deg); filter: brightness(.45); } }
+@keyframes btdLatPhai { from { transform: rotateY(0); filter: brightness(1); } to { transform: rotateY(90deg); filter: brightness(.45); } }
+@keyframes btdLoRa { from { filter: brightness(.72); } to { filter: brightness(1); } }
+/* Dây đèn: 15 bóng (BTD.DAY) trên dây đèn phía trên 6 ảnh nhỏ, chỉ có khi Báo tường động chạy. Lúc sáng: lõi trắng ấm giữa bóng và quầng sáng cùng màu bóng;
+   lúc tắt chỉ còn bóng vẽ trên báo tường. Bóng chẵn và bóng lẻ thay nhau sáng, mỗi lượt 0,6 giây. */
+.btd-bong { position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; opacity: 0; animation: btdNhay 1.2s linear infinite;
+  background: radial-gradient(ellipse 8% 11% at 50% 50%, rgba(255, 254, 242, .98) 0, rgba(255, 254, 242, .9) 55%, rgba(255, 254, 242, 0) 100%),
+              radial-gradient(circle at 50% 50%, var(--q) 0, var(--q) 14%, var(--q2) 52%); }
+.btd-bong.le { animation-delay: -.6s; }
+.btd-bong.do { --q: rgba(255, 58, 40, .92); --q2: rgba(255, 58, 40, 0); }
+.btd-bong.vang { --q: rgba(255, 190, 0, .95); --q2: rgba(255, 190, 0, 0); }
+.btd-bong.xanh { --q: rgba(0, 210, 175, .92); --q2: rgba(0, 210, 175, 0); }
+.btd-bong.hong { --q: rgba(255, 80, 180, .92); --q2: rgba(255, 80, 180, 0); }
+.btd-bong.lam { --q: rgba(30, 130, 255, .92); --q2: rgba(30, 130, 255, 0); }
+@keyframes btdNhay { 0%, 42% { opacity: 1; } 50%, 92% { opacity: 0; } 100% { opacity: 1; } }
 /* 27/11 10:05 (lời thầy: "cái viền ở cái tấm ảnh lên cho thêm gì đó sinh động đi, bạn tự tư duy đi, ví dụ như đèn sân khấu hay gì đó dể làm ảnh nổi bật lên"):
    khung đèn sân khấu quanh ảnh to, chỉ có khi Báo tường động chạy. .btd-hao: quầng sáng vàng ấm sau khung, sáng tối thật chậm. .btd-den: viền vàng kim
    (rộng BTD.VIEN = 14 điểm, đè lên viền kem của ảnh trên báo tường) có hàng bóng đèn nhỏ; cứ 0,45 giây đèn sáng chạy sang bóng kế (3 bước là 1,35 giây,
@@ -673,6 +760,7 @@ body.tv { background: #130c06; }
 .btd-den { position: absolute; }
 #baoTuong #btd .btd-den svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }   /* phải thắng luật #baoTuong.co-anh svg (ẩn hình chờ khi đã có ảnh báo tường) */
 .btd-den .sang, .btd-den .quang { animation: btdChay 1.35s steps(3, end) infinite; }
+/* 27/11 14:56: thầy bỏ hiệu ứng chiếu đèn: js không tạo .btd-roi, .btd-goc nữa (hai luật dưới đây để lại, không dùng). */
 .btd-roi { position: absolute; top: -7px; width: 900px; height: 900px; z-index: 2; opacity: .7; mix-blend-mode: screen; filter: blur(2.5px); transform-origin: 0 0;
   background: conic-gradient(from 118deg at 0 0, rgba(255, 248, 228, 0) 0deg, rgba(255, 248, 228, .75) 3.5deg, rgba(255, 252, 240, .95) 7deg, rgba(255, 248, 228, .75) 10.5deg, rgba(255, 248, 228, 0) 14deg, rgba(255, 248, 228, 0) 360deg);
   -webkit-mask-image: radial-gradient(circle at 0 0, #000 0, #000 14%, transparent 52%); mask-image: radial-gradient(circle at 0 0, #000 0, #000 14%, transparent 52%); }
@@ -834,23 +922,27 @@ body.tv { background: #130c06; }
 #caiDat { z-index: 9; }
 /* các bảng che phủ rộng hơn sân 1920 × 1080: màn hình không phải 16:9 thì báo tường (to theo --bt) ló ra ngoài sân, lớp mờ vẫn che hết */
 #caiDat, #nhiemVu, #dapSo, #gvMa { inset: -700px; }
-.cd-hop { width: 1660px; background: var(--giay); border-radius: 30px; padding: 24px 44px 26px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
-.cd-hop h2 { margin: 0 0 2px; font-family: var(--chu-dam); font-size: 44px; color: #6b3d1e; }
-.cd-hop h3 { margin: 16px 0 8px; font-size: 26px; }
-.cd-hop p { margin: 7px 0 0; font-size: 20px; color: var(--chu-nhat); line-height: 1.38; }
+/* 27/11 14:46, thầy (ảnh chụp Cài đặt trên laptop, nút Đóng màu đỏ bị cắt ở góc dưới phải): bảng cao hơn màn hình 1080 nên mất cả chữ "Cài đặt" ở trên và nút Đóng ở dưới.
+   → bảng cao tối đa 1040 (luôn nằm trong màn hình), chữ "Cài đặt" và nút Đóng luôn hiện; phần giữa gọn lại cho vừa, còn dài hơn thì cuộn trong bảng. */
+.cd-hop { position: relative; width: 1660px; max-height: 1040px; display: flex; flex-direction: column; background: var(--giay); border-radius: 30px; padding: 20px 44px 22px; box-shadow: 0 20px 60px rgba(60, 40, 20, .3); }
+.cd-hop > h2, .cd-hop > .cd-duoi { flex: none; }
+.cd-hop > .cd-cot { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.cd-hop h2 { margin: 0 0 2px; font-family: var(--chu-dam); font-size: 40px; line-height: 1.15; color: #6b3d1e; }
+.cd-hop h3 { margin: 10px 0 6px; font-size: 26px; }
+.cd-hop p { margin: 6px 0 0; font-size: 20px; color: var(--chu-nhat); line-height: 1.34; }
 .cd-hop p.xau { color: #b3261d; font-weight: 600; }
 #btTinh { color: var(--chu); }
 .cd-hang { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 #tv .nut.bat { background: #fde9c4; border-color: #e0a63a; box-shadow: inset 0 0 0 2px #e0a63a; }
 #maPhong { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--chu); letter-spacing: 2px; }
-.cd-duoi { margin-top: 22px; display: flex; justify-content: flex-end; }
+.cd-duoi { position: absolute; right: 44px; bottom: 22px; z-index: 1; display: flex; justify-content: flex-end; }      /* nút Đóng nằm ở góc dưới phải của bảng (cột phải ngắn, chỗ đó trống), luôn hiện */
 .cd-cot { display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; }
 .cd-cot > div + div { border-left: 2px solid #eadfc9; padding-left: 54px; }
 .cd-hop h4 { margin: 16px 0 8px; font-size: 22px; font-weight: 600; color: var(--chu); }
 .cd-hop .cd-truoc { margin: 0 0 12px; }
 .cd-hang.cd-cach { margin-top: 12px; }
 .cd-gv { display: flex; gap: 22px; align-items: flex-start; }
-#tv .cd-gv-ma { flex: none; width: 232px; height: 232px; padding: 0; border: 2px solid var(--nut-vien); border-radius: 14px; background: #fff; cursor: pointer; overflow: hidden; }
+#tv .cd-gv-ma { flex: none; width: 210px; height: 210px; padding: 0; border: 2px solid var(--nut-vien); border-radius: 14px; background: #fff; cursor: pointer; overflow: hidden; }
 .cd-gv-ma span, .cd-gv-ma svg { display: block; width: 100%; height: 100%; }
 .cd-gv-chu { flex: 1; min-width: 0; }
 .cd-hop .cd-gv-chu p:first-child { margin-top: 0; }
@@ -1216,6 +1308,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
   <span id="tvNoi" class="noi">Đang nối…</span>
 
   <section class="xep">
+    <div id="btNgoai" aria-hidden="true"></div>
     <div id="baoTuong">
       <!-- hình vẽ thay cho báo tường khi máy chưa có ảnh (ảnh thật có hình thầy cô, không để trên mạng) -->
       <svg viewBox="0 0 1189 841" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1392,6 +1485,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=c621f24d"></script>
-<script src="js/xep-thiep.js?v=0b09e421"></script>
+<script src="js/xep-thiep.js?v=011a0a19"></script>
 </body>
 </html>
