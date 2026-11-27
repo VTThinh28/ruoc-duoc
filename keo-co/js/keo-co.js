@@ -61,6 +61,11 @@
   //   chui ra sau bím tóc bạn đứng trong cùng (nam.ha mới). dayTT: sợi dây trong hình của tư thế đó dày bao nhiêu điểm ảnh gốc khi khác
   //   vanH (khúc dây trang tự vẽ thu theo cho khít); chanTT: chỗ bàn chân của tư thế đó khi khác CHAN_F. Hình "ha" của đội áo thể dục
   //   (ngả người ra sau, dây ngang ngực) thầy không nhắc tới: giữ nguyên.
+  //   27/11/2026 10:45 thầy Thịnh (gửi ảnh đội áo vàng vắt dây qua vai): "cái dây bị lỗi mỗi bạn cầm một dây nè, chỉnh lại là bạn để tay lên
+  //   dây rồi kéo á." Trong hình vắt vai, dây từ vai mỗi bạn vòng xuống nắm tay rồi hết ở đó (đầu dây lòi ra dưới nắm tay), nên nhìn như mỗi
+  //   bạn cầm một sợi riêng. Nên d2-ha.webp về lại hình của bản 4 (25/11): bốn bạn hạ người, cả bốn nắm chung một sợi dây bằng hai tay;
+  //   nam.ha của hình đó, bỏ dayTT và chanTT của hình vắt vai. Hình hạ người cao 210 đến 219 điểm ảnh trên sân, đội áo thể dục "ha" phóng
+  //   1,15 lần cao 205 đến 225: hai đội vẫn cân.
   //   27/11/2026 6:54 thầy Thịnh: "sợi dây của đội áo thể dục đang cầm thì nhỏ hơn bên áo vàng." Đo: dây áo thể dục trên sân dày khoảng
   //   6,5 điểm ảnh, dây áo vàng 8,5. Nên sợi dây trong 4 hình cầm dây của đội áo thể dục (d1-keo, -truot, -quay, -ha) và dải vân day-d1
   //   giãn theo chiều đứng 1,35 lần (vân xoắn giữ nhịp cũ, phần khác của hình giữ nguyên; cách làm: thu/day-to-hon.py trong thư mục dự
@@ -74,7 +79,7 @@
   const HINH = [
     { k: "d1", w: 1175, h: 543, base: 529, s: .62, dinh: 0, nam: { keo: [94, 297.5], truot: [91, 298.2], quay: [96, 296.2], ha: [144, 378] }, vanH: 22, duoc: .225, toTT: { keo: 1.1, truot: 1.1, quay: 1.1, ha: 1.15 },
       ban: [[202, 465, 461, 67.5, 197, 198.5, 95.5], [204, 465, 460, 67, 199, 195, 346.5], [218, 466, 462, 76, 213, 189, 591.5], [241, 466, 461, 97.5, 236, 187, 829.5]] },
-    { k: "d2", w: 1187, h: 493, base: 487, s: .585, dinh: 12, nam: { keo: [163, 216.8], truot: [150, 222.2], quay: [147, 226.5], ha: [198.5, 184.2] }, vanH: 21, dayTT: { ha: 14.4 }, chanTT: { ha: [.065, .294, .532, .736] }, duoc: .205,
+    { k: "d2", w: 1187, h: 493, base: 487, s: .585, dinh: 12, nam: { keo: [163, 216.8], truot: [150, 222.2], quay: [147, 226.5], ha: [110, 326] }, vanH: 21, duoc: .205,
       ban: [[213, 492, 487, 70.5, 208, 184, 76.5], [209, 493, 488, 78, 205, 192.5, 355], [230, 494, 489, 88.5, 225, 183, 626], [227, 493, 488, 81.5, 222, 182.5, 913]] }
   ];
   const TU_THE = ["keo", "truot", "quay", "ha", "thang", "thua"];
@@ -148,7 +153,7 @@
   //   địa chỉ: "co" = bốn lá cờ nhỏ treo trên dây mang bốn phép tính + − × ÷ (mặc định của bản mẫu); "hinh" = bốn hạt xâu vào dây hình
   //   vuông, tam giác đều, hình tròn, lục giác đều; "thuoc" = khúc dây giữa bọc một dải thước đo, mỗi vạch cách nhau đúng một nấc dây
   //   (PXN), số đếm từ dải lụa đỏ ra hai phía; "khong" = dây trơn như bản 8.
-  //   27/11/2026 (bản 15) mặc định là "no": cái nơ có bốn dấu (NO_TOAN bên dưới); ba kiểu cũ vẫn mở được bằng ?day=.
+  //   27/11/2026 (bản 15) mặc định là "no": cái nơ giữa dây (bản 16: nơ vô cực NO_VC bên dưới); các kiểu cũ vẫn mở được bằng ?day=.
   const KIEU_DAY = (/[?&]day=(no|co|hinh|thuoc|khong)\b/.exec(location.search) || [])[1] || "no";
   const TOAN_O = [-102, -34, 34, 102];              // bốn hình cách dải lụa bấy nhiêu điểm ảnh dọc theo sợi dây
   const TOAN_MAU = [["#f6c544", "#b07a12", "#fff0a8"], ["#72c56b", "#3b8a3a", "#c9f0b4"], ["#5fbdea", "#2a7fb5", "#cdefff"], ["#b892ea", "#7550b8", "#eadcff"]];   // mặt, viền, vệt sáng
@@ -163,30 +168,24 @@
   // 27/11/2026 9:53 thầy Thịnh: "chỉnh lại 4 cái dấu + - x : thành cái nơ đi nhưng cái nơ đó có kí hiệu + - x : á. tại để 4 cái thẻ + - x :
   //   như vậy thì nó bị lỗi kéo giật về." 9:55: "ý là trong phiên bản hồi nãy vì tôi nói là đội thắng kéo cả 4 dấu + - x : về phía mình á
   //   nên ví dụ đội 2 thắng nhưng dấu cộng vẫn ở phía đội 1 thì đội 2 phải giật về thêm 1 cái. nên giờ chuyển thành cái nơ cho khỏi bị"
-  //   9:56: "với đổi luật luôn đưa 4 dấu cộng trừ nhân chia về phía đội mình là được."
-  //   Nên bỏ bốn lá cờ; giữa dây buộc một cái nơ đỏ (hai quai, nút nơ, hai đuôi rủ xuống), bốn dấu + − × ÷ là bốn huy hiệu tròn (màu như bốn
-  //   lá cờ cũ) xâu trên sợi dây vàng thả thẳng xuống từ nút nơ. Bốn dấu nằm trong một dải rộng 2 × NO_R quanh đường thẳng đứng qua nút
-  //   nơ, hẹp hơn một nấc dây (PXN) mỗi bên, nên dây lệch 1 nấc là cả bốn dấu đã sang hẳn một bên vạch giữa, không cần kéo thêm. Nơ đung
-  //   đưa rất nhẹ (±1,5 độ) để cột huy hiệu không lắc qua vạch giữa. NO_X, NO_Y: nút nơ trong khung NO_W × NO_H (điểm ảnh trên sân).
-  //   Huy hiệu bán kính NO_R = 12,5 (cả viền 13,7): dây lệch 1 nấc (20 px) thì mép huy hiệu còn cách mép nét đứt của vạch giữa chừng 3 px.
-  const NO_W = 128, NO_H = 168, NO_X = 64, NO_Y = 16, NO_R = 12.5, NO_HUY = [43, 70, 97, 124];
-  const NO_DAU = ["M-6.6 0 H6.6 M0 -6.6 V6.6", "M-6.6 0 H6.6", "M-4.9 -4.9 L4.9 4.9 M4.9 -4.9 L-4.9 4.9", "M-6.6 0 H6.6"];      // + − × ÷ (÷ thêm hai chấm)
-  const NO_TOAN = '<svg viewBox="0 0 ' + NO_W + " " + NO_H + '" aria-hidden="true">' +
-    '<path d="M60 20 C52 44 34 66 30 96 C27 116 24 128 18 140 L31 136 L35 149 C40 128 42 112 44 96 C47 70 60 48 64 22 Z" fill="#c21d1d" stroke="#8f1111" stroke-width="1.5" stroke-linejoin="round"/>' +
-    '<path d="M68 20 C76 44 94 66 98 96 C101 116 104 128 110 140 L97 136 L93 149 C88 128 86 112 84 96 C81 70 68 48 64 22 Z" fill="#d42626" stroke="#8f1111" stroke-width="1.5" stroke-linejoin="round"/>' +
-    '<path d="M41 70 C36 84 33 100 32 118 M87 70 C92 84 95 100 96 118" fill="none" stroke="#ff8a78" stroke-width="2" stroke-linecap="round" opacity=".6"/>' +
-    '<path d="M' + NO_X + " 20 V" + NO_HUY[3] + '" stroke="#b07a12" stroke-width="4" stroke-linecap="round"/><path d="M' + NO_X + " 20 V" + NO_HUY[3] + '" stroke="#ffd35a" stroke-width="2" stroke-linecap="round"/>' +
-    '<path d="M64 16 C52 -1 22 -8 9 3 C-1 12 4 34 22 34 C38 34 53 26 64 16 Z" fill="#ea3a3a" stroke="#a31515" stroke-width="1.8" stroke-linejoin="round"/>' +
-    '<path d="M64 16 C76 -1 106 -8 119 3 C129 12 124 34 106 34 C90 34 75 26 64 16 Z" fill="#ea3a3a" stroke="#a31515" stroke-width="1.8" stroke-linejoin="round"/>' +
-    '<path d="M55 16 C46 9 31 6 22 12 M73 16 C82 9 97 6 106 12" fill="none" stroke="#b81d1d" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>' +
-    '<path d="M15 9 C10 15 12 24 19 28 M113 9 C118 15 116 24 109 28" fill="none" stroke="#ff9a8a" stroke-width="2.2" stroke-linecap="round" opacity=".8"/>' +
-    '<ellipse cx="64" cy="16" rx="11" ry="10" fill="#f04a4a" stroke="#a31515" stroke-width="1.8"/><path d="M58.5 11.5 C61 9.5 65 9 68.5 10.8" fill="none" stroke="#ffb1a3" stroke-width="2" stroke-linecap="round"/>' +
-    TOAN_MAU.map((m, i) => '<g transform="translate(' + NO_X + " " + NO_HUY[i] + ')"><circle r="' + NO_R + '" fill="' + m[0] + '" stroke="' + m[1] + '" stroke-width="2.2"/>' +
-      '<path d="M-8.6 -3.4 A9 9 0 0 1 -2.9 -8.6" fill="none" stroke="' + m[2] + '" stroke-width="2" stroke-linecap="round" opacity=".9"/>' +
-      '<g fill="none" stroke-linecap="round"><path d="' + NO_DAU[i] + '" stroke="' + m[1] + '" stroke-width="7.2"/><path d="' + NO_DAU[i] + '" stroke="#fff" stroke-width="3.6"/></g>' +
-      (i === 3 ? '<circle cy="-5.6" r="2.6" fill="#fff" stroke="' + m[1] + '" stroke-width="1.5"/><circle cy="5.6" r="2.6" fill="#fff" stroke="' + m[1] + '" stroke-width="1.5"/>' : "") + "</g>").join("") +
-    "</svg>";
-  const NEO = KIEU_DAY === "no" ? [NO_X, NO_Y] : [45, 12];      // nút nơ (hay nút dải lụa) trong khung #kcNeo
+  //   9:56: "với đổi luật luôn đưa 4 dấu cộng trừ nhân chia về phía đội mình là được." Bản 15 (không đưa lên trang): bỏ bốn lá cờ, giữa
+  //   dây một cái nơ to (khung 128 × 168) có bốn huy hiệu + − × ÷ thả dưới nút nơ.
+  //   10:45 thầy xem bản 15: "thôi bỏ dấu cộng trừ nhân chia đi, đổi lại thành cái nơ có kích cỡ như ở bản đầu tiên nhưng vẽ giống kí
+  //   hiệu vô cực." Nên (bản 16) không còn dấu + − × ÷ nào; cái nơ cùng khung, cùng cỡ với dải lụa đỏ đầu tiên (DAI_LUA ở trên, bản 4 đến 8:
+  //   khung 90 × 150, nút nơ ở (45, 12), hai đuôi y như cũ), còn hai quai nơ vẽ thành kí hiệu vô cực ∞: một dải lụa đỏ uốn hình số 8 nằm
+  //   ngang, hai nét giao nhau ở nút nơ, lòng hai quai để trống nên nhìn qua thấy sợi dây. Nơ đung đưa như dải lụa cũ (kcDen). Nút nơ nằm
+  //   đúng vạch giữa lúc dây ở 0 nấc (bản 15), nên dây lệch về bên nào là nút nơ sang hẳn bên đó, không kéo thêm.
+  const VO_CUC = "M45 12 C50.5 4.5 56 -1.5 63 -1.5 C71.5 -1.5 78 4.5 78 12 C78 19.5 71.5 25.5 63 25.5 C56 25.5 50.5 19.5 45 12 " +
+    "C39.5 4.5 34 -1.5 27 -1.5 C18.5 -1.5 12 4.5 12 12 C12 19.5 18.5 25.5 27 25.5 C34 25.5 39.5 19.5 45 12 Z";      // ∞, tâm ở nút nơ
+  const NO_VC = '<svg viewBox="0 0 90 150" aria-hidden="true">' +
+    '<path d="M46 12 C54 40 66 62 64 96 C63 110 68 122 75 133 L60 128 L54 141 C52 120 50 100 50 80 C50 56 48 34 42 14 Z" fill="#c21d1d"/>' +
+    '<path d="M38 12 C28 38 16 66 20 100 C22 116 18 128 11 140 L26 132 L34 145 C38 126 36 104 38 84 C40 58 44 36 46 14 Z" fill="#e22b2b"/>' +
+    '<path d="M35 22 C28 44 22 68 25 98" fill="none" stroke="#ff8a78" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>' +
+    '<g fill="none" stroke-linejoin="round"><path d="' + VO_CUC + '" stroke="#a31515" stroke-width="10.5"/><path d="' + VO_CUC + '" stroke="#ea3a3a" stroke-width="7.4"/>' +
+    '<path d="M51 16.5 C56 22.5 59.5 23.6 63 23.6 C69.5 23.6 74.6 19.6 75.8 14.6 M39 16.5 C34 22.5 30.5 23.6 27 23.6 C20.5 23.6 15.4 19.6 14.2 14.6" stroke="#b81d1d" stroke-width="2" stroke-linecap="round" opacity=".75"/>' +
+    '<path d="M51 7.5 C55.5 2.2 59.5 .4 63 .4 C68.5 .4 72.8 3 74.9 7 M39 7.5 C34.5 2.2 30.5 .4 27 .4 C21.5 .4 17.2 3 15.1 7" stroke="#ff9a8a" stroke-width="2.2" stroke-linecap="round" opacity=".9"/></g>' +
+    '<ellipse cx="45" cy="12" rx="9" ry="8" fill="#f04a4a" stroke="#a31515" stroke-width="1.6"/><path d="M40.3 8.3 C42.3 6.6 45.4 6.2 48.2 7.4" fill="none" stroke="#ffb1a3" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  const NEO = [45, 12];                             // nút nơ (hay nút dải lụa cũ) trong khung #kcNeo
   const THUOC_CAO = 34, THUOC_DAI = 240;            // dải thước đo: cao, dài nhất mỗi nửa (11 vạch số)
   const thuocNen = phai => {                        // nửa bên phải dải lụa: số tăng dần sang phải kể từ mép trái; nửa bên trái thì ngược lại
     let h = '<svg xmlns="http://www.w3.org/2000/svg" width="' + THUOC_DAI + '" height="' + THUOC_CAO + '" viewBox="0 0 ' + THUOC_DAI + " " + THUOC_CAO + '"><rect x="-6" y="1.6" width="' + (THUOC_DAI + 12) + '" height="' + (THUOC_CAO - 3.2) + '" fill="#fff6d2" stroke="#b3560f" stroke-width="2.6"/><path d="M-6 ' + (THUOC_CAO - 6.5) + " H" + (THUOC_DAI + 6) + '" stroke="#f0d9a0" stroke-width="5"/>';
@@ -365,8 +364,8 @@
   // 27/11/2026 6:54 thầy Thịnh: "bạn thiết kế lại sao cho đến ván cuối thì đội nào thắng thì sẽ kéo 4 lá cờ về phía sân của mình". Bản 11 đến 14:
   //   kéo xong câu 5 mà dây lệch chưa tới 8 nấc thì đội thắng kéo thêm một hơi cho cả bốn lá cờ sang hẳn sân mình.
   //   27/11 9:55 thầy: "ví dụ đội 2 thắng nhưng dấu cộng vẫn ở phía đội 1 thì đội 2 phải giật về thêm 1 cái. nên giờ chuyển thành cái nơ cho
-  //   khỏi bị" (bản 15): bỏ hơi kéo thêm đó. Bốn dấu nay ở trên cái nơ giữa dây (NO_TOAN), đội thắng cả ván dẫn ít nhất 1 nấc là cả bốn dấu đã
-  //   ở bên sân đội đó. Sang bước thắp đuốc, hai đội buông dây về chỗ cạnh cây đuốc như cũ, sợi dây và cái nơ nằm yên dưới đất đúng chỗ dây
+  //   khỏi bị" (bản 15): bỏ hơi kéo thêm đó. Giữa dây là một cái nơ (bản 16: nơ vô cực NO_VC, không còn dấu + − × ÷), nút nơ ở đúng vạch
+  //   giữa lúc dây ở 0 nấc, đội thắng cả ván dẫn ít nhất 1 nấc là nút nơ đã ở bên sân đội đó. Sang bước thắp đuốc, hai đội buông dây về chỗ cạnh cây đuốc như cũ, sợi dây và cái nơ nằm yên dưới đất đúng chỗ dây
   //   dừng sau câu 5 (đúng số nấc thật), tới hết phần bắt tay.
 
   const S = { che: "an", q: 0, kc: [], t0: XA, phu: false, tinh: false, ket: 0, cues: [], L: null, d1Trai: false, doi: null, chay: null, daTu: false, m0: [0, 0] };
@@ -466,7 +465,9 @@
       // 26/11 11:09 (bản mẫu): hình Toán ở khúc dây giữa hai đội, kiểu theo KIEU_DAY
       (KIEU_DAY === "thuoc" ? '<div class="kc-thuoc-do t"></div><div class="kc-thuoc-do p"></div>' : KIEU_DAY === "khong" || KIEU_DAY === "no" ? "" :
         TOAN_O.map((o, i) => '<div class="kc-toan ' + KIEU_DAY + '"><span class="la"><span class="lac" style="animation-delay:-' + (i * .55).toFixed(2) + 's">' + (KIEU_DAY === "co" ? CO_TOAN[i] : HAT_TOAN[i]) + "</span></span></div>").join("")) +
-      HINH.map(H => '<div class="kc-doi-boc">' + TU_THE.map(p => '<img class="kc-doi" data-p="' + p + '" src="hinh/' + H.k + "-" + p + '.webp" alt="" draggable="false"' +
+      // 27/11 10:45 (bản 16): hình d2-ha.webp đổi mà tên tệp giữ nguyên, nên hình hai đội mang mã phiên bản của trang (TV đã mở bản cũ trong vòng
+      //   10 phút vẫn lấy hình mới, không dùng hình cũ trong bộ nhớ trình duyệt)
+      HINH.map(H => '<div class="kc-doi-boc">' + TU_THE.map(p => '<img class="kc-doi" data-p="' + p + '" src="hinh/' + H.k + "-" + p + '.webp?v=' + (window.RD_V || "") + '" alt="" draggable="false"' +
         (p === "thang" && H.dinh ? ' style="top:' + (-H.dinh / H.h * 100).toFixed(3) + "%;height:" + ((H.h + H.dinh) / H.h * 100).toFixed(3) + '%"' : "") + ">").join("") + "</div>").join("") +
       // từng bạn chìa tay bắt tay (xếp theo ĐỘI rồi theo bạn): khung gốc đặt ở giữa hai bàn chân, <i> là bóng dưới chân
       HINH.map(H => H.ban.map((B, k) => '<div class="kc-ban"><i></i><img src="hinh/' + H.k + "-b" + k + '.webp" alt="" draggable="false"></div>').join("")).join("") +
@@ -474,8 +475,8 @@
       '<div class="kc-tia" id="kcTia">' + [0, 1, 2, 3, 4, 5, 6, 7].map(() => "<i></i>").join("") + "</div>" +
       [0, 1, 2, 3].map(() => '<div class="kc-tia bt">' + [0, 1, 2, 3, 4, 5, 6, 7].map(() => "<i></i>").join("") + "</div>").join("") +      // tia sáng ở chỗ bốn cặp bắt tay
       // 26/11 12:20 thầy Thịnh: "bỏ cái nơ trên dây kéo đi đổi thành 4 lá cờ": khung dải lụa còn đó (tia sáng lúc kéo vẫn loé ở giữa dây) nhưng không vẽ nơ nữa
-      //   27/11 9:53 (bản 15): khung này vẽ lại cái nơ, nay mang bốn dấu + − × ÷ (NO_TOAN)
-      '<div class="kc-den-neo' + (KIEU_DAY === "no" ? " no" : "") + '" id="kcNeo"><div class="kc-den-boc"><div class="kc-den" id="kcDen">' + (KIEU_DAY === "no" ? NO_TOAN : "") + "</div></div></div>";
+      //   27/11 9:53 (bản 15): khung này vẽ lại cái nơ; 10:45 (bản 16): nơ vô cực cỡ như dải lụa đầu tiên (NO_VC), không còn dấu + − × ÷
+      '<div class="kc-den-neo" id="kcNeo"><div class="kc-den-boc"><div class="kc-den" id="kcDen">' + (KIEU_DAY === "no" ? NO_VC : "") + "</div></div></div>";
     for (let b = 0; b < 2; b++) BUI_F.forEach((f, j) => { h += '<div class="kc-bui b' + b + '" style="top:' + (GND - (j % 2 ? 28 : 34)) + 'px;width:124px;height:60px">' + BUI_THAP_SVG + "</div>"; });
     for (let b = 0; b < 2; b++) for (let k = 0; k < 2; k++) h += '<div class="kc-ho b' + b + '"></div>';
     const muiTen = lat => '<svg class="kc-mui ' + (lat ? "m1" : "m2") + '" style="left:' + (lat ? 776 : 1048) + "px" + (lat ? ";transform:scaleX(-1)" : "") + '" width="96" height="40" viewBox="0 0 96 40" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6 L24 20 L8 34" opacity=".45"/><path d="M38 6 L54 20 L38 34" opacity=".75"/><path d="M68 6 L84 20 L68 34"/></g></svg>';
@@ -1153,8 +1154,7 @@
     /* --- sân --- */
     kieu(E.nhom, "transform", "translateX(" + px(dx) + ")");
     kieu(E.canh, "transform", sx || sy ? "translate(" + px(sx) + "," + px(sy) + ")" : "");
-    const laNo = KIEU_DAY === "no" ? la * .6 : la;          // 27/11 (bản 15): cái nơ có cột bốn dấu dài nên giật nhẹ hơn dải lụa cũ
-    kieu(E.den, "transform", Math.abs(laNo) > .02 ? "rotate(" + laNo.toFixed(2) + "deg)" : "");
+    kieu(E.den, "transform", Math.abs(la) > .02 ? "rotate(" + la.toFixed(2) + "deg)" : "");
     if (KIEU_DAY === "co") E.toanLa.forEach((el, i) => kieu(el, "transform", Math.abs(la) > .02 ? "rotate(" + (la * (i % 2 ? 1.25 : .95)).toFixed(2) + "deg)" : ""));
     const TT = tuTheDoi(che, q, u, W), P = { tt: [], ng: ng, nhay: nhay, rung: rung, pop: [-1, -1], roi: [0, 0], vang: fx.vang, mung: [false, false], day: dxDay - dx };
     const nen = { tt: [], ng: [0, 0], nhay: [0, 0], rung: 0, pop: [-1, -1], roi: [0, 0], vang: -1, mung: [false, false], day: dxDay - dx };

@@ -557,11 +557,7 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-den-boc{position:absolute;inset:0;transform-origin:45px 12px;animation:kcDen 2.2s ease-in-out infinite alternate}
 .kc-den-neo.nam .kc-den-boc{animation:none}
 @keyframes kcDen{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
-/* 27/11/2026 9:53 (bản 15): cái nơ có bốn dấu + − × ÷ (js NO_TOAN): khung to hơn, gốc xoay ở nút nơ, đung đưa rất nhẹ để cột bốn dấu không lắc qua vạch giữa */
-.kc-den-neo.no{width:128px;height:168px;transform-origin:64px 16px}
-.kc-den-neo.no .kc-den-boc,.kc-den-neo.no .kc-den{transform-origin:64px 16px}
-.kc-den-neo.no .kc-den-boc{animation-name:kcNo}
-@keyframes kcNo{from{transform:rotate(-1.5deg)}to{transform:rotate(1.5deg)}}
+/* 27/11/2026 10:45 (bản 16): cái nơ vô cực (js NO_VC) dùng đúng khung 90 × 150 và nhịp đung đưa của dải lụa đỏ đầu tiên ở trên */
 .kc-den{position:absolute;inset:0;transform-origin:45px 12px;filter:drop-shadow(0 4px 4px rgba(40,20,0,.35))}
 .kc-den svg{display:block;width:100%;height:100%;overflow:visible}
 /* 26/11 11:09 thầy Thịnh: "thiết kế cho tôi cái sợi dây kéo co á, mà nó có hình ảnh liên quan đến môn toán". BẢN MẪU (thầy chưa chọn), ba kiểu ở
@@ -819,16 +815,19 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
            27/11/2026 9:53 thầy: "chỉnh lại 4 cái dấu + - x : thành cái nơ đi nhưng cái nơ đó có kí hiệu + - x : á" và 9:56: "với đổi luật luôn đưa 4 dấu
            cộng trừ nhân chia về phía đội mình là được." (bản 15): bốn lá cờ thành cái nơ có bốn dấu; "Nhiệm vụ" đổi "bốn lá cờ cộng, trừ, nhân, chia"
            thành "bốn dấu cộng, trừ, nhân, chia" (chữ của thầy); dòng cuối "Cách chơi" (lời thầy 25/11) đổi "đội kéo được dây về phía mình" thành
-           "đội đưa được bốn dấu cộng, trừ, nhân, chia về phía đội mình" theo lời đổi luật 9:56, phần sau giữ nguyên từng chữ. -->
+           "đội đưa được bốn dấu cộng, trừ, nhân, chia về phía đội mình" theo lời đổi luật 9:56, phần sau giữ nguyên từng chữ.
+           10:45 thầy: "thôi bỏ dấu cộng trừ nhân chia đi, đổi lại thành cái nơ có kích cỡ như ở bản đầu tiên nhưng vẽ giống kí hiệu vô cực." (bản 16):
+           không còn bốn dấu nên hai chỗ "bốn dấu cộng, trừ, nhân, chia" đổi thành "cái nơ" (vẫn theo lời đổi luật 9:56: đưa về phía đội mình là
+           được), các chữ khác giữ nguyên. Đây là cách tôi chọn chữ, thầy chưa duyệt. -->
       <h2>Nhiệm vụ</h2>
-      <p>Nhóm 1 và nhóm 2 ghép thành Đội 1, nhóm 3 và nhóm 4 ghép thành Đội 2. Nhiệm vụ của hai đội là trả lời 5 câu hỏi thầy đưa ra để kéo co, đưa bốn dấu cộng, trừ, nhân, chia về phía đội mình và thắp sáng ngọn đuốc của đội mình.</p>
+      <p>Nhóm 1 và nhóm 2 ghép thành Đội 1, nhóm 3 và nhóm 4 ghép thành Đội 2. Nhiệm vụ của hai đội là trả lời 5 câu hỏi thầy đưa ra để kéo co, đưa cái nơ về phía đội mình và thắp sáng ngọn đuốc của đội mình.</p>
       <h2>Cách chơi</h2>
       <ul>
         <li>Khi câu hỏi hiện lên, mỗi bạn tự suy nghĩ và tính đáp án.</li>
         <li>Khi màn hình báo "Giơ đáp án", mỗi bạn giơ thẻ có chữ cái của đáp án mình chọn, mặt có mã hướng về phía thầy, giữ yên cho đến khi thầy quét xong.</li>
         <li>Mỗi câu, đội nào có tỉ lệ bạn trả lời đúng cao hơn thì kéo được dây về phía đội mình; hơn càng nhiều thì kéo được càng nhiều nấc.</li>
         <li>Mỗi câu hỏi sẽ cho đội chiến thắng nhận được hiệu ứng riêng: Khai cuộc, Đồng lòng, Tăng tốc, Tiếp sức, Về đích.</li>
-        <li>Sau 5 câu, đội đưa được bốn dấu cộng, trừ, nhân, chia về phía đội mình sẽ được thắp đuốc trước và nhận một phần quà của thầy.</li>
+        <li>Sau 5 câu, đội đưa được cái nơ về phía đội mình sẽ được thắp đuốc trước và nhận một phần quà của thầy.</li>
       </ul>
     </div>
     <button type="button" class="luat-nut luat-hien" id="luatHien" aria-controls="luat" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Hiện luật chơi</button>
@@ -978,18 +977,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="e9444a54";</script>
-<script src="js/cau-hinh.js?v=e9444a54"></script>
-<script src="js/scanlib.js?v=e9444a54"></script>
-<script src="js/du-lieu.js?v=e9444a54"></script>
-<script src="js/dong-bo.js?v=e9444a54"></script>
-<script src="js/am-thanh.js?v=e9444a54"></script>
-<script src="js/quet.js?v=e9444a54"></script>
-<script src="js/cay-cau.js?v=e9444a54"></script>
-<script src="js/san-khau.js?v=e9444a54"></script>
-<script src="js/keo-co.js?v=e9444a54"></script>
-<script src="js/tro-choi.js?v=e9444a54"></script>
-<script src="js/nhanh.js?v=e9444a54"></script>
-<script src="js/do.js?v=e9444a54"></script>
+<script>window.RD_V="c77655f5";</script>
+<script src="js/cau-hinh.js?v=c77655f5"></script>
+<script src="js/scanlib.js?v=c77655f5"></script>
+<script src="js/du-lieu.js?v=c77655f5"></script>
+<script src="js/dong-bo.js?v=c77655f5"></script>
+<script src="js/am-thanh.js?v=c77655f5"></script>
+<script src="js/quet.js?v=c77655f5"></script>
+<script src="js/cay-cau.js?v=c77655f5"></script>
+<script src="js/san-khau.js?v=c77655f5"></script>
+<script src="js/keo-co.js?v=c77655f5"></script>
+<script src="js/tro-choi.js?v=c77655f5"></script>
+<script src="js/nhanh.js?v=c77655f5"></script>
+<script src="js/do.js?v=c77655f5"></script>
 </body>
 </html>
