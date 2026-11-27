@@ -723,6 +723,9 @@
   KC.phu = function (on) { S.phu = !!on; if (E) lop(E.g, "kc-dung", S.phu); if (!on) S.tinh = false; };
   // lúc báo tường lộ ra hết (giây, cùng đồng hồ performance.now); không đang đốt thì null
   KC.lucBaoHien = () => (S.che === "tuong" ? S.t0 + T_HET : null);
+  // bản 19 (27/11 14:33, "lúc mà hoạt động kéo co diễn ra ... thì nhạc tạm tắt"): lúc lượt kéo đang phát xong hẳn (tiếng trống nấc cuối đã
+  //   tắt), cùng đồng hồ performance.now tính bằng giây; không có hoạt cảnh kéo thì null. tro-choi.js (datNhac) tắt nhạc tới lúc này.
+  KC.lucKeoXong = () => (S.che === "keo" && S.L && S.t0 > XA ? S.t0 + S.L.het : null);
   KC.khiBam = null;
   KC.khiXongCau5 = null;
   KC._S = S;

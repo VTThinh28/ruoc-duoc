@@ -4,13 +4,27 @@
   "use strict";
   var RD = window.RD = window.RD || {};
   var A = RD.AmThanh = { bat: true, muc: 1 };
-  var ac = null, tong = null, nhieu = null;
-  try { A.bat = localStorage.getItem("rd-am") !== "0"; } catch (e) { /* bỏ qua */ }
+  var ac = null, tong = null, tieng = null, nhacBus = null, nhieu = null;
+  // 27/11/2026 14:33 thầy Thịnh: "âm thanh trò kéo co hơi nhỏ, cho to lên tối đa, đến lúc lên tiết tiếng to quá thì tôi sẽ tự giảm nhé".
+  //   Trang Kéo co nhớ bật/tắt tiếng và độ to riêng (kc-am, kc-am-muc; trang Rước đuốc vẫn dùng rd-am, rd-am-muc), lần đầu mở là 100 %.
+  //   Thầy giảm bằng nút − trên TV hay phím −, máy nhớ mức đó cho lần sau.
+  try { A.bat = localStorage.getItem("kc-am") !== "0"; } catch (e) { /* bỏ qua */ }
   // 6/11 chiều, thầy Thịnh: "trong game có nút tăng giảm âm lượng". muc: 0 … 1, mỗi nấc 10%, nhớ trên máy.
   //   6/11 trưa: "tăng giảm âm lượng cho tối đa là 100 thôi" (trước cho tới 150%; số cũ lớn hơn 100% thì về 100%)
-  try { var m0 = parseFloat(localStorage.getItem("rd-am-muc")); if (m0 >= 0) A.muc = Math.min(1, m0); } catch (e) { /* bỏ qua */ }
-  var DO_TO = 0.9;
-  function doTo() { return A.bat ? DO_TO * A.muc : 0; }
+  try { var m0 = parseFloat(localStorage.getItem("kc-am-muc")); if (m0 >= 0) A.muc = Math.min(1, m0); } catch (e) { /* bỏ qua */ }
+  function doTo() { return A.bat ? A.muc : 0; }
+  // 27/11 (bản 19): trước đây mọi tiếng đi qua bộ nén mặc định (ngưỡng -24 dB) nên ra loa rất nhỏ: đo trên trang, nhạc nền chỉ khoảng
+  //   -30 LUFS (video thường khoảng -14 LUFS), đỉnh cả ván -6 dBFS. Nay trên TV: nhạc nền to thêm TANG_TV.nhac lần, tiếng động to thêm
+  //   TANG_TV.tieng lần, rồi qua một bộ giới hạn (ngưỡng -2 dB, tỉ số 20) để chỗ to nhất cũng không vỡ tiếng (đỉnh dưới -1 dBFS).
+  //   Nhạc thường ra loa khoảng -12 LUFS (đo bằng thu/ghi-am.js và thu/do-am.py). Điện thoại (chỉ có tiếng "tích" khi quét) giữ độ to như cũ.
+  var TANG_TV = { nhac: 10, tieng: 2.8 }, TANG_DT = { nhac: 1, tieng: 1.4 }, laTV = false;
+  function tang() { return laTV ? TANG_TV : TANG_DT; }
+  A.datTV = function (on) {
+    laTV = !!on;
+    if (!ac) return;
+    tieng.gain.setTargetAtTime(tang().tieng, ac.currentTime, 0.05);
+    nhacBus.gain.setTargetAtTime(tang().nhac, ac.currentTime, 0.05);
+  };
 
   // chỉ gọi sau một lần chạm hoặc bấm phím (trình duyệt chặn âm thanh tự phát)
   A.mo = function () {
@@ -18,10 +32,18 @@
       var C = window.AudioContext || window.webkitAudioContext;
       if (!C) return;
       ac = new C();
-      tong = ac.createGain();
+      tong = ac.createGain();            // nút to nhỏ (muc) và tắt tiếng
       tong.gain.value = doTo();
-      var nen = ac.createDynamicsCompressor();
-      tong.connect(nen); nen.connect(ac.destination);
+      tieng = ac.createGain();           // mọi tiếng động
+      tieng.gain.value = tang().tieng;
+      nhacBus = ac.createGain();         // nhạc nền
+      nhacBus.gain.value = tang().nhac;
+      tieng.connect(tong); nhacBus.connect(tong);
+      var gh = ac.createDynamicsCompressor();      // bộ giới hạn: dưới -2 dB đi thẳng, trên đó bị ép 20 lần
+      gh.threshold.value = -2; gh.knee.value = 0; gh.ratio.value = 20; gh.attack.value = 0.001; gh.release.value = 0.2;
+      var sau = ac.createGain();         // bộ giới hạn tự cộng thêm chừng +1 dB: hạ lại một chút để đỉnh cao nhất ra loa khoảng -1 dBFS
+      sau.gain.value = 0.92;
+      tong.connect(gh); gh.connect(sau); sau.connect(ac.destination);
       var len = ac.sampleRate * 1.5, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
       for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       nhieu = b;
@@ -29,6 +51,7 @@
     if (ac.state === "suspended") ac.resume();
     giaiMaNhac();
     giaiMaVoTay();
+    giaiMaTrong();
   };
 
   /* ---------- nhạc nền ---------- */
@@ -57,7 +80,7 @@
       NH.g.gain.value = 0.0001;
       NH.h = ac.createGain();          // nút hạ nhạc lúc có tiếng vỗ tay (haNhac)
       NH.h.gain.value = 1;
-      NH.g.connect(NH.h); NH.h.connect(tong);
+      NH.g.connect(NH.h); NH.h.connect(nhacBus);
       NH.src = ac.createBufferSource();
       NH.src.buffer = NH.buf;
       NH.src.loop = true;
@@ -85,14 +108,14 @@
   A.nhacDangBat = function () { return NH.batNhac; };
   A.datBat = function (on) {
     A.bat = !!on;
-    try { localStorage.setItem("rd-am", on ? "1" : "0"); } catch (e) { /* bỏ qua */ }
+    try { localStorage.setItem("kc-am", on ? "1" : "0"); } catch (e) { /* bỏ qua */ }
     if (tong) tong.gain.setTargetAtTime(doTo(), ac.currentTime, 0.05);
   };
   // đặt độ to (0 … 1); trả về độ to mới. Đang tắt tiếng mà bấm tăng thì bật lại tiếng
   A.MUC_MAX = 1;
   A.datMuc = function (v) {
     A.muc = Math.round(Math.max(0, Math.min(A.MUC_MAX, v)) * 10) / 10;
-    try { localStorage.setItem("rd-am-muc", String(A.muc)); } catch (e) { /* bỏ qua */ }
+    try { localStorage.setItem("kc-am-muc", String(A.muc)); } catch (e) { /* bỏ qua */ }
     if (tong) tong.gain.setTargetAtTime(doTo(), ac.currentTime, 0.05);
     return A.muc;
   };
@@ -102,7 +125,7 @@
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(gain, t + 0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    node.connect(g); g.connect(tong);
+    node.connect(g); g.connect(tieng);
     return g;
   }
   function tiengNhieu(t, len, loc, f1, f2, q, gain) {
@@ -135,13 +158,26 @@
     o2.frequency.exponentialRampToValueAtTime(230, t + 0.07);
     ra(o2, 0.1 * m, t, 0.09);
     o2.start(t); o2.stop(t + 0.11);
+    // 27/11 (bản 19, "để khán giả nghe rõ tiếng chân tiếng kéo"): tiếng trống cũ gần như chỉ có tiếng trầm dưới 250 Hz, loa laptop và loa
+    //   TV nhỏ phát rất yếu. Thêm một tiếng "thịch" ở quãng giữa (âm bồi gấp đôi, tắt nhanh) và một tiếng chạm đất rất ngắn, nhỏ, để tiếng
+    //   mỗi nấc nghe như tiếng giậm chân, nghe rõ trên loa nhỏ. Không thêm tiếng rền sâu, không thêm tiếng xoẹt dài (5/11 thầy chê tiếng nổ).
+    var o3 = ac.createOscillator();
+    o3.type = "sine";
+    o3.frequency.setValueAtTime(360, t);
+    o3.frequency.exponentialRampToValueAtTime(200, t + 0.12);
+    ra(o3, 0.36 * m, t, 0.18);
+    o3.start(t); o3.stop(t + 0.2);
+    tiengNhieu(t, 0.045, "bandpass", 700, 320, 1.1, 0.16 * m);
   };
   // âm giai ngũ cung Đô Rê Mi Son La (quãng tám 5 và 6) cho tiếng mộc cầm
   var NGU = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
   // một tiếng gõ mộc cầm êm (thay tiếng trống khi mảnh ghép đáp xuống cầu); bac: bậc trong âm giai, mạnh 0..1
+  // 27/11 (bản 19, "cho to lên tối đa"): tiếng mộc cầm và tiếng chuông vốn rất nhỏ (đo: khúc vui chỉ khoảng -27 LUFS), nay to gấp đôi
+  //   (+6 dB) cùng với mọi tiếng động to thêm (TANG_TV), để vẫn nghe rõ khi nhạc nền đã to: tiếng báo câu mới, khúc vui, tiếng gõ, tiếng chuông
+  var TO_CHUONG = 2;
   A.go = function (bac, manh, luc) {
     if (!san()) return;
-    var t = luc || ac.currentTime, m = manh == null ? 1 : manh;
+    var t = luc || ac.currentTime, m = (manh == null ? 1 : manh) * TO_CHUONG;
     var f = NGU[Math.max(0, Math.min(NGU.length - 1, bac | 0))];
     var o = ac.createOscillator();
     o.type = "sine"; o.frequency.value = f;
@@ -169,12 +205,12 @@
     var t = ac.currentTime;
     moGo(t, 1180, 0.21);          // đỉnh ra loa ngang tiếng vỗ tay (khoảng -10 dBFS), to hơn nhạc nền khoảng 8 dB
     moGo(t + 0.5, 800, 0.09);
-    A.go(bac, 1, t);
+    A.go(bac, 1 / TO_CHUONG, t);  // nốt mộc cầm giữ độ to như trước bản 19 (tiếng tích tắc to lên cùng mọi tiếng động)
   };
   // chuông nhỏ trong trẻo, ngân nhẹ (như hộp nhạc)
   A.chuong = function (manh, luc) {
     if (!san()) return;
-    var t = luc || ac.currentTime, m = manh == null ? 1 : manh;
+    var t = luc || ac.currentTime, m = (manh == null ? 1 : manh) * TO_CHUONG;
     [[1046.5, 0.065, 1.3], [2093, 0.019, 0.8], [3139.5, 0.009, 0.45]].forEach(function (p) {
       var o = ac.createOscillator();
       o.type = "sine"; o.frequency.value = p[0];
@@ -268,9 +304,46 @@
     var s = ac.createBufferSource(), g = ac.createGain();
     s.buffer = VT.buf;
     g.gain.value = 0.55 * (manh == null ? 1 : manh);     // to hơn nhạc nền khoảng 4 dB (đo độ to LUFS của hai tệp)
-    s.connect(g); g.connect(tong);
+    s.connect(g); g.connect(tieng);
     s.start(ac.currentTime);
     haNhac(VT.buf.duration);
+  };
+  // 27/11/2026 14:33 thầy Thịnh: "lúc đồng hồ đếm ngược nhạc cũng tạm tắt, có tiếng reo lúc đếm ngược 5 giây xong"; 17:20: "giơ đáp án đổi
+  //   sang tiếng trống giống tấm thiệp của nhóm em đi.", "tùng tùng tùng là được". Hết 5 giây đếm ngược (chữ "Giơ đáp án", tro-choi.js
+  //   veDemTV) gọi A.trongGio(): ba tiếng trống trường "tùng, tùng, tùng" cách nhau 0,7 giây, đúng ba tiếng "tùng" của đồng hồ trang Xếp thiệp
+  //   (xep-thiep.js NHIP_TRONG, bỏ hai tiếng "cạch" gõ viền). Tiếng trống là keo-co/nhac/trong-tung.wav, chép nguyên từ
+  //   xep-thiep/nhac/trong-tung.wav (bản thu CC0 "Bass tom, #4" của Joseph SARDIN, BigSoundBank số 2341, trang Xếp thiệp đã chỉnh cho loa
+  //   tivi nhỏ). Chưa tải được tệp thì gõ ba tiếng trống tự tạo (A.trong). Nhạc nền tắt lúc đếm và chờ trống xong mới có lại (tro-choi.js, datNhac).
+  var NHIP_TUNG = [[0, 0.95], [0.7, 0.95], [1.4, 1]];   // [giây kể từ lúc hết giờ, mạnh nhẹ]: như 0,9; 1,6; 2,3 giây của Xếp thiệp
+  A.TRONG_TO = 0.34;   // đỉnh tệp 0,89 × 0,34 × TANG_TV.tieng 2,8 ≈ 0,85: vừa chạm bộ giới hạn, to nhất mà không vỡ tiếng
+  var TR = { url: "nhac/trong-tung.wav", tai: null, ab: null, buf: null, dangGiai: false };
+  A.taiTrong = function (url) {
+    if (url) TR.url = url;
+    if (TR.tai || TR.buf) return;
+    TR.tai = fetch(TR.url).then(function (r) { if (!r.ok) throw new Error("trong " + r.status); return r.arrayBuffer(); })
+      .then(function (ab) { TR.ab = ab; giaiMaTrong(); })
+      .catch(function () { TR.tai = null; });
+  };
+  function giaiMaTrong() {
+    if (!ac || !TR.ab || TR.buf || TR.dangGiai) return;
+    TR.dangGiai = true;
+    var ab = TR.ab;
+    var xong = function (b) { TR.buf = b; TR.ab = null; TR.dangGiai = false; };
+    var p = ac.decodeAudioData(ab, xong, function () { TR.dangGiai = false; });
+    if (p && p.then) p.catch(function () { TR.dangGiai = false; });
+  }
+  A.coTrong = function () { return !!TR.buf; };
+  A.trongGio = function () {
+    if (!san()) return;
+    var t = ac.currentTime + 0.02;
+    NHIP_TUNG.forEach(function (n) {
+      if (!TR.buf) { A.trong(n[1], t + n[0]); return; }
+      var s = ac.createBufferSource(), g = ac.createGain();
+      s.buffer = TR.buf;
+      g.gain.value = A.TRONG_TO * n[1];
+      s.connect(g); g.connect(tieng);
+      s.start(t + n[0]);
+    });
   };
   A.lapLanh = function () {
     if (!san()) return;
