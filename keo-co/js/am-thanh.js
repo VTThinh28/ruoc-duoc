@@ -245,7 +245,7 @@
   };
   A.vut = function () {
     if (!san()) return;
-    tiengNhieu(ac.currentTime, 0.9, "bandpass", 300, 2400, 1.4, 0.3);
+    tiengNhieu(ac.currentTime, 0.9, "bandpass", 300, 2400, 1.4, 0.3 * A.VUT_TO);
   };
   // đuốc bén lửa: tiếng "phừng" nhẹ và một tiếng chuông (trước đây là tiếng nổ trầm kèm trống; 6/11 bỏ tiếng lách tách)
   A.bungLua = function () {
@@ -328,7 +328,7 @@
     if (!ac || !TR.ab || TR.buf || TR.dangGiai) return;
     TR.dangGiai = true;
     var ab = TR.ab;
-    var xong = function (b) { TR.buf = b; TR.ab = null; TR.dangGiai = false; };
+    var xong = function (b) { TR.buf = b; TR.ab = null; TR.dangGiai = false; lamNac(); };
     var p = ac.decodeAudioData(ab, xong, function () { TR.dangGiai = false; });
     if (p && p.then) p.catch(function () { TR.dangGiai = false; });
   }
@@ -345,6 +345,62 @@
       s.start(t + n[0]);
     });
   };
+  // 27/11/2026 22:15 thầy Thịnh (bản 21): "à không phải là mất mà tiếng lúc kéo nhỏ quá không nghe ra, cho to lên tối đa."; 22:23: "độ lớn
+  //   của tiếng lúc kéo cũng giống như bài hát của trò chơi kéo có". Đo bản 20 (thu/ghi-am.js, rồi cắt dưới 300 Hz như loa laptop, cắt dưới
+  //   150 Hz như loa tivi): tiếng giậm chân mỗi nấc (A.trong 0,85) gần hết nằm dưới 250 Hz nên ra loa laptop lớn nhất chỉ -28 LUFS (đo trong
+  //   0,4 giây), loa tivi -19,5, trong khi nhạc nền -13,3 và -12,8; đỉnh đã chạm bộ giới hạn nên tăng thẳng độ to thì chỉ vỡ tiếng.
+  //   Bản 21: mỗi nấc kéo là A.trongKeo = tiếng trống trường thu thật (cùng tệp trống "tùng" lúc Giơ đáp án) làm sẵn một lần cho loa nhỏ
+  //   (lamNac): cao lên NAC.TOC lần (trống nhỏ hơn một chút, tiếng rơi vào quãng loa nhỏ phát được), bớt tiếng ù dưới NAC.HP Hz, nhấn quãng
+  //   NAC.F Hz và tiếng dùi chạm mặt trống (trên 2 kHz), nén mềm chỗ đỉnh (tanh) để thân tiếng to lên mà đỉnh không vượt bộ giới hạn, ngân
+  //   NAC.NGAN giây rồi tắt nhanh để các nấc cách nhau 0,5 giây không chồng lên nhau. To bằng nhạc nền trên loa laptop, to hơn nhạc chừng
+  //   2 dB trên loa tivi và loa lớn (số đo ở DOC-TRUOC). Tệp trống chưa tải xong thì dùng tiếng giậm chân cũ (A.trong).
+  var NAC = { buf: null, TOC: 1.25, HP: 150, F: 500, DB: 12, CAO: 8, K: 2.5, NGAN: 0.4, TAT: 0.07 };
+  A.NAC_TO = 0.3;      // đỉnh một nấc mạnh 0,85 trước đường tiếng động; × TANG_TV.tieng 2,8 ≈ 0,84: vừa chạm bộ giới hạn, không vỡ tiếng
+  // hệ số bộ lọc như BiquadFilterNode (Audio EQ Cookbook; highpass: Q tính bằng dB như Web Audio; highshelf: độ dốc 1)
+  function heSo(loai, f, Q, G, sr) {
+    var w0 = 2 * Math.PI * f / sr, cw = Math.cos(w0), sw = Math.sin(w0), A0 = Math.pow(10, G / 40), al, b, a;
+    if (loai === "hp") { al = sw / (2 * Math.pow(10, Q / 20)); b = [(1 + cw) / 2, -(1 + cw), (1 + cw) / 2]; a = [1 + al, -2 * cw, 1 - al]; }
+    else if (loai === "pk") { al = sw / (2 * Q); b = [1 + al * A0, -2 * cw, 1 - al * A0]; a = [1 + al / A0, -2 * cw, 1 - al / A0]; }
+    else {
+      al = sw / 2 * Math.SQRT2; var s2 = 2 * Math.sqrt(A0) * al;
+      b = [A0 * ((A0 + 1) + (A0 - 1) * cw + s2), -2 * A0 * ((A0 - 1) + (A0 + 1) * cw), A0 * ((A0 + 1) + (A0 - 1) * cw - s2)];
+      a = [(A0 + 1) - (A0 - 1) * cw + s2, 2 * ((A0 - 1) - (A0 + 1) * cw), (A0 + 1) - (A0 - 1) * cw - s2];
+    }
+    return [b[0] / a[0], b[1] / a[0], b[2] / a[0], a[1] / a[0], a[2] / a[0]];
+  }
+  function loc(x, c) {
+    var x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+    for (var i = 0; i < x.length; i++) { var v = x[i], y = c[0] * v + c[1] * x1 + c[2] * x2 - c[3] * y1 - c[4] * y2; x2 = x1; x1 = v; y2 = y1; y1 = y; x[i] = y; }
+  }
+  function lamNac() {
+    if (NAC.buf || !TR.buf || !ac) return;
+    try {
+      var sr = TR.buf.sampleRate, goc = TR.buf.getChannelData(0), dai = Math.min(Math.floor(goc.length / NAC.TOC), Math.ceil(sr * (NAC.NGAN + 7 * NAC.TAT)));
+      var x = new Float32Array(dai), i, dinh = 0;
+      for (i = 0; i < dai; i++) { var p = i * NAC.TOC, j = Math.floor(p), f = p - j; x[i] = goc[j] * (1 - f) + (j + 1 < goc.length ? goc[j + 1] : 0) * f; }
+      loc(x, heSo("hp", NAC.HP, 0.7, 0, sr)); loc(x, heSo("pk", NAC.F, 1, NAC.DB, sr)); loc(x, heSo("hs", 2000, 1, NAC.CAO, sr));
+      for (i = 0; i < dai; i++) { var tg = i / sr; if (tg > NAC.NGAN) x[i] *= Math.exp(-(tg - NAC.NGAN) / NAC.TAT); if (Math.abs(x[i]) > dinh) dinh = Math.abs(x[i]); }
+      var th = Math.tanh(NAC.K);
+      for (i = 0; i < dai; i++) x[i] = Math.tanh(NAC.K * x[i] / dinh) / th;
+      var b = ac.createBuffer(1, dai, sr);
+      b.getChannelData(0).set(x);
+      NAC.buf = b;
+    } catch (e) { NAC.buf = null; }
+  }
+  A.coNac = function () { return !!NAC.buf; };
+  A.trongKeo = function (manh, luc) {
+    if (!san()) return;
+    if (!NAC.buf) lamNac();
+    if (!NAC.buf) { A.trong(manh, luc); return; }
+    var t = luc || ac.currentTime, s = ac.createBufferSource(), g = ac.createGain();
+    s.buffer = NAC.buf;
+    g.gain.value = A.NAC_TO * (manh == null ? 1 : manh) / 0.85;
+    s.connect(g); g.connect(tieng);
+    s.start(t);
+  };
+  // 22:15 (bản 21) "tiếng lúc kéo ... cho to lên tối đa": tiếng vút lúc có bạn trượt chân (câu 2, câu 5, giữa lúc kéo) vốn rất nhỏ (ra loa
+  //   laptop lớn nhất -31 LUFS, nhạc nền -13), nay to thêm VUT_TO lần
+  A.VUT_TO = 5;
   A.lapLanh = function () {
     if (!san()) return;
     var t = ac.currentTime;

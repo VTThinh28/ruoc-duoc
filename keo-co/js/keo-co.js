@@ -700,7 +700,9 @@
           //   tiếng vút (vut), tiếng lách tách (lachTach), cả ở lúc đội thắng sang bắt tay và lúc vầng sáng lan ra. Còn lại: gõ mộc cầm và chuông
           //   lúc hiện ô báo, trống mỗi nấc kéo, tiếng vút lúc có bạn trượt chân, khúc vui, vỗ tay, trống lúc vầng sáng lan ra, nhạc nền.
           hen(t + T_SM, keu("go", 3, .35)); hen(t + T_BAO, keu("chuong", .35));
-          S.L.moc.forEach((m, i) => { hen(t + m, keu("trong", i >= K.nac ? .7 : .85)); });
+          // 27/11 22:15 (bản 21) thầy Thịnh: "tiếng lúc kéo nhỏ quá không nghe ra, cho to lên tối đa", 22:23 "giống như bài hát": mỗi nấc là
+          //   tiếng trống trường làm sẵn cho loa nhỏ (A.trongKeo, am-thanh.js), to bằng nhạc nền; trước là tiếng giậm chân tự tạo (A.trong)
+          S.L.moc.forEach((m, i) => { hen(t + m, keu("trongKeo", i >= K.nac ? .7 : .85)); });
           if (S.q === 2 && S.L.moc.length) hen(t + S.L.moc[0] + .1, keu("vut"));                    // có bạn trượt chân
           if (S.q === 5 && S.L.moc.length > 1) hen(t + S.L.moc[1] + .1, keu("vut"));
           if (S.q === 5 && trong(5).thang) { hen(t + S.L.het + T_MUNG + T_CT + .1, keu("ken")); S.kenLuc = t + S.L.het + T_MUNG + T_CT + .1; }      // dòng chữ vàng "ĐỘI n CHIẾN THẮNG": khúc vui
