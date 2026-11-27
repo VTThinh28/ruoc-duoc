@@ -2412,10 +2412,10 @@
        25/11 06:02, thầy: "bỏ cái pháo hoa đi nhé" → gỡ. 25/11 11:10, thầy: "bổ sung lại pháo hoa đi" → cả khối này trở lại nguyên văn bản 01:31.
        Nhạc nền: nhỏ dần trong 0,9 giây rồi TẮT hẳn (ghi <phòng>/nhac b = 0, máy giáo viên thấy nút nhạc về "tắt"); hết pháo nhạc không tự bật lại.
        Tiếng pháo: nhac/phao-bong.mp3, 19 giây cắt từ một bản thu thật (BigSoundBank số 2672 của Joseph Sardin, CC0, xem test/lam-phao.py), phát lúc tf = T3.PHAO_AM;
-       các quả pháo trên màn hình nổ đúng lúc các tiếng nổ trong bản thu. Tiếng ra thẳng loa, không theo nút âm lượng của nhạc nền (như tiếng trống).
+       các quả pháo trên màn hình nổ đúng lúc các tiếng nổ trong bản thu. Tiếng không theo nút âm lượng của nhạc nền (như tiếng trống); 27/11 23:04: tệp làm to hơn, đi qua đường ra loa chung có bộ giới hạn (amDuong).
        Tivi tải tệp này 2,5 giây sau hai tiếng trống. Lúc pháo bắt đầu mà tệp chưa tải xong, hay trình duyệt chưa cho phát tiếng (tivi chưa được chạm lần nào): cứ 0,25 giây thử lại,
        được lúc nào thì phát tiếp từ đúng chỗ của lúc đó (không phát lại từ đầu), để tiếng nổ vẫn khớp hình. #phao[data-am] = "số lần đã phát,giây bỏ qua ở lần gần nhất" cho bài thử đọc. */
-    var PHAO_TEP = "nhac/phao-bong.mp3", PHAO_TO = 0.9;
+    var PHAO_TEP = "nhac/phao-bong.mp3?v=faf12cc9", PHAO_TO = 0.9;      // 27/11 23:04: tệp làm to hơn (xem NHAC_TANG), ?v= để máy không dùng tệp cũ còn lưu
     var phaoMau = null, phaoDangTai = false, phaoSrc = null, phaoHen = 0, phaoLan = 0, phaoDem = 0;
     function phaoTai() {                            // tải và giải mã tiếng pháo, một lần
       var ac = amAC();
@@ -2442,7 +2442,7 @@
           if (!phaoMau) phaoTai(); else { try { ac.resume(); } catch (e) { /* bỏ qua */ } }
           phaoHen = setTimeout(thu, 250); return;
         }
-        src = ac.createBufferSource(); g = ac.createGain(); src.buffer = phaoMau; g.gain.value = PHAO_TO; src.connect(g); g.connect(ac.destination);
+        src = ac.createBufferSource(); g = ac.createGain(); src.buffer = phaoMau; g.gain.value = PHAO_TO; src.connect(g); g.connect(amDuong(ac));
         if (tre >= 0) src.start(ac.currentTime + tre); else src.start(ac.currentTime, -tre);
         src.onended = function () { try { g.disconnect(); } catch (e) { /* bỏ qua */ } if (phaoSrc === src) phaoSrc = null; };
         phaoSrc = src; phaoDem++;
@@ -2820,6 +2820,15 @@
        và mỗi lần tivi mở trang thì về lại mức 10 (thầy tự bấm nhỏ nếu muốn). Đo: Xếp thiệp −14,9 LUFS, Bài học đầu tiên −14,8 LUFS, Học Vui Mỗi Ngày −20,1 LUFS. */
     var NHAC_BAI = { xep: { tep: "nhac/xep-thiep.mp3", ten: "Xếp thiệp", bu: 1 }, hv: { tep: "../nhac/nhac-nen.ogg", ten: "Học Vui Mỗi Ngày", bu: 1.78 } };      // bu: nhân độ to ở mức 10
     var NHAC_MUC = 10, NHAC_MUC_DAU = 10;
+    /* 27/11/2026 22:59 (giờ thầy), thầy hỏi: "âm thanh của phần tấm thiệp của nhóm em đã to nhất chưa"; 23:04 thầy chọn "Làm to rồi đưa lên luôn"
+       trên thẻ "Làm âm thanh Tấm thiệp to bằng trò Kéo co?". Đo trước khi sửa (cắt dưới 300 Hz như loa laptop / dưới 150 Hz như loa tivi):
+       nhạc nền mức 10 -16,3 / -15,6 LUFS, trong khi nhạc nền trò Kéo co (bản 19) -13,3 / -12,8; một tiếng "tùng" lớn nhất -21 / -16,4 (đo trong 0,4 giây);
+       tiếng pháo hoa lớn nhất -25,8 / -23,2 (đo trong 3 giây). Nay làm như trò Kéo co:
+       - mọi tiếng (nhạc nền, trống, pháo hoa) đi vào một đường chung N.ra, rồi qua bộ giới hạn (ngưỡng -2 dB, tỉ số 20) và hạ 0,92: chỗ to nhất cũng không vỡ tiếng;
+       - nhạc nền to thêm NHAC_TANG lần SAU nút âm lượng (nút N.g: mức 10 vẫn là độ to gốc của tệp), cả bài Báo tường động và bài thầy chọn từ máy
+         (thẻ audio, nối vào đường này bằng createMediaElementSource);
+       - hai tiếng trống và tiếng pháo hoa là tệp mới làm to hơn (bớt tiếng ù dưới 150 Hz, nhấn quãng giữa và tiếng dùi, nén, ép mềm đỉnh), đỉnh tệp vẫn 0,89. */
+    var NHAC_TANG = 1.6;
     var N = { nguon: "xep", ten: "", bat: false, am: NHAC_MUC_DAU, mo: 1, tt: 0, lan: 0, ac: null, g: null, src: null, buf: {}, au: null, url: null, cho: false, daNhan: false, henMo: 0 };
     /* 16/11 13:11, thầy: "Nhạc nền mặc định là  xếp thiệp". Mỗi lần tivi mở trang, bài đang chọn luôn là "Xếp thiệp" (bản 11:37 nhớ bài thầy chọn lần trước trong localStorage "xt-nhac").
        Thầy chọn bài khác trong Cài đặt thì dùng bài đó cho tới khi tải lại trang. Chỉ còn nhớ tên file thầy đã chọn từ máy ("xt-nhac-ten") để ghi lên nút. */
@@ -2835,19 +2844,36 @@
        Chưa tải được (mất mạng, file hỏng) thì dùng tiếng tự tạo của bản 17/11: amTrong cho "tùng" (mặt da rung trầm, TRONG_BOI, TRONG_ON), amCachTao cho "cạch".
        Nhịp gõ ở DN_NHIP: [mili giây kể từ tiếng đầu, "cach" hay "tung", mạnh nhẹ]. Lúc bắt đầu và lúc hết giờ đều là "cạch, cạch" rồi "tùng, tùng, tùng"
        (tiếng cuối ở 2,3 giây). Cái trống vẽ trên đồng hồ gõ cùng nhịp đó (dnGo). Chạy tiếp sau khi tạm dừng thì không gõ.
-       Tiếng ra thẳng loa, không theo nút âm lượng của nhạc nền (nhạc tắt vẫn có tiếng trống).
+       Tiếng không theo nút âm lượng của nhạc nền (nhạc tắt vẫn có tiếng trống); 27/11 23:04: tệp làm to hơn, đi qua đường ra loa chung có bộ giới hạn (amDuong).
        Trình duyệt chỉ cho phát tiếng khi trang tivi đã được chạm một lần. Tivi tạo sẵn AudioContext lúc mở trang, lần chạm (hay bấm phím) đầu tiên thì cho nó chạy;
        tivi báo tv3d.a = 1 khi đã phát được tiếng, 0 khi chưa, để máy giáo viên nhắc thầy chạm vào tivi. Chưa phát được thì bỏ qua tiếng (không phát bù về sau); hình trống vẫn gõ. */
     var NHIP_TRONG = [[0, "cach", 0.85], [300, "cach", 0.85], [900, "tung", 0.95], [1600, "tung", 0.95], [2300, "tung", 1]];
     var DN_NHIP = { mo: NHIP_TRONG, het: NHIP_TRONG };
     var AM_TO = { tung: 0.9, cach: 0.8 };          // độ to mỗi loại tiếng thu thật (file đã đưa đỉnh về 0,89); đo bằng test/nghe-am.js, cùng nhạc mức 10 vẫn dưới 1
-    var AM_TEP = { tung: "nhac/trong-tung.wav", cach: "nhac/trong-cach.wav" }, amMau = { tung: null, cach: null };
+    var AM_TEP = { tung: "nhac/trong-tung.wav?v=484be0f8", cach: "nhac/trong-cach.wav?v=ac201545" }, amMau = { tung: null, cach: null };
     var AM_TRONG = 0.38;                            // tiếng tự tạo (khi chưa tải được file): độ to một tiếng "tùng" mạnh nhất, như bản 17/11
     var AM = { mo: 0, het: 0 };                    // số lần đã phát tiếng từng loại (bài thử đọc ở #dn[data-am] = "mở,hết giờ")
     function amAC() {
       var AC = window.AudioContext || window.webkitAudioContext;
-      if (!N.ac && AC) { try { N.ac = new AC(); N.g = N.ac.createGain(); N.g.connect(N.ac.destination); N.ac.onstatechange = function () { if (N.ac.state === "running" && N.bat && N.tt === 2) nhacDat(1); else bao3d(); }; } catch (e) { N.ac = null; } }
+      if (!N.ac && AC) { try { N.ac = new AC(); N.g = N.ac.createGain(); amDuongChung(); N.g.connect(N.gt); N.ac.onstatechange = function () { if (N.ac.state === "running" && N.bat && N.tt === 2) nhacDat(1); else bao3d(); }; } catch (e) { N.ac = null; } }
       return N.ac;
+    }
+    function amDuongChung() {                       // 27/11 23:04: đường ra loa chung, có bộ giới hạn như trò Kéo co (N.g phải là nút gain đầu tiên trang tạo: bài thử đọc nó)
+      var ac = N.ac, gh, sau;
+      N.gt = ac.createGain(); N.gt.gain.value = NHAC_TANG;           // phần tăng thêm của nhạc nền
+      N.ra = ac.createGain(); N.ra.gain.value = 1;                    // mọi tiếng đi vào đây
+      N.gt.connect(N.ra);
+      try {
+        gh = ac.createDynamicsCompressor();                           // bộ giới hạn: dưới -2 dB đi thẳng, trên đó bị ép 20 lần
+        gh.threshold.value = -2; gh.knee.value = 0; gh.ratio.value = 20; gh.attack.value = 0.001; gh.release.value = 0.2;
+        sau = ac.createGain(); sau.gain.value = 0.92;               // bộ giới hạn tự cộng thêm chừng +1 dB: hạ lại để đỉnh ra loa khoảng -1 dBFS
+        N.ra.connect(gh); gh.connect(sau); sau.connect(ac.destination);
+      } catch (e) { try { N.ra.disconnect(); } catch (e2) { /* bỏ qua */ } N.ra.connect(ac.destination); }
+    }
+    function amDuong(ac) { return ac && ac === N.ac && N.ra ? N.ra : ac.destination; }      // đường ra loa cho trống, pháo hoa
+    function amNoiThe() {                           // 27/11 23:04: thẻ audio (bài Báo tường động, bài thầy chọn) cũng đi qua phần tăng và bộ giới hạn
+      if (N.auNoi || !N.au || !amAC() || !N.gt) return;
+      try { N.auSrc = N.ac.createMediaElementSource(N.au); N.auSrc.connect(N.gt); N.auNoi = true; } catch (e) { N.auNoi = false; }
     }
     function amTT() { return N.ac && N.ac.state === "running" ? 1 : 0; }
     var amOnBuf = null;
@@ -2912,7 +2938,7 @@
       var ac = amAC();
       function phat() {
         var ra, t;
-        ra = ac.createGain(); ra.gain.value = 1; ra.connect(ac.destination); t = ac.currentTime + 0.04 + (cho || 0) / 1000;      // 0,04 giây: cùng mốc với cái trống vẽ trên đồng hồ (dnGo)
+        ra = ac.createGain(); ra.gain.value = 1; ra.connect(amDuong(ac)); t = ac.currentTime + 0.04 + (cho || 0) / 1000;      // 0,04 giây: cùng mốc với cái trống vẽ trên đồng hồ (dnGo)
         DN_NHIP[loai].forEach(function (n) { amGo(ac, ra, n[1], t + n[0] / 1000, n[2]); });
         AM[loai]++; $("dn").setAttribute("data-am", AM.mo + "," + AM.het);
         amRa.push(ra);
@@ -2988,12 +3014,12 @@
       layAnh(N.nguon === "btd" ? "btdNhac" : "nhacXep", function (b) {             // file thầy chọn; 27/11: hay bài hát của Báo tường động
         if (lan !== N.lan) return;
         if (!b) { nhacDat(4); return; }
-        if (!N.au) { N.au = new Audio(); N.au.loop = true; }
+        if (!N.au) { N.au = new Audio(); N.au.loop = true; amNoiThe(); }
         if (!N.url || N.blob !== b) { if (N.url) URL.revokeObjectURL(N.url); N.blob = b; N.url = URL.createObjectURL(b); N.au.src = N.url; }
         nhacDatTo();
         var p = null;
         try { p = N.au.play(); } catch (e) { nhacDat(4); return; }
-        if (p && p.then) p.then(function () { if (lan === N.lan) nhacDat(1); }, function (er) { if (lan !== N.lan) return; if (er && er.name === "NotAllowedError") { nhacDat(2); nhacChoCham(); } else nhacDat(4); });
+        if (p && p.then) p.then(function () { if (lan !== N.lan) return; if (N.auNoi && N.ac.state !== "running") { try { N.ac.resume(); } catch (e4) { /* bỏ qua */ } nhacDat(2); nhacChoCham(); } else nhacDat(1); }, function (er) { if (lan !== N.lan) return; if (er && er.name === "NotAllowedError") { nhacDat(2); nhacChoCham(); } else nhacDat(4); });
         else nhacDat(1);
       });
     }
