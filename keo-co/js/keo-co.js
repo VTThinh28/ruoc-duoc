@@ -66,6 +66,11 @@
   //   bạn cầm một sợi riêng. Nên d2-ha.webp về lại hình của bản 4 (25/11): bốn bạn hạ người, cả bốn nắm chung một sợi dây bằng hai tay;
   //   nam.ha của hình đó, bỏ dayTT và chanTT của hình vắt vai. Hình hạ người cao 210 đến 219 điểm ảnh trên sân, đội áo thể dục "ha" phóng
   //   1,15 lần cao 205 đến 225: hai đội vẫn cân.
+  //   11:16 thầy xem bản 16: "Cho cái dây nơ ngắn lại, tôi muốn dây để lên vai nhưng vẽ hợp lí hơn". Nên (bản 17) d2-ha.webp lại là hình
+  //   vắt dây qua vai của 25/11 22:12, nhưng sửa cho dây liền một sợi: dây từ giữa sân vắt qua vai bạn đứng trong cùng, vòng xuống hai
+  //   nắm tay, từ nắm tay chạy lên vai bạn đứng trước, cứ thế tới bạn cuối cùng (bạn này giữ đuôi dây như cũ). Bỏ khúc dây cũ chạy ngang
+  //   dưới cằm ba bạn và ba đầu dây cụt dưới nắm tay (cách làm: hinh-day-vai-ban-17/sua17.py trong thư mục dự án). Khúc dây chui ra sau
+  //   bím tóc và bàn chân giữ y như hình vắt vai cũ, nên nam.ha, dayTT, chanTT lấy lại số của hình đó.
   //   27/11/2026 6:54 thầy Thịnh: "sợi dây của đội áo thể dục đang cầm thì nhỏ hơn bên áo vàng." Đo: dây áo thể dục trên sân dày khoảng
   //   6,5 điểm ảnh, dây áo vàng 8,5. Nên sợi dây trong 4 hình cầm dây của đội áo thể dục (d1-keo, -truot, -quay, -ha) và dải vân day-d1
   //   giãn theo chiều đứng 1,35 lần (vân xoắn giữ nhịp cũ, phần khác của hình giữ nguyên; cách làm: thu/day-to-hon.py trong thư mục dự
@@ -79,7 +84,7 @@
   const HINH = [
     { k: "d1", w: 1175, h: 543, base: 529, s: .62, dinh: 0, nam: { keo: [94, 297.5], truot: [91, 298.2], quay: [96, 296.2], ha: [144, 378] }, vanH: 22, duoc: .225, toTT: { keo: 1.1, truot: 1.1, quay: 1.1, ha: 1.15 },
       ban: [[202, 465, 461, 67.5, 197, 198.5, 95.5], [204, 465, 460, 67, 199, 195, 346.5], [218, 466, 462, 76, 213, 189, 591.5], [241, 466, 461, 97.5, 236, 187, 829.5]] },
-    { k: "d2", w: 1187, h: 493, base: 487, s: .585, dinh: 12, nam: { keo: [163, 216.8], truot: [150, 222.2], quay: [147, 226.5], ha: [110, 326] }, vanH: 21, duoc: .205,
+    { k: "d2", w: 1187, h: 493, base: 487, s: .585, dinh: 12, nam: { keo: [163, 216.8], truot: [150, 222.2], quay: [147, 226.5], ha: [198.5, 184.2] }, vanH: 21, dayTT: { ha: 14.4 }, chanTT: { ha: [.065, .294, .532, .736] }, duoc: .205,
       ban: [[213, 492, 487, 70.5, 208, 184, 76.5], [209, 493, 488, 78, 205, 192.5, 355], [230, 494, 489, 88.5, 225, 183, 626], [227, 493, 488, 81.5, 222, 182.5, 913]] }
   ];
   const TU_THE = ["keo", "truot", "quay", "ha", "thang", "thua"];
@@ -175,12 +180,14 @@
   //   khung 90 × 150, nút nơ ở (45, 12), hai đuôi y như cũ), còn hai quai nơ vẽ thành kí hiệu vô cực ∞: một dải lụa đỏ uốn hình số 8 nằm
   //   ngang, hai nét giao nhau ở nút nơ, lòng hai quai để trống nên nhìn qua thấy sợi dây. Nơ đung đưa như dải lụa cũ (kcDen). Nút nơ nằm
   //   đúng vạch giữa lúc dây ở 0 nấc (bản 15), nên dây lệch về bên nào là nút nơ sang hẳn bên đó, không kéo thêm.
+  //   11:16 thầy xem bản 16: "Cho cái dây nơ ngắn lại, tôi muốn dây để lên vai nhưng vẽ hợp lí hơn". Nên (bản 17) hai đuôi nơ chỉ còn
+  //   dài tới khoảng y = 86 trong khung (đuôi cũ tới y = 145), vẫn xẻ chữ V ở cuối; hai quai ∞ và nút nơ giữ y như bản 16.
   const VO_CUC = "M45 12 C50.5 4.5 56 -1.5 63 -1.5 C71.5 -1.5 78 4.5 78 12 C78 19.5 71.5 25.5 63 25.5 C56 25.5 50.5 19.5 45 12 " +
     "C39.5 4.5 34 -1.5 27 -1.5 C18.5 -1.5 12 4.5 12 12 C12 19.5 18.5 25.5 27 25.5 C34 25.5 39.5 19.5 45 12 Z";      // ∞, tâm ở nút nơ
   const NO_VC = '<svg viewBox="0 0 90 150" aria-hidden="true">' +
-    '<path d="M46 12 C54 40 66 62 64 96 C63 110 68 122 75 133 L60 128 L54 141 C52 120 50 100 50 80 C50 56 48 34 42 14 Z" fill="#c21d1d"/>' +
-    '<path d="M38 12 C28 38 16 66 20 100 C22 116 18 128 11 140 L26 132 L34 145 C38 126 36 104 38 84 C40 58 44 36 46 14 Z" fill="#e22b2b"/>' +
-    '<path d="M35 22 C28 44 22 68 25 98" fill="none" stroke="#ff8a78" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>' +
+    '<path d="M46 12 C53 28 63 40 63 56 C63 63 66 69 71 75 L60 72 L55 81 C52 70 50 60 50 50 C50 36 47 24 42 14 Z" fill="#c21d1d"/>' +
+    '<path d="M38 12 C30 28 19 44 20 60 C21 68 18 74 13 80 L25 77 L32 86 C36 76 36 68 38 58 C40 42 44 28 46 14 Z" fill="#e22b2b"/>' +
+    '<path d="M35 22 C30 34 25 46 25 60" fill="none" stroke="#ff8a78" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>' +
     '<g fill="none" stroke-linejoin="round"><path d="' + VO_CUC + '" stroke="#a31515" stroke-width="10.5"/><path d="' + VO_CUC + '" stroke="#ea3a3a" stroke-width="7.4"/>' +
     '<path d="M51 16.5 C56 22.5 59.5 23.6 63 23.6 C69.5 23.6 74.6 19.6 75.8 14.6 M39 16.5 C34 22.5 30.5 23.6 27 23.6 C20.5 23.6 15.4 19.6 14.2 14.6" stroke="#b81d1d" stroke-width="2" stroke-linecap="round" opacity=".75"/>' +
     '<path d="M51 7.5 C55.5 2.2 59.5 .4 63 .4 C68.5 .4 72.8 3 74.9 7 M39 7.5 C34.5 2.2 30.5 .4 27 .4 C21.5 .4 17.2 3 15.1 7" stroke="#ff9a8a" stroke-width="2.2" stroke-linecap="round" opacity=".9"/></g>' +
