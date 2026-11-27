@@ -61,8 +61,12 @@
   //   chui ra sau bím tóc bạn đứng trong cùng (nam.ha mới). dayTT: sợi dây trong hình của tư thế đó dày bao nhiêu điểm ảnh gốc khi khác
   //   vanH (khúc dây trang tự vẽ thu theo cho khít); chanTT: chỗ bàn chân của tư thế đó khi khác CHAN_F. Hình "ha" của đội áo thể dục
   //   (ngả người ra sau, dây ngang ngực) thầy không nhắc tới: giữ nguyên.
+  //   27/11/2026 6:54 thầy Thịnh: "sợi dây của đội áo thể dục đang cầm thì nhỏ hơn bên áo vàng." Đo: dây áo thể dục trên sân dày khoảng
+  //   6,5 điểm ảnh, dây áo vàng 8,5. Nên sợi dây trong 4 hình cầm dây của đội áo thể dục (d1-keo, -truot, -quay, -ha) và dải vân day-d1
+  //   giãn theo chiều đứng 1,35 lần (vân xoắn giữ nhịp cũ, phần khác của hình giữ nguyên; cách làm: thu/day-to-hon.py trong thư mục dự
+  //   án), dải vân cao 16 thành 22 hàng: vanH 16 thành 22.
   const HINH = [
-    { k: "d1", w: 1175, h: 543, base: 529, s: .62, dinh: 0, nam: { keo: [94, 297.5], truot: [91, 298.2], quay: [96, 296.2], ha: [144, 378] }, vanH: 16, duoc: .225,
+    { k: "d1", w: 1175, h: 543, base: 529, s: .62, dinh: 0, nam: { keo: [94, 297.5], truot: [91, 298.2], quay: [96, 296.2], ha: [144, 378] }, vanH: 22, duoc: .225,
       ban: [[202, 465, 461, 67.5, 197, 198.5, 95.5], [204, 465, 460, 67, 199, 195, 346.5], [218, 466, 462, 76, 213, 189, 591.5], [241, 466, 461, 97.5, 236, 187, 829.5]] },
     { k: "d2", w: 1187, h: 493, base: 487, s: .585, dinh: 12, nam: { keo: [163, 216.8], truot: [150, 222.2], quay: [147, 226.5], ha: [198.5, 184.2] }, vanH: 21, dayTT: { ha: 14.4 }, chanTT: { ha: [.065, .294, .532, .736] }, duoc: .205,
       ban: [[213, 492, 487, 70.5, 208, 184, 76.5], [209, 493, 488, 78, 205, 192.5, 355], [230, 494, 489, 88.5, 225, 183, 626], [227, 493, 488, 81.5, 222, 182.5, 913]] }
@@ -321,6 +325,12 @@
   // 25/11 22:30 thầy: "đội nào thắng thì đuốc sẽ được thắp sáng luôn nhé, không cần tôi bấm": kéo xong câu 5, đội thắng mừng T_TU giây (hòa
   //   cả ván: T_TU_HOA giây) thì trang tự sang bước thắp đuốc (KC.khiXongCau5 do tro-choi.js gắn)
   const T_TU = 1.7, T_TU_HOA = .9;
+  // 27/11/2026 6:54 thầy Thịnh: "bạn thiết kế lại sao cho đến ván cuối thì đội nào thắng thì sẽ kéo 4 lá cờ về phía sân của mình". Bốn lá cờ
+  //   treo cách dải lụa tới 102 px (lá rộng 50 px), nên dây lệch từ 7 nấc (140 px) trở lên thì cả bốn lá đã sang hẳn một bên vạch giữa. Kéo
+  //   xong câu 5 mà cả ván có đội thắng và dây lệch chưa tới NAC_CO nấc: đội thắng kéo thêm một hơi (KEO_CO_DAI giây, không thêm tiếng) cho dây
+  //   lệch đủ NAC_CO nấc về phía mình. Thước nấc vẫn chỉ số nấc thật. Sang bước thắp đuốc, hai đội buông dây về chỗ cạnh cây đuốc như cũ nhưng
+  //   sợi dây (cùng dải lụa, bốn lá cờ) nằm yên dưới đất bên phía đội thắng, tới hết phần bắt tay.
+  const NAC_CO = 8, KEO_CO_DAI = 1;
 
   const S = { che: "an", q: 0, kc: [], t0: XA, phu: false, tinh: false, ket: 0, cues: [], L: null, d1Trai: false, doi: null, chay: null, daTu: false, m0: [0, 0] };
   let E = null;
@@ -613,10 +623,16 @@
   function lichKeo(K) {
     const n = K.buoc.length, gap = n > 4 ? .5 : .62, tb = K.q === 5 && n && K.thang ? T_TB : null, tre = tb != null ? TB_TRE : 0;
     const moc = K.buoc.map((b, i) => T_K + tre + i * gap + (i >= K.nac ? .75 : 0));
-    const het = n ? moc[n - 1] + .9 : T_K + .3;
-    let vuot = null, c = K.truoc;
+    let het = n ? moc[n - 1] + .9 : T_K + .3, vuot = null, c = K.truoc, keoCo = null;
     K.buoc.forEach((b, i) => { c += b; if (vuot == null && K.truoc && c && (c > 0) !== (K.truoc > 0)) vuot = i; });
-    return { moc: moc, het: het, sao: het, ket: het + (K.thang ? 1.7 : 1.1), loi: loiCau(K), vuot: vuot, tb: tb };      // câu hòa cũng có sao bay (0,8 giây)
+    // 27/11 6:54: câu 5, cả ván có đội thắng mà dây lệch chưa đủ NAC_CO nấc: đội thắng kéo thêm m nấc (có dấu như vt) cho bốn lá cờ sang sân mình
+    const lech = Math.min(Math.abs(K.sau), RD.NAC_HIEN);
+    if (K.q === 5 && K.sau && lech < NAC_CO) {
+      const tu = n ? moc[n - 1] + .55 : T_K + .2;
+      keoCo = { tu: tu, dai: KEO_CO_DAI, m: (K.sau > 0 ? 1 : -1) * (NAC_CO - lech) };
+      het = tu + KEO_CO_DAI + .3;
+    }
+    return { moc: moc, het: het, sao: het, ket: het + (K.thang ? 1.7 : 1.1), loi: loiCau(K), vuot: vuot, tb: tb, keoCo: keoCo };      // câu hòa cũng có sao bay (0,8 giây)
   }
 
   /* ---------- điều khiển từ trò chơi ---------- */
@@ -763,8 +779,12 @@
         if (q === 3) dat(phe, "quay", tA);
         if (q === 4) dat(phe, "ha", tA);
         if (q === 5) { dat(phe, "ha", tA); dat(kia, "truot", L.moc[Math.min(1, n - 1)] + .1); }
+        if (L.keoCo) { dat(W - 1, "ha", L.keoCo.tu - .3); dat(2 - W, "truot", L.keoCo.tu - .1); }      // 27/11: đội thắng cả ván hạ người kéo thêm, đội kia trượt chân
         if (q === 5 && W) { dat(W - 1, "thang", tR); dat(2 - W, "thua", tR); } else { dat(0, "keo", tR); dat(1, "keo", tR); }
-      } else if (q === 5 && W && u >= L.het + T_MUNG) { dat(W - 1, "thang", L.het + T_MUNG); dat(2 - W, "thua", L.het + T_MUNG); }      // câu 5 hòa nhưng cả ván đã có đội thắng
+      } else {
+        if (L.keoCo) { dat(W - 1, "ha", L.keoCo.tu - .3); dat(2 - W, "truot", L.keoCo.tu - .1); }
+        if (q === 5 && W && u >= L.het + T_MUNG) { dat(W - 1, "thang", L.het + T_MUNG); dat(2 - W, "thua", L.het + T_MUNG); }      // câu 5 hòa nhưng cả ván đã có đội thắng
+      }
     } else if (che === "dich" || che === "tuong") {
       if (W) { tt[W - 1] = "thang"; tt[2 - W] = "thua"; }          // dáng lúc vừa kéo xong câu 5 (dây đã buông)
       else { const luc0 = che === "dich" ? .15 : XA; dat(0, "thang", luc0); dat(1, "thang", luc0); }
@@ -827,8 +847,9 @@
       const ox = O.w / 2, oy = O.h * .97, n = N || H.nam.keo;
       const lx = ((b ? n[0] * H.s : O.w - n[0] * H.s) - ox) * sx, ly = (n[1] * H.s - oy) * sy;
       const gx = O.x + ox + lx - ly * Math.tan(nga * Math.PI / 180) + tx, gy = O.y + oy + ly + ty, k = P.roi[b];
-      A[b] = k > 0 ? [gx + ((b ? O.x : O.x + O.w) - gx) * k, gy + (DAY_DAT - gy) * k] : [gx, gy];
+      A[b] = k > 0 ? [gx + ((b ? O.x : O.x + O.w) - gx) * k + (P.day || 0) * k, gy + (DAY_DAT - gy) * k] : [gx, gy];
       kieu(E.dayDat[b], "opacity", lin(k, .75, 1).toFixed(2));          // khúc dây nằm sẵn dưới chân đội chỉ hiện khi dây đã rơi gần tới đất
+      kieu(E.dayDat[b], "transform", P.day ? "translateX(" + px(P.day) + ")" : "");      // 27/11: hai đội về chỗ, sợi dây nằm yên bên phía đội thắng
       roiTB += k / 2;
     }
     const M = [(A[0][0] + A[1][0]) / 2, (A[0][1] + A[1][1]) / 2];
@@ -1007,7 +1028,7 @@
     const che = S.che, q = S.q, u = t - S.t0;
     const tran = che === "hoi" || che === "keo", ketCanh = che === "dich" || che === "tuong";
     const cuoi = trong(5), W = cuoi.thang, hg = huong();
-    let p = 0, sao = [0, 0], lit = [0, 0], thap = [-1, -1], bayTri = -1, LB = null, thangChu = null;
+    let p = 0, pThem = 0, sao = [0, 0], lit = [0, 0], thap = [-1, -1], bayTri = -1, LB = null, thangChu = null;      // pThem: nấc kéo thêm cuối ván (27/11), chỉ dời sân
     const mach = [null, null];                        // giây kể từ lúc công thức bắt đầu chạy lên thân đuốc bên b (null: bước này không thắp đuốc đó)
     const C51 = (RD.SanKhau && RD.SanKhau.C51) || [955, 66];
     let sx = 0, sy = 0, la = 0, kh = 0, khD = 0, khLuc = 0, dangKeo = 0, moHUD = 1, an = 0;      // an: 0..1, các khung của lượt kéo mờ đi khi cả ván đã có đội thắng
@@ -1055,6 +1076,23 @@
           // đội đang bị dẫn kéo dải lụa qua vạch giữa
           if (L.vuot != null) { const d = u - L.moc[L.vuot]; if (d > 0 && d < 1.6) { const dk = K.thang || (K.buoc[0] > 0 ? 1 : 2); fx.no = { chu: "ĐỘI " + dk + " VƯỢT LÊN!", d: d, dai: 1.6, lop: "nho d" + dk }; } }
         }
+        // 27/11 6:54: đội thắng cả ván kéo thêm một hơi cho cả bốn lá cờ sang hẳn sân mình: ngả người, bụi ở chân đội kia, vết nứt có ánh
+        //   vàng, vệt gió, đội thắng toả sáng (không thêm tiếng)
+        if (L.keoCo && u > L.keoCo.tu) {
+          const kc = L.keoCo, d = u - kc.tu, b = kc.m > 0 ? 1 : -1, bw = ben(b > 0 ? 0 : 1), sb = hg * b, i = Math.min(K.buoc.length, NUT / 2 - 1);
+          pThem = kc.m * em(cl(d / kc.dai));
+          datT.push({ i: i, d: d, sb: sb, bw: bw, manh: true, p0: p, p1: p + pThem });
+          buiT.push({ d: d, sb: sb, thua: 1 - bw, i: i, manh: true });
+          const e = d < .12 ? d / .12 : Math.exp(-(d - .12) * 2.6);
+          ng[bw] += sb * 6 * e; ng[1 - bw] += sb * 4.2 * e;
+          la += sb * 16 * Math.exp(-d * 3.5) * Math.sin(d * 13);
+          if (d < .22) { const a = 8 * (1 - d / .22); sx += a * Math.sin(d * 95); sy += a * .6 * Math.cos(d * 77); }
+          if (d < .45) fx.vut = { b: sb, d: d, vang: true };
+          if (d < .34) fx.tia = d;
+          if (d < 1.9) fx.la.push({ d: d, b: -sb, i: i });
+          if (d < kc.dai + .2) fx.vang = bw;
+          if (d > -.1 && d < kc.dai) dangKeo = b;
+        }
         // 25/11 17:19 thầy: "chỉ có câu 5 khi chiến thắng thì các bạn học sinh mới nhảy lên thôi": kéo xong câu 5, đội thắng cả ván buông dây
         //   nhảy mừng, hoa giấy tung lên (câu 1 đến câu 4 không ai nhảy)
         if (q === 5 && W) {
@@ -1069,7 +1107,10 @@
     } else if (che === "dau") { p = 0; }
     else { p = cuoi.vt; sao = saoToi(5); }
     // phần kết: hai đội buông dây, cả cụm về lại giữa sân để mỗi đội đứng sát cây đuốc của mình
-    const pv = Math.max(-RD.NAC_HIEN, Math.min(RD.NAC_HIEN, p)), dx = hg * PXN * pv * (ketCanh ? (che === "dich" ? 1 - em(lin(u, 0, T_VE)) : 0) : 1);
+    //   27/11 6:54: cả ván có đội thắng thì sợi dây nằm yên dưới đất bên phía đội thắng (lệch ít nhất NAC_CO nấc), dxDay là chỗ của sợi dây
+    const kep = x => Math.max(-RD.NAC_HIEN, Math.min(RD.NAC_HIEN, x)), pv = kep(p);
+    const dxDay = hg * PXN * (ketCanh ? (W ? (W === 1 ? 1 : -1) * Math.max(NAC_CO, Math.abs(kep(cuoi.vt))) : pv) : kep(p + pThem));
+    const dx = ketCanh ? dxDay * (che === "dich" ? 1 - em(lin(u, 0, T_VE)) : 0) : dxDay;
 
     /* --- phần kết: đuốc sáng, tri thức bay lên, bắt tay, tất cả bay về số 51 --- */
     if (ketCanh) {
@@ -1097,8 +1138,8 @@
     kieu(E.canh, "transform", sx || sy ? "translate(" + px(sx) + "," + px(sy) + ")" : "");
     kieu(E.den, "transform", Math.abs(la) > .02 ? "rotate(" + la.toFixed(2) + "deg)" : "");
     if (KIEU_DAY === "co") E.toanLa.forEach((el, i) => kieu(el, "transform", Math.abs(la) > .02 ? "rotate(" + (la * (i % 2 ? 1.25 : .95)).toFixed(2) + "deg)" : ""));
-    const TT = tuTheDoi(che, q, u, W), P = { tt: [], ng: ng, nhay: nhay, rung: rung, pop: [-1, -1], roi: [0, 0], vang: fx.vang, mung: [false, false] };
-    const nen = { tt: [], ng: [0, 0], nhay: [0, 0], rung: 0, pop: [-1, -1], roi: [0, 0], vang: -1, mung: [false, false] };
+    const TT = tuTheDoi(che, q, u, W), P = { tt: [], ng: ng, nhay: nhay, rung: rung, pop: [-1, -1], roi: [0, 0], vang: fx.vang, mung: [false, false], day: dxDay - dx };
+    const nen = { tt: [], ng: [0, 0], nhay: [0, 0], rung: 0, pop: [-1, -1], roi: [0, 0], vang: -1, mung: [false, false], day: dxDay - dx };
     let song = false;
     for (let d = 0; d < 2; d++) {
       const b = ben(d), tu = TT.tt[d], coDay = !!HINH[d].nam[tu], dd = u - TT.luc[d];

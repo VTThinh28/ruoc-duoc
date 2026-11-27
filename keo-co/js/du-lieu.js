@@ -191,11 +191,14 @@
        · câu 3 Tăng tốc: đội thắng câu này kéo thêm 1 nấc · câu 4 Tiếp sức: đội đang bị dẫn mà thắng câu này thì số nấc nhân đôi
        · câu 5 Về đích (25/11 16:18 thầy: "câu vàng đổi thành về đích"): số nấc nhân đôi. Mỗi câu thắng được 1 ngôi sao (chỉ để nhìn, không tính vào kết quả).
      vt: vị trí dây tính bằng nấc, dương là Đội 1 đang dẫn (dây lệch về bên Đội 1 đứng), âm là Đội 2 đang dẫn.
-     Đội nào đứng bên nào trên TV: cfg.d1Trai (true: Đội 1 bên trái; mặc định Đội 1 bên phải), nút "Đổi bên" trong Cài đặt. */
+     Đội nào đứng bên nào trên TV: RD.d1Trai(cfg) (true: Đội 1 bên trái; mặc định Đội 1 bên phải), nút "Đổi bên" trong Cài đặt. */
   RD.DOI = [
     { n: 1, ten: "Đội 1", mau: "#2f6fd6", dam: "#1b4a97", nhat: "#dfe9fb", to: [0, 1] },
     { n: 2, ten: "Đội 2", mau: "#e9861c", dam: "#a8560a", nhat: "#fdead3", to: [2, 3] }
   ];
+  // 27/11/2026 6:54 thầy Thịnh: "mặc định đội 1 luôn nằm bên phải nhé." Nút "Đổi bên" nay ghi mã của ván đang chơi (cfg.d1Trai = cfg.ses), nên
+  //   chỉ đổi bên trong ván đó; ván mới, hay dữ liệu cũ còn ghi true, thì Đội 1 lại đứng bên phải.
+  RD.d1Trai = function (c) { return !!(c && c.d1Trai && c.d1Trai === c.ses); };
   RD.SUC_MANH = [
     { ten: "Khai cuộc", luat: "Đội nào đúng nhiều hơn thì kéo dây về phía đội mình" },
     { ten: "Đồng lòng", luat: "Đội nào đúng từ 90% trở lên được thưởng thêm 1 nấc" },
@@ -252,6 +255,62 @@
     return { vt: vt, sao: sao, cau: cau, thang: vt > 0 ? 1 : vt < 0 ? 2 : 0 };
   };
   RD.vietVT = function (vt) { return vt > 0 ? "Đội 1 dẫn " + vt + " nấc" : vt < 0 ? "Đội 2 dẫn " + (-vt) + " nấc" : "Hai đội ngang nhau"; };
+
+  /* ---------- nút "Chọn đáp án ngẫu nhiên" có tính toán (27/11/2026) ----------
+     Thầy Thịnh 27/11 6:39: "khi mà tôi bấm vào cái chế độ mà chọn ngẫu nhiên á, chọn ngẫu nhiên đáp án á, thì bạn sẽ chọn làm sao để cho cái
+       trò chơi hay hơn. Ví dụ như đang ở ván 3 đi, đang ván 3 mà đội 2 đang thua. Đó thì bạn sẽ chọn làm sao để cho đội 2 có thể thắng được.
+       Đó, và kéo ngược dây về phía mình. Đó, như vậy nó sẽ hấp dẫn hơn. Đó, bạn thử tính toán các trường hợp và bổ sung thêm cái việc đó nhé."
+       ("ván 3" là câu 3: mỗi câu một lượt kéo.) 6:47: "Nhưng cũng cố gắng tính toán làm sao để mà về chót sẽ có đội chiến thắng á, đừng để
+       hòa. Dĩ nhiên là nếu mà tôi quét không được, còn nếu quét được thì hòa thì thôi. ... khi mà tôi bấm vào cái nút mà chọn đáp án ngẫu
+       nhiên á, có một vài em còn lại chưa quét được á, thì lúc này bạn sẽ tính toán để cho cái kết quả nó sẽ phù hợp với lại cái kết quả đang
+       diễn ra trò chơi nhé."
+     q: câu đang quét; cards, man: thẻ đã đọc và ghi tay của câu q trên máy giáo viên; ds: các em chưa quét [{ id, t: 0 Đội 1 | 1 Đội 2 }];
+     vt: vị trí dây trước câu q (dương là Đội 1 đang dẫn); rnd: hàm ngẫu nhiên (để thử), mặc định Math.random.
+     Trả về { chon: { "t<id>": chữ }, cach: "ngang" | "tinh", x: [số em chọn đúng của Đội 1, của Đội 2], k: kết quả câu q dự tính }.
+     - Câu 1 đến câu 4 mà dây đang ở giữa (câu 1, hay hai đội đang ngang nhau): mỗi em một chữ ngẫu nhiên trong A, B, C, D như bản 10.
+     - Còn lại (dây đang lệch, hay đang ở câu 5): máy thử hết mọi cách "mỗi đội có bao nhiêu em chọn đúng" (các em còn lại chọn một chữ sai),
+       tính kết quả câu q đúng luật kéo co (RD.doiCau, RD.keoCau, kể cả hiệu ứng của câu), rồi lấy cách tốt nhất theo thứ tự:
+         0. câu 5: kết thúc có đội thắng, không hòa (thẻ quét được đã làm hòa chắc rồi thì thôi);
+         1. dây đi về phía đội đang bị dẫn (đội đó thắng câu, hay ở câu 2 được thưởng Đồng lòng); không cách nào làm được thì bỏ qua mục này
+            (lúc đó mục 2 giúp đội bị dẫn bớt thua: đội đang dẫn kéo ít nấc nhất, hay hòa); dây ở giữa thì không có mục này;
+         2. sau câu q dây gần giữa nhất: đội bị dẫn gỡ lại vừa đủ, không để đội nào bỏ xa;
+         3. đội bị dẫn thắng câu q (được ngôi sao);
+         4. gần với chọn ngẫu nhiên nhất (mỗi đội khoảng một phần tư số em chọn đúng), để số em chọn mỗi đáp án trông tự nhiên.
+       Còn ngang nhau thì bốc thăm; trong mỗi đội, em nào chọn đúng cũng bốc thăm; chữ sai bốc thăm trong ba chữ sai. */
+  RD.chonNgauCoTinh = function (q, cfg, cards, man, ds, vt, rnd) {
+    rnd = rnd || Math.random;
+    var bat = function (a) { return a[Math.floor(rnd() * a.length)]; };
+    var chon = {};
+    if (!vt && q < 5) {
+      ds.forEach(function (e) { chon["t" + e.id] = bat(RD.CHU); });
+      return { chon: chon, cach: "ngang" };
+    }
+    var dung = RD.CAU[q - 1].dung, sai = RD.CHU.filter(function (l) { return l !== dung; });
+    var lop = RD.lop(cfg), B = vt > 0 ? 2 : vt < 0 ? 1 : 0, huong = vt > 0 ? -1 : 1;   // B: đội đang bị dẫn (0: dây ở giữa); huong: về phía B
+    var doi = [[], []];
+    ds.forEach(function (e) { doi[e.t ? 1 : 0].push(e); });
+    doi.forEach(function (a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } });
+    var goc = {};
+    Object.keys(cards || {}).forEach(function (k) { goc[k] = cards[k]; });
+    var thu = function (x) {
+      var cd = {};
+      Object.keys(goc).forEach(function (k) { cd[k] = goc[k]; });
+      doi.forEach(function (a, t) { a.forEach(function (e, i) { cd["t" + e.id] = i < x[t] ? dung : sai[0]; }); });
+      return RD.keoCau(q, RD.doiCau(q, lop, { cards: cd, man: man || {} }), vt);
+    };
+    var hon = function (a, b) { for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1; return 0; };
+    var tot = [], dTot = null;
+    for (var x0 = 0; x0 <= doi[0].length; x0++) for (var x1 = 0; x1 <= doi[1].length; x1++) {
+      var K = thu([x0, x1]);
+      var d = [q === 5 && !K.sau ? 1 : 0, !B || (K.sau - vt) * huong > 0 ? 0 : 1, Math.abs(K.sau), !B || K.thang === B ? 0 : 1,
+        Math.abs(x0 - doi[0].length / 4) + Math.abs(x1 - doi[1].length / 4)];
+      var s = dTot ? hon(d, dTot) : -1;
+      if (s < 0) { dTot = d; tot = [{ x: [x0, x1], k: K }]; } else if (s === 0) tot.push({ x: [x0, x1], k: K });
+    }
+    var c = bat(tot);
+    doi.forEach(function (a, t) { a.forEach(function (e, i) { chon["t" + e.id] = i < c.x[t] ? dung : bat(sai); }); });
+    return { chon: chon, cach: "tinh", x: c.x, k: c.k };
+  };
 
   // các bước của buổi chơi, theo đúng thứ tự bấm "tiếp"
   RD.BUOC = ["setup", "intro"];

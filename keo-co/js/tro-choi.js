@@ -227,7 +227,7 @@
   //   (giữ danh sách lớp, bỏ đề đã chọn của ván trước)
   function vanMoi(giuLop, buoc) {
     var s = ngauNhien(8), c = giuLop && S.cfg ? clone(S.cfg) : RD.cfgMacDinh(s);
-    c.ses = s; c.at = Date.now(); delete c.de;
+    c.ses = s; c.at = Date.now(); delete c.de; delete c.d1Trai;      // 27/11 thầy: "mặc định đội 1 luôn nằm bên phải nhé"
     DB.set("cfg", c);
     DB.set("now", { ses: s, step: buoc || "setup", pub: {}, at: Date.now(), by: TAB });
     for (var q = 1; q <= 5; q++) DB.set("s" + q, { ses: s, q: q, cards: {}, man: {}, at: Date.now(), by: TAB });
@@ -511,7 +511,7 @@
       this.value = "";
     });
     q("thu").addEventListener("change", function () { var on = this.checked; ghiCfg(function (c) { c.thu = on; }); });
-    q("doiBen").addEventListener("click", function () { ghiCfg(function (c) { c.d1Trai = !c.d1Trai; }); });
+    q("doiBen").addEventListener("click", function () { ghiCfg(function (c) { c.d1Trai = RD.d1Trai(c) ? false : c.ses; }); });      // 27/11: chỉ đổi trong ván này
     $$("[data-de]", el).forEach(function (b) {
       b.addEventListener("click", function () {
         var k = this.dataset.de;
@@ -589,7 +589,7 @@
     att.className = "chip " + (RD.anhBao ? "ok" : "");
     att.textContent = RD.anhBao ? "Đã có ảnh trên máy này" : "Chưa chọn ảnh";
     q("thu").checked = !!c.thu;
-    q("benTT").textContent = c.d1Trai ? "Đội 1 bên trái, Đội 2 bên phải" : "Đội 2 bên trái, Đội 1 bên phải";
+    q("benTT").textContent = RD.d1Trai(c) ? "Đội 1 bên trái, Đội 2 bên phải" : "Đội 2 bên trái, Đội 1 bên phải";
     // bộ đề: chọn được cho tới khi hiện câu 1; đang chơi thì chỉ còn sáng ô đề đang dùng
     var doiDuoc = duocDoiDe();
     $$("[data-de]", el).forEach(function (b) {
@@ -898,7 +898,7 @@
     if (step !== "setup") anCB = false;
     $("#chuanBiTV").hidden = !((step === "setup" && !anCB) || moCB);
     capNhatChuanBi($("#cbTV"));
-    KC.datBen(!!cfg().d1Trai);
+    KC.datBen(RD.d1Trai(cfg()));
     KC.datThe(RD.lopDoi(RD.lop(cfg())).map(function (x) { return x.ds; }));
     A.batNhac(cfg().nhac !== false);
     var laCau = loai === "q" || loai === "k" || loai === "a";
@@ -1558,6 +1558,10 @@
   //   Em chưa quét = có mặt (không vắng), chưa có thẻ, chưa ghi tay ở câu đang quét, của cả hai đội. Mỗi em được một trong bốn chữ A, B, C, D
   //   (có thể trúng đáp án đúng), đánh dấu nn: 1 (sc.ngau); sau đó camera hay ảnh đọc được thẻ thật của em thì lấy thẻ thật.
   //   Nút và lời báo không ghi số em, không kể tên em nào.
+  // 27/11/2026 6:39 thầy Thịnh: "bạn sẽ chọn làm sao để cho cái trò chơi hay hơn ... đang ván 3 mà đội 2 đang thua. Đó thì bạn sẽ chọn làm sao
+  //   để cho đội 2 có thể thắng được. Đó, và kéo ngược dây về phía mình." Nên lúc dây đang lệch, máy chọn có tính toán (RD.chonNgauCoTinh
+  //   trong du-lieu.js): đội bị dẫn kéo được dây về phía mình nếu làm được, dây về gần giữa nhất. Dây đang ở giữa thì chọn ngẫu nhiên như cũ.
+  //   Nút, lời báo và TV không đổi gì.
   function emChuaQuet() {
     var ds = [];
     if (!PQ) return ds;
@@ -1567,8 +1571,16 @@
   }
   function chonNgauNhien(ds) {
     if (!PQ || !ds.length) return;
-    var luc = Date.now();
-    ds.forEach(function (e) { PQ.obs["t" + e.id] = { l: RD.CHU[Math.floor(Math.random() * 4)], t: luc, nn: 1 }; });
+    var luc = Date.now(), chon = null;
+    try {
+      var truoc = {};
+      for (var j = 1; j < PQ.q; j++) truoc[j] = true;
+      chon = RD.chonNgauCoTinh(PQ.q, cfg(), theHienTai(), PQ.man, ds, RD.keoCo(cfg(), cacScan(), truoc).vt).chon;
+    } catch (e) { chon = null; }      // tính lỗi thì chọn ngẫu nhiên như cũ, không để nút hỏng giữa giờ dạy
+    ds.forEach(function (e) {
+      var l = chon && chon["t" + e.id];
+      PQ.obs["t" + e.id] = { l: RD.CHU.indexOf(l) >= 0 ? l : RD.CHU[Math.floor(Math.random() * 4)], t: luc, nn: 1 };
+    });
     ghiQuet(true);
     veBangTo();
     trangThai("ok", "Đã chọn đáp án ngẫu nhiên.");
