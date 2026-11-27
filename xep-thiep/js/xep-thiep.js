@@ -2411,11 +2411,11 @@
        → không còn lớp trời đêm; lúc bắn: máy giáo viên gửi lệnh "phao" (thầy chọn Có), 0,4 giây sau pháo bắt đầu (batPhao). Phần vẽ ở js/tranh-3d.js (vePhaoBong).
        25/11 06:02, thầy: "bỏ cái pháo hoa đi nhé" → gỡ. 25/11 11:10, thầy: "bổ sung lại pháo hoa đi" → cả khối này trở lại nguyên văn bản 01:31.
        Nhạc nền: nhỏ dần trong 0,9 giây rồi TẮT hẳn (ghi <phòng>/nhac b = 0, máy giáo viên thấy nút nhạc về "tắt"); hết pháo nhạc không tự bật lại.
-       Tiếng pháo: nhac/phao-bong.mp3, 19 giây cắt từ một bản thu thật (BigSoundBank số 2672 của Joseph Sardin, CC0, xem test/lam-phao.py), phát lúc tf = T3.PHAO_AM; 28/11 (thầy 00:04 "thêm tiếng vút lúc bắn pháo bông đi, vút lên rồi bùm giống bên ngoài hay có á"): tệp có thêm tiếng vút lên của từng quả và T3.PHAO_TRUOC giây ở đầu, phát lúc tf = T3.PHAO_AM - T3.PHAO_TRUOC;
+       Tiếng pháo: nhac/phao-bong.mp3, 19 giây cắt từ một bản thu thật (BigSoundBank số 2672 của Joseph Sardin, CC0, xem test/lam-phao.py), phát lúc tf = T3.PHAO_AM;
        các quả pháo trên màn hình nổ đúng lúc các tiếng nổ trong bản thu. Tiếng không theo nút âm lượng của nhạc nền (như tiếng trống); 27/11 23:04: tệp làm to hơn, đi qua đường ra loa chung có bộ giới hạn (amDuong).
        Tivi tải tệp này 2,5 giây sau hai tiếng trống. Lúc pháo bắt đầu mà tệp chưa tải xong, hay trình duyệt chưa cho phát tiếng (tivi chưa được chạm lần nào): cứ 0,25 giây thử lại,
        được lúc nào thì phát tiếp từ đúng chỗ của lúc đó (không phát lại từ đầu), để tiếng nổ vẫn khớp hình. #phao[data-am] = "số lần đã phát,giây bỏ qua ở lần gần nhất" cho bài thử đọc. */
-    var PHAO_TEP = "nhac/phao-bong.mp3?v=b99f31f7", PHAO_TO = 0.9;      // 27/11 23:04: tệp làm to hơn (xem NHAC_TANG); 28/11: thêm tiếng vút; ?v= để máy không dùng tệp cũ còn lưu
+    var PHAO_TEP = "nhac/phao-bong.mp3?v=faf12cc9", PHAO_TO = 0.9;      // 27/11 23:04: tệp làm to hơn (xem NHAC_TANG), ?v= để máy không dùng tệp cũ còn lưu
     var phaoMau = null, phaoDangTai = false, phaoSrc = null, phaoHen = 0, phaoLan = 0, phaoDem = 0;
     function phaoTai() {                            // tải và giải mã tiếng pháo, một lần
       var ac = amAC();
@@ -2436,7 +2436,7 @@
       (function thu() {
         var tf, tre, g, src;
         if (lan !== phaoLan || !phaoLuc) return;
-        tf = (performance.now() - phaoLuc) / 1000; tre = T3.PHAO_AM - (T3.PHAO_TRUOC || 0) - tf;
+        tf = (performance.now() - phaoLuc) / 1000; tre = T3.PHAO_AM - tf;
         if (tf > T3.DAI_PHAO - 1.5) return;         // sắp hết pháo: thôi
         if (!phaoMau || ac.state !== "running") {
           if (!phaoMau) phaoTai(); else { try { ac.resume(); } catch (e) { /* bỏ qua */ } }
