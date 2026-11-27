@@ -540,7 +540,11 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 .kc-doi-boc{position:absolute;transform-origin:50% 97%;will-change:transform}
 .kc-doi{position:absolute;left:0;top:0;width:100%;height:100%;visibility:hidden}
 .kc-doi-boc.lat .kc-doi{transform:scaleX(-1)}
-.kc-doi-boc.vang{filter:drop-shadow(0 0 9px rgba(255,205,70,.95)) drop-shadow(0 0 22px rgba(255,170,30,.65))}
+/* 27/11 11:52 thầy Thịnh: "tối ưu ứng dụng và trò chơi nhé". Quầng sáng vàng của đội đang toả sáng trước đây đặt trên cả khung đội (.kc-doi-boc),
+   khung này dời, xô, nhún từng khung hình nên máy phải làm mờ lại cả quầng sáng mỗi khung hình (đo trên máy không có card đồ hoạ: mấy giây
+   cuối lượt kéo câu 4, câu 5 còn 15 đến 20 khung hình mỗi giây). Nay quầng sáng đặt trên chính hình tư thế đang hiện (khung đội chỉ có 6 hình
+   tư thế, chỉ một hình hiện): nhìn y như cũ, nhưng quầng sáng vẽ một lần cùng hình rồi chỉ dời theo khung đội. */
+.kc-doi-boc.vang .kc-doi{filter:drop-shadow(0 0 9px rgba(255,205,70,.95)) drop-shadow(0 0 22px rgba(255,170,30,.65))}
 /* 25/11 18:22 thầy: "bắt tay thì cả bốn bạn bên này qua bắt bốn bạn bên kia". Hình từng bạn chìa tay: khung gốc 0 × 0 đặt ở giữa hai bàn chân
    (js/keo-co.js veBan dời khung, datBen đặt cỡ hình), <i> là bóng dưới chân */
 .kc-ban{position:absolute;left:0;top:0;width:0;height:0;opacity:0;visibility:hidden;z-index:1;will-change:transform}
@@ -782,8 +786,8 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <h1>Ngọn đuốc tri thức</h1>
     <p>Máy này dùng để làm gì trong tiết học?</p>
     <div class="vai-nut">
-      <button type="button" data-vai="tv"><img src="../anh/duoc.webp" alt=""><b>Màn hình TV</b><small>Laptop nối TV hoặc máy chiếu</small></button>
-      <button type="button" data-vai="dt"><img src="../anh/to-2.webp" alt=""><b>Điện thoại</b><small>Quét thẻ và điều khiển trò chơi</small></button>
+      <button type="button" data-vai="tv"><img src="../anh/duoc.webp" alt="" loading="lazy"><b>Màn hình TV</b><small>Laptop nối TV hoặc máy chiếu</small></button>
+      <button type="button" data-vai="dt"><img src="../anh/to-2.webp" alt="" loading="lazy"><b>Điện thoại</b><small>Quét thẻ và điều khiển trò chơi</small></button>
     </div>
     <p class="vai-ghi" id="vaiGhi"></p>
   </div>
@@ -977,18 +981,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="77a43952";</script>
-<script src="js/cau-hinh.js?v=77a43952"></script>
-<script src="js/scanlib.js?v=77a43952"></script>
-<script src="js/du-lieu.js?v=77a43952"></script>
-<script src="js/dong-bo.js?v=77a43952"></script>
-<script src="js/am-thanh.js?v=77a43952"></script>
-<script src="js/quet.js?v=77a43952"></script>
-<script src="js/cay-cau.js?v=77a43952"></script>
-<script src="js/san-khau.js?v=77a43952"></script>
-<script src="js/keo-co.js?v=77a43952"></script>
-<script src="js/tro-choi.js?v=77a43952"></script>
-<script src="js/nhanh.js?v=77a43952"></script>
-<script src="js/do.js?v=77a43952"></script>
+<script>window.RD_V="ce811499";</script>
+<script src="js/cau-hinh.js?v=ce811499"></script>
+<script src="js/scanlib.js?v=ce811499"></script>
+<script src="js/du-lieu.js?v=ce811499"></script>
+<script src="js/dong-bo.js?v=ce811499"></script>
+<script src="js/am-thanh.js?v=ce811499"></script>
+<script src="js/quet.js?v=ce811499"></script>
+<script src="js/cay-cau.js?v=ce811499"></script>
+<script src="js/san-khau.js?v=ce811499"></script>
+<script src="js/keo-co.js?v=ce811499"></script>
+<script src="js/tro-choi.js?v=ce811499"></script>
+<script src="js/nhanh.js?v=ce811499"></script>
+<script src="js/do.js?v=ce811499"></script>
 </body>
 </html>
