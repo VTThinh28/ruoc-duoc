@@ -422,6 +422,8 @@ body.xem-gv #manXep .dt-nut2, body.xem-gv #manThiep .dt-nut2 { padding-bottom: 6
 .gv-phao { margin: 0 0 6px; padding: 3px 5px 3px 12px; background: #eef7ee; border-color: #8cc59a; }
 .gv-phao .nut { min-height: 44px; }
 .gv-phao .gv-dn-chu { font-weight: 700; }
+/* 27/11 08:37: hàng Báo tường động, ngay dưới hàng pháo hoa; chữ bên trái là tình hình trên tivi (số ảnh; đang chạy) */
+.gv-btd .gv-dn-chu { font-weight: 400; font-size: 13.5px; line-height: 1.3; }
 .gv-hoi { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(46, 33, 18, .6); }
 .gv-hoi-hop { width: 100%; max-width: 360px; padding: 24px 18px 18px; background: #fffdf6; border: 2px solid var(--vien); border-radius: 20px; text-align: center; box-shadow: 0 14px 44px rgba(0, 0, 0, .35); }
 .gv-hoi-cau { margin: 0; font-size: 27px; font-weight: 800; font-family: var(--chu-dam); line-height: 1.2; }
@@ -605,6 +607,26 @@ body.tv { background: #130c06; }
 .bt-chu2 { font-family: var(--chu-thuong); font-weight: 600; font-size: 15.5px; fill: #ffe9a8; text-anchor: middle; }
 .bt-chu3 { font-family: var(--chu-dam); font-weight: 700; font-size: 26px; fill: #a5814b; text-anchor: middle; }
 .bt-chu4 { font-family: var(--chu-thuong); font-size: 15.5px; fill: #a5814b; text-anchor: middle; }
+/* 27/11: Báo tường động (js: phần "Báo tường động"). Lớp #btd nằm trong #baoTuong, đè đúng lên ảnh to và 6 ảnh nhỏ của báo tường, không bắt chạm.
+   Khung ảnh to có hai lớp ảnh: ảnh mới nằm trên, hiện ra trong 1,6 giây (BTD.DOI) theo một trong 3 kiểu: mờ chéo (.mo), quét mềm từ trái (.quet-trai),
+   từ phải (.quet-phai). Ảnh nhỏ đổi bằng mờ dần. Không phóng to thu nhỏ. */
+#btd { position: absolute; inset: 0; pointer-events: none; transition: opacity .8s ease; }
+#btd.tan { opacity: 0; }
+.btd-lon, .btd-nho { position: absolute; overflow: hidden; }
+.btd-o { position: absolute; inset: 0; opacity: 0; }
+.btd-o.hien { opacity: 1; }
+.btd-o.tren { z-index: 1; }
+.btd-o img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.btd-o.mo { animation: btdMo 1.6s ease-in-out both; }
+.btd-o.quet-trai, .btd-o.quet-phai { -webkit-mask-size: 250% 100%; mask-size: 250% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.btd-o.quet-trai { -webkit-mask-image: linear-gradient(to right, #000 40%, transparent 60%); mask-image: linear-gradient(to right, #000 40%, transparent 60%); animation: btdQuetTrai 1.6s ease-in-out both; }
+.btd-o.quet-phai { -webkit-mask-image: linear-gradient(to left, #000 40%, transparent 60%); mask-image: linear-gradient(to left, #000 40%, transparent 60%); animation: btdQuetPhai 1.6s ease-in-out both; }
+@keyframes btdMo { from { opacity: 0; } to { opacity: 1; } }
+@keyframes btdQuetTrai { from { -webkit-mask-position: 100% 0; mask-position: 100% 0; } to { -webkit-mask-position: 0 0; mask-position: 0 0; } }
+@keyframes btdQuetPhai { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 100% 0; mask-position: 100% 0; } }
+.btd-nho img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; opacity: 0; transition: opacity 1s ease; }
+.btd-nho img.hien { opacity: 1; }
+.btd-nho img.tren { z-index: 1; }
 .khung { position: absolute; }
 /* từ 19/11: cột phải Nhóm 1 (trên), Nhóm 2 (dưới); cột trái Nhóm 3 (trên), Nhóm 4 (dưới). Màu đi theo số nhóm như trước (1 đỏ, 2 cam, 3 xanh dương, 4 xanh lá). */
 #khung1 { left: 1319.6px; top: 78.3px; width: 372.4px; --ho: 41.5px; --mau: #d9463c; }
@@ -1005,7 +1027,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <div id="nhapDong" class="nhap-dong"></div>
       </div>
       <div id="nhapAi" class="nhap-duoi nhap-ai" hidden><button id="nhapAiNut" class="nut goi-y-nut">✦ AI hỗ trợ nhóm nhiệm vụ 1</button></div>
-      <div id="nhapDuoi" class="nhap-duoi" hidden><button id="nhapSang" class="nut chinh" disabled>Sang nhiệm vụ 2: Xếp hình</button></div>
+      <div id="nhapDuoi" class="nhap-duoi" hidden><button id="nhapSang" class="nut chinh" disabled>Sang nhiệm vụ 2: Báo tường online</button></div>
     </section>
 
     <section id="manXep" class="man" hidden>
@@ -1067,6 +1089,11 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
       <span class="gv-dn-chu">Cả 4 nhóm đã hoàn thành</span>
       <button id="gvPhaoNut" class="nut">Pháo hoa</button>
     </div>
+    <!-- 27/11 08:37: nút Báo tường động, hiện sau khi thầy trả lời câu hỏi pháo hoa và pháo đã bắn xong; chữ bên trái: số ảnh trên tivi, đang chạy -->
+    <div id="gvBtd" class="gv-dn gv-phao gv-btd" hidden>
+      <span id="gvBtdChu" class="gv-dn-chu"></span>
+      <button id="gvBtdNut" class="nut">Báo tường động</button>
+    </div>
     <div class="gv-tivi">
       <p id="gvTv" class="gv-tv"></p>
       <p id="gvAm" class="gv-tv xau" hidden>Tivi chưa phát được tiếng (âm báo đồng hồ, nhạc). Thầy chạm một lần vào màn hình tivi.</p>
@@ -1105,7 +1132,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
         <button id="gvLamLai" class="nut">Xóa hết, về nhiệm vụ 1</button>
         <p>Xóa cả số đo đã nhập, hình và điểm đã chấm của 4 nhóm. Dùng khi dạy lớp khác hoặc thử lại.</p>
       </div>
-      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Cả 4 nhóm hoàn thành thì máy này hỏi “Hiện pháo hoa?”. Hiện chấm điểm: tivi hiện bảng chấm của 4 nhóm và bảng rubric, chấm trên tivi hay trên máy này đều được; trên tivi, bấm Ẩn ở bảng của nhóm nào thì bảng đó cất đi để nhìn tấm thiệp. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý, nút AI hỗ trợ nhóm nhiệm vụ 1 và nút AI hỗ trợ nhóm trong từng mục nhập. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
+      <p class="gv-ghi">Tranh 3D bấm được khi nhóm đã bấm Hoàn thành. Cả 4 nhóm hoàn thành thì máy này hỏi “Hiện pháo hoa?”; chọn Có hay Không thì Tranh 3D của nhóm hoàn thành sau cùng cũng tự chạy, rồi hiện nút Báo tường động. Hiện chấm điểm: tivi hiện bảng chấm của 4 nhóm và bảng rubric, chấm trên tivi hay trên máy này đều được; trên tivi, bấm Ẩn ở bảng của nhóm nào thì bảng đó cất đi để nhìn tấm thiệp. Xem ĐT nhóm: mở bài của nhóm ngay trên máy này, có thêm nút Hình AI gợi ý, nút AI hỗ trợ nhóm nhiệm vụ 1 và nút AI hỗ trợ nhóm trong từng mục nhập. Chọn bài hát, ảnh báo tường, tạo phòng mới: chạm nút bánh răng ở giữa mép dưới báo tường trên tivi.</p>
       <div id="gvMaHs" class="gv-ma-hs"><b>Mã QR của học sinh</b><div id="gvMaHsHinh" class="gv-ma-hs-hinh"></div><p>Em nào lỡ thoát ra thì quét mã này để vào lại.</p></div>
     </div>
     <div id="gvChamMan" class="gv-cm" hidden>
@@ -1246,6 +1273,10 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
           <div class="cd-hang"><button id="nutChonAnh" class="nut">Chọn ảnh báo tường từ máy</button><button id="nutBoAnh" class="nut" hidden>Bỏ ảnh</button><input id="btTep" type="file" accept="image/*" hidden></div>
           <p id="btTinh"></p>
           <p>Ảnh chỉ lưu trong máy này, không đưa lên mạng. Lần sau mở trang vẫn còn.</p>
+          <h3>Báo tường động</h3>
+          <div class="cd-hang"><button id="nutBtdChon" class="nut">Chọn tệp Báo tường động</button><button id="nutBtdThu" class="nut" disabled>▶ Xem thử</button><button id="nutBtdBo" class="nut" hidden>Bỏ</button><input id="btdTep" type="file" accept=".zip,image/*,audio/*" multiple hidden></div>
+          <p id="btdTinh"></p>
+          <p>Thầy chọn tệp bao-tuong-dong.zip (hay chọn nhiều ảnh và một bài hát). Ảnh trong thư mục anh-to hiện ở khung ảnh to, các ảnh khác ở 6 khung nhỏ. Ảnh và bài hát chỉ lưu trong máy này, không đưa lên mạng.</p>
           <h3>Nhạc nền</h3>
           <div class="cd-hang"><button id="nhacXep" class="nut nho">Xếp thiệp</button><button id="nhacHV" class="nut nho">Học Vui Mỗi Ngày</button><button id="nhacChon" class="nut nho">Chọn bài hát từ máy</button><input id="nhacTep" type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" hidden></div>
           <div class="cd-hang cd-lien cd-nhac"><p id="nhacTinh"></p><button id="nhacBat" class="nut nho nhac-bat">▶ Bật nhạc</button></div>
@@ -1289,7 +1320,7 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
           <ul>
             <li>nhóm đang bị khóa và nút Mở khóa;</li>
             <li>nút Mở nhiệm vụ 2 (bàn xếp), Tranh 3D, Xem ĐT nhóm và Cho sửa lại hình của từng nhóm;</li>
-            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc, nút Hiện chấm điểm.</li>
+            <li>nút hiện, ẩn bảng Nhiệm vụ, mã QR, Đáp số trên tivi, đồng hồ đếm ngược, nút tắt nhạc, nút Hiện chấm điểm, nút Báo tường động.</li>
           </ul>
           <p class="gvma-nhac">Mã này chỉ dành cho giáo viên. Thầy quét trước giờ học, lúc học sinh chưa nhìn màn hình.</p>
           <p>Quét một lần là đủ: link dùng được tới khi thầy bấm Tạo phòng mới.</p>
@@ -1304,6 +1335,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=c621f24d"></script>
-<script src="js/xep-thiep.js?v=53d2aa08"></script>
+<script src="js/xep-thiep.js?v=713b1320"></script>
 </body>
 </html>

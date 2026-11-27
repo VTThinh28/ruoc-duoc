@@ -114,13 +114,13 @@
         "Đo đạc, tính diện tích từng mảnh ghép và diện tích phần còn lại của tấm thiệp, rồi nhập vào điện thoại.",
         "AI sẽ chấm ngay từng mục. Mục nào nhập sai 3 lần thì AI sẽ khóa mục đó lại, nhóm phải báo thầy để thầy hướng dẫn nhóm làm và mở khóa cho nhóm.",
         "Nhóm nào đã tính xong diện tích phần còn lại thì báo thầy để thầy xác nhận, rồi chuyển sang nhiệm vụ 2."] },
-      { ten: "Xếp hình", dong: [
-        "Các nhóm thảo luận, dùng điện thoại để xếp 10 mảnh ghép thành một hình có ý nghĩa."] },
+      { ten: "Báo tường online", dong: [        // 27/11 08:37 thầy đổi tên (trước là "Xếp hình") và thêm "góp phần hoàn thiện tờ báo tường online"
+        "Các nhóm thảo luận, dùng điện thoại để xếp 10 mảnh ghép thành một hình có ý nghĩa, góp phần hoàn thiện tờ báo tường online."] },
       { ten: "Dán hình lên thiệp và nêu ý nghĩa tấm thiệp", dong: [        // 15/11 22:34 thầy đổi: bỏ dòng viết lời chúc (tấm thiệp không còn phần ghi lời chúc)
         "Các nhóm dán 10 mảnh lên thiệp theo hình đã xếp trên điện thoại. Lưu ý các mảnh không chồng lên nhau.",
         "Thảo luận để chuẩn bị trình bày phần ý nghĩa tấm thiệp."] },
-      { ten: "Dán thiệp lên báo tường", dong: [
-        "Bốn nhóm đem tấm thiệp đã hoàn chỉnh lên dán vào báo tường.",
+      { ten: "Báo tường của lớp em", dong: [        // 27/11 08:37 thầy đổi tên (trước là "Dán thiệp lên báo tường") và thêm "của lớp"
+        "Bốn nhóm đem tấm thiệp đã hoàn chỉnh lên dán vào báo tường của lớp.",
         "Một bạn giải thích ý nghĩa bức tranh của nhóm."] }
     ]
   };
@@ -1857,7 +1857,7 @@
     function doiMan(tuMayChu) {
       var ten = xong ? "thiep" : man;
       an($("manNhap"), ten !== "nhap"); an($("manXep"), ten !== "xep"); an($("manThiep"), ten !== "thiep");
-      chu($("dtTen"), ten === "nhap" ? "Nhiệm vụ 1: Đo đạc và tính toán" : ten === "xep" ? "Nhiệm vụ 2: Xếp hình" : "Tấm thiệp đã xong");
+      chu($("dtTen"), ten === "nhap" ? "Nhiệm vụ 1: Đo đạc và tính toán" : ten === "xep" ? "Nhiệm vụ 2: Báo tường online" : "Tấm thiệp đã xong");
       if (ten !== "nhap" && O.kh) dongO();
       if (ten !== "xep") { if (ten !== tenCu || !hopAi) dongHop(); $("goiY").hidden = true; }      // 26/11 11:21: bảng hỏi của nút AI ở màn nhiệm vụ 1 không tự đóng mỗi lần dữ liệu đổi
       else if (hopAi && !$("hop").hidden) dongHop();      // vừa sang bàn xếp lúc bảng hỏi của nút AI còn mở: đóng
@@ -2248,16 +2248,17 @@
     /* Tivi báo cho máy giáo viên trong <phòng>/tv3d: l = thiệp đang hiện to (0 = báo tường), c = "0100" nhóm đang chạy Tranh 3D, b = "1100" nhóm đã được bấm,
        q = 1 khi mã QR đang hiện trên thiệp nào đó, d = 1 khi bảng Đáp số đang mở, n = 1 khi bảng Nhiệm vụ đang mở,
        m = nhạc nền: 0 thầy đang tắt, 1 đang phát, 2 trình duyệt chưa cho phát (phải chạm một lần vào màn hình tivi), 3 đang chọn "Không dùng nhạc", 4 không mở được bài hát,
-       p = 1 khi pháo hoa đang bắn (25/11; bỏ lúc 06:02, trở lại lúc 11:10 theo lời thầy), g = 1 khi màn Chấm điểm đang hiện (25/11). */
+       p = 1 khi pháo hoa đang bắn (25/11; bỏ lúc 06:02, trở lại lúc 11:10 theo lời thầy), g = 1 khi màn Chấm điểm đang hiện (25/11),
+       bd = 1 khi Báo tường động đang chạy, bc / ba = số ảnh khung to / khung nhỏ của Báo tường động có trong máy tivi, bn = 1 khi có bài hát của Báo tường động (27/11). */
     var tt3dCu = null;
     function bao3d() {
-      var c = "", b = "", ky, q, d, n, p = phaoLuc ? 1 : 0;
+      var c = "", b = "", ky, q, d, n, p = phaoLuc ? 1 : 0, bd = btdBao();
       if (!T) return;
       [1, 2, 3, 4].forEach(function (k) { c += hx[k].chay ? "1" : "0"; b += hx[k].bam ? "1" : "0"; });
       q = [1, 2, 3, 4].some(hienMa) ? 1 : 0; d = $("dapSo").hidden ? 0 : 1; n = $("nhiemVu").hidden ? 0 : 1;
-      ky = lon + "|" + c + "|" + b + "|" + q + d + n + nhacTT() + amTT() + p + (chamHien ? 1 : 0);
+      ky = lon + "|" + c + "|" + b + "|" + q + d + n + nhacTT() + amTT() + p + (chamHien ? 1 : 0) + "|" + bd.join(",");
       if (ky === tt3dCu) return;
-      tt3dCu = ky; T.set("tv3d", { l: lon, c: c, b: b, q: q, d: d, n: n, m: nhacTT(), a: amTT(), p: p, g: chamHien ? 1 : 0 });
+      tt3dCu = ky; T.set("tv3d", { l: lon, c: c, b: b, q: q, d: d, n: n, m: nhacTT(), a: amTT(), p: p, g: chamHien ? 1 : 0, bd: bd[0], bc: bd[1], ba: bd[2], bn: bd[3] });
     }
     /* Các bảng che báo tường: Cài đặt, Mã cho máy giáo viên (chỉ mở trên tivi), Đáp số, Nhiệm vụ (mở được từ máy giáo viên). Mỗi lúc chỉ một bảng. Hiện ngay, không phóng to thu nhỏ. */
     function dongBang() { $("caiDat").hidden = true; $("gvMa").hidden = true; }
@@ -2267,6 +2268,8 @@
     /* Lệnh từ máy giáo viên, trong <phòng>/lenh = { i: mã lệnh, v, k }: v = "3d" hiện to thiệp nhóm k và chạy Tranh 3D; "dung" dừng Tranh 3D nhóm k;
        "ve" về báo tường (đóng mọi bảng, thôi hiện to); "ma" hiện (k = 1) hay ẩn (k = 0) mã QR; "dap" hiện / ẩn bảng Đáp số; "nv" hiện / ẩn bảng Nhiệm vụ;
        "phao" bắn pháo hoa (25/11: thầy chọn Có ở câu hỏi "Hiện pháo hoa?" trên máy giáo viên; bỏ lúc 06:02, trở lại lúc 11:10); "cham" hiện (k = 1) hay tắt (k = 0) màn Chấm điểm (25/11).
+       27/11: "phao" có thể kèm n = các nhóm chạy Tranh 3D cùng lúc với pháo (vd "4"); "3dds" chạy Tranh 3D các nhóm trong n (thầy chọn Không ở câu hỏi pháo hoa);
+       "btd" bật (k = 1) hay dừng (k = 0) Báo tường động. Hai lệnh liền nhau thì tivi chỉ làm lệnh sau, nên pháo và Tranh 3D đi chung một lệnh.
        Lệnh đang nằm sẵn lúc tivi mở trang là lệnh cũ: không làm. */
     var lenhCu;
     function nhanLenh(L) {
@@ -2278,16 +2281,23 @@
       if (L.v === "ma") { if (k) veBaoTuong(); doiXem(k ? "ma" : "xep"); return; }
       if (L.v === "dap") { hienDapSo(!!k); return; }
       if (L.v === "nv") { hienNhiemVu(!!k); return; }
-      if (L.v === "phao") { batPhao(); return; }
+      if (L.v === "phao") { batPhao(); chay3dDs(L.n); return; }
+      if (L.v === "3dds") { chay3dDs(L.n); return; }
+      if (L.v === "btd") { if (k) btdBat(); else btdTat(); return; }
       if (L.v === "cham") { hienCham(!!k); return; }
       if (!(k >= 1 && k <= 4)) return;
-      if (L.v === "3d") {
-        if (!T3 || !(duLieu[k] || {}).xong) return;
-        dongBang(); $("dapSo").hidden = true; $("nhiemVu").hidden = true;      // thầy đang bấm từ điện thoại: dẹp các bảng đang che thiệp
-        if (hienMa(k)) { xem = "xep"; capNhatMa(); }
-        if (lon) phong_to(lon);                    // 16/11 10:02, thầy: "tranh 3d không cần hiện to lên làm gì nhé" → thiệp chạy ngay tại chỗ của nó trên báo tường (đang có thiệp hiện to thì về báo tường)
-        bat3d(k);
-      } else if (L.v === "dung") dung3d(k);
+      if (L.v === "3d") lenh3d(k);
+      else if (L.v === "dung") dung3d(k);
+    }
+    function chay3dDs(ds) {                        // 27/11: thầy trả lời câu hỏi pháo hoa (Có hay Không): Tranh 3D tự chạy cho nhóm hoàn thành sau cùng (ds = "4"); nhóm đang chạy thì để yên
+      String(ds || "").split("").forEach(function (s) { var k = +s; if (k >= 1 && k <= 4 && !hx[k].chay) lenh3d(k); });
+    }
+    function lenh3d(k) {                           // lệnh "3d": thầy bấm Tranh 3D của nhóm k trên máy giáo viên
+      if (!T3 || !(duLieu[k] || {}).xong) return;
+      dongBang(); $("dapSo").hidden = true; $("nhiemVu").hidden = true;      // thầy đang bấm từ điện thoại: dẹp các bảng đang che thiệp
+      if (hienMa(k)) { xem = "xep"; capNhatMa(); }
+      if (lon) phong_to(lon);                    // 16/11 10:02, thầy: "tranh 3d không cần hiện to lên làm gì nhé" → thiệp chạy ngay tại chỗ của nó trên báo tường (đang có thiệp hiện to thì về báo tường)
+      bat3d(k);
     }
 
     /* ---------- Tranh 3D (15/11; phần vẽ ở js/tranh-3d.js) ----------
@@ -2413,6 +2423,7 @@
     function phaoBatDau() { nhacPhaoBong(); phaoTieng(); }
     function batPhao() {                            // lệnh "phao" từ máy giáo viên. Đang bắn mà nhận lệnh nữa thì bắn lại từ đầu
       if (!T3) return;
+      if (btd.chay) btdTat(true);                   // 27/11: đang chạy Báo tường động thì dừng (pháo tự làm nhạc nhỏ dần rồi tắt)
       veBaoTuong();                                 // dẹp các bảng, thôi hiện to: pháo hoa bắn trên báo tường có 4 tấm thiệp
       phaoLuc = performance.now() + 400; phaoBatDau(); bao3d(); chayVong();
     }
@@ -2919,7 +2930,7 @@
         })(N.nguon);
         return;
       }
-      layAnh("nhacXep", function (b) {             // file thầy chọn
+      layAnh(N.nguon === "btd" ? "btdNhac" : "nhacXep", function (b) {             // file thầy chọn; 27/11: hay bài hát của Báo tường động
         if (lan !== N.lan) return;
         if (!b) { nhacDat(4); return; }
         if (!N.au) { N.au = new Audio(); N.au.loop = true; }
@@ -2931,7 +2942,7 @@
         else nhacDat(1);
       });
     }
-    function nhacTenBai() { return NHAC_BAI[N.nguon] ? NHAC_BAI[N.nguon].ten : (N.ten || "bài hát thầy chọn"); }
+    function nhacTenBai() { return NHAC_BAI[N.nguon] ? NHAC_BAI[N.nguon].ten : N.nguon === "btd" ? (btd.nhacTen || "bài hát của Báo tường động") : (N.ten || "bài hát thầy chọn"); }
     function veNhac() {
       var tt = N.tt, chu, nhan = N.bat ? "Tắt nhạc" : "Bật nhạc", b = $("nutNhac");
       $("nhacXep").classList.toggle("bat", N.nguon === "xep"); $("nhacHV").classList.toggle("bat", N.nguon === "hv"); $("nhacChon").classList.toggle("bat", N.nguon === "rieng");
@@ -2990,6 +3001,328 @@
     $("nutNhacNho").onclick = function () { nhacGhi(N.bat, N.am - 1); };
     $("nutNhacTo").onclick = function () { nhacGhi(N.bat, N.am + 1); };
     veNhac();
+
+    /* ---------- Báo tường động (27/11) ----------
+       27/11 08:37, thầy (kèm bài hát "09. Bèo dạt mây trôi.mp3"): "khi mà 4 nhóm đã hoàn thiện tờ báo tường online, đã bắn pháo bông xong thì trong ứng dụng sẽ có
+       một nút gọi là, Báo tường động, lúc này thì hình ảnh thầy cô ở bức ảnh to sẽ chuyển động, ... còn các hình nhỏ bên dưới thì đổi hình thôi và khi tôi bấm vào
+       nút báo tường động thì cũng sẽ đổi nhạc sang bài này".
+       09:08, thầy: "clip nặng quá tôi tải về lâu. giờ bạn vô thư mục này chọn ảnh rồi tạo hiệu ứng đổi ảnh là được. có thể truy cập web phan tây hồ để lựa các
+       hình ảnh mới nhất nhé". Nên không dùng clip: khung ảnh to đổi lần lượt các ảnh thầy cô, 6 khung nhỏ đổi ảnh hoạt động; không phóng to thu nhỏ.
+       Ảnh có hình thầy cô, học sinh; bài hát có bản quyền: KHÔNG để trên mạng. Thầy chọn tệp bao-tuong-dong.zip (hay chọn thẳng nhiều ảnh và một bài hát) trong
+       Cài đặt trên máy tivi; trang lưu trong kho của trình duyệt máy đó (IndexedDB "ruoc-duoc", cùng kho với ảnh báo tường, không đổi số phiên bản của kho):
+       khóa "btdTo" (ảnh khung to), "btdAnh" (ảnh khung nhỏ), "btdNhac" (bài hát). Ảnh trong thư mục "anh-to" (hay tên bắt đầu bằng "to-") vào khung to, ảnh
+       khác vào khung nhỏ. Lúc chọn, ảnh nào chưa đúng khung 3 : 2 thì làm lại cho đúng (ảnh ngang cắt vừa khung; ảnh dọc để nguyên ở giữa, hai bên là chính ảnh
+       đó nhoè). Chọn tệp mới thì thay hết; nút "Bỏ" xóa hết khỏi máy.
+       Chạy: khung to cứ BTD.TO giây đổi sang ảnh kế (theo thứ tự tên tệp, hết thì quay lại), lần lượt 3 kiểu: mờ chéo, quét mềm từ trái sang, quét mềm từ phải
+       sang. 6 khung nhỏ: cứ BTD.ANH giây một khung mờ dần sang ảnh mới (ảnh xáo trộn; hai khung không cùng một ảnh). Nhạc nền đổi sang bài hát, lặp lại (không có
+       bài hát thì giữ bài đang có). Dừng: các khung mờ đi, hiện lại ảnh trên báo tường; nhạc nhỏ dần rồi trả lại bài cũ (bài cũ đang tắt thì nhạc tắt).
+       Lệnh "btd" từ máy giáo viên (k = 1 bật, 0 dừng); trong Cài đặt có nút "Xem thử". Pháo hoa bắn thì Báo tường động dừng.
+       Chỗ các khung lấy từ bo-cuc-canva-a3.json (lop-a3-ban-6) của báo tường 4494 × 3179; trang vẽ báo tường rộng 1527 (#baoTuong). */
+    var BTD = {
+      TO: 5.5,                                      // giây: mỗi ảnh khung to hiện bao lâu, kể cả lúc đổi sang ảnh sau
+      DOI: 1.6,                                     // giây đổi ảnh khung to (bằng thời gian các hiệu ứng .btd-o.mo, .quet-trai, .quet-phai trong index.html)
+      KIEU: ["mo", "quet-trai", "quet-phai"],       // 3 kiểu đổi ảnh khung to, lần lượt
+      ANH: 2.4,                                     // giây: cứ chừng ấy thì một khung nhỏ đổi ảnh (mỗi khung chừng 14 giây đổi một lần)
+      TO_W: 1800, TO_H: 1200, NHO_W_A: 960, NHO_H_A: 640,      // lúc chọn tệp: cỡ ảnh lưu lại (khung to trên tivi rộng chừng 1300 điểm ảnh, khung nhỏ chừng 300)
+      LON: [1311.54, 597.75, 1870.93, 1246.73],     // ảnh to: trái, trên, rộng, cao (theo ảnh báo tường 4494 × 3179)
+      NHO: [[1771, 1968.84, -2], [2279, 2357.66, -1.8], [2279, 2746.49, 1.6], [2279, 1968.84, 1.5], [1771, 2746.49, -1.2], [1771, 2357.66, 1.5]],
+      NHO_W: 444, NHO_H: 296                        // 6 ảnh nhỏ: trái, trên, góc xoay (độ, quanh tâm khung); thứ tự trong mảng là thứ tự đổi ảnh, xen kẽ cho đều
+    };
+    var btd = { chay: false, lan: 0, to: [], anh: [], nhac: null, nhacTen: "", nhacCu: null, o: [], nho: [], cur: -1, toVi: 0, kieuVi: 0,
+                hen: 0, henDauTo: 0, henAnh: 0, henDau: 0, henTan: 0, anhDs: [], anhVi: 0, nhoVi: 0, dangChon: false, chonLan: 0, boQua: 0 };
+    var btdKhung = H("div", null, null, $("baoTuong")), btdLon = H("div", "btd-lon", null, btdKhung);
+    btdKhung.id = "btd"; btdKhung.hidden = true;
+    (function () {
+      var s = 1527 / 4494, L = BTD.LON;
+      function dat(e, x, y, w, h) { e.style.left = (x * s).toFixed(2) + "px"; e.style.top = (y * s).toFixed(2) + "px"; e.style.width = (w * s).toFixed(2) + "px"; e.style.height = (h * s).toFixed(2) + "px"; }
+      dat(btdLon, L[0], L[1], L[2], L[3]);
+      [0, 1].forEach(function () {
+        var o = { e: H("div", "btd-o", null, btdLon), url: "" };
+        o.im = H("img", null, null, o.e); o.im.alt = ""; o.im.decoding = "async";
+        btd.o.push(o);
+      });
+      BTD.NHO.forEach(function (n) {
+        var e = H("div", "btd-nho", null, btdKhung), im = [H("img", null, null, e), H("img", null, null, e)];
+        dat(e, n[0], n[1], BTD.NHO_W, BTD.NHO_H); e.style.transform = "rotate(" + n[2] + "deg)";
+        im.forEach(function (x) { x.alt = ""; x.decoding = "async"; });
+        btd.nho.push({ e: e, im: im, dang: -1, url: "" });
+      });
+    })();
+    function btdBao() {                             // cho bao3d: [đang chạy, số ảnh khung to, số ảnh khung nhỏ, có bài hát]
+      return typeof btd === "object" && btd ? [btd.chay ? 1 : 0, btd.to.length, btd.anh.length, btd.nhac ? 1 : 0] : [0, 0, 0, 0];
+    }
+    function btdXao(a) { var i, j, t; for (i = a.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    function btdDoiTo() {                           // khung to đổi sang ảnh kế: ảnh mới nằm trên, hiện ra theo một trong 3 kiểu; xong thì cất ảnh cũ
+      var lan = btd.lan, moi, cu, a;
+      if (!btd.chay || !btd.to.length) return;
+      moi = btd.o[btd.cur === 0 ? 1 : 0]; cu = btd.cur >= 0 ? btd.o[btd.cur] : null;
+      a = btd.to[btd.toVi++ % btd.to.length];
+      moi.url = a.url; moi.im.src = a.url;
+      function hien() {
+        var kieu;
+        if (lan !== btd.lan || !btd.chay || moi.url !== a.url) return;
+        kieu = BTD.KIEU[btd.kieuVi++ % BTD.KIEU.length];
+        BTD.KIEU.forEach(function (k) { moi.e.classList.remove(k); });
+        void moi.e.offsetWidth;                     // để hiệu ứng chạy lại từ đầu
+        moi.e.classList.add("tren", "hien", kieu);
+        if (cu) cu.e.classList.remove("tren");
+        btd.cur = btd.o.indexOf(moi);
+        setTimeout(function () {
+          if (lan !== btd.lan) return;              // đã dừng: btdDon dọn hết
+          moi.e.classList.remove(kieu);
+          if (cu && btd.o[btd.cur] !== cu) cu.e.classList.remove("hien");
+        }, BTD.DOI * 1000 + 150);
+      }
+      if (moi.im.decode) moi.im.decode().then(hien, function () { /* ảnh hỏng: giữ ảnh đang hiện, tới lượt sau đổi tiếp */ });
+      else moi.im.onload = hien;
+    }
+    function btdAnhKe() {                           // ảnh kế tiếp cho khung nhỏ: đi hết lượt rồi xáo lại, bỏ qua ảnh đang hiện ở khung khác
+      var dang = btd.nho.map(function (n) { return n.url; }), i, a = null;
+      for (i = 0; i <= btd.anh.length; i++) {
+        if (btd.anhVi >= btd.anhDs.length) { btd.anhDs = btdXao(btd.anh.slice()); btd.anhVi = 0; }
+        a = btd.anhDs[btd.anhVi++];
+        if (dang.indexOf(a.url) < 0) return a;
+      }
+      return a;
+    }
+    function btdDoiAnh() {                          // một khung nhỏ mờ dần sang ảnh mới (ảnh mới nằm trên, hiện dần; xong thì cất ảnh cũ)
+      var lan = btd.lan, n, a, im, cu;
+      if (!btd.chay || !btd.anh.length) return;
+      n = btd.nho[btd.nhoVi++ % btd.nho.length]; a = btdAnhKe();
+      if (!a) return;
+      im = n.im[n.dang === 0 ? 1 : 0]; cu = n.dang >= 0 ? n.im[n.dang] : null;
+      n.url = a.url; im.src = a.url;
+      function hien() {
+        if (lan !== btd.lan || !btd.chay || n.url !== a.url) return;
+        im.classList.add("tren"); if (cu) cu.classList.remove("tren");
+        im.classList.add("hien"); n.dang = n.im.indexOf(im);
+        if (cu) setTimeout(function () { if (lan === btd.lan && n.im[n.dang] !== cu) cu.classList.remove("hien"); }, 1100);
+      }
+      if (im.decode) im.decode().then(hien, function () { /* bỏ qua */ }); else im.onload = hien;
+    }
+    function btdNhacBat() {                         // nhạc nền đổi sang bài của Báo tường động (không có bài hát thì giữ bài đang có)
+      if (!btd.nhac) return;
+      if (!btd.nhacCu) btd.nhacCu = { nguon: N.nguon === "btd" ? "xep" : N.nguon, bat: N.bat };
+      clearInterval(N.henMo);
+      N.nguon = "btd"; N.loi = "";
+      if (N.bat) nhacPhat(); else nhacGhi(true, N.am);
+    }
+    function btdNhacTat(nhanh) {                    // trả lại bài cũ: nhạc nhỏ dần chừng 0,9 giây rồi phát bài cũ, hay tắt nếu lúc bật Báo tường động nhạc đang tắt
+      var cu = btd.nhacCu, buoc = 0;                // nhanh: pháo hoa sắp tự làm nhạc nhỏ dần rồi tắt, ở đây chỉ trả tên bài
+      if (!cu || N.nguon !== "btd") { btd.nhacCu = null; return; }
+      if (nhanh || !N.bat) { btd.nhacCu = null; N.nguon = cu.nguon; veNhac(); return; }
+      clearInterval(N.henMo);
+      N.henMo = setInterval(function () {
+        buoc++; N.mo = Math.max(0, 1 - buoc / 15); nhacDatTo();
+        if (buoc < 15) return;
+        clearInterval(N.henMo);
+        btd.nhacCu = null; N.nguon = cu.nguon;
+        if (cu.bat) nhacPhat(); else nhacGhi(false, N.am);
+      }, 60);
+    }
+    function btdDon() {                             // đã mờ hẳn: cất các khung
+      clearTimeout(btd.henTan); btd.henTan = 0;
+      btdKhung.hidden = true; btdKhung.classList.remove("tan");
+      btd.o.forEach(function (o) { o.url = ""; o.e.classList.remove("hien", "tren", "mo", "quet-trai", "quet-phai"); o.im.removeAttribute("src"); });
+      btd.nho.forEach(function (n) { n.dang = -1; n.url = ""; n.im.forEach(function (im) { im.classList.remove("hien", "tren"); im.removeAttribute("src"); }); });
+    }
+    function btdBat() {
+      if (btd.chay || btd.dangChon) return;
+      if (!btd.to.length && !btd.anh.length) { btdVe(); bao3d(); return; }      // máy tivi chưa có ảnh: máy giáo viên báo thầy vào Cài đặt chọn tệp
+      if (btd.henTan) btdDon();                     // vừa dừng, còn đang mờ: dọn ngay rồi chạy lại
+      veBaoTuong();                                 // dẹp các bảng, thôi hiện to: thấy cả tấm báo tường
+      btd.chay = true; btd.lan++; btd.cur = -1; btd.toVi = 0; btd.kieuVi = 0; btd.nhoVi = 0;
+      btdKhung.classList.remove("tan"); btdKhung.hidden = false;
+      if (btd.to.length) { btd.henDauTo = setTimeout(btdDoiTo, 600); btd.hen = setInterval(btdDoiTo, BTD.TO * 1000); }
+      if (btd.anh.length) { btd.henDau = setTimeout(btdDoiAnh, 1500); btd.henAnh = setInterval(btdDoiAnh, BTD.ANH * 1000); }
+      btdNhacBat();
+      btdVe(); bao3d();
+    }
+    function btdTat(nhanh) {
+      if (!btd.chay) return;
+      btd.chay = false; btd.lan++;
+      clearTimeout(btd.henDauTo); clearInterval(btd.hen); clearTimeout(btd.henDau); clearInterval(btd.henAnh);
+      btdKhung.classList.add("tan");
+      btd.henTan = setTimeout(btdDon, 850);
+      btdNhacTat(nhanh);
+      btdVe(); bao3d();
+    }
+    /* --- Cài đặt: chọn tệp, xem thử, bỏ --- */
+    function btdVe() {
+      var c = btd.to.length, a = btd.anh.length, e = $("btdTinh");
+      if (btd.dangChon) return;
+      e.textContent = (c || a || btd.nhac ? "Đang có " + c + " ảnh khung to, " + a + " ảnh khung nhỏ" + (btd.nhac ? " và bài hát “" + btd.nhacTen + "”." : ", chưa có bài hát (nhạc nền giữ bài đang chọn).")
+        : "Chưa có ảnh, bài hát nào.") + (btd.boQua ? " Bỏ qua " + btd.boQua + " tệp không mở được." : "");
+      e.classList.remove("xau");
+      $("nutBtdThu").textContent = btd.chay ? "■ Dừng" : "▶ Xem thử";
+      tat($("nutBtdThu"), !btd.chay && !c && !a);
+      tat($("nutBtdChon"), false);
+      an($("nutBtdBo"), !(c || a || btd.nhac));
+    }
+    function btdTenBai(ten) { return String(ten || "").replace(/\.[a-z0-9]{2,5}$/i, "").replace(/^\s*\d{1,3}\s*[.)_-]\s*/, "") || "bài hát"; }      // "09. Bèo dạt mây trôi.mp3" → "Bèo dạt mây trôi"
+    function btdNapKho(cb) {                        // đọc ảnh, bài hát đã lưu trong máy này (lúc mở trang, sau khi chọn tệp hay bỏ)
+      layAnh("btdTo", function (dt) {
+        layAnh("btdAnh", function (da) {
+          layAnh("btdNhac", function (nh) {
+            btd.to.forEach(function (a) { URL.revokeObjectURL(a.url); }); btd.anh.forEach(function (a) { URL.revokeObjectURL(a.url); });
+            btd.to = (Array.isArray(dt) ? dt : []).filter(Boolean).map(function (b) { return { url: URL.createObjectURL(b) }; });
+            btd.anh = (Array.isArray(da) ? da : []).filter(Boolean).map(function (b) { return { url: URL.createObjectURL(b) }; });
+            btd.nhac = nh || null; btd.nhacTen = nh ? btdTenBai(nh.name) : "";
+            btd.anhDs = []; btd.anhVi = 0;
+            btdVe(); veNhac(); bao3d();
+            if (cb) cb();
+          });
+        });
+      });
+    }
+    function btdKhongDau(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D"); }
+    function btdLoai(ten, t) {                      // "to" (ảnh khung to), "anh" (ảnh khung nhỏ), "nhac", "zip" hay "" (tệp khác: bỏ qua)
+      var p = btdKhongDau(ten).toLowerCase(), cuoi = p.split("/").pop(), d = cuoi.indexOf(".") >= 0 ? cuoi.split(".").pop() : "";
+      t = (t || "").toLowerCase();
+      if (!cuoi || /^\./.test(cuoi) || /(^|\/)__macosx\//.test(p)) return "";
+      if (d === "zip" || /zip/.test(t)) return "zip";
+      if (/^image\//.test(t) || /^(jpe?g|png|webp|gif|bmp|avif)$/.test(d)) return /(^|\/)(anh[ _-]*to|thay[ _-]*co)\//.test(p) || /^to[ _-]/.test(cuoi) ? "to" : "anh";
+      if (/^audio\//.test(t) || /^(mp3|m4a|aac|wav|ogg|oga|opus|flac)$/.test(d)) return "nhac";
+      return "";
+    }
+    function btdKieuTep(ten) {                      // kiểu tệp theo đuôi (cho tệp lấy ra từ .zip)
+      var d = (ten.split(".").pop() || "").toLowerCase();
+      return { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", bmp: "image/bmp", avif: "image/avif",
+               mp3: "audio/mpeg", m4a: "audio/mp4", aac: "audio/aac", wav: "audio/wav", ogg: "audio/ogg", oga: "audio/ogg", opus: "audio/ogg", flac: "audio/flac" }[d] || "";
+    }
+    function btdMoZip(f, cb) {                      // mở tệp .zip (lưu thẳng, hay nén kiểu deflate như Windows nén): cb([{ ten, b }]) hay cb(null) nếu không đọc được
+      var r = new FileReader();
+      r.onload = function () {
+        var buf = r.result, v, n, i, cuoi = -1, so, cd, ds = [], ra = [], nl, el, cl, pp, co, lo, ten, dl;
+        try {
+          v = new DataView(buf); n = buf.byteLength;
+          for (i = n - 22; i >= Math.max(0, n - 65557); i--) if (v.getUint32(i, true) === 0x06054b50) { cuoi = i; break; }
+          if (cuoi < 0) { cb(null); return; }
+          so = v.getUint16(cuoi + 10, true); cd = v.getUint32(cuoi + 16, true);
+          for (i = 0; i < so; i++) {
+            if (cd + 46 > n || v.getUint32(cd, true) !== 0x02014b50) break;
+            pp = v.getUint16(cd + 10, true); co = v.getUint32(cd + 20, true);
+            nl = v.getUint16(cd + 28, true); el = v.getUint16(cd + 30, true); cl = v.getUint16(cd + 32, true); lo = v.getUint32(cd + 42, true);
+            ten = new TextDecoder().decode(new Uint8Array(buf, cd + 46, nl));
+            cd += 46 + nl + el + cl;
+            if (/\/$/.test(ten) || !btdLoai(ten, "") || btdLoai(ten, "") === "zip" || lo + 30 > n || v.getUint32(lo, true) !== 0x04034b50) continue;
+            dl = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true);
+            if (dl + co <= n && (pp === 0 || pp === 8)) ds.push({ ten: ten, pp: pp, du: buf.slice(dl, dl + co) });
+          }
+        } catch (e) { cb(null); return; }
+        (function tiep(k) {
+          var x;
+          if (k >= ds.length) { cb(ra); return; }
+          x = ds[k];
+          if (x.pp === 0) { ra.push({ ten: x.ten, b: new Blob([x.du], { type: btdKieuTep(x.ten) }) }); tiep(k + 1); return; }
+          try {
+            new Response(new Blob([x.du]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer().then(function (g) {
+              ra.push({ ten: x.ten, b: new Blob([g], { type: btdKieuTep(x.ten) }) }); tiep(k + 1);
+            }, function () { tiep(k + 1); });
+          } catch (e2) { tiep(k + 1); }
+        })(0);
+      };
+      r.onerror = function () { cb(null); };
+      r.readAsArrayBuffer(f);
+    }
+    function btdKhungAnh(b, W, H, cb) {             // ảnh: đúng khung W × H (3 : 2) và không lớn hơn thì giữ nguyên; không thì làm lại cho vừa khung, lưu JPEG; cb(null) nếu không mở được
+      docAnh(b, function (im, u) {
+        var w, h, c, g, tl, sw, sh;
+        if (!im) { cb(null); return; }
+        w = im.naturalWidth; h = im.naturalHeight;
+        if (Math.abs(w / h - W / H) < 0.01 * W / H && w <= W) { URL.revokeObjectURL(u); cb(b); return; }
+        c = document.createElement("canvas"); c.width = W; c.height = H;
+        try {
+          g = c.getContext("2d");
+          tl = Math.max(W / w, H / h); sw = W / tl; sh = H / tl;               // phần ảnh vừa kín khung
+          if (w / h >= 1.25) g.drawImage(im, (w - sw) / 2, (h - sh) * 0.4, sw, sh, 0, 0, W, H);      // ảnh ngang: cắt vừa khung (lệch lên trên một chút cho khỏi mất đầu người)
+          else {                                    // ảnh dọc hay gần vuông: nền là chính ảnh đó nhoè, tối đi; ảnh để nguyên ở giữa
+            try { g.filter = "blur(" + Math.round(W / 50) + "px) brightness(0.75)"; } catch (e) { /* bỏ qua */ }
+            g.drawImage(im, (w - sw) / 2, (h - sh) / 2, sw, sh, -W * 0.06, -H * 0.06, W * 1.12, H * 1.12);
+            g.filter = "none";
+            tl = Math.min(W / w, H / h);
+            g.drawImage(im, (W - w * tl) / 2, (H - h * tl) / 2, w * tl, h * tl);
+          }
+        } catch (e2) { URL.revokeObjectURL(u); cb(null); return; }
+        URL.revokeObjectURL(u);
+        try { c.toBlob(function (x) { cb(x || null); }, "image/jpeg", 0.88); } catch (e3) { cb(null); }
+      });
+    }
+    function btdXemNhac(f, cb) {                    // mở thử bài hát
+      var a = new Audio(), u = URL.createObjectURL(f), xong = false;
+      function het(ok) { if (xong) return; xong = true; a.onloadedmetadata = a.onerror = null; a.removeAttribute("src"); URL.revokeObjectURL(u); cb(ok); }
+      a.preload = "metadata"; a.onloadedmetadata = function () { het(true); }; a.onerror = function () { het(false); };
+      setTimeout(function () { het(false); }, 10000);
+      a.src = u;
+    }
+    function btdChon(tep) {                         // thầy chọn tệp: mở .zip, làm lại ảnh nào chưa đúng khung, lưu tất cả vào kho của trình duyệt (thay hết cái cũ)
+      var lan = ++btd.chonLan, e = $("btdTinh"), ds = [], bo = 0, zip = [];
+      tep.forEach(function (f) {
+        var ten = f.webkitRelativePath || f.name, l = btdLoai(ten, f.type);
+        if (l === "zip") zip.push(f); else if (l) ds.push({ ten: ten, b: f, l: l });
+      });
+      if (btd.chay) btdTat();
+      btd.dangChon = true; tat($("nutBtdChon"), true); tat($("nutBtdThu"), true); an($("nutBtdBo"), true); e.classList.remove("xau");
+      (function moZip(i) {
+        if (lan !== btd.chonLan) return;
+        if (i >= zip.length) { doc(); return; }
+        e.textContent = "Đang mở tệp " + zip[i].name + "…";
+        btdMoZip(zip[i], function (ra) {
+          if (lan !== btd.chonLan) return;
+          if (!ra) bo++;
+          else ra.forEach(function (x) { var l = btdLoai(x.ten, x.b.type); if (l && l !== "zip") ds.push({ ten: x.ten, b: x.b, l: l }); });
+          moZip(i + 1);
+        });
+      })(0);
+      function doc() {
+        var to = [], anh = [], nhac = null, i = 0;
+        if (!ds.length) {
+          btd.dangChon = false; btd.boQua = 0; btdVe();
+          e.textContent = "Không thấy ảnh hay bài hát nào trong tệp đã chọn. Thầy chọn lại tệp bao-tuong-dong.zip nhé."; e.classList.add("xau");
+          return;
+        }
+        ds.sort(function (a, b) { return a.ten.localeCompare(b.ten, "vi", { numeric: true }); });
+        (function tiep() {
+          var x;
+          if (lan !== btd.chonLan) return;
+          if (i >= ds.length) { luu(to, anh, nhac); return; }
+          x = ds[i++];
+          e.textContent = "Đang đọc " + i + "/" + ds.length + ": " + x.ten.split("/").pop();
+          if (x.l === "to") btdKhungAnh(x.b, BTD.TO_W, BTD.TO_H, function (b) { if (b) to.push(b); else bo++; tiep(); });
+          else if (x.l === "anh") btdKhungAnh(x.b, BTD.NHO_W_A, BTD.NHO_H_A, function (b) { if (b) anh.push(b); else bo++; tiep(); });
+          else if (!nhac) btdXemNhac(x.b, function (ok) {
+            if (ok) nhac = typeof File === "function" && x.b instanceof File ? x.b : new File([x.b], x.ten.split("/").pop(), { type: x.b.type || btdKieuTep(x.ten) });
+            else bo++;
+            tiep();
+          });
+          else tiep();                              // nhiều bài hát: lấy bài đầu tiên
+        })();
+      }
+      function luu(to, anh, nhac) {
+        e.textContent = "Đang lưu vào máy này…";
+        luuAnh("btdTo", to.length ? to : null, function (ok1) {
+          luuAnh("btdAnh", anh.length ? anh : null, function (ok2) {
+            luuAnh("btdNhac", nhac, function (ok3) {
+              btd.dangChon = false; btd.boQua = bo;
+              try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e3) { /* bỏ qua */ }
+              btdNapKho(function () {
+                if (ok1 && ok2 && ok3) return;
+                e.textContent = "Máy này không đủ chỗ lưu hết. Thầy bớt ảnh rồi chọn lại."; e.classList.add("xau");
+              });
+            });
+          });
+        });
+      }
+    }
+    $("nutBtdChon").onclick = function () { $("btdTep").value = ""; $("btdTep").click(); };
+    $("btdTep").onchange = function () { var ds = [].slice.call($("btdTep").files || []); if (ds.length) btdChon(ds); };
+    $("nutBtdThu").onclick = function () { if (btd.chay) btdTat(); else btdBat(); };
+    $("nutBtdBo").onclick = function () {
+      if (btd.chay) btdTat();
+      luuAnh("btdTo", null, function () { luuAnh("btdAnh", null, function () { luuAnh("btdNhac", null, function () { btd.boQua = 0; btdNapKho(); }); }); });
+    };
+    btdVe();
+    setTimeout(function () { btdNapKho(); }, 1500);      // đọc kho sau khi trang mở xong (không giành việc với lúc nối máy chủ)
 
     $("nutMa").onclick = function () { var dangHien = [1, 2, 3, 4].some(hienMa); veBaoTuong(); doiXem(dangHien ? "xep" : "ma"); };
     $("nutCaiDat").onclick = function () { $("dapSo").hidden = true; $("nhiemVu").hidden = true; $("gvMa").hidden = true; $("caiDat").hidden = false; bao3d(); };
@@ -3384,7 +3717,7 @@
     }
     function chay(k) { return coTv && !!tv && typeof tv.c === "string" && tv.c.charAt(k - 1) === "1"; }
     function daBam(k) { return coTv && !!tv && typeof tv.b === "string" && tv.b.charAt(k - 1) === "1"; }
-    function lenh(v, k) { if (T) T.set("lenh", { i: maNgauNhien(8), v: v, k: k || 0 }); }
+    function lenh(v, k, n) { var L = { i: maNgauNhien(8), v: v, k: k || 0 }; if (n) L.n = String(n); if (T) T.set("lenh", L); }      // 27/11: n = các nhóm chạy Tranh 3D (lệnh "phao", "3dds")
     [1, 2, 3, 4].forEach(function (k) {
       var o = H("section", "gv-nhom", null, $("gvDs")), h, kh, n, X = { o: o };
       o.id = "gvNhom" + k;
@@ -3504,8 +3837,26 @@
     var phaoCo = {}, phaoHoi = false, phaoKhoa = "xt-phao-" + phong, phaoTL = false;
     try { phaoTL = sessionStorage.getItem(phaoKhoa) === "1"; } catch (e0) { /* bỏ qua */ }
     function phaoNho(b) { phaoTL = b; try { if (b) sessionStorage.setItem(phaoKhoa, "1"); else sessionStorage.removeItem(phaoKhoa); } catch (e) { /* bỏ qua */ } }
+    /* 27/11 08:37, thầy: "Khi nhóm cuối cùng hoàn thiện tấm thiệp thì hỏi về pháo hoa đó thì thi tôi bấm có hoặc không thì đều sẽ hiện tranh 3d cho nhóm cuối đó,
+       không cần tôi chọn tranh 3d." nhomCuoi = nhóm bấm Hoàn thành sau cùng mà máy này thấy (nhớ trong sessionStorage như phaoTL; nhóm được cho sửa lại hình
+       rồi hoàn thành lần nữa thì nhóm đó là nhóm sau cùng). Máy này mở trang sau lúc đó (không biết nhóm nào xong sau cùng) thì lấy các nhóm đã hoàn thành
+       mà tivi chưa chạy Tranh 3D lần nào. Nhóm đang chạy Tranh 3D thì để yên. Có: lệnh "phao" kèm n = các nhóm đó (tivi bắn pháo và chạy Tranh 3D cùng lúc);
+       Không: lệnh "3dds" kèm n. */
+    var xongCu = {}, cuoiKhoa = "xt-cuoi-" + phong, nhomCuoi = 0;
+    try { nhomCuoi = +sessionStorage.getItem(cuoiKhoa) || 0; } catch (e1) { /* bỏ qua */ }
+    function thayXong(k) {                          // gọi mỗi lần nhận dữ liệu nhóm k, trước khi đặt phaoCo[k] (lần nhận đầu là lúc mở trang: chưa tính)
+      var x = !!(D[k] || {}).xong;
+      if (phaoCo[k] && x && !xongCu[k]) { nhomCuoi = k; try { sessionStorage.setItem(cuoiKhoa, String(k)); } catch (e) { /* bỏ qua */ } }
+      xongCu[k] = x;
+    }
+    function ds3dCuoi() {                           // các nhóm sẽ tự chạy Tranh 3D khi thầy trả lời câu hỏi pháo hoa: "4", có khi "23"; "" là không có nhóm nào
+      var ds = "";
+      if (nhomCuoi >= 1 && nhomCuoi <= 4 && (D[nhomCuoi] || {}).xong) ds = String(nhomCuoi);
+      else [1, 2, 3, 4].forEach(function (k) { if ((D[k] || {}).xong && !daBam(k)) ds += k; });
+      return ds.split("").filter(function (s) { return !chay(+s); }).join("");
+    }
     function vePhaoGV() {
-      var du, ban = tt("p") === 1;
+      var du, ban = tt("p") === 1, bd = tt("bd") === 1, coBtd = tt("bc") > 0 || tt("ba") > 0, ds3;
       if (![1, 2, 3, 4].every(function (k) { return phaoCo[k]; })) return;
       du = [1, 2, 3, 4].every(function (k) { return !!(D[k] || {}).xong; });
       if (!du) { phaoHoi = false; if (phaoTL) phaoNho(false); }
@@ -3514,13 +3865,23 @@
       $("gvPhaoHoi").hidden = !(du && phaoHoi);
       $("gvPhaoNut").textContent = ban ? "Đang bắn…" : "Pháo hoa";
       $("gvPhaoNut").classList.toggle("bat", ban);
-      $("gvPhaoNut").disabled = !coTv || ban;
+      $("gvPhaoNut").disabled = !coTv || ban || bd;
       $("gvPhaoCo").disabled = !T || !coTv;
-      $("gvPhaoPhu").textContent = coTv ? "Cả 4 nhóm đã hoàn thành." : "Tivi chưa mở trang Xếp thiệp nên chưa bắn được.";
+      ds3 = du && phaoHoi && coTv ? ds3dCuoi() : "";
+      $("gvPhaoPhu").textContent = coTv ? "Cả 4 nhóm đã hoàn thành." + (ds3 ? " Chọn Có hay Không thì Tranh 3D của nhóm " + ds3.split("").join(", nhóm ") + " cũng tự chạy." : "")
+        : "Tivi chưa mở trang Xếp thiệp nên chưa bắn được.";
+      /* 27/11 08:37: hàng Báo tường động hiện khi cả 4 nhóm đã hoàn thành, thầy đã trả lời câu hỏi pháo hoa và pháo không còn đang bắn; đang chạy thì luôn hiện để thầy dừng */
+      $("gvBtd").hidden = !((du && phaoTL && !phaoHoi && !ban) || bd);
+      $("gvBtdNut").textContent = bd ? "■ Dừng" : "Báo tường động";
+      $("gvBtdNut").classList.toggle("bat", bd);
+      $("gvBtdNut").disabled = !T || !coTv || (!bd && !coBtd);
+      $("gvBtdChu").textContent = !coTv ? "Tivi chưa mở trang Xếp thiệp." : bd ? "Tivi đang chạy Báo tường động." : coBtd ? "Tivi có " + tt("bc") + " ảnh thầy cô, " + tt("ba") + " ảnh hoạt động"
+        + (tt("bn") ? " và bài hát." : ", chưa có bài hát.") : "Tivi chưa có ảnh: thầy vào Cài đặt trên tivi, chọn tệp Báo tường động.";
     }
     $("gvPhaoNut").onclick = function () { phaoHoi = true; vePhaoGV(); };
-    $("gvPhaoCo").onclick = function () { if (!T || !coTv) return; phaoHoi = false; phaoNho(true); lenh("phao", 1); vePhaoGV(); };
-    $("gvPhaoKhong").onclick = function () { phaoHoi = false; phaoNho(true); vePhaoGV(); };
+    $("gvPhaoCo").onclick = function () { var ds; if (!T || !coTv) return; ds = ds3dCuoi(); phaoHoi = false; phaoNho(true); lenh("phao", 1, ds); vePhaoGV(); };
+    $("gvPhaoKhong").onclick = function () { var ds = coTv ? ds3dCuoi() : ""; phaoHoi = false; phaoNho(true); if (ds && T) lenh("3dds", 0, ds); vePhaoGV(); };
+    $("gvBtdNut").onclick = function () { if (!T || !coTv) return; lenh("btd", tt("bd") === 1 ? 0 : 1); };
     /* 25/11: màn Chấm điểm trên máy giáo viên (lời thầy, thang điểm, cách máy chấm tiêu chí 1: xem TIEU_CHI).
        Hàng "Bảng chấm điểm 4 nhóm" có nút Chấm điểm: mở màn chấm trên máy này (#gvChamMan, che cả máy) và gửi lệnh "cham" cho tivi hiện bảng chấm.
        Dấu X: tắt màn chấm ở cả hai nơi, tivi về báo tường. Tivi tắt bảng chấm (dấu X trên tivi, Về báo tường, pháo hoa) thì máy này tắt theo:
@@ -3633,7 +3994,7 @@
       /* 21/11: máy giáo viên không hiện vị trí mảnh (chỉ hiện số mục đúng, số máy, khóa, đã mở, đã xong). Trước đây mỗi lần một mảnh của bất kì nhóm nào nhích,
          máy này vẽ lại hết cả trang (cả lớp cùng kéo: hơn 400 lần một giây). Bây giờ chỉ vẽ lại khi phần dữ liệu ngoài vị trí mảnh đổi. */
       var kyNhom = {};
-      [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { var ky; D[k] = d || {}; phaoCo[k] = true; ky = kyNgoaiManh(D[k]); if (ky === kyNhom[k]) return; kyNhom[k] = ky; veHet(); }); });
+      [1, 2, 3, 4].forEach(function (k) { T.on("n" + k, function (d) { var ky; D[k] = d || {}; thayXong(k); phaoCo[k] = true; ky = kyNgoaiManh(D[k]); if (ky === kyNhom[k]) return; kyNhom[k] = ky; veHet(); }); });
       T.on("tv3d", function (v) { tv = v && typeof v === "object" ? v : null; veHet(); });
       T.on("tv", function (v) { coTv = !!v && typeof v === "object" && Object.keys(v).length > 0; veHet(); });
       T.on("dn", function (v) { dn = v && typeof v === "object" ? v : null; veDn(); });
