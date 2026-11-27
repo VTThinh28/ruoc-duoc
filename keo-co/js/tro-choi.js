@@ -147,7 +147,7 @@
       so.textContent = String(con);
       hoat(so, [{ opacity: 0.2 }, { opacity: 1 }], 260, DE, function () { huyHoat(so); });
       A.demNguoc(DEM_GIAY - con);
-    } else A.ken();                    // hết giờ: khúc vui ngắn
+    } else if (A.reo) A.reo(); else A.ken();   // hết giờ: 27/11 bản 19 tiếng reo (trước là khúc vui ngắn, rất nhỏ)
   }
   // TV, ô dưới chữ đề ở bước đọc đề: "dem" đang đếm (vòng tròn và số), "gio" đã đếm xong ở câu này (chữ "Giơ đáp án", ở lại tới
   //   khi đổi bước; mở lại trang lúc đang quét cũng thấy), "" chưa bấm đếm. now.dem bị xoá khi đổi bước (datBuoc)
@@ -672,6 +672,7 @@
     SK.khiBamLuat = function (an) { SK.anLuat(an); ghiLuat(!an); };   // 9/11: điện thoại cũng thấy, cũng đổi được
     A.taiNhac();
     if (A.taiVoTay) A.taiVoTay();
+    if (A.taiReo) A.taiReo();                       // bản 19: tiếng reo lúc hết 5 giây đếm ngược
     dungChuanBi($("#cbTV"));
     napAnhBao().then(function () { if (RD.anhBao) SK.anhBao(RD.anhBao); ve(); });
     for (var q = 1; q <= 5; q++) taoVideo(q);      // tải sẵn hình chuyển động của 5 câu
@@ -921,14 +922,35 @@
   // 13/11 thầy Thịnh (đổi nhạc nền sang bài Suno "Học Vui Mỗi Ngày"): "chỗ nào mà tôi sẽ kêu học sinh phát biểu thì cho nhạc nhỏ lại".
   //   Hai chỗ: bước đáp án (mời một em nêu cách làm) và bước tuong từ lúc báo tường hiện xong (hỏi "Sắp tới trường chúng ta có ngày gì?");
   //   lúc tia lửa bay lên số 51 và lửa đốt tan màn đêm nhạc vẫn to như thường. Trước đây chỉ bước đáp án nhỏ lại, mức 0,08.
-  var NHAC_VUA = 0.22, NHAC_NHO = 0.06, henNhac = null;
+  // 27/11/2026 14:33 thầy Thịnh: "lúc mà tôi bấm nút đáp án, hiện đáp án thì học sinh sẽ giải thích tại sao chọn đáp án đó, lúc đó cho
+  //   nhạc nhỏ lại nhé". Bản 19 nhạc thường to hơn trước khoảng 17 dB ("cho to lên tối đa") nên lúc học sinh giải thích nhạc hạ sâu hơn:
+  //   NHAC_NHO 0,06 → 0,03, nhỏ hơn nhạc thường khoảng 17 dB (trước là 11 dB). Bước tuong (hỏi cả lớp ở màn báo tường) cũng mức này.
+  // Cũng 14:33: "lúc mà hoạt động kéo co diễn ra có tiếng kéo rồi tiếng giậm chân thì nhạc tạm tắt nhé để khán giả nghe rõ tiếng chân tiếng
+  //   kéo": bấm "Kéo co" (bước r) là nhạc tắt dần trong chừng một giây, tắt suốt lúc hai đội kéo (tiếng gõ, tiếng chuông của ô báo, tiếng
+  //   trống mỗi nấc, tiếng vút lúc trượt chân), kéo xong (KC.lucKeoXong) thì nhạc to dần lại. Mở lại trang ở bước r (không có hoạt cảnh)
+  //   thì nhạc như thường. "lúc đồng hồ đếm ngược nhạc cũng tạm tắt, có tiếng reo lúc đếm ngược 5 giây xong": nhạc tắt lúc đếm (đã có từ
+  //   21/11), hết giờ có tiếng reo (A.reo) và nhạc chờ REO_GIU giây cho tiếng reo xong rồi mới có lại.
+  var NHAC_VUA = 0.22, NHAC_NHO = 0.03, REO_GIU = 2.2, henNhac = null;
   function datNhac(step, loai) {
     clearTimeout(henNhac); henNhac = null;
     var muc = NHAC_VUA, giay = 1;
     if (step === "setup") muc = 0;
     else if (loai === "q" && dangDem()) { muc = 0; giay = 0.25; }       // 21/11: đang đếm ngược 5 giây thì không có nhạc nền
-    else if (loai === "q" && DEM.id) giay = 2;                          //   vừa đếm xong ("Giơ đáp án"): nhạc có lại từ từ
+    else if (loai === "q" && DEM.id) {                                   //   vừa đếm xong ("Giơ đáp án"): chờ tiếng reo rồi nhạc có lại từ từ
+      var sauDem = performance.now() - DEM.bd - DEM_GIAY * 1000;
+      if (sauDem < REO_GIU * 1000) {
+        muc = 0; giay = 0.25;
+        henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === step) A.nhacMuc(NHAC_VUA, 2); }, REO_GIU * 1000 - Math.max(0, sauDem));
+      } else giay = 2;
+    }
     else if (loai === "a") { muc = NHAC_NHO; giay = 1.5; }
+    else if (loai === "r") {
+      var lk = KC.lucKeoXong ? KC.lucKeoXong() : null, con3 = lk != null ? lk - performance.now() / 1000 : 0;
+      if (con3 > 0) {
+        muc = 0; giay = 0.8;
+        henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === step) A.nhacMuc(NHAC_VUA, 1.5); }, Math.min(con3, 30) * 1000);
+      }
+    }
     else if (step === "tuong") {
       var lb = KC.lucBaoHien(), con = lb != null ? lb - performance.now() / 1000 : 0;        // Kéo co: mốc lửa đốt xong của sân kéo co
       if (con > 0) henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === "tuong") A.nhacMuc(NHAC_NHO, 1.5); }, Math.min(con, 15) * 1000);
@@ -1877,6 +1899,7 @@
   }
   function vaoVai(v) {
     VAI = v;
+    if (A.datTV) A.datTV(v === "tv");               // bản 19: TV to tối đa, điện thoại giữ như cũ
     lsSet("rd-vai", v);
     document.documentElement.classList.add(v);
     $("#vaiTro").hidden = true;
