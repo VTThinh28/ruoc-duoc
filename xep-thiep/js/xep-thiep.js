@@ -2238,6 +2238,14 @@
       var tl = (BT_CAO + 32) / (BT_RONG + 32), cao = Math.min(vh - 16, (vw - 152) * tl), sb = Math.max(1, cao / s / (BT_CAO + 32));
       $("tv").style.transform = "translate(-50%,-50%) scale(" + s + ")";
       $("tv").style.setProperty("--bt", (BT_RONG * sb / 1527).toFixed(5));
+      /* 27/11 21:18, thầy: "xếp mấy cái nút đó qua góc phải đi" → cụm 6 nút (2 cột × 3 hàng, rộng 122, cao 188) ở góc phải phía dưới, giữa dải viền mờ
+         bên phải báo tường; cách mép dưới phần nhìn thấy bằng khoảng cách hai bên (ít nhất 24, nhiều nhất 60). Tọa độ sân 1920 × 1080. Dòng báo nối ngay trên cụm nút. */
+      var bt = BT_RONG * sb / 1527, phai = 960 + vw / s / 2, day = 540 + vh / s / 2, mep = 960 + 763.5 * bt, rong = phai - mep;
+      var NR = 122, NC = 188, le = Math.max(8, Math.min(60, (rong - NR) / 2));
+      var trai = rong >= NR + 16 ? mep + (rong - NR) / 2 : phai - 8 - NR, tren = day - Math.max(24, le) - NC, st = $("tv").style;
+      st.setProperty("--nutTrai", trai.toFixed(1) + "px"); st.setProperty("--nutTren", tren.toFixed(1) + "px");
+      st.setProperty("--noiGiua", (trai + NR / 2).toFixed(1) + "px"); st.setProperty("--noiDay", (1080 - tren + 10).toFixed(1) + "px");
+      st.setProperty("--noiRong", Math.round(Math.max(120, Math.min(176, rong - 12))) + "px");
     }
     window.addEventListener("resize", coGian); coGian();
 

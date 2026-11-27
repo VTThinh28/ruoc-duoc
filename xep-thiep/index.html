@@ -914,7 +914,7 @@ body.tv { background: #130c06; }
 #tv.dang-lon .dem-3d { visibility: hidden; }
 .phao { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 30; }
 /* dòng báo nối máy chủ: ẩn (16/11 06:30). Chỉ hiện khi mất kết nối hoặc nối mãi chưa được (lớp "hien", xem trangThai), ở lề phải phía dưới */
-#tv.xem-xep #tvNoi { display: none; left: auto; right: 16px; top: auto; bottom: 14px; max-width: 176px; font-size: 16px; line-height: 1.25; padding: 4px 12px; white-space: normal; text-align: center; border-radius: 14px; }
+#tv.xem-xep #tvNoi { display: none; left: var(--noiGiua, 1808px); right: auto; top: auto; bottom: var(--noiDay, 249px); transform: translateX(-50%); width: max-content; box-sizing: border-box; max-width: var(--noiRong, 176px); font-size: 16px; line-height: 1.25; padding: 4px 12px; white-space: normal; text-align: center; border-radius: 14px; z-index: 6; }      /* 27/11 21:18: ngay trên cụm nút ở góc phải (xem .tv-nut). z-index 6: từ bản 14:46 nền nhoè (#btNgoai trong .xep) che mất dòng này, tivi không báo được mất kết nối */
 #tv.xem-xep #tvNoi.hien { display: block; }
 
 /* --- cài đặt --- */
@@ -959,21 +959,36 @@ body.tv { background: #130c06; }
 /* nút bánh răng (Cài đặt): nút duy nhất còn trên màn hình tivi.
    16/11 06:39, thầy (kèm ảnh khoanh đỏ ở giữa mép dưới báo tường): "NÚT CÀI ĐẶT CHO NẰM Ở PHẦN MÀU ĐỎ NÈ" → nút nằm giữa mép dưới báo tường, cưỡi lên viền khung,
    màu kem viền gỗ như chính cái khung. Nút nằm trong .xep nên to nhỏ theo báo tường. */
-.tv-nut { position: absolute; left: 960px; top: 1074px; width: 324px; height: 44px; margin: -22px 0 0 -162px; display: flex; gap: 12px; }      /* 16/11 10:02: nút Toàn màn hình kế nút Cài đặt; 10:44: thêm 3 nút nhạc (bật / tắt, nhỏ, to) kế nút Toàn màn hình. Cả hàng nằm giữa mép dưới báo tường */
+.tv-nut { position: absolute; left: var(--nutTrai, 1747px); top: var(--nutTren, 841px); display: grid; grid-template-columns: 56px 56px; grid-auto-rows: 56px; gap: 10px; }      /* 16/11 10:02: nút Toàn màn hình kế nút Cài đặt; 10:44: thêm 3 nút nhạc (bật / tắt, nhỏ, to) kế nút Toàn màn hình. Cả hàng nằm giữa mép dưới báo tường */
+/* 27/11 20:56, thầy (kèm ảnh hàng nút dưới tivi): "làm mấy nút này to lên chút và đẩy cao lên, sợ không bấm cảm ứng được trên tivi á." và "chỉnh lại cho nó bo cong giống trò kéo co"
+   → nút to 56 điểm ảnh trên tivi 16:9 Full HD (trước 42), kiểu nút như trò kéo co (keo-co/index.html, .tv-nut button): vuông bo góc, nền nâu đậm trong mờ, viền kem, hình kem.
+   Nhạc đang bật vẫn xanh lá, đang chờ vẫn cam, nút Nối lại vẫn xanh dương (25/11).
+   21:18, thầy (xem ảnh hàng nút mới ở giữa phía dưới báo tường): "xếp mấy cái nút đó qua góc phải đi"
+   → 6 nút xếp 2 cột × 3 hàng ở góc phải phía dưới, nằm trong phần viền mờ bên phải báo tường nên không che báo tường. Cụm nút ra khỏi .xep (tọa độ sân);
+   js coGian đặt --nutTrai, --nutTren: giữa dải viền bên phải, cách mép dưới phần nhìn thấy bằng khoảng cách hai bên (tivi 16:9: 51 điểm ảnh; ít nhất 24).
+   Hàng trên: Cài đặt, Toàn màn hình. Hàng giữa: Nhạc, Nối lại. Hàng dưới: Nhỏ, To. */
+#nutCaiDat { grid-area: 1 / 1; }
+#nutToanNgoai { grid-area: 1 / 2; }
+#nutNhac { grid-area: 2 / 1; }
+#nutNoiLai { grid-area: 2 / 2; }
+#nutNhacNho { grid-area: 3 / 1; }
+#nutNhacTo { grid-area: 3 / 2; }
 .nut-nhac { position: relative; }
 .nut-nhac .bat, .nut-nhac.dang .tat { display: none; }
 .nut-nhac.dang .bat { display: block; }
-#tv .nut.nut-rang.nut-nhac.dang { background: #3f8f52; border-color: #2c6e3d; color: #fff; }
-#tv .nut.nut-rang.nut-nhac.dang.cho { background: #e07b2a; border-color: #a95600; }
-.nut-nhac .muc { position: absolute; right: -7px; top: -8px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box; border-radius: 10px; background: #7a5a2a; color: #fff; font: 700 13px/20px var(--chu-thuong); text-align: center; }
-#tv .nut.nut-rang:disabled { opacity: .45; }
+#tv .nut.nut-rang.nut-nhac.dang { background: rgba(47, 128, 70, .94); border-color: rgba(205, 242, 214, .75); color: #fff; }
+#tv .nut.nut-rang.nut-nhac.dang.cho { background: rgba(224, 123, 42, .94); border-color: rgba(255, 224, 190, .8); }
+.nut-nhac .muc { position: absolute; right: -7px; top: -8px; min-width: 25px; height: 25px; padding: 0 5px; box-sizing: border-box; border-radius: 13px; background: #ffeccb; color: #3b2814; border: 2px solid rgba(28, 19, 11, .85); font: 800 14px/21px var(--chu-thuong); text-align: center; }
+#tv .nut.nut-rang:disabled { opacity: .4; }
 .nut-toan .thu, .nut-toan.dang .mo { display: none; }
 .nut-toan.dang .thu { display: block; }
-#tv .nut.nut-rang { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; color: #7a5a2a; background: #f6e7c4; border: 2px solid #b8892f; box-shadow: 0 2px 7px rgba(0, 0, 0, .4); }
-.nut-rang svg { display: block; width: 26px; height: 26px; }
-#tv #nutNoiLai.nut.nut-rang { background: #2f6fd6; border-color: #1f56ad; color: #fff; }      /* 25/11 07:59: nút Nối lại màu xanh dương cho khác các nút còn lại */
-#tv #nutNoiLai.nut.nut-rang.quay { background: #4a86e4; }
-#tv #nutNoiLai.nut.nut-rang:active:not(:disabled) { background: #1f56ad; }
+#tv .nut.nut-rang { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; min-height: 56px; padding: 0; border-radius: 15px; color: #ffeccb; background: rgba(28, 19, 11, .74); border: 2px solid rgba(255, 235, 190, .55); box-shadow: 0 3px 10px rgba(0, 0, 0, .3); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+#tv .nut.nut-rang:hover { background: rgba(60, 40, 20, .9); }
+#tv .nut.nut-rang:active { background: rgba(88, 60, 30, .96); }
+.nut-rang svg { display: block; width: 30px; height: 30px; }
+#tv #nutNoiLai.nut.nut-rang { background: rgba(31, 86, 170, .94); border-color: rgba(196, 220, 255, .8); color: #fff; }      /* 25/11 07:59: nút Nối lại màu xanh dương cho khác các nút còn lại */
+#tv #nutNoiLai.nut.nut-rang.quay { background: rgba(58, 120, 215, .96); }
+#tv #nutNoiLai.nut.nut-rang:active:not(:disabled) { background: rgba(22, 64, 132, .96); }
 
 /* --- bảng Nhiệm vụ (15/11 21:28): 4 nhiệm vụ của hoạt động, thầy bật tắt từ máy giáo viên. Cỡ chữ cho tivi 70 inch, học sinh cuối lớp đọc được --- */
 #nhiemVu { position: absolute; inset: 0; z-index: 9; background: rgba(74, 53, 36, .45); display: flex; align-items: center; justify-content: center; }
@@ -1334,17 +1349,17 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
     <div id="mungTo" hidden><b id="mungTo1"></b><b id="mungTo2"></b><b id="mungTo3"></b></div>
     <div id="rubric" class="rb" hidden></div>
     <div id="dem3d" class="dem-3d"><b>Tranh 3D</b><div class="dem-o"><span>1</span><span>2</span><span>3</span><span>4</span></div><p id="dem3dChu">Đã bấm 0/4 nhóm</p></div>
-    <!-- 15/11 21:29, thầy: "mấy nút này chuyển hết vào app cho tôi đi." 16/11 06:30: "ẩn hết luôn, chỉ có chọn trên điện thoại của giáo viên". Tivi chỉ còn nút bánh răng mở bảng Cài đặt:
-         việc phải làm ngay trên tivi (toàn màn hình, chọn ảnh báo tường, mã cho máy giáo viên, tạo phòng mới) và các nút dự phòng. Chỗ nằm: giữa mép dưới báo tường (thầy khoanh đỏ 16/11 06:39). -->
-    <div class="tv-nut">
-      <button id="nutCaiDat" class="nut nut-rang" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
-      <button id="nutToanNgoai" class="nut nut-rang nut-toan" aria-label="Toàn màn hình" title="Toàn màn hình"><svg class="mo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg><svg class="thu" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
-      <button id="nutNhac" class="nut nut-rang nut-nhac" aria-label="Bật nhạc" title="Bật nhạc"><svg class="tat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.27 3L3 4.27l9 9v.28c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-1.73L19.73 21 21 19.73 4.27 3zM14 7h4V3h-6v5.18l2 2z"/></svg><svg class="bat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><span id="nhacMuc" class="muc">5</span></button>
-      <button id="nutNhacNho" class="nut nut-rang" aria-label="Giảm âm lượng" title="Giảm âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg></button>
-      <button id="nutNhacTo" class="nut nut-rang" aria-label="Tăng âm lượng" title="Tăng âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
-      <button id="nutNoiLai" class="nut nut-rang" aria-label="Nối lại" title="Nối lại (không tải lại trang)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
-    </div>
   </section>
+  <!-- 15/11 21:29, thầy: "mấy nút này chuyển hết vào app cho tôi đi." 16/11 06:30: "ẩn hết luôn, chỉ có chọn trên điện thoại của giáo viên". Tivi chỉ còn nút bánh răng mở bảng Cài đặt:
+       việc phải làm ngay trên tivi (toàn màn hình, chọn ảnh báo tường, mã cho máy giáo viên, tạo phòng mới) và các nút dự phòng. Chỗ nằm: giữa mép dưới báo tường (thầy khoanh đỏ 16/11 06:39); 27/11 21:18 chuyển sang góc phải phía dưới, ngoài báo tường (xem .tv-nut). -->
+  <div class="tv-nut" id="tvNut">
+    <button id="nutCaiDat" class="nut nut-rang" aria-label="Cài đặt" title="Cài đặt"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+    <button id="nutToanNgoai" class="nut nut-rang nut-toan" aria-label="Toàn màn hình" title="Toàn màn hình"><svg class="mo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg><svg class="thu" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
+    <button id="nutNhac" class="nut nut-rang nut-nhac" aria-label="Bật nhạc" title="Bật nhạc"><svg class="tat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.27 3L3 4.27l9 9v.28c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-1.73L19.73 21 21 19.73 4.27 3zM14 7h4V3h-6v5.18l2 2z"/></svg><svg class="bat" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><span id="nhacMuc" class="muc">5</span></button>
+    <button id="nutNhacNho" class="nut nut-rang" aria-label="Giảm âm lượng" title="Giảm âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg></button>
+    <button id="nutNhacTo" class="nut nut-rang" aria-label="Tăng âm lượng" title="Tăng âm lượng"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+    <button id="nutNoiLai" class="nut nut-rang" aria-label="Nối lại" title="Nối lại (không tải lại trang)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
+  </div>
 
 
   <div id="mungGiay"></div>
@@ -1485,6 +1500,6 @@ td.dap-ten:not([colspan]) { padding-left: 6px; }
 <noscript><p style="padding:24px">Trang này cần bật JavaScript.</p></noscript>
 <script src="js/qrcode.min.js?v=e259e455"></script>
 <script src="js/tranh-3d.js?v=c621f24d"></script>
-<script src="js/xep-thiep.js?v=011a0a19"></script>
+<script src="js/xep-thiep.js?v=d3189e5d"></script>
 </body>
 </html>
