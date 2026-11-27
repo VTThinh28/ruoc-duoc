@@ -29,7 +29,7 @@
   /* ---------- trạng thái sân khấu ---------- */
   // che: dau (chuẩn bị, giới thiệu) · hoi (màn câu hỏi che cảnh) · cau (di chuyển câu q) · dich (về đích) · hang (thứ hạng) · bao (hiện báo tường)
   const S = {
-    che: "dau", tieu: false, luat: false, anLuat: true, ALa: 0, AL0: -1e6, luatK: 0, luatDo: true, hienCho: null, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
+    che: "dau", hoanDo: 0, tieu: false, luat: false, anLuat: true, ALa: 0, AL0: -1e6, luatK: 0, luatDo: true, hienCho: null, I0: -1e6, q: 0, nCau: 0, ls: null, vt: null, hg: null,
     R0: XA, L: null, E0: CHUA, B0: CHUA, T0: CHUA, H0: CHUA, W0: CHUA, K: null, tiep: false,
     binh: { q: 0, chu: "", luc: 0 }, phu: false, cues: [], tCu: 0,
     ext: { bn: 0, bd: 0, EW: W, EH: H, KF: null }
@@ -506,6 +506,40 @@
     const F = S.ext && S.ext.KF; if (!F) return null;
     return { s: F.w / K.w, cx0: K.x + K.w / 2, cy0: K.y + K.h / 2, cx: F.x + F.w / 2, cy: F.y + F.h / 2 };
   }
+  // bản 20 (27/11 18:04, thầy Thịnh: "ở phần cuối của hoạt động kéo co, cũng cho thêm phần viền mờ 2 bên giống tấm thiệp của nhóm em"):
+  //   phần ngoài báo tường ở hai bước cuối là chính báo tường lật gương ra bốn phía rồi làm nhoè, làm như trang Tấm thiệp của nhóm em
+  //   (xep-thiep.js, veNgoai: mỗi tấm 288 × 204, 3 × 3 tấm, các tấm ngoài lật gương, nhoè 4 điểm ảnh rồi phóng to theo báo tường), không phủ
+  //   màu tối. Tấm giữa trùng đúng chỗ báo tường (khung K lúc chờ bấm nút cuối, khung KF sau khi bấm), nên ra tới mép là báo tường kéo dài.
+  //   Trước bản 20: nền tối (nenBao) quanh khung K, nền nhoè phủ màu tối rgba(30,17,6,.66) quanh khung KF.
+  let guong = null, guongSo = -1;
+  function guongNhoe() {
+    if (!bao) return null;
+    if (guong && guongSo === baoSo) return guong;
+    const w = 288, h = 204, mot = document.createElement("canvas"); mot.width = w; mot.height = h;
+    const g1 = mot.getContext("2d"); g1.imageSmoothingQuality = "high"; g1.drawImage(bao, 0, 0, w, h);
+    const c = document.createElement("canvas"); c.width = 3 * w; c.height = 3 * h;
+    const g = c.getContext("2d");
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+      const sx = i ? -1 : 1, sy = j ? -1 : 1;
+      g.setTransform(sx, 0, 0, sy, (i + 1) * w + (sx < 0 ? w : 0), (j + 1) * h + (sy < 0 ? h : 0));
+      g.drawImage(mot, 0, 0);
+    }
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    const c2 = document.createElement("canvas"); c2.width = c.width; c2.height = c.height;
+    const g2 = c2.getContext("2d");
+    if ("filter" in g2) { g2.filter = "blur(4px)"; g2.drawImage(c, 0, 0); g2.filter = "none"; }
+    else {                                    // trình duyệt chưa có filter cho canvas: thu nhỏ 6 lần rồi phóng lại, cũng nhoè
+      const nho = document.createElement("canvas"); nho.width = Math.round(c.width / 6); nho.height = Math.round(c.height / 6);
+      nho.getContext("2d").drawImage(c, 0, 0, nho.width, nho.height); g2.drawImage(nho, 0, 0, c2.width, c2.height);
+    }
+    guong = c2; guongSo = baoSo;
+    return c2;
+  }
+  // vẽ nền lật gương lên g (đang ở toạ độ thế giới), tấm giữa trùng khung F
+  function veGuong(g, F) {
+    const m = guongNhoe(); if (!m) return;
+    g.save(); g.imageSmoothingQuality = "high"; g.drawImage(m, F.x - F.w, F.y - F.h, 3 * F.w, 3 * F.h); g.restore();
+  }
   // báo tường nhoè phủ kín khung vẽ (vẽ nhỏ rồi phóng to thì tự nhoè). 6/11 tối: phóng to một lần ra đúng cỡ khung vẽ rồi giữ lại;
   //   trước đây phóng to mỗi khung hình, mất khoảng 9 ms mỗi khung trên máy không có card đồ hoạ.
   // 15/11: giữ hai tấm (mức nét thường, mức nét cao) như canhBao, để lúc bấm nút cuối không phải dựng tấm cỡ lớn. r: mức nét cần.
@@ -513,20 +547,16 @@
   function nenMo(r) {
     if (!bao || !cv) return null;
     if (!(r > 0)) r = rDo;
-    const E = S.ext, rong = Math.round(E.EW * r), cao = Math.round(E.EH * r), khoa = [rong, cao, baoSo, E.EW.toFixed(1), E.EH.toFixed(1)].join("|");
+    const E = S.ext, F = E.KF || K, rong = Math.round(E.EW * r), cao = Math.round(E.EH * r);
+    const khoa = [rong, cao, baoSo, E.EW.toFixed(1), E.EH.toFixed(1), F.x.toFixed(2), F.y.toFixed(2), F.w.toFixed(2)].join("|");
     for (let i = 0; i < khoMo.length; i++) if (khoMo[i].khoa === khoa) return khoMo[i].c;
-    const nho = document.createElement("canvas"); nho.width = 120; nho.height = 85;
-    let g = nho.getContext("2d");
-    try { g.filter = "blur(2px)"; } catch (e) { /* bỏ qua */ }
-    g.drawImage(bao, -6, -6, 132, 97); g.filter = "none";
-    g.fillStyle = "rgba(30,17,6,.66)"; g.fillRect(0, 0, 120, 85);
     const o = khoMo.length >= 2 ? khoMo.shift() : { c: document.createElement("canvas"), khoa: "" }, moLon = o.c;
     moLon.width = rong; moLon.height = cao;
-    g = moLon.getContext("2d");
+    const g = moLon.getContext("2d");
     g.fillStyle = "#130c06"; g.fillRect(0, 0, moLon.width, moLon.height);      // phủ kín (ảnh có chỗ trong suốt cũng không lộ)
-    const s = Math.max(moLon.width / 120, moLon.height / 85), w = 120 * s, h = 85 * s;
-    g.imageSmoothingQuality = "high";
-    g.drawImage(nho, (moLon.width - w) / 2, (moLon.height - h) / 2, w, h);
+    // bản 20: báo tường lật gương, nhoè, tấm giữa trùng khung KF (trước: ảnh 120 × 85 nhoè 2 điểm ảnh, phủ màu tối .66, phóng to kín khung)
+    g.setTransform(r, 0, 0, r, Math.round(E.bn * r), Math.round(E.bd * r));
+    veGuong(g, F);
     o.khoa = khoa; khoMo.push(o);
     return moLon;
   }
@@ -552,7 +582,7 @@
       o.c.width = w; o.c.height = h;
       const g = o.c.getContext("2d");
       g.setTransform(r, 0, 0, r, Math.round(E.bn * r), Math.round(E.bd * r));
-      g.drawImage(nenBao(), 0, 0); veKhungBao(g, kb);
+      g.drawImage(nenBao(), 0, 0); veGuong(g, K); veKhungBao(g, kb);      // bản 20: nền lật gương quanh khung K
       o.khoa = khoa; khoCanhBao.push(o);
     }
     return o.c;
@@ -585,12 +615,37 @@
     const khoa = [S.che, rDoNen.toFixed(4), rDoCao.toFixed(4), S.ext.EW.toFixed(1), S.ext.EH.toFixed(1), baoSo, soKhung, CC.Y0, CC.LH].join("|");
     if (khoa === khoaHenKet) return;
     khoaHenKet = khoa;
-    henRanh(() => { if (S.che === "hang" && daSanSang && S.ls && S.ls.length >= 6) cauKet(trangThai(dongHo()).st); });
+    // bản 20 (Kéo co): tấm cây cầu chỉ vẽ lúc cây cầu còn mờ dần (trước mốc F0 + 4); bước bắt tay của Kéo co mở cảnh thứ hạng đã qua mốc đó từ
+    //   lâu nên cây cầu không bao giờ hiện, khỏi dựng (đo trên máy thử: dựng tấm này làm hình khựng 0,13 giây ngay lúc đội thắng bắt đầu sang)
+    henRanh(() => { if (S.che === "hang" && daSanSang && S.ls && S.ls.length >= 6 && S.K && dongHo() < S.K.F0 + 4.0) cauKet(trangThai(dongHo()).st); });
     henRanh(() => { nenBao(); khungBao(0); khungBao(1); });
     henRanh(() => { canhBao(rDoNen); if (rDoCao > rDoNen + 1e-6) canhBao(rDoCao); });
     henRanh(() => { nenMo(rDoNen); if (rDoCao > rDoNen + 1e-6) nenMo(rDoCao); });
     henRanh(() => { vaiXanh(); bongVai(); bangTrong(); vetLuot(); domCat(); domLap(); });     // vải xanh lá, tấm xoá chữ, vệt sáng
   }
+  // bản 20 (27/11 17:46, thầy Thịnh: "kiểm tra và tối ưu trò chơi đi, xem có bị lỗi hay lag gì không nhé"): Kéo co chỉ hiện sân khấu này ở hai
+  //   bước cuối, nên các lớp vẽ sẵn của báo tường (nền và khung báo tường, nền lật gương, nền nhoè, tấm xoá chữ, vệt sáng) trước đây dồn cả vào
+  //   lúc vừa bấm sang cảnh bắt tay: đo trên máy thử, khung hình đầu của cảnh đó đứng 0,07 giây. Nay tro-choi.js gọi hàm này mỗi lần màn câu hỏi
+  //   đã che kín sân: dựng sẵn từng lớp, mỗi lần máy rảnh một lớp, lớp nào đã có thì xong ngay (đổi cỡ cửa sổ thì lần sau dựng lại theo cỡ mới).
+  //   Thứ tự và số tấm giữ như chuanBiKet (mỗi kho giữ hai mức nét), nên tới bước bắt tay mọi tấm đã có sẵn, hình y như cũ.
+  //   yen(): còn nên dựng tiếp không (màn câu hỏi còn che, không đang đếm ngược); không yên thì thôi, lần che sau làm tiếp.
+  let soChuoi = 0;
+  SK.chuanBiBao = function (yen) {
+    if (!cv || !daSanSang || !bao || !S.ext) return;
+    const so = ++soChuoi, viec = [
+      () => { nenBao(); khungBao(0); khungBao(1); guongNhoe(); },
+      () => canhBao(rDoNen), () => { if (rDoCao > rDoNen + 1e-6) canhBao(rDoCao); },
+      () => nenMo(rDoNen), () => { if (rDoCao > rDoNen + 1e-6) nenMo(rDoCao); },
+      () => { vaiXanh(); bongVai(); bangTrong(); vetLuot(); domCat(); domLap(); }
+    ];
+    let i = 0;
+    const lam = () => {
+      if (so !== soChuoi || i >= viec.length || (yen && !yen())) return;
+      try { viec[i++](); } catch (e) { console.error(e); }
+      henRanh(lam);
+    };
+    henRanh(lam);
+  };
   // vệt sáng quét chéo (góc QG so với trục ngang) từ góc trên trái xuống góc dưới phải khung xem; s: vị trí giữa vệt sáng, đo dọc
   //   hướng quét (toạ độ thế giới)
   const QG = 22 * Math.PI / 180, QC = Math.cos(QG), QS = Math.sin(QG), QB = 150;
@@ -1472,7 +1527,9 @@
     //   kéo trung bình 90 khung lên quá ngưỡng và độ nét bị giảm oan, giảm rồi không tăng lại: khung dài hơn 0,25 giây thì bỏ
     //   cả đợt đo, đo lại từ đầu.
     const dt = S.tCu ? t - S.tCu : -1;
-    if (dt > .25) dts = [];
+    // bản 20 (Kéo co): lúc sân kéo co còn đang chạy hoạt cảnh đè lên (cảnh bắt tay, tới lúc vành lửa tan hết: SK.hoanDo) thì khung hình chậm là do
+    //   sân kéo co, không do sân khấu này: không đo, khỏi hạ độ nét rồi dựng lại cả tấm báo tường ngay lúc báo tường đang lộ ra
+    if (dt > .25 || t < S.hoanDo) dts = [];
     else if (dt >= 0 && document.visibilityState === "visible") {
       dts.push(dt); if (dts.length > 90) dts.shift();
       // 15/11: đang ở mức nét cao của báo tường mà 24 khung hình liền (tính từ lúc lên mức nét cao) trung bình quá 30 ms: máy vẽ
@@ -1695,6 +1752,8 @@
   SK.phu = function (on) { S.phu = !!on; };
   // Kéo co: on = true khi sân kéo co đang che khung vẽ cây cầu (mọi bước trừ hai bước báo tường cuối)
   SK.keoCo = function (on) { S.kc = !!on; if (cv) cv.style.visibility = on ? "hidden" : ""; };
+  // bản 20: tới lúc luc (giây, đồng hồ performance.now) thì chưa đo tốc độ khung hình để tự hạ độ nét (xem vong)
+  SK.hoanDo = function (luc) { S.hoanDo = luc > 0 ? luc : 0; };
   SK.C51 = C51;            // chỗ số 51 trên báo tường (toạ độ thế giới): lửa của Kéo co bay tới đây rồi đốt tan màn đêm
   SK.huy = function () { S.cues = []; };
   SK.mocKet = () => S.K;

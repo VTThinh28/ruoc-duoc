@@ -7,7 +7,12 @@
   "use strict";
   var RD = window.RD, SK = RD.SanKhau, KC = RD.KeoCo, Q = RD.Quet, A = RD.AmThanh;
   // màn câu hỏi che kín sân: cả sân khấu cũ lẫn sân kéo co thôi vẽ
-  function phuSan(on) { SK.phu(on); KC.phu(on); }
+  // bản 20 (27/11 17:46, "xem có bị lỗi hay lag gì không"): lúc che kín sân thì dựng sẵn các lớp báo tường của hai bước cuối, mỗi lần máy rảnh
+  //   một lớp, chỉ khi màn câu hỏi còn che và không đang đếm ngược (trước đây dựng lúc vừa sang cảnh bắt tay: hình khựng một nhịp)
+  function phuSan(on) {
+    SK.phu(on); KC.phu(on);
+    if (on && VAI === "tv" && SK.chuanBiBao) SK.chuanBiBao(function () { return mcHien && !dangDem(); });
+  }
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }
@@ -986,6 +991,22 @@
     }
     return kc;
   }
+  // bản 20 (27/11 17:46, "xem có bị lỗi hay lag gì không"): cảnh bắt tay có hoạt cảnh thì gần 8 giây đầu sân kéo co che kín báo tường ở lớp dưới,
+  //   vậy mà sân khấu cũ vẫn vẽ lại báo tường mỗi khung hình (máy làm thêm việc không ai thấy, máy chậm còn tưởng mình chậm nên tự hạ độ nét, dựng lại
+  //   cả tấm báo tường: khựng thêm hai nhịp). Nay sân khấu cũ nghỉ tới lúc vành lửa bắt đầu lan từ số 51 (KC.lucLua), lúc đó sân kéo co vẫn còn che
+  //   kín thêm chừng 1,6 giây, nên báo tường đã vẽ xong trước khi lộ ra: hình y như cũ.
+  //   Sân khấu cũ cũng chưa đo tốc độ khung hình tới lúc vành lửa tan hết (KC.lucBaoHien): máy chậm vì hoạt cảnh của sân kéo co thì không tự hạ độ nét
+  //   báo tường giữa lúc báo tường đang lộ ra (hạ độ nét là dựng lại cả tấm: khựng một nhịp).
+  var henBao = 0;
+  function choBaoDuoi() {
+    clearTimeout(henBao);
+    var h = KC.lucBaoHien ? KC.lucBaoHien() : null;
+    if (SK.hoanDo) SK.hoanDo(h == null ? 0 : h + 0.3);
+    var l = KC.lucLua ? KC.lucLua() : null, con = l == null ? 0 : l - performance.now() / 1000;
+    if (!(con > 0)) return;
+    SK.keoCo(true);
+    henBao = setTimeout(function () { if (nowHopLe().step === "tuong") SK.keoCo(false); }, con * 1000);
+  }
   // mỗi bước trên TV: màn câu hỏi (q, k, a) che sân; các bước khác do sân kéo co (keo-co.js) vẽ; riêng hai bước báo tường cuối
   //   (tuong, bao) là sân khấu cũ của Rước đuốc (san-khau.js): báo tường, 4 bạn cầm đuốc trong 4 ô thiệp, bồ câu kéo vải
   function vaoBuocTV(step, cu, loai, q, rev) {
@@ -1022,6 +1043,7 @@
     if (step === "tuong") {
       SK.dat({ che: "hang", tiep: true, ls: ls, hoatCanh: false });
       KC.dat({ che: "tuong", kc: kc, hoatCanh: cu === "finish" });
+      choBaoDuoi();
       return;
     }
     KC.dat({ che: "an" });
