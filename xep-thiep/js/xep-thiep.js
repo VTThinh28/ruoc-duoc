@@ -3021,12 +3021,15 @@
     var BTD = {
       TO: 5.5,                                      // giây: mỗi ảnh khung to hiện bao lâu, kể cả lúc đổi sang ảnh sau
       DOI: 1.6,                                     // giây đổi ảnh khung to (bằng thời gian các hiệu ứng .btd-o.mo, .quet-trai, .quet-phai trong index.html)
-      KIEU: ["mo", "quet-trai", "quet-phai"],       // 3 kiểu đổi ảnh khung to, lần lượt
+      KIEU: ["rem", "lat", "tron", "luot", "la", "mo", "kim", "trang", "o", "quet-trai", "roi", "cheo", "sang", "quet-phai"],   // 27/11 12:08: 14 kiểu đổi ảnh khung to, lần lượt
+      RA: { luot: 1 },                              // kiểu nào thì ảnh cũ cũng chuyển động (lớp "ra-" + kiểu)
       ANH: 2.4,                                     // giây: cứ chừng ấy thì một khung nhỏ đổi ảnh (mỗi khung chừng 14 giây đổi một lần)
       TO_W: 1800, TO_H: 1200, NHO_W_A: 960, NHO_H_A: 640,      // lúc chọn tệp: cỡ ảnh lưu lại (khung to trên tivi rộng chừng 1300 điểm ảnh, khung nhỏ chừng 300)
       LON: [1311.54, 597.75, 1870.93, 1246.73],     // ảnh to: trái, trên, rộng, cao (theo ảnh báo tường 4494 × 3179)
       NHO: [[1771, 1968.84, -2], [2279, 2357.66, -1.8], [2279, 2746.49, 1.6], [2279, 1968.84, 1.5], [1771, 2746.49, -1.2], [1771, 2357.66, 1.5]],
-      NHO_W: 444, NHO_H: 296                        // 6 ảnh nhỏ: trái, trên, góc xoay (độ, quanh tâm khung); thứ tự trong mảng là thứ tự đổi ảnh, xen kẽ cho đều
+      NHO_W: 444, NHO_H: 296,                       // 6 ảnh nhỏ: trái, trên, góc xoay (độ, quanh tâm khung); thứ tự trong mảng là thứ tự đổi ảnh, xen kẽ cho đều
+      VIEN: 14,                                     // 27/11 10:05: bề rộng viền đèn quanh ảnh to (điểm trên trang báo tường rộng 1527), tính ra ngoài mép ảnh
+      BONG: 90                                      // số bóng đèn trên viền (chia hết cho 3: cứ 3 bóng có 1 bóng sáng, chạy vòng)
     };
     var btd = { chay: false, lan: 0, to: [], anh: [], nhac: null, nhacTen: "", nhacCu: null, o: [], nho: [], cur: -1, toVi: 0, kieuVi: 0,
                 hen: 0, henDauTo: 0, henAnh: 0, henDau: 0, henTan: 0, anhDs: [], anhVi: 0, nhoVi: 0, dangChon: false, chonLan: 0, boQua: 0 };
@@ -3036,6 +3039,15 @@
       var s = 1527 / 4494, L = BTD.LON;
       function dat(e, x, y, w, h) { e.style.left = (x * s).toFixed(2) + "px"; e.style.top = (y * s).toFixed(2) + "px"; e.style.width = (w * s).toFixed(2) + "px"; e.style.height = (h * s).toFixed(2) + "px"; }
       dat(btdLon, L[0], L[1], L[2], L[3]);
+      (function () {                                // 27/11 10:05: khung đèn sân khấu quanh ảnh to (quầng sáng, viền vàng có bóng đèn chạy, hai luồng đèn rọi)
+        var M = BTD.VIEN, x = L[0] * s - M, y = L[1] * s - M, w = L[2] * s + 2 * M, h = L[3] * s + 2 * M;
+        var hao = H("div", "btd-hao"), den = H("div", "btd-den", null, btdKhung);
+        btdKhung.insertBefore(hao, btdLon);
+        [hao, den].forEach(function (e) { e.style.left = x.toFixed(2) + "px"; e.style.top = y.toFixed(2) + "px"; e.style.width = w.toFixed(2) + "px"; e.style.height = h.toFixed(2) + "px"; });
+        den.innerHTML = btdVienSvg(w, h, M);
+        H("div", "btd-goc trai", null, den); H("div", "btd-goc phai", null, den);   // hai đèn rọi ở hai góc trên, luồng sáng .btd-roi phát ra từ đây
+        H("div", "btd-roi trai", null, btdLon); H("div", "btd-roi phai", null, btdLon);
+      })();
       [0, 1].forEach(function () {
         var o = { e: H("div", "btd-o", null, btdLon), url: "" };
         o.im = H("img", null, null, o.e); o.im.alt = ""; o.im.decoding = "async";
@@ -3048,6 +3060,29 @@
         btd.nho.push({ e: e, im: im, dang: -1, url: "" });
       });
     })();
+    function btdVienSvg(w, h, M) {                  // viền vàng kim rộng M quanh ảnh to (w × h là cả khung, đã gồm viền) và BTD.BONG bóng đèn trên đường giữa viền
+      var R = M / 2 + 4, n = BTD.BONG, pl = ' pathLength="' + n * 6 + '"';
+      function f(v) { return Math.round(v * 100) / 100; }
+      function d(k) {                               // chữ nhật bo góc cách mép ngoài k, đi theo chiều kim đồng hồ từ góc trên trái
+        var q = Math.max(0, R - k), a = k, b = k, W = w - 2 * k, Hh = h - 2 * k, c = "A" + f(q) + " " + f(q) + " 0 0 1 ";
+        return "M" + f(a + q) + " " + f(b) + "H" + f(a + W - q) + c + f(a + W) + " " + f(b + q) + "V" + f(b + Hh - q) + c + f(a + W - q) + " " + f(b + Hh) +
+          "H" + f(a + q) + c + f(a) + " " + f(b + Hh - q) + "V" + f(b + q) + c + f(a + q) + " " + f(b) + "Z";
+      }
+      var g = d(M / 2), bong = ' d="' + g + '"' + pl + ' fill="none" stroke-linecap="round"';
+      return '<svg viewBox="0 0 ' + f(w) + ' ' + f(h) + '" aria-hidden="true"><defs>' +
+        '<linearGradient id="btdDenVang" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a4a0e"/><stop offset=".16" stop-color="#c8902a"/>' +
+        '<stop offset=".3" stop-color="#f6d77a"/><stop offset=".46" stop-color="#b47a1e"/><stop offset=".64" stop-color="#e8bb52"/><stop offset=".8" stop-color="#f9e39a"/>' +
+        '<stop offset="1" stop-color="#7a4a0e"/></linearGradient>' +
+        '<filter id="btdDenMo" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="3"/></filter></defs>' +
+        '<path d="' + g + '" fill="none" stroke="url(#btdDenVang)" stroke-width="' + M + '"/>' +
+        '<path d="' + d(0.7) + '" fill="none" stroke="rgba(92,52,8,.85)" stroke-width="1.4"/>' +
+        '<path d="' + d(1.9) + '" fill="none" stroke="rgba(255,240,190,.75)" stroke-width="1"/>' +
+        '<path d="' + d(M - 0.6) + '" fill="none" stroke="rgba(84,48,10,.75)" stroke-width="1.2"/>' +
+        '<path class="de"' + bong + ' stroke="#6b4512" stroke-width="9.4" stroke-dasharray="0 6" opacity=".9"/>' +
+        '<path class="bong"' + bong + ' stroke="#fbe7a8" stroke-width="6.6" stroke-dasharray="0 6" opacity=".75"/>' +
+        '<path class="quang"' + bong + ' stroke="#ffc83d" stroke-width="18" stroke-dasharray="0 18" opacity=".95" filter="url(#btdDenMo)"/>' +
+        '<path class="sang"' + bong + ' stroke="#fffdf2" stroke-width="6.6" stroke-dasharray="0 18"/></svg>';
+    }
     function btdBao() {                             // cho bao3d: [đang chạy, số ảnh khung to, số ảnh khung nhỏ, có bài hát]
       return typeof btd === "object" && btd ? [btd.chay ? 1 : 0, btd.to.length, btd.anh.length, btd.nhac ? 1 : 0] : [0, 0, 0, 0];
     }
@@ -3062,15 +3097,15 @@
         var kieu;
         if (lan !== btd.lan || !btd.chay || moi.url !== a.url) return;
         kieu = BTD.KIEU[btd.kieuVi++ % BTD.KIEU.length];
-        BTD.KIEU.forEach(function (k) { moi.e.classList.remove(k); });
+        BTD.KIEU.forEach(function (k) { moi.e.classList.remove(k, "ra-" + k); });
         void moi.e.offsetWidth;                     // để hiệu ứng chạy lại từ đầu
         moi.e.classList.add("tren", "hien", kieu);
-        if (cu) cu.e.classList.remove("tren");
+        if (cu) { cu.e.classList.remove("tren"); if (BTD.RA[kieu]) cu.e.classList.add("ra-" + kieu); }
         btd.cur = btd.o.indexOf(moi);
         setTimeout(function () {
           if (lan !== btd.lan) return;              // đã dừng: btdDon dọn hết
           moi.e.classList.remove(kieu);
-          if (cu && btd.o[btd.cur] !== cu) cu.e.classList.remove("hien");
+          if (cu && btd.o[btd.cur] !== cu) cu.e.classList.remove("hien", "ra-" + kieu);
         }, BTD.DOI * 1000 + 150);
       }
       if (moi.im.decode) moi.im.decode().then(hien, function () { /* ảnh hỏng: giữ ảnh đang hiện, tới lượt sau đổi tiếp */ });
@@ -3123,7 +3158,7 @@
     function btdDon() {                             // đã mờ hẳn: cất các khung
       clearTimeout(btd.henTan); btd.henTan = 0;
       btdKhung.hidden = true; btdKhung.classList.remove("tan");
-      btd.o.forEach(function (o) { o.url = ""; o.e.classList.remove("hien", "tren", "mo", "quet-trai", "quet-phai"); o.im.removeAttribute("src"); });
+      btd.o.forEach(function (o) { o.url = ""; o.e.className = "btd-o"; o.im.removeAttribute("src"); });
       btd.nho.forEach(function (n) { n.dang = -1; n.url = ""; n.im.forEach(function (im) { im.classList.remove("hien", "tren"); im.removeAttribute("src"); }); });
     }
     function btdBat() {
