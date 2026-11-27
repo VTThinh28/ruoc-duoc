@@ -267,7 +267,7 @@
      q: câu đang quét; cards, man: thẻ đã đọc và ghi tay của câu q trên máy giáo viên; ds: các em chưa quét [{ id, t: 0 Đội 1 | 1 Đội 2 }];
      vt: vị trí dây trước câu q (dương là Đội 1 đang dẫn); rnd: hàm ngẫu nhiên (để thử), mặc định Math.random.
      ngau: các thẻ do máy chọn trước đó (không tính vào tỉ lệ đúng).
-     Trả về { chon: { "t<id>": chữ }, cach: "ngang" | "tinh", x: [số em chọn đúng của Đội 1, của Đội 2], k: kết quả câu q dự tính, p: tỉ lệ dùng }.
+     Trả về { chon: { "t<id>": chữ }, cach: "tinh" (bản 14: dây ở giữa cũng tính, không còn "ngang"), x: [số em chọn đúng của Đội 1, của Đội 2], k: kết quả câu q dự tính, p: tỉ lệ dùng }.
      7:47 thầy thử trên điện thoại (chưa quét em nào, bấm nút): "ví dụ nhóm 23 em mà có 8 em đúng là sao? claude chọn xác suất gì kì vậy ?"
        Bản 11 bốc thăm đều A, B, C, D nên chỉ khoảng 1/4 số em đúng (ván thầy thử: câu 1 Đội 1 đúng 2/22, Đội 2 đúng 8/23), thấp hơn lớp
        thật rất nhiều. Bản 12: em chưa quét chọn đúng theo tỉ lệ đúng của các em đã quét trong câu đó (RD.tiLeNgau: của đội em đó nếu đội đã
@@ -275,14 +275,20 @@
        lấy tỉ lệ thì dễ lệch hẳn, ví dụ quét 4 em đều sai thì 40 em còn lại sai hết); thẻ máy đã chọn trước đó
        (ngau) không tính vào tỉ lệ. 8:02 thầy: "bài này tương đôi đơn giản nên thường ví dụ nhóm 23 em thì tầm 7-8 em sai là cùng à." nên
        RD.TI_LE_NGAU = 80% (nhóm 23 em thường sai 2 đến 7 em).
-     - Câu 1 đến câu 4 mà dây đang ở giữa (câu 1, hay hai đội đang ngang nhau): mỗi em chọn đúng với xác suất p của đội em đó (bốc thăm),
-       chọn sai thì bốc thăm một trong ba chữ sai.
-     - Còn lại (dây đang lệch, hay đang ở câu 5): máy thử hết mọi cách "mỗi đội có bao nhiêu em chọn đúng" (các em còn lại chọn một chữ sai),
-       tính kết quả câu q đúng luật kéo co (RD.doiCau, RD.keoCau, kể cả hiệu ứng của câu), rồi lấy cách tốt nhất theo thứ tự:
+     9:33 thầy (bản 14): "Nếu vậy là chọn cách hai nhé, luôn luôn cho nếu được á, nếu được nha, nếu được thì cố gắng cho một đội dẫn trước để
+       tăng cái độ kịch tính lên. Ví dụ đội đang thua mà được thắng để kéo lên thì chắc chắn là khán giả sẽ hú hét nhiều hơn. Nhưng mà về mặt
+       điểm số thì vẫn phải cụ toán theo cái tác nha, chứ bạn không có được gian lận như nhau. Ý là giống như kiểu là quy tắc đã đặt ra là cái
+       câu này là câu về tăng tốc hoặc là câu về đứt, nó đã nhân bao nhiêu nấc thì cứ vậy mà giữ nguyên chứ đừng có khác gì hết."
+       ("cách hai" = đội đang thua kéo vượt qua vạch giữa, dẫn ngược lại; bản 11 đến 13 chỉ kéo về gần vạch giữa nhất.)
+       Máy chỉ chọn đáp án cho các em chưa quét; số nấc vẫn tính đúng luật (RD.doiCau, RD.keoCau, kể cả hiệu ứng của câu), không đổi gì.
+     - Máy thử hết mọi cách "mỗi đội có bao nhiêu em (chưa quét) chọn đúng" (các em còn lại chọn một chữ sai), tính kết quả câu q đúng luật
+       kéo co, rồi lấy cách tốt nhất theo thứ tự:
          0. câu 5: kết thúc có đội thắng, không hòa (thẻ quét được đã làm hòa chắc rồi thì thôi);
-         1. dây đi về phía đội đang bị dẫn (đội đó thắng câu, hay ở câu 2 được thưởng Đồng lòng); không cách nào làm được thì bỏ qua mục này
-            (lúc đó mục 2 giúp đội bị dẫn bớt thua: đội đang dẫn kéo ít nấc nhất, hay hòa); dây ở giữa thì không có mục này;
-         2. sau câu q dây gần giữa nhất: đội bị dẫn gỡ lại vừa đủ, không để đội nào bỏ xa;
+         1. dây đang lệch: đội đang bị dẫn vượt qua vạch giữa, dẫn ngược lại (bản 14); dây đang ở giữa: có một đội vượt lên dẫn, không đứng
+            yên ở giữa (bản 14). Không cách nào làm được thì bỏ qua mục này;
+         2. dây đang lệch: nếu vượt lên được thì dẫn ít nấc nhất (trận còn giằng co); không vượt được thì dây về gần vạch giữa nhất (đội bị dẫn
+            gỡ được nhiều nhất, hay đội đang dẫn kéo thêm ít nhất). Dây đang ở giữa: câu 5 thì đội thắng hơn ít nấc nhất, câu 1 đến 4 không có
+            mục này;
          3. đội bị dẫn thắng câu q (được ngôi sao);
          4. (bản 12) còn nhiều cách tốt như nhau thì bốc thăm, cách nào giống lớp thật hơn thì dễ được chọn hơn: mỗi cách nặng bằng khả năng
             có đúng chừng ấy em chọn đúng khi mỗi em đúng với xác suất p của đội (nhị thức, p giữ trong 5%..95%). Bản 11 lấy cách gần một phần
@@ -303,11 +309,7 @@
     var chon = {};
     var dung = RD.CAU[q - 1].dung, sai = RD.CHU.filter(function (l) { return l !== dung; });
     var p = RD.tiLeNgau(q, cfg, cards, man, ngau);
-    if (!vt && q < 5) {
-      ds.forEach(function (e) { chon["t" + e.id] = rnd() < p[e.t ? 1 : 0] ? dung : bat(sai); });
-      return { chon: chon, cach: "ngang", p: p };
-    }
-    var lop = RD.lop(cfg), B = vt > 0 ? 2 : vt < 0 ? 1 : 0, huong = vt > 0 ? -1 : 1;   // B: đội đang bị dẫn (0: dây ở giữa); huong: về phía B
+    var lop = RD.lop(cfg), B = vt > 0 ? 2 : vt < 0 ? 1 : 0;   // B: đội đang bị dẫn (0: dây ở giữa)
     var doi = [[], []];
     ds.forEach(function (e) { doi[e.t ? 1 : 0].push(e); });
     doi.forEach(function (a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } });
@@ -329,7 +331,11 @@
     var tot = [], dTot = null;
     for (var x0 = 0; x0 <= doi[0].length; x0++) for (var x1 = 0; x1 <= doi[1].length; x1++) {
       var K = thu([x0, x1]);
-      var d = [q === 5 && !K.sau ? 1 : 0, !B || (K.sau - vt) * huong > 0 ? 0 : 1, Math.abs(K.sau), !B || K.thang === B ? 0 : 1];
+      var dB = B === 1 ? K.sau : -K.sau;   // sau câu q đội B dẫn bấy nhiêu nấc (âm: còn bị dẫn)
+      var d = [q === 5 && !K.sau ? 1 : 0,
+        B ? (dB >= 1 ? 0 : 1) : (K.sau ? 0 : 1),
+        B ? (dB >= 1 ? dB : -dB) : (q === 5 ? Math.abs(K.sau) : 0),
+        !B || K.thang === B ? 0 : 1];
       var s = dTot ? hon(d, dTot) : -1, o = { x: [x0, x1], k: K, w: nang(x0, doi[0].length, p[0]) * nang(x1, doi[1].length, p[1]) };
       if (s < 0) { dTot = d; tot = [o]; } else if (s === 0) tot.push(o);
     }

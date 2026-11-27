@@ -1565,6 +1565,8 @@
   //   Nút, lời báo và TV không đổi gì.
   // 27/11 7:47 thầy: "ví dụ nhóm 23 em mà có 8 em đúng là sao? claude chọn xác suất gì kì vậy ?": em chưa quét chọn đúng theo tỉ lệ đúng
   //   của các em đã quét trong câu đó (RD.tiLeNgau), không còn bốc thăm đều bốn chữ.
+  // 27/11 9:33 thầy (bản 14): "chọn cách hai nhé ... nếu được thì cố gắng cho một đội dẫn trước để tăng cái độ kịch tính lên": đội đang thua
+  //   vượt lên dẫn nếu làm được, dây ở giữa thì có một đội vượt lên; số nấc vẫn đúng luật (RD.chonNgauCoTinh trong du-lieu.js).
   function emChuaQuet() {
     var ds = [];
     if (!PQ) return ds;
