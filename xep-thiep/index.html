@@ -1026,8 +1026,12 @@ body.tv { background: #130c06; }
      rung nhẹ thân trống, làm sáng mặt trống, hiện vệt tiếng và chữ "Tùng!". Không phóng to thu nhỏ: chỉ xoay, trôi, mờ dần.
    18/11 01:46, thầy: "cái dùi trống quay ngược xuống dưới nhé ... kết thúc thì đếm số 00 thì mới đánh trống ... thường thì ngta sẽ gõ vào viền trống kêu cạch cạnh rồi mới đánh tùng tùng tùng"
    → dùi trống lật lại: tay cầm ở dưới bên phải, đầu dùi ở trên. Dùi gõ vào viền trống 2 tiếng "Cạch!" (lóe tia ở viền, #dnTia), rồi đánh vào mặt trống 3 tiếng "Tùng!".
-   → hết giờ: số dừng ở 00:00 (đỏ), dòng chữ trên số thành "Hết giờ" (đỏ), rồi trống mới đánh. Không còn ô chữ "Hết giờ" thay chỗ số --- */
-.dn { position: absolute; left: 800px; top: 626px; width: 320px; height: 380px; transform: scale(var(--bt)); transform-origin: 160px -86px; z-index: 12; box-sizing: border-box; padding: 10px 0 0; background: linear-gradient(180deg, #fff6dc 0%, #fcecc0 69%, #ebcd92 69.6%, #e2bf80 78%, #d6af70 100%); border-radius: 28px; box-shadow: 0 0 0 4px #f6e7c4, 0 0 0 6.5px #d9b25a, 0 8px 22px rgba(60, 40, 20, .26); display: flex; flex-direction: column; align-items: center; overflow: hidden; animation: dnMo .5s ease-out both; }
+   → hết giờ: số dừng ở 00:00 (đỏ), dòng chữ trên số thành "Hết giờ" (đỏ), rồi trống mới đánh. Không còn ô chữ "Hết giờ" thay chỗ số.
+   28/11 05:25, thầy (kèm ảnh chụp đồng hồ trên Báo tường động): "lùi cái trống xuống dưới, nó che mất tấm hình lớn ở trên rồi"
+   → đồng hồ hạ 45 px (top 626 → 671, transform-origin y = 540 - top = -131 để vẫn to nhỏ quanh tâm màn hình): viền ngoài của đồng hồ bắt đầu ngay dưới dây đèn
+     trên 6 ảnh nhỏ (ngang mép trên hàng ảnh nhỏ thứ nhất), không còn đè mép dưới ảnh to và hàng bóng đèn quanh ảnh to; đáy đồng hồ còn cách đáy báo tường chừng 23 px.
+     Hàng nút tivi đã dời về góc dưới bên phải từ 27/11 21:18 nên phía dưới giữa trống, lý do nhích đồng hồ lên hôm 17/11 không còn. --- */
+.dn { position: absolute; left: 800px; top: 671px; width: 320px; height: 380px; transform: scale(var(--bt)); transform-origin: 160px -131px; z-index: 12; box-sizing: border-box; padding: 10px 0 0; background: linear-gradient(180deg, #fff6dc 0%, #fcecc0 69%, #ebcd92 69.6%, #e2bf80 78%, #d6af70 100%); border-radius: 28px; box-shadow: 0 0 0 4px #f6e7c4, 0 0 0 6.5px #d9b25a, 0 8px 22px rgba(60, 40, 20, .26); display: flex; flex-direction: column; align-items: center; overflow: hidden; animation: dnMo .5s ease-out both; }
 @keyframes dnMo { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dnHien { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .dn[hidden] { display: none; }
