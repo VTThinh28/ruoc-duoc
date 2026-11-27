@@ -921,11 +921,6 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <div class="dt-ngau-hang" id="dtNgauHang" hidden>
       <button type="button" class="nut dt-ngau" id="dtNgau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.4" cy="8.4" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="15.6" cy="15.6" r="1.5" fill="currentColor" stroke="none"/><circle cx="15.6" cy="8.4" r="1.5" fill="currentColor" stroke="none"/><circle cx="8.4" cy="15.6" r="1.5" fill="currentColor" stroke="none"/></svg><span class="dt-ngau-chu"><b id="dtNgauChu">Chọn đáp án ngẫu nhiên</b></span></button>
     </div>
-    <label id="dtGhiNgayKhung" style="display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:700;font-size:15px;line-height:1.3"><input type="checkbox" id="dtGhiNgay" checked style="width:24px;height:24px;flex:none"><span>Ghi ngay lần đọc rõ đầu tiên <small style="font-weight:600;opacity:.75">(đang bật là nhanh nhất; tắt thì thẻ phải giữ yên 0,15 giây mới ghi)</small></span></label>
-    <div id="dtBaMoi" style="margin-top:10px;display:grid;gap:8px;font-size:15px;line-height:1.3">
-      <label style="display:flex;align-items:flex-start;gap:10px;font-weight:700"><input type="checkbox" id="dtPhoiNgan" checked style="width:24px;height:24px;flex:none"><span>Chống nhòe khi lia máy <small id="dtPhoiNganTT" style="display:block;font-weight:600;opacity:.75"></small></span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-weight:700"><input type="checkbox" id="dtKhung" checked style="width:24px;height:24px;flex:none"><span>Lấy hình nhanh <small id="dtKhungTT" style="display:block;font-weight:600;opacity:.75"></small></span></label>
-    </div>
     <p id="dtTrangThai" class="dt-tt"></p>
     <div id="dtTo" class="dt-to"></div>
     <div id="dtPhanBo" class="dt-phanbo" hidden></div>
@@ -941,6 +936,15 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
     <div id="cbDT"></div>
   </section>
   <section id="dtGhi" class="dt-the dt-ghi" hidden></section>
+  <!-- 27/11/2026 9:10 thầy Thịnh: "chuyển 3 mục này xuống cuồi cùng, nằm trên số đo quét luôn nha": ba ô chỉnh cách quét (Ghi ngay, Chống nhòe,
+       Lấy hình nhanh) ra khỏi khung quét, thành khung riêng ngay trên Số đo quét. Vẫn chỉ hiện lúc còn ghi thẻ (bước đọc đề và quét xong) như trước. -->
+  <section id="dtCachQuet" class="dt-the" hidden>
+      <label id="dtGhiNgayKhung" style="display:flex;align-items:center;gap:10px;margin-top:0;font-weight:700;font-size:15px;line-height:1.3"><input type="checkbox" id="dtGhiNgay" checked style="width:24px;height:24px;flex:none"><span>Ghi ngay lần đọc rõ đầu tiên <small style="font-weight:600;opacity:.75">(đang bật là nhanh nhất; tắt thì thẻ phải giữ yên 0,15 giây mới ghi)</small></span></label>
+      <div id="dtBaMoi" style="margin-top:10px;display:grid;gap:8px;font-size:15px;line-height:1.3">
+        <label style="display:flex;align-items:flex-start;gap:10px;font-weight:700"><input type="checkbox" id="dtPhoiNgan" checked style="width:24px;height:24px;flex:none"><span>Chống nhòe khi lia máy <small id="dtPhoiNganTT" style="display:block;font-weight:600;opacity:.75"></small></span></label>
+        <label style="display:flex;align-items:flex-start;gap:10px;font-weight:700"><input type="checkbox" id="dtKhung" checked style="width:24px;height:24px;flex:none"><span>Lấy hình nhanh <small id="dtKhungTT" style="display:block;font-weight:600;opacity:.75"></small></span></label>
+      </div>
+  </section>
   <section id="dtSoDo" class="dt-the">
     <h3>Số đo quét</h3>
     <p id="sdTT" class="dt-tt" style="margin-top:0">Chưa có số đo.</p>
@@ -965,18 +969,18 @@ details.dt-nc summary{cursor:pointer;font-weight:700;color:var(--muc2);margin-to
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script>window.RD_V="25257e92";</script>
-<script src="js/cau-hinh.js?v=25257e92"></script>
-<script src="js/scanlib.js?v=25257e92"></script>
-<script src="js/du-lieu.js?v=25257e92"></script>
-<script src="js/dong-bo.js?v=25257e92"></script>
-<script src="js/am-thanh.js?v=25257e92"></script>
-<script src="js/quet.js?v=25257e92"></script>
-<script src="js/cay-cau.js?v=25257e92"></script>
-<script src="js/san-khau.js?v=25257e92"></script>
-<script src="js/keo-co.js?v=25257e92"></script>
-<script src="js/tro-choi.js?v=25257e92"></script>
-<script src="js/nhanh.js?v=25257e92"></script>
-<script src="js/do.js?v=25257e92"></script>
+<script>window.RD_V="68004809";</script>
+<script src="js/cau-hinh.js?v=68004809"></script>
+<script src="js/scanlib.js?v=68004809"></script>
+<script src="js/du-lieu.js?v=68004809"></script>
+<script src="js/dong-bo.js?v=68004809"></script>
+<script src="js/am-thanh.js?v=68004809"></script>
+<script src="js/quet.js?v=68004809"></script>
+<script src="js/cay-cau.js?v=68004809"></script>
+<script src="js/san-khau.js?v=68004809"></script>
+<script src="js/keo-co.js?v=68004809"></script>
+<script src="js/tro-choi.js?v=68004809"></script>
+<script src="js/nhanh.js?v=68004809"></script>
+<script src="js/do.js?v=68004809"></script>
 </body>
 </html>

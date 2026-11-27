@@ -1417,7 +1417,8 @@
     // 18/11: TV đã hiện đáp án thì thôi ghi thẻ: tắt camera, ẩn nút camera, nút chụp ảnh và các ô chỉnh cách đọc (lùi về Kết quả thì hiện lại)
     var choGhi = loai === "q" || loai === "k";
     if (loai === "a" && Q.Live.chay) dungCam();
-    [".dt-quet-nut", "#dtGhiNgayKhung", "#dtBaMoi"].forEach(function (s) { var e = $(s); if (e && e.hidden === choGhi) e.hidden = !choGhi; });
+    // 27/11 9:10: ba ô chỉnh cách quét nay là khung riêng #dtCachQuet ngay trên Số đo quét (thầy: "chuyển 3 mục này xuống cuồi cùng")
+    [".dt-quet-nut", "#dtCachQuet"].forEach(function (s) { var e = $(s); if (e && e.hidden === choGhi) e.hidden = !choGhi; });
     $("#dtNc").hidden = true;
     // 9/11: màn giới thiệu: nút hiện / ẩn luật chơi trên TV; bước đọc đề: nút Đếm ngược 5 giây
     var luatHien = !!now.luat, ln = $("#dtLuatNut");
