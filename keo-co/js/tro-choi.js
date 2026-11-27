@@ -147,7 +147,7 @@
       so.textContent = String(con);
       hoat(so, [{ opacity: 0.2 }, { opacity: 1 }], 260, DE, function () { huyHoat(so); });
       A.demNguoc(DEM_GIAY - con);
-    } else if (A.reo) A.reo(); else A.ken();   // hết giờ: 27/11 bản 19 tiếng reo (trước là khúc vui ngắn, rất nhỏ)
+    } else if (A.trongGio) A.trongGio(); else A.ken();   // hết giờ ("Giơ đáp án"): 27/11 17:20 trống "tùng, tùng, tùng" như trang Xếp thiệp (trước là khúc vui ngắn, rất nhỏ)
   }
   // TV, ô dưới chữ đề ở bước đọc đề: "dem" đang đếm (vòng tròn và số), "gio" đã đếm xong ở câu này (chữ "Giơ đáp án", ở lại tới
   //   khi đổi bước; mở lại trang lúc đang quét cũng thấy), "" chưa bấm đếm. now.dem bị xoá khi đổi bước (datBuoc)
@@ -672,7 +672,7 @@
     SK.khiBamLuat = function (an) { SK.anLuat(an); ghiLuat(!an); };   // 9/11: điện thoại cũng thấy, cũng đổi được
     A.taiNhac();
     if (A.taiVoTay) A.taiVoTay();
-    if (A.taiReo) A.taiReo();                       // bản 19: tiếng reo lúc hết 5 giây đếm ngược
+    if (A.taiTrong) A.taiTrong();                   // bản 19: tiếng trống "tùng" lúc hết 5 giây đếm ngược
     dungChuanBi($("#cbTV"));
     napAnhBao().then(function () { if (RD.anhBao) SK.anhBao(RD.anhBao); ve(); });
     for (var q = 1; q <= 5; q++) taoVideo(q);      // tải sẵn hình chuyển động của 5 câu
@@ -929,18 +929,19 @@
   //   kéo": bấm "Kéo co" (bước r) là nhạc tắt dần trong chừng một giây, tắt suốt lúc hai đội kéo (tiếng gõ, tiếng chuông của ô báo, tiếng
   //   trống mỗi nấc, tiếng vút lúc trượt chân), kéo xong (KC.lucKeoXong) thì nhạc to dần lại. Mở lại trang ở bước r (không có hoạt cảnh)
   //   thì nhạc như thường. "lúc đồng hồ đếm ngược nhạc cũng tạm tắt, có tiếng reo lúc đếm ngược 5 giây xong": nhạc tắt lúc đếm (đã có từ
-  //   21/11), hết giờ có tiếng reo (A.reo) và nhạc chờ REO_GIU giây cho tiếng reo xong rồi mới có lại.
-  var NHAC_VUA = 0.22, NHAC_NHO = 0.03, REO_GIU = 2.2, henNhac = null;
+  //   21/11), hết giờ có tiếng trống (17:20: "giơ đáp án đổi sang tiếng trống giống tấm thiệp của nhóm em đi.", "tùng tùng tùng là được";
+  //   A.trongGio: ba tiếng "tùng" lúc 0; 0,7; 1,4 giây, tiếng cuối ngân chừng một giây) và nhạc chờ TRONG_GIU giây cho trống xong rồi mới có lại.
+  var NHAC_VUA = 0.22, NHAC_NHO = 0.03, TRONG_GIU = 2.6, henNhac = null;
   function datNhac(step, loai) {
     clearTimeout(henNhac); henNhac = null;
     var muc = NHAC_VUA, giay = 1;
     if (step === "setup") muc = 0;
     else if (loai === "q" && dangDem()) { muc = 0; giay = 0.25; }       // 21/11: đang đếm ngược 5 giây thì không có nhạc nền
-    else if (loai === "q" && DEM.id) {                                   //   vừa đếm xong ("Giơ đáp án"): chờ tiếng reo rồi nhạc có lại từ từ
+    else if (loai === "q" && DEM.id) {                                   //   vừa đếm xong ("Giơ đáp án"): chờ tiếng trống rồi nhạc có lại từ từ
       var sauDem = performance.now() - DEM.bd - DEM_GIAY * 1000;
-      if (sauDem < REO_GIU * 1000) {
+      if (sauDem < TRONG_GIU * 1000) {
         muc = 0; giay = 0.25;
-        henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === step) A.nhacMuc(NHAC_VUA, 2); }, REO_GIU * 1000 - Math.max(0, sauDem));
+        henNhac = setTimeout(function () { henNhac = null; if (nowHopLe().step === step) A.nhacMuc(NHAC_VUA, 2); }, TRONG_GIU * 1000 - Math.max(0, sauDem));
       } else giay = 2;
     }
     else if (loai === "a") { muc = NHAC_NHO; giay = 1.5; }

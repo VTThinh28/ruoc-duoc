@@ -51,7 +51,7 @@
     if (ac.state === "suspended") ac.resume();
     giaiMaNhac();
     giaiMaVoTay();
-    giaiMaReo();
+    giaiMaTrong();
   };
 
   /* ---------- nhạc nền ---------- */
@@ -261,11 +261,11 @@
   };
   // khúc vui ngắn: hợp âm rải Đô Mi Son Đô bằng tiếng mộc cầm, nốt cuối ngân như chuông
   // (trước đây là tiếng kèn răng cưa, nghe chói)
-  A.ken = function (manh) {
+  A.ken = function () {
     if (!san()) return;
-    var t = ac.currentTime, m = manh == null ? 1 : manh;
-    [0, 2, 3, 5].forEach(function (b, i) { A.go(b, (i === 3 ? 0.5 : 0.4) * m, t + i * 0.14); });
-    A.chuong(0.45 * m, t + 0.42);
+    var t = ac.currentTime;
+    [0, 2, 3, 5].forEach(function (b, i) { A.go(b, i === 3 ? 0.5 : 0.4, t + i * 0.14); });
+    A.chuong(0.45, t + 0.42);
   };
   // "ting" khi quét xong (5/11: nhỏ lại, trước là 0.22, to nhất trong các tiếng)
   A.ting = function () {
@@ -308,39 +308,42 @@
     s.start(ac.currentTime);
     haNhac(VT.buf.duration);
   };
-  // 27/11/2026 14:33 thầy Thịnh: "lúc đồng hồ đếm ngược nhạc cũng tạm tắt, có tiếng reo lúc đếm ngược 5 giây xong". Hết 5 giây đếm ngược
-  //   (tro-choi.js, veDemTV) gọi A.reo(). REO_KIEU "ho": tiếng một nhóm bạn nhỏ reo "Yay!" thu thật, keo-co/nhac/reo.ogg (2,3 giây), cắt từ
-  //   "yay.mp3" của Disarmenemyships trên Freesound.org (freesound.org/s/563845), giấy phép CC0 (dùng tự do, không cần ghi tên);
-  //   "chuong": khúc vui mộc cầm và chuông (A.ken) to gấp KEN_REO lần. Chưa tải xong tiếng reo thì dùng khúc vui.
-  //   Nhạc nền tắt trong lúc đếm và chờ tiếng reo xong mới có lại (tro-choi.js, datNhac).
-  A.REO_KIEU = "ho";
-  var KEN_REO = 1.6;
-  var RE = { url: "nhac/reo.ogg", tai: null, ab: null, buf: null, dangGiai: false };
-  A.taiReo = function (url) {
-    if (url) RE.url = url;
-    if (RE.tai || RE.buf) return;
-    RE.tai = fetch(RE.url).then(function (r) { if (!r.ok) throw new Error("reo " + r.status); return r.arrayBuffer(); })
-      .then(function (ab) { RE.ab = ab; giaiMaReo(); })
-      .catch(function () { RE.tai = null; });
+  // 27/11/2026 14:33 thầy Thịnh: "lúc đồng hồ đếm ngược nhạc cũng tạm tắt, có tiếng reo lúc đếm ngược 5 giây xong"; 17:20: "giơ đáp án đổi
+  //   sang tiếng trống giống tấm thiệp của nhóm em đi.", "tùng tùng tùng là được". Hết 5 giây đếm ngược (chữ "Giơ đáp án", tro-choi.js
+  //   veDemTV) gọi A.trongGio(): ba tiếng trống trường "tùng, tùng, tùng" cách nhau 0,7 giây, đúng ba tiếng "tùng" của đồng hồ trang Xếp thiệp
+  //   (xep-thiep.js NHIP_TRONG, bỏ hai tiếng "cạch" gõ viền). Tiếng trống là keo-co/nhac/trong-tung.wav, chép nguyên từ
+  //   xep-thiep/nhac/trong-tung.wav (bản thu CC0 "Bass tom, #4" của Joseph SARDIN, BigSoundBank số 2341, trang Xếp thiệp đã chỉnh cho loa
+  //   tivi nhỏ). Chưa tải được tệp thì gõ ba tiếng trống tự tạo (A.trong). Nhạc nền tắt lúc đếm và chờ trống xong mới có lại (tro-choi.js, datNhac).
+  var NHIP_TUNG = [[0, 0.95], [0.7, 0.95], [1.4, 1]];   // [giây kể từ lúc hết giờ, mạnh nhẹ]: như 0,9; 1,6; 2,3 giây của Xếp thiệp
+  A.TRONG_TO = 0.34;   // đỉnh tệp 0,89 × 0,34 × TANG_TV.tieng 2,8 ≈ 0,85: vừa chạm bộ giới hạn, to nhất mà không vỡ tiếng
+  var TR = { url: "nhac/trong-tung.wav", tai: null, ab: null, buf: null, dangGiai: false };
+  A.taiTrong = function (url) {
+    if (url) TR.url = url;
+    if (TR.tai || TR.buf) return;
+    TR.tai = fetch(TR.url).then(function (r) { if (!r.ok) throw new Error("trong " + r.status); return r.arrayBuffer(); })
+      .then(function (ab) { TR.ab = ab; giaiMaTrong(); })
+      .catch(function () { TR.tai = null; });
   };
-  function giaiMaReo() {
-    if (!ac || !RE.ab || RE.buf || RE.dangGiai) return;
-    RE.dangGiai = true;
-    var ab = RE.ab;
-    var xong = function (b) { RE.buf = b; RE.ab = null; RE.dangGiai = false; };
-    var p = ac.decodeAudioData(ab, xong, function () { RE.dangGiai = false; });
-    if (p && p.then) p.catch(function () { RE.dangGiai = false; });
+  function giaiMaTrong() {
+    if (!ac || !TR.ab || TR.buf || TR.dangGiai) return;
+    TR.dangGiai = true;
+    var ab = TR.ab;
+    var xong = function (b) { TR.buf = b; TR.ab = null; TR.dangGiai = false; };
+    var p = ac.decodeAudioData(ab, xong, function () { TR.dangGiai = false; });
+    if (p && p.then) p.catch(function () { TR.dangGiai = false; });
   }
-  A.coReo = function () { return !!RE.buf; };
-  A.REO_TO = 0.75;
-  A.reo = function () {
+  A.coTrong = function () { return !!TR.buf; };
+  A.trongGio = function () {
     if (!san()) return;
-    if (A.REO_KIEU !== "ho" || !RE.buf) { A.ken(KEN_REO); return; }
-    var s = ac.createBufferSource(), g = ac.createGain();
-    s.buffer = RE.buf;
-    g.gain.value = A.REO_TO;
-    s.connect(g); g.connect(tieng);
-    s.start(ac.currentTime);
+    var t = ac.currentTime + 0.02;
+    NHIP_TUNG.forEach(function (n) {
+      if (!TR.buf) { A.trong(n[1], t + n[0]); return; }
+      var s = ac.createBufferSource(), g = ac.createGain();
+      s.buffer = TR.buf;
+      g.gain.value = A.TRONG_TO * n[1];
+      s.connect(g); g.connect(tieng);
+      s.start(t + n[0]);
+    });
   };
   A.lapLanh = function () {
     if (!san()) return;
